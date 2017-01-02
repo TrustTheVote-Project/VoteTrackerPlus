@@ -14,11 +14,15 @@ VOTES is intended to be as compliant as possible with [NIST](https://en.wikipedi
 
 The basic high level design goals are:
 
-* The voter can validate the accuracy of their vote and its tally at any time
+* The voter can validate the accuracy of their vote and its proper tally at any time
   * Anyone with access to the election repository can count the votes
   * The election repository is not available until after the polls close
 * There is both a paper and electronic trail with the necessary security attributes
-* The system can support any vote counting [methodology](https://electology.org/library)
+* The system:
+  * can support any vote counting [methodology](https://electology.org/library)
+  * is incrementally adoptable at different geographical/hierarchical levels
+  * scales well - is distributed
+  * easily testable - simulations can be run at will
 * Create a solution that is usable in the 2020 US election
 
 # Status - 2017/01/01
