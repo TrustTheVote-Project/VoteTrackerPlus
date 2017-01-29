@@ -25,6 +25,8 @@ The basic high level design goals are:
   * easily testable - simulations can be run at will
 * Create a solution that is usable in the 2020 US election
 
-# Status - 2017/01/01
+# Status - 2017/01/29
 
-Happy New Year - VOTES is currently in the design phase - still working out the basics etc.  See the docs directory for more info.
+VOTES is currently in the design phase - still working out the basics etc.
+* See the [docs/Overview.md](https://github.com/PacemTerra/votes/blob/master/docs/Overview.md) for more general overview information
+* See the wiki for the latest [project design](https://github.com/PacemTerra/votes/wiki) thoughts
