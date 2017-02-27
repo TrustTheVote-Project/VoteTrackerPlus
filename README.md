@@ -28,5 +28,6 @@ The basic high level design goals are:
 # Status - 2017/01/29
 
 VOTES is currently in the design phase - still working out the basics etc.
-* See the [docs/Overview.md](https://github.com/PacemTerra/votes/blob/master/docs/Overview.md) for more general overview information
-* See the wiki for the latest [project design](https://github.com/PacemTerra/votes/wiki) thoughts
+* For a general overview see [docs/Overview.md](https://github.com/PacemTerra/votes/blob/master/docs/Overview.md)
+* For high level details see [docs/design-notes.md](https://github.com/PacemTerra/votes/blob/master/docs/design-notes.md)
+* The project wiki contains a [project overview](https://github.com/PacemTerra/votes/wiki)
