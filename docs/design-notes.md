@@ -2,11 +2,11 @@
 
 __As an example, the following notes are assuming a 2018 US national election.__
 
-See ../Home.md in this repo for background info.
+See [the wiki](https://github.com/PacemTerra/votes/wiki) for some additional information
 
-See [Overview.md](https://github.com/PacemTerra/votes/docs/Overview.md) in the votes repo for a general overview.
+See [Overview.md](https://github.com/PacemTerra/votes/blob/master/docs/Overview.md) in the votes repo for a general overview.
 
-There is a local copy of [NIST.SP.1500-100.pdf](https://github.com/PacemTerra/votes/docs/NIST.SP.1500-100.pdf) which contains a terminology section on page 120 as well as the precinct and ward map for Cambridge Massachusetts on pages 14 and 15.
+There is a local copy of [NIST.SP.1500-100.pdf](https://github.com/PacemTerra/votes/blob/master/docs/NIST.SP.1500-100.pdf) which contains a terminology section on page 120 as well as the precinct and ward map for Cambridge Massachusetts on pages 14 and 15.
 
 ## 1.1) Basic Git Repo Prototype
 
