@@ -6,9 +6,9 @@ A Verifiable Open Technology Election System
 
 VOTES is a distributed, open-source project aimed at creating public/private, transparent, secure, and accurate elections.  It is an [election](https://en.wikipedia.org/wiki/Election) and [voting](https://en.wikipedia.org/wiki/Voting) framework delivered as a [SaaS](https://en.wikipedia.org/wiki/Software_as_a_service) solution.
 
-# 2) Basic Technical Overview - What is it?
+# 2) Basic Technical Overview - What is VOTES?
 
-The basic technical idea is to electronically record each paper ballot as a hashed-chain of ballots.  Specifically, each voter receives a [cryptographic hash](https://en.wikipedia.org/wiki/Cryptographic_hash_function) and associated barcode/[QR code](https://en.wikipedia.org/wiki/QR_code) for their ballot that is not associated with their identity within the electronic medium.  The cryptographic hash/barcode is also printed/attached to the physical paper ballot, the physical ballot acting as an air-gapped non-electronic record of the ballot.  The physical ballot remains in control of the voting center (voting precinct). The electronic copy and associated hash are stored in an election database/repository by the VOTES SaaS.
+Technically VOTES is method to electronically record each paper ballot as a hashed-chain of ballots.  Specifically, each voter receives a [cryptographic hash](https://en.wikipedia.org/wiki/Cryptographic_hash_function) and associated barcode/[QR code](https://en.wikipedia.org/wiki/QR_code) for their ballot that is not associated with their identity within the electronic medium.  The cryptographic hash/barcode is also printed/attached to the physical paper ballot, the physical ballot acting as an air-gapped non-electronic record of the ballot.  The physical ballot remains in control of the voting center (voting precinct). The electronic copy and associated hash are stored in an election database/repository by the VOTES SaaS.
 
 The cryptographic hash is chained - the hashing function includes the previous hash for the previous ballot for that precinct (for that ballot database repository).  The precinct's VOTES servers/SaaS randomize the ballot sequence such that _physical_ sequential ballots at any specific voting location are not sequential in the hashing function, minimizing the probability that the previous hash matches the previous voter in any given precinct.
 
@@ -16,24 +16,24 @@ Individual ballots are immediately and publicly accessable once cast and remain 
 
 Once the polls close, the complete hashed chain of ballots becomes available for any person to download.  This allows any individual or agency, government or private, to perform the counting function of any race in the election.  In particular this ability is available with any copy of the election database/repository.
 
-Regarding ballot counting, the algorithms, including how the ballots are defined, parsed, counted, and validated/invalidated are included in the hashing function as they are also contained in the same database/repository as the ballots themselves.  Any individual can both inspect their ballot as well as its compliance/status at any time once cast.  Once the polls close, since only then is the entire chain accessible to all, any individual can then also count the votes for any question/race on their ballot or for any race/question in the election.  All that is required to count the votes at any geographical/hierarchical level of the election is a copy iof the single election database/repository.
+Regarding ballot counting, the algorithms, including how the ballots are defined, parsed, counted, and validated/invalidated are included in the hashing function as they are also contained in the same database/repository as the ballots themselves.  Any individual can both inspect their ballot as well as its compliance/status at any time once cast.  Once the polls close, since only then is the entire chain accessible to all, any individual can then also count the votes for any question/race on their ballot or for any race/question in the election.  All that is required to count the votes at any __Geopolitical Geographical Overlay (GGO)__ level of the election is a copy iof the election database/repositories.
 
 Each actual election is a different instance of the VOTES SaaS solution and runs on a different set of VOTES servers, nominally in either a public or private cloud.
 
-Regarding geographical/hierarchical overlays per election, an _election_ is created when an identified owner (say for example the federal US government) creates one.  Creating an election implies creating two things (a highly scientific term):
+Regarding GGO overlays per election, an _election_ is created when an identified owner (say for example the federal US government) creates one.  Creating an election implies creating two things (a highly scientific term):
 
-* A root election database/repository.  A root election database/repository aggregates intermediate database/repositories that are created at lower geographical/hierarchical overlays.
-* A [Certificate Authority](https://en.wikipedia.org/wiki/Certificate_authority) which in turn allows [Intermediate Certificate Authorities](https://en.wikipedia.org/wiki/Intermediate_certificate_authority) to be created at lower geographical/hierarchical overlays.
+* A root election database/repository.  A root election database/repository aggregates intermediate database/repositories that are created at lower GGO overlays.
+* A [Certificate Authority](https://en.wikipedia.org/wiki/Certificate_authority) which in turn allows [Intermediate Certificate Authorities](https://en.wikipedia.org/wiki/Intermediate_certificate_authority) to be created at lower GGO overlays.
 
-Per the reality of geographical/hierarchical overlays (for example state, county, town, precincts - see [NIST standards](http://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.1500-100.pdf)), the overlays may or may not overlap or share physical boundaries.  Regardless each state or county or town or voting center (precinct) can participate in the election by providing races/questions at that geographical/hierarchical level.  Each geographical/hierarchical overlay also can optionally create their separate ballot repository, controlled/managed by them.  Thus the actual election database is distributed in nature, locally managed, but aggregated in a shared manner.
+Per the reality of GGO overlays (for example state, county, town, precincts - see [NIST standards](http://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.1500-100.pdf)), the overlays may or may not overlap or share physical boundaries.  Regardless each state or county or town or voting center (precinct) can participate in the election by providing races/questions at that GGO level.  Each GGO overlay also can optionally create their separate ballot repository, controlled/managed by them.  Thus the actual election database is distributed in nature, locally managed, but aggregated in a shared manner.
 
 The aggregation does not change the voter's original hash and no repository is available in its entirety until after all polls close, even though voters can individually validate their specific ballot at any time.
 
-Regarding ballot validation, there is a natural ballot entry validation that occurs when the physical ballot is scanned - if the ballot does not meet the validation requirements for each of the geographical/hierarchical overlays the ballot is rejected and no hash is generated.  (Note - different vote counting methodologies will have different validation algorithms even via a single ballot.)
+Regarding ballot validation, there is a natural ballot entry validation that occurs when the physical ballot is scanned - if the ballot does not meet the validation requirements for each of the GGO overlays the ballot is rejected and no hash is generated.  (Note - different vote counting methodologies will have different validation algorithms even via a single ballot.)
 
-Post entry into VOTES, the various authorities at the geographical/hierarchical overlays can invalidate a specific ballot by issuing a negation ballot.  A negation ballot voids a previous ballot and becomes part of the chain of votes at the time of the invalidation.  Negation ballot require full disclosure of the who/what/when/why such that all observers (anyone with access to a copy of the election repository) can inspect the invalidation, including the voter.  Negation ballots themselves can be negated, such as when the negation of the ballot is overruled.  However, the entire timeline of ballots, the potential negation thereof, and the potential reversal of the negation are all part of the permanent cryptographic hash chain of the election.
+Post entry into VOTES, the various authorities at the GGO overlays can invalidate a specific ballot by issuing a negation ballot.  A negation ballot voids a previous ballot and becomes part of the chain of votes at the time of the invalidation.  Negation ballot require full disclosure of the who/what/when/why such that all observers (anyone with access to a copy of the election repository) can inspect the invalidation, including the voter.  Negation ballots themselves can be negated, such as when the negation of the ballot is overruled.  However, the entire timeline of ballots, the potential negation thereof, and the potential reversal of the negation are all part of the permanent cryptographic hash chain of the election.
 
-Technical note - the overall geographical/hierarchical security model is not limited to root and intermediate CA's - there are additional out-of-band security controls in play to minimize and mitigate [attack surfaces](https://en.wikipedia.org/wiki/Attack_surface).
+Technical note - the overall GGO security model is not limited to root and intermediate CA's - there are additional out-of-band security controls in play to minimize and mitigate [attack surfaces](https://en.wikipedia.org/wiki/Attack_surface).
 
 # 3) Basic Business Overview - How?
 
@@ -44,7 +44,7 @@ An important goal of VOTES is to be aligned with election reform so to leverage 
 High-level VOTES differentiators are:
 
  * Grassroots alignment with election reform
- * Each election including the ballots, counting algorithms, geographical/hierarchical layers etc is open sourced and distributed
+ * Each election including the ballots, counting algorithms, GGO layers etc is open sourced and distributed
  * Alignment with NIST so to leverage technical traction and maximize interplay with other vendors, agencies, and the general public at large
  * Flexible support for different voting/counting methodologies, allowing the efficient and secure interplay of differing adoption rates of different voting methodologies within a specific election
  * Best-in-class security frameworks and implementations
@@ -58,12 +58,12 @@ The current delivery model is SaaS.  As the VOTES project is still pre-garage st
 ## 4.1) High Level Requirements / In-scope
 
 1. Validation at any time of a ballot post submittal by the voter
-2. Validation at any time of the vote count by any person for any ballot race/question at any geographical/hierarchical scope (aggregation point) of the ballot
-3. Support for any combination of geographical/hierarchical overlays for any specific precinct/voting location (for example, support for voting in the town of Cambridge MA - see NIST reference)
+2. Validation at any time of the vote count by any person for any ballot race/question at any GGO scope (aggregation point) of the ballot
+3. Support for any combination of GGO overlays for any specific precinct/voting location (for example, support for voting in the town of Cambridge MA - see NIST reference)
 4. Support for different [counting schemes](https://electology.org/library#104) (plurality, approval, IRV) potentially simultaneously across any race/question for any given ballot
 5. Ballot validation (rejection of non-compliant ballots) at entry point as a function of the counting scheme and election configuration
 6. Best possible adherence to existing [NIST standards](http://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.1500-100.pdf) ballot payloads UML definitions
-7. Distribution of control/ownership of a geographical/hierarchical portion of a ballot to that geographical/hierarchical entity as a configuration of the election
+7. Distribution of control/ownership of a GGO portion of a ballot to that GGO entity as a configuration of the election
 8. Voter anonymity (or voter tracking) as a configuration of the election
 9. Tracked ballot disqualification as a configuration of the election (if an election allows the future disqualification of ballots, then the disqualification thereof is fully tracked and transparent with regards to who/what/where/where etc.)
 10. An [air-gapped](https://en.wikipedia.org/wiki/Air_gap_(networking)) and physical ballot tied to the electronic copy but separate thereof
@@ -79,7 +79,7 @@ The current delivery model is SaaS.  As the VOTES project is still pre-garage st
 
 ## 5.1) Pre Election Day Summary
 
-Prior to election day, VOTES supports the configuration of a specific election at all the geographical/hierarchical levels (country, state, county, town, other) in parallel.  Each level of the election uses best-in-class authorization, authentication, and encryption to support configuration of that part of the ballot(s) to be provided any each precinct/voting center.  As election day approaches VOTES tracks all the changes (versions) to all the ballot questions as well as providing the ability for each precinct to test the election day workflows.
+Prior to election day, VOTES supports the configuration of a specific election at all the GGO levels (country, state, county, town, other) in parallel.  Each level of the election uses best-in-class authorization, authentication, and encryption to support configuration of that part of the ballot(s) to be provided any each precinct/voting center.  As election day approaches VOTES tracks all the changes (versions) to all the ballot questions as well as providing the ability for each precinct to test the election day workflows.
 
 Once a precinct finalizes a ballot, that ballot becomes available for early voting.  Early ballots can be entered into VOTES at any time, including prior, during, or after election day as an election configuration option.
 
