@@ -24,9 +24,10 @@ The basic high level design goals are:
   * easily testable - simulations can be run at will
 * Create a solution that is usable in the 2020 US election
 
-# Status - 2017/03/05
+# Status - 2017/03/20
 
-VOTES is currently in the design phase - still working out the basics etc.
+VOTES is currently in the design phase - still working out the basics.
 * Looking for volunteers to help layout basic business plans and technical designs
-* See the [docs/Overview.md](https://github.com/PacemTerra/votes/tree/master/docs) directory for more information
-* See the wiki for a general overview [project design](https://github.com/PacemTerra/votes/wiki)
+* See the [docs](https://github.com/PacemTerra/votes/tree/master/docs) directory for more information
+* There is also a [wiki](https://github.com/PacemTerra/votes/wiki) (currently contains more or less the same information worded differently)
+* There is a [votes-dev](https://groups.google.com/forum/#!forum/votes-dev) Google Group for public discussion.  Email me at windoverwater at gmail dot com for more private communication.
