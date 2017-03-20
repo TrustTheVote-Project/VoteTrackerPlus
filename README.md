@@ -15,7 +15,7 @@ VOTES is intended to be as compliant as possible with [NIST](https://en.wikipedi
 The basic high level design goals are:
 
 * The voter can validate the accuracy of their vote and its proper tally at any time
-* After all poles cloes, anyone with access to the election repository can count the votes
+* After all polls close, anyone with access to the election repository can count the votes
 * There is both a paper and electronic trail with the necessary security attributes
 * The system:
   * can support any vote counting [methodology](https://electology.org/library)
