@@ -4,13 +4,13 @@ A Verifiable Open Technology Election System
 
 # Overview
 
-VOTES is a distributed, open-source [voting](https://en.wikipedia.org/wiki/Voting) system that creates transparent, secure, and accurate elections with individual verifiability.
+VOTES is a distributed, open-source [voting](https://en.wikipedia.org/wiki/Voting) system that creates transparent, secure, and accurate elections with anonymous individually verifiable ballots.
 
 **BUSINESS ADVANTAGES:**  VOTES can be adopted by existing election solution providers ([ESS/Diebold](http://www.essvote.com/about/), [ClearBallot](http://www.clearballot.com/), etc.), public or private agencies during the [RFP](https://en.wikipedia.org/wiki/Request_for_proposal) process for voting machines, or anyone wishing to provide election systems/solutions.  VOTES is both a self-contained free open-source platform as well as a revenue generating [SaaS](https://en.wikipedia.org/wiki/Software_as_a_service) solution capable of handling national, state, town, or private elections.
 
 **TECH ADVANTAGES:** VOTES allows the voter to anonymously validate their ballot and its accurate inclusion in an election while likewise allowing election officials to do the same for all ballots.  It is extremely immune to hacking and compromise due to its distributed, bitcoin-like hashed full ledger design.
 
-**END-VOTER ADVANTAGES:**  Using VOTES the voter can validate their ballot as well as validating the tally of any or all contests. VOTES is 100% transparent, insuring that no entity or person can mishandle or manipulate any vote or contest. 
+**END-VOTER ADVANTAGES:**  Using VOTES the voter can validate their ballot as well as validating the tally of any or all contests. VOTES is 100% transparent, insuring that no entity or person can mishandle or manipulate any ballot or contest. 
 
 **VOTER RIGHTS/POLICY ADVANTAGES:**   VOTES is not a voter ID system, but by supporting the surgical and tracked nullification of specific ballots during a recount, the natural tension between extensive voter pre identification/registration and a low effective barrier to voting, particularly for the disenfranchised and disadvantaged, is mitigated.  Under due process a ballot can be nullified after the fact as well as un-nullified with full automatic disclosure.
 
