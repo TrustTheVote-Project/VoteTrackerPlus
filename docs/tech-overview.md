@@ -193,9 +193,9 @@ So for the PBFD workflows, the various GGO work on their election ballots.  At s
 
 Once the ballot is frozen, the ballot is made available to all voters.  Due to the inherent design nature of the GGO's, every address in a precinct can obtain their address correct ballot via either the publicly available ballot repo or via their election officials (who obtain it via the public ballot repo).
 
-As the precincts, towns, and state support, early voting, absentee voting, and UVBM workflows can commence.  Each precinct, town, and state can following their own procedures and guidelines regarding when the ballots are actually cast.  Note that the ballot repo is NOT available with any new updates post the __Ballot Freeze Date__ until all the poles close in all precincts.
+As the precincts, towns, and state support, early voting, absentee voting, and UVBM workflows can commence.  Each precinct, town, and state can following their own procedures and guidelines regarding when the ballots are actually cast.  Note that the ballot repo is NOT available with any new updates post the __Ballot Freeze Date__ until all the polls close in all precincts.
 
-Technical note - and patches/fixes to the ballot itself post the Ballot Freeze Date is available only as a fork of the ballot repo - a physically separate.  Once all poles close, the fork is merged into the original ballot repo on a branch so to record the changes.
+Technical note - and patches/fixes to the ballot itself post the Ballot Freeze Date is available only as a fork of the ballot repo - a physically separate.  Once all polls close, the fork is merged into the original ballot repo on a branch so to record the changes.
 
 As ballots are cast, via the VOTES SaaS framework and not via public copies of the repos, individual ballot digests can be inspected to make sure that the ballot is correct.  Though digests can be looked up via humans - bots are rejected - neither repo, ballot or voter-id, are publicly available.
 
@@ -235,7 +235,7 @@ If the voter pursues redress, that process too is not public so to protect the a
 
 ### 5.5.2) Recounts
 
-Post the closing of all poles/precincts/voter centers, the tallies are more or less immediately available for anyone with public access to execute.  However, post pole closing election officials, voters, and third parties will most likely inspect the data and question any irregularities found.  Irregulars can occur in either the voter-id repo or the ballot repo.  Problems with the tally algorithms can be found, with voter identification records, etc.
+Post the closing of all polls/precincts/voter centers, the tallies are more or less immediately available for anyone with public access to execute.  However, post poll closing election officials, voters, and third parties will most likely inspect the data and question any irregularities found.  Irregulars can occur in either the voter-id repo or the ballot repo.  Problems with the tally algorithms can be found, with voter identification records, etc.
 
 As such, until the election is declared officially closed, the final tally of any contest can change.  It is nominally up to the election officials of the highest GGO to declare the official closure of an election.  At that point, neither the ballot or voter-id repos can be written to or decoded.
 
