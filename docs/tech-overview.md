@@ -1,54 +1,66 @@
 # 1) Design Notes/Thoughts Regarding the Ballot Repo (unreviewed)
 
-__As an example, the following notes are assuming a 2018 US national election.__
+__As an example, the following notes are assuming a 2020 US national election.__
 
-See [project-overview.md](https://github.com/PacemTerra/votes/docs/project-overview.md) for a general overview.
+See [project-overview.md](https://github.com/PacemTerra/votes/docs/project-overview.md) for a general project overview.
 
-There is a local copy of [NIST.SP.1500-100.pdf](https://github.com/PacemTerra/votes/docs/NIST.SP.1500-100.pdf) which contains a terminology section on page 120 as well as the precinct and ward map for Cambridge Massachusetts on pages 14 and 15.
+See security-overview.md for a general overview of the security aspects of running an election via a VOTES SaaS implementation.
 
-# 2) Git Based Prototype Overview - the Ballot Repo
+This document give a general technology overview of the open-source components of the project.  For reference there is a local copy in this directory of [NIST.SP.1500-100.pdf](https://github.com/PacemTerra/votes/docs/NIST.SP.1500-100.pdf) which contains a terminology section on page 120 as well as the precinct and ward map for Cambridge Massachusetts on pages 14 and 15.
 
-As a prototype, the idea is to just (sic) use a set of git/github repos to host the election data for an election.  Once a prototype is up and running and we know more of what we do not know now, the github backend implementation can be switched out.
+# 2) Git Based Prototype Overview
 
-Regarding using bitcoin as a backend - the current thought is that a bitcoin is to tied to an economic model so to be reasonably applicable to a voting situation.  The use cases are too different even though both scenarios share a similar desire to authenticate a ledger of data.  Having the ballots and the algorithms being completely stored unencrypted in a publicly accessible manner, albeit a git repo with many git submodules, achieves the verifiability goals.
+As a prototype, the idea is use a set of git/github repos to host the election data for an election.  Once a prototype is up and running and we know more of what we do not know, either git or the GitHub backend implementations can be switched out for some other implementation.
+
+Regarding using bitcoin as a backend - the current thought is that a bitcoin is to tied to an economic model so to be reasonably applicable to a voting situation.  The use cases are too different even though both scenarios share a similar desire to authenticate a ledger of data.  Having the ballots and the algorithms being completely stored unencrypted in a publicly accessible manner, albeit a git repo with many git submodules, achieves the verifiability goals and allows for a greater degree of trustworthiness from the voters.  It is important that the voters trust the election system in use.
 
 Regarding Ethereum, it is still unclear whether an Ethereum solution will enable the creation of a market to sell and buy votes (by allowing individual voters to offer their ballot contents to a third party as proof of sale).
 
 As an example and a talking point, the following overview is based on a hypothetical 2020 US presidential election.
 
-So, the git/github prototype idea is to allocate a set of git/github repos for the 2020 US presidential election.  The (TBD) federal agency in charge of the presidential election creates the cert root authority so to be able to provide the authentication for intermediate cert authorities at the state level (or the next downward hierarchical) __Geopolitical Geographical Overlay (GGO)__  overlay for the election.  The state does the same for the next lower level GGO (counties, boroughs, towns, districts).  And so on until each actual/planned voting center/precinct has a cert to identify themselves.
+## 2.1) Certificate Authorities
+
+The git/GitHub prototype idea is to allocate a set of git/GitHub repos for the 2020 US presidential election.  The election commission of each state opting in to the VOTES SaaS solution would appoint/select the certificate authority for that state.  The VOTES SaaS entity itself would also create a certificate authority independent of the states.  It is a TBD whether that certificate authorities would be owned by the private contractor responsible for the 2020 election or if it owned by the [EAC](https://www.eac.gov/) or some other branch of the federal government.  Given the open-source nature of VOTES it could be either and be different for different elections.  Regardless the VOTES framework would be shared between all the participating states while the certificate authorities would not be.
+
+Each such state entity would in turn create intermediate cert authorities for each child GGO (Geopolitical Geographical Overlay) down from the state level that will be managing a git repo that will be contrinuting to the election.  For example, if there will be county, borough, town, district or other GGO based ballot questions or races, those entities will need their own repo so to create the ballot question and races.
+
+In addition, each state will need to create a intermediate authority for each voting center that wishes to collect and process/scan ballots.  Voting centers can be grouped into sets by sharing certificates but in theory each voting center will want to have in independent certificate.
 
 Each GGO (the federal government, a state, a county, a town, a whatever) will need to clone a pre-configured 2020 VOTES repo.  The pre-configure-ing is mainly to create an ease-of-use UX for the GGO so to allow all the various repos to be aggregated.
 
-For the git/github prototype, low-level repos will simply (sic) be a git submodule of the parent GGO, the git submodule tree mirroring in affect the cert chain hierarchy.
+For this 2020 git/GitHub prototype each state will be a submodule under the parent VOTES git repo.  In addition each GGO will also be a git submodule.  All the submodules are arranged in a directory tree structure that mirrors the certificate authority chain which in fact is exactly the GGO chain as well.
 
 The federal, state, town etc git repos all are clones the same pre-configured virgin/empty VOTES repo.  An empty VOTES repo does not yet contain any election race/question details.  However it does contain the (latest) release of the VOTES framework as well as the configuration data that make it easy to create such a US federal based election.  A state only election or an election for a different country with different fundamental overlays/entities would have a different pre-configuration.  The VOTES clone specifies things such has how the different (arbitrary) GGO are aggregated within a single election.
 
-## 2.1) What actually is a ballot?
+## 3.1) What actually is a ballot?
 
-### 2.1.1) Option A - a ballot is an empty commit
+### 3.1.1) Option A - a ballot is an empty commit
 
-In the git prototype a ballot is simply an empty commit with a git hook validated/managed description.  The voter's choices on the ballot are scanned off the paper ballot and yaml/json/xml encoded into the commit message.  The only files contained in a repo are the VOTES framework files and the GGO's ballot sections, ballot/election configurations, etc.  As noted this includes the tally algorithm and all election related information.  Post election day when the repos are made publicly available, anyone who downloads the repos (the root repo and all the submodule repos) will be able to count the votes for all races.  They will also be able to see their individual ballot via their commit hash keys.
+In the git prototype a ballot is simply an empty commit with a git hook validated/managed description.  The voter's choices on the ballot are scanned off the paper ballot and yaml/json/xml encoded into the commit message.  The only actual files contained in a repo are the VOTES framework files and the GGO's ballot sections, ballot/election configurations, etc.  As noted this includes the tally algorithm and all election related information.  Post election day when the repos are made publicly available, anyone who downloads the repos (the root VOTES repo and all the state and GGO submodule repos) will be able to count the votes for all races.  They will also be able to inspect all the ballots as well as their own specific ballot.
 
-### 2.1.2) Option B - a ballot is just a text file in ballots subtree of the repo.
+### 3.1.2) Option B - a ballot is just a text file in ballots subtree of the repo
 
-To tally a state ballot question, one needs to clone the state and its submodule repos and perform the count on their computer or phone, etc.  Note - they will also be able to tally the votes using different tally algorithms to the extent that it makes sense (since for example a plurality ballot is not tally-able with an approval tally algorithm).
+In this option the ballot contents are stored as separate yaml/json/xml text files.  Similar to Option A the individual repos also contain the various other files such as the ballot questions/races, tally algorithms, etc. 
 
-To tally a national ballot question or race, one needs to clone the national repo and all its submodule repos.
+To tally a state ballot question, one needs to clone the state and its submodule repos and perform the tally on their computer or phone, etc.  Side note - they will also be able to tally the votes using different tally algorithms to the extent that it makes sense (since for example a plurality ballot is not tally-able with an approval tally algorithm).
 
-## 2.2) Basic Git Repo Prototype
+To tally a national ballot question or race that is _above_ the state level, such as a presidential race, the root VOTES repo will contain an software implementation of the electoral college.  However, this would just be a simulation, an estimate, as the real electoral college is independent of the VOTES implementation.
 
-As a prototype implementation the VOTES framework can (in theory - TBD) be implemented as a set of git repos connected via submodules.  The parent repo is associated with the __Geopolitical Geographical Overlay (GGO)__ with the greatest geographical geopolitical extent in the election.  For the 2018 US national election, this would be the federal government as it is a national election.
+## 3.2) Basic Git Repo Prototype
 
-Note that if only one or a few states adopt VOTES by that time, it is ok. Those states would act as the VOTES root certificate authorities for the towns and counties/boroughs that are participating.
+As a prototype implementation the VOTES framework is implemented as a set of git repos connected via submodules.  The parent repo is associated with VOTES SaaS framework itself and can be owned and operated by either a private or public entity per election.
+
+Note that any number of states can opt into the VOTES framework.  Currently the only point where state exchange ballot data is at the electoral college level, which for VOTES is just a simulation (as VOTES does __NOT__ replace the electoral college).
+
+If only certain GGO's within a state participate in the VOTES framework, that too is ok as per NIST and other standards the VOTES ballot data is easily, quickly, and trivially translatable/migratable to other electronic formats.  Or more directly the tallies of the questions/races being handled by VOTES can be passed into those other election systems.
 
 All VOTES repos have the same layout regardless of the GGO (national, state, county, town, etc).  What is different is only the data that is contained in the folder structure within and where/how the submodule tree is stitched together.
 
 Each repo contains the information authored by each GGO.  However, per the git subtree hierarchy children and parent repos as well as configuration data information is shared across repo.
 
-## 2.3) Folder Layout Per Git Repo
+## 3.3) Folder Layout Per Git Repo
 
-So the root most GGO is that git repo _owned/authored_ by the VOTES root authority of the cert chain for the 2018 US election (_the election_).  In this case the agency deemed responsible for actually running the 2018 national US election would be the VOTES root authority.  The folder structure for VOTES repos is:
+So the root most GGO is that git repo _owned/authored_ by the VOTES root authority of the cert chain for the 2020 US election (_the election_).  In this case the agency deemed responsible for actually running the 2020 national US election would be the VOTES root authority.  The folder structure for VOTES repos is:
 
 #### ./info
 
@@ -72,7 +84,7 @@ Each GGO contributes to the ballot that is presented to the voter at the precinc
 
 Votes are _collected_ in the votes folder.  The default configuration is that only GGO repos that have a precinct/VC will be collecting votes.  However it is configurable for a precinct/VC to commit votes to a parent GGO repo.  So, the root GGO repo in most cases would not directly contain any votes since it would not have a precinct/VC associated with it.
 
-### 2.3.1) Child GGO's - Git Submodules
+### 3.3.1) Child GGO's - Git Submodules
 
 A child GGO is one where the VOTES Certificate Authority (CA) for this GGO creates an intermediate CA and allocates/associates sub GGO information with the ./info folder.  The git submodule tree looks like the following:
 
@@ -90,7 +102,7 @@ The US national GGO will define 50 git submodules under the ggos subfolder.
 
 Each state entity (specifically each sub GGO who has been delegated as an intermediate certificate authority) can independently select its sub GGO class name for their state.  As an example Alabama may use the I18n string _town_ in its VOTES repo as above.
 
-### 2.3.2) Multiple / Parallel GGOs
+### 3.3.2) Multiple / Parallel GGOs
 
 It is possible to have multiple and different classes of sub GGOs. For a state with both towns, counties, boroughs, congressional districts, school districts etc that can overlap in effectively arbitrary ways.  In the VOTES framework this is implemented as multiple/sibling \<sub GGO class names>:
 
@@ -135,43 +147,57 @@ Each Congressional District and Ward would have a git repo where there respectiv
 
 Implementation note: it is possible for precincts/VC to share the same repo or leverage a parent repo to cast votes into - it is configurable into which repo a precinct/VC submits votes to.
 
-# 3) The Voter ID Repo
+# 4) The Voter ID Repo(s)
 
-The voter ID ballot is a separate non-aggregated repo with a separate one nominally created for each precinct.  It contains the voter id, which nominally is the voter's name and address.  Each precinct can configure what comprises the voter id as this repo is precinct specific.
+There three versions of the voter-id repo.  The first variant is private (a.k.a. The Private copy) to the voting center's election officials, nominally controlled by the state certificate authority entity.  It is not publicly shared even though it stored in the VOTES framework.  It should not be confused with whatever database and/or application and/or process that the state, town, or precinct election officials are using to correctly and accurately identify voters.
 
-Importantly the voter id contains a specially constructed encrypted key of the voter's ballot key.  To decode a voter id repos key requires both a precinct certificate and the presiding GGO certificate so to create a decoding key - voter id digests are doubly encoded.  The presence of a single key will not result in a properly decrypted ballot digest.
+The private version of the VOTES voter-id repo only contains the voter's name, address, and two additional fields to store VOTES information.  One field is the VOTES voter status which concerns the state of the voter's ballot within the VOTES supported ballot workflows.  The other is a VOTES generated digest.
 
-In addition, the GGO decoding key is itself generated on demand and is based on the full voter id repo (ledger), and when generated, requires the voter id repo to register the creation of the _decoding_ as an additional transaction.  This decoding transaction records the who, what, when of the decoding (but not the actual generated key).  In this manner the vote-id repo records all the decodings of a voter-id entry.
+The private VOTES voter-id repos is never aggregated and is never publicly shared.
 
-So as the ballot repo records specific ballot nullifications potentially post the close of the election, the voter-id repo records when the presiding certificate authorities provide a voter-id decoding.  In this manner the voter knows both if their ballot is nullified or if their voter-id key has been decoded.
+The second variant of the VOTES voter-id repo is public (a.k.a. The Public Copy) and only contains the voter's name and address as entered in the state/town private repo.  The public variant repos are organized in a similar manner to VOTES ballot repos via the git submodule hierarchy described above.  However, unlike the ballot repo this repo is only publicly available once all the poles close.  VOTES maintains this repo as an internally updated copy of the private version.
 
-# 4) How Ballots Are Entered - an Overview
+The third version of the VOTES voter-id repo is similar to the private variant except that it is VOTES internal only (a.k.a. The Internal Copy).  It also contains two additional fields beyond the voter's name and address, a status field and a VOTES generated digest.
+
+VOTES keeps the 2nd and 3rd versions in sync with the first version as the state enters and modifies their private copy.  The 2nd and 3rd versions are only updated with new/changed/removed voter id's when the private version is updated by the state/town.
+
+Regarding the state/town private copy, depending on the state of the ballot (see the UX documentation for more details on ballot/voter workflows) the digest field may be blank, it may contain the digest of the blank (!) ballot that the voter has received but not filled in, or it may contain the double encrypted digest of the voter's _physical_ ballot digest as it was scanned into VOTES.  Specifically this digest when so doubly encoded __ONLY__ points to the scanned physical ballot, not the ballot contents that were scanned into the VOTES SaaS implementation.  The VOTES electronically scanned ballot has a completely different digest associated with it.
+
+The 3rd version of the VOTES voter-id repo, The Internal version, is somewhat similar to The Private version except that The Internal version __only__ contains the double encrypted digest of the electronically scanned ballot.  The Internal version has no pathway to the physical ballot and The Private version has no pathway to the electronic copy of the ballot.  But with the valid double decryption of either, The Private version allows election officials following due process to associate a voter with their specific ballot while The Internal version allows VOTES to associate the voter with their specific electronic copy of the ballot.
+
+In no case can either ballot (physical or electronic) be associated with a voter given The Public version of the voter-id repo since that version does not contain any digest or ballot information, encrypted or not.
+
+# 5) How Ballots Are Entered - an Overview
 
 A paper or electronic ballot, generated by the VOTES framework, is custom generated for the address of the identified voter.  It is not required that the VOTES framework (the SaaS implementation) prints the voter-id paperwork.  A precinct can alternatively use their own voter-id paperwork.
 
-Regardless, the voter fills out the ballot and submits it to a VOTES compatible ballot-capture device nominally operated by an election official at a precinct/VC.  The ballot is verified not to contain any overvotes or undervotes.  An overvote will block the submittal of a ballot.  An undervote is simply an ignorable alert to the voter that they have not entered all the ballot choices that that ballot supports.
+Regardless, the voter fills out the ballot and submits it to a VOTES compatible ballot scanning device operated by an election official.  The ballot is verified not to contain any overvotes or undervotes.  An overvote will block the submittal of a ballot as being invalid.  An undervote may or may not block a ballot scan.  Each precinct/state can configure VOTES as to how undervotes are handled.  They can simply be ignored or be configured to allow an election official to ask/allow the voter to fill out a new ballot.
 
-Once validated by the VOTES framework, the ballot is submitted to the ballot repo and the commit digest (the ballot digest) is returned to the voter, the encrypted digest is returned to the election official, and the voter-id and the encrypted ballot digest is entered in the voter-id repo.
+Once validated by the VOTES framework, the ballot is submitted to the VOTES system and the various repos are updated accordingly.
 
-## 4.1) UVBM and Early Voting
+There are several workflows checks that are not configurable and are part of the nature of VOTES.  For example once a voter (a specific voter-id) has submitted a ballot, they no longer can submit any other ballot, be it absentee, early, late, whatever.  However, as described how a precinct handles undervotes is configurable.
 
-Precincts/VC can choose whether they enter early-ballots when received or on the day of election.  The digests associated with the ballot can be made available to the early voter as the precinct sees fit, for example either by physical or electronic post.
+## 5.1) In Person Voting
 
-In such UVBM or early voting situations, election officials should take care that ballots are entered by two people who are not sharing information.  One person acts as the election official and one acts as the voter.  The election official actor should never see the un-encrypted ballot digest and the voter actor should never see the encrypted digest.  The reason for this is that there should be no opportunity to unambiguously record the ballot and encrypted digest together as that would create the opportunity for a market to buy and sell votes.  As long as there is no publicly verifiable connection between any digest and it encrypted value, the public accessibility of the data contained in the ballot and voter-id repos can not easily lead to a marketplace for buying and selling votes.
+See the UX documentation describing in person voting.  This also includes in-person early voting.
 
-As both repos are fully public, voters can validate their ballot by looking up their digest in a copy of the ballot repo or their encrypted digest in their voter-id repo.  But there is no public means to verify that the two match.
+## 5.2) Absentee Voting
 
-Note - that is why it is important in UVBM, early voting, or vote by mail situations that election officials need to follow the proper procedures and guidelines.
+See the UX documentation describe [absentee voting](UX/absentee-voting.md)
 
-## 4.2) Election Day
+## 5.3) UVBM - Universal Vote By Mail
 
-Voters physically enter a precinct/VC and cast paper ballots.  For precincts/VCs that wish to support electronic balloting, ballots are entered electronically.  Early voting and absentee voting can occur on election day or prior depending on what each precinct/town decides.
+See the UX documentation describe [UVBM voting](UX/UVBM-voting.md)
 
-# 5) What Is Accessible When
+# 6) What Is Accessible When
 
-## 5.1) Pre Ballot Freeze Date
+Note - there are different classes/sets of VOTES supported workflows/UX experiences.  One set is voter centric - how the voter experiences the act of casting a ballot.  This includes in-person voting at a voting center, both for early voting or election day voting.  
 
-Each GGO (election overlay) starts filling in their respective information and data per the Pre Ballot Freeze Date (PBFD) workflows (there are different types of  workflows/UX experiences - PBFD, pre-election day, election day, and post election day).  The various entities/overlay owners enter the races/questions they wish to be contained on their respective ballot sections.  These can be ballot races, ballot questions, etc.
+ early or absentee a - PBFD, pre-election day, election day, and post election day
+
+## 6.1) Pre Ballot Freeze Date
+
+Each GGO (Geopolitical Geographical Overlay) starts filling in their respective information and data per the Pre Ballot Freeze Date (PBFD) workflows.  The various entities/overlay owners enter the races/questions they wish to be contained on their respective ballot sections.  These can be ballot races, ballot questions, etc.
 
 Each GGO can also select the voting algorithm if different from the default approval setting.  One reason for a default [tally algorithm](https://electology.org/library#104) to be approval is due to the shortcoming of plurality voting.  Having a GGO to take action to change the default is to plurality hopefully will increase awareness of better tally alternatives.
 
