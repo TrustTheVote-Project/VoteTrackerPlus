@@ -189,19 +189,19 @@ See the UX documentation describe [absentee voting](UX/absentee-voting.md)
 
 See the UX documentation describe [UVBM voting](UX/UVBM-voting.md)
 
-# 6) What Is Accessible When
+# 6) What Is Accessible When and General UX
 
-Note - there are different classes/sets of VOTES supported workflows/UX experiences.  One set is voter centric - how the voter experiences the act of casting a ballot.  This includes in-person voting at a voting center, both for early voting or election day voting.  
+Note - there are different classes/sets of VOTES supported workflows/UX experiences.  One set is voter centric - how the voter experiences the act of casting a ballot.  This includes in-person voting at a voting center, both for early voting or election day voting.  The voter UX also includes non in-person voter workflows such as absentee and UVBM.
 
- early or absentee a - PBFD, pre-election day, election day, and post election day
+Separate from voter UX is the GGO pre-election day workflows.  These include how the various GGO's construct their ballots and configure VOTES to handle customizable aspects of the voter experience.  Section 6 pertains to the GGO centric UX.
 
 ## 6.1) Pre Ballot Freeze Date
 
-Each GGO (Geopolitical Geographical Overlay) starts filling in their respective information and data per the Pre Ballot Freeze Date (PBFD) workflows.  The various entities/overlay owners enter the races/questions they wish to be contained on their respective ballot sections.  These can be ballot races, ballot questions, etc.
+Each GGO (Geopolitical Geographical Overlay) starts filling in their respective information and data per the Ballot Freeze Date (BFD) workflows.  The various entities/overlay owners enter the races/questions they wish to be contained on their respective ballot sections.  These can be ballot races, ballot questions, etc.
 
-Each GGO can also select the voting algorithm if different from the default approval setting.  One reason for a default [tally algorithm](https://electology.org/library#104) to be approval is due to the shortcoming of plurality voting.  Having a GGO to take action to change the default is to plurality hopefully will increase awareness of better tally alternatives.
+Each GGO can also select the voting algorithm if different from the default tally settings.  One reason for a default [tally algorithm](https://electology.org/library#104) to be approval is due to the shortcoming of plurality voting.  Having a GGO to take action to change the default is to plurality hopefully will increase awareness of better tally alternatives.
 
-Note that each GGO/overlay in one sense works independently of all the others.  Each entity can only modify their repo - their own specific GGO information.  Note - various git hooks enforce the non-alteration of VOTES framework repo local files which defines how the GGO interact in a hierarchical tally sense.   Similar to software development across a distributed project spanning distributed teams, the different entities pull and push their work to the configured VOTES SaaS github servers (hosted somewhere).  There is distributed, tracked, authenticated sharing of the specific election repos during the pre-election day workflows.
+Note that each GGO/overlay in one sense works independently of all the others.  Each entity can only modify their repo - their own specific GGO information.  Note - various git hooks and other aspects of the VOTES framework enforce the non-alteration of VOTES framework repo local files which defines how the GGO interact in a hierarchical tally sense.   Similar to software development across a distributed project spanning distributed teams, the different entities pull and push their work to the configured VOTES SaaS github servers.  There is distributed, tracked, authenticated sharing of the specific election repos during the pre-election day workflows.
 
 Note that virgin ballot free VOTES repo contains VOTES framework files as well as files and templates for use by the various GGO.  A ballot that is given to a specific voter at a specific location will be a function of the aggregation of the ballot questions of the various overlays and the specific street address of the voter.  Each GGO composes their respective section of the ballot.
 
@@ -211,70 +211,70 @@ Note that during this process each entity can both test their election independe
 
 With this overview of VOTES in mind, once again note that VOTES (the framework and hence the repos) will be compliant as possible with [NIST](http://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.1500-100.pdf) standards - this part of the value add of a VOTES framework.
 
-Regarding the voter-id repo, though it is recommended that election official pre-fill out the voter-id repos with the registered voters, actually doing so is optional.  Regardless, when ballots are cast part of the actual voting process is the recording of the voter-id in the voter-id repos of the VOTES framework.
+Regarding the voter-id repo, though it is highly recommended that election official pre-fill out the voter-id repos with the registered voters, actually doing so is optional.  Voters can be added to the voter-id repo directly at the voting center if so configured by the election officials.
 
-So for the PBFD workflows, the various GGO work on their election ballots.  At some point all the GGO's declare done.  At some point the election set of repos is declared done.  When that occurs, early balloting can proceed.
+Once a GGO achieves their BFD, their portion of ballot is ready.
 
-## 5.2) Pre Election Day, Post Ballot Freeze Data
+## 6.2) Pre Election Day, Post Ballot Freeze Data
 
-Once the ballot is frozen, the ballot is made available to all voters.  Due to the inherent design nature of the GGO's, every address in a precinct can obtain their address correct ballot via either the publicly available ballot repo or via their election officials (who obtain it via the public ballot repo).
+Once all the GGO's complete their portions of the ballot, the ballot is said to be done and is made available to all voters.  Due to the inherent design nature of the GGO's, every address in a precinct can obtain their address correct ballot via either the publicly available ballot repo or via their election officials - who obtain it via the public ballot repo as well.
 
-As the precincts, towns, and state support, early voting, absentee voting, and UVBM workflows can commence.  Each precinct, town, and state can following their own procedures and guidelines regarding when the ballots are actually cast.  Note that the ballot repo is NOT available with any new updates post the __Ballot Freeze Date__ until all the polls close in all precincts.
+As the precincts/state support it, early voting, absentee voting, and UVBM workflows can commence.  Each precinct/state follow their own workflows regarding when the ballots are actually cast and scanned.  Note that the ballot repo is __not__ publicly updated once ballots are allowed to be entered into VOTES.  Any patches/fixes to the ballot itself post the Ballot Freeze Date is available only as a fork of the ballot repo - a physically separate repo.  Once all polls close, the fork is merged into the original ballot repo on a branch so to record the changes.
 
-Technical note - and patches/fixes to the ballot itself post the Ballot Freeze Date is available only as a fork of the ballot repo - a physically separate.  Once all polls close, the fork is merged into the original ballot repo on a branch so to record the changes.
+## 6.3) Election Day
 
-As ballots are cast, via the VOTES SaaS framework and not via public copies of the repos, individual ballot digests can be inspected to make sure that the ballot is correct.  Though digests can be looked up via humans - bots are rejected - neither repo, ballot or voter-id, are publicly available.
+Voters visit precinct/voting centers and cast votes in-person.  See the voter IX documentation regarding the various kinds of in-person voting experiences/workflows.
 
-## 5.3) Election Day
+## 6.4) When the Last Precinct Closes
 
-Voters visit precinct/voting centers and cast votes.  For those precincts that support electronic voting on election day, voters can vote electronically.
+When the last precinct closes and all the UVBM, early ballots, and absentee ballots are accepted and no further un-cast ballots are acceptable, the ballot and voter-id repos are made publicly available.
 
-Note that due to inherent design nature of the voter-id anad ballot repo, it is impossible for a single voter to vote twice via any medium.  Caveat - reminder - VOTES is __NOT__ a voter id system that properly identifies voters and who and who cannot vote.  VOTES only records ballots and voter-id's however the precincts choose to identify their voters, preventing any such identified voter from voting more then once.
+Note that some precincts may still be scanning ballots after all the polls close.  This could be by choice or due to computer glitch, power failure, etc.  Regardless as precincts update their repos, in a manner similar to native distributed software development, they post their latest versions of their repos when they are ready.
 
-## 5.4) When the Last Precinct Closes
+At this point the general public is free to execute and inspect the tallies as precincts post their results.
 
-When the last precinct closes and all the UVBM, early ballots, and absentee ballots are accepted and no further ballots are acceptable, the ballot and voter-id repos are made publicly available.  Changes to the ballot itself post Ballot Freeze Date are merged in on a release branch.
+## 6.5) Post Election Day
 
-At this point the general public is free to execute and inspect the tallies.
+Voters can inspect either their personal physical ballot or its electronic copy by visting in-person an election office.
 
-## 5.5) Post Election Day
+Citizens at large can inspect The Public version of the voter-id repo(s) and the ballot repo(s).  All citizens can look for voter-id issues, ballot issues, election fraud issues, etc.
 
-Voters can continue to inspect their ballots but at this point the inspection can occur both via the VOTES SaaS framework or via a public copy of the ballot repo.  Voters can continue to seek redress from election officials if they so choose.
+Note that there is nothing in VOTES that produces a single official version of the tally since an official tally is available to all citizens to compute themselves.  The VOTES ballot repo(s) are completely open source.
 
-Election official can likewise decide to seek redress if they find improper voter-id information.
+### 6.5.1) Ballot Redress and Nullification
 
-As both repos are publicly available, any third party can also seek redress.
+Note that all VOTES repos are a full ledger records of all transactions as both are based on git.
 
-### 5.5.1) Ballot Redress and Nullification
+Regarding nullifying fraudulent ballots, a specific ballot can be nullified as an additional change to the underlying git repos.  Whenever a ballot is nullified, the specific state/precinct ballot repo will receive a change that nullifies the specific ballot of interest.  In addition The Private and The Internal voter-id repos fully record each nullification, recording the who, what, when, why etc of the nullification.  This information is absent from The Public version of the voter-id repo.
 
-Note that both repos are a full ledger records of all transactions.  The ballot repo fully records each new record while the voter-id repo records every write as well as every encrypted digest decoding.  A ballot is nullified when a new version of the ballot is entered which nullified the original.  Nullifications can themselves be nullified.
-
-The nullification only can occur at the owning GGO level or above, requiring not only the necessary certificate but also the pre-configured due process recorded in the ballot.
+The nullification only can occur at the owning GGO level or above, requiring the necessary double certificate authorities to create such a change.  Workflow details concerning the due process necessary for nullifying ballots is contained in the configuration section of the ballot repo for each GGO.  In this manner different states can decide how to handle ballot nullification workflows as they desire.
 
 Depending on who is asking for a nullification affects the specific workflow that needs to be followed.  In the case of a third party successfully questioning a voter id via the contents of a voter-id repo, or successfully questioning the procedures or behaviors of an election official or precinct, the voter-id repo is decoded for the identified voters, the true ballot digests are obtained, and their ballots are nullified.
 
-Nominally this process is not a public process so to protect the identity of the voter - all the public will know is that a decoding occurred (the public will not know which voter-id was decoded), and that some ballots were nullified.  When a voter-id is decoded, the record of which ballot was decoded is encrypted.  The key is available to the election officials (the owners of the first certificate), the GGO (the owners of the second certificate), and the voter themselves.
+Election officials can also call for the nullification of ballots.
 
-The owner of the ballots will see that their ballot was nullified when they inspect the ballot repo.  Or it might be the case that they receive notification that their voter-id data was decoded.  The ballot owner can contact their election officials and obtain the key(s) to the decodings of their voter-id so to evaluate what happened.  At that time, the voter can decide whether to pursue redress and have the nullification itself nullified.
+Nominally nullification is not a public process so to protect the identity of the voter - all the public will know is that a decoding occurred (The Public version of the voter-id repo will not know which voter-id was decoded), and that some ballots were nullified (since the ballot repo does indeed change).  When a voter-id is decoded, the record of which ballot was decoded is encrypted.  And in addition that info is limited to The Private and The Internal version of the voter-id repo.
 
-If the voter pursues redress, that process too is not public so to protect the anonymity of the voter and their ballot.
+The owner of the ballots will see that their ballot was nullified when they inspect their ballot either via a meeting with an election official (so to see their electronic copy of their physical ballot), or if they already have securely obtained their electronic ballot digest, by direct inspection of that ballot.  Or it might be the case that they receive notification that their voter-id data was decoded if their election officials are sending out that information.
 
-### 5.5.2) Recounts
+In either case the voter can decide whether or not to pursue redress and have the nullification itself nullified.  If the voter pursues redress, that process too is not public so to protect the anonymity of the voter and their ballot.  If they win their case, the original nullification of their ballot is nullified, re-instating their ballot in the tally.
 
-Post the closing of all polls/precincts/voter centers, the tallies are more or less immediately available for anyone with public access to execute.  However, post poll closing election officials, voters, and third parties will most likely inspect the data and question any irregularities found.  Irregulars can occur in either the voter-id repo or the ballot repo.  Problems with the tally algorithms can be found, with voter identification records, etc.
+### 6.5.2) Recounts
 
-As such, until the election is declared officially closed, the final tally of any contest can change.  It is nominally up to the election officials of the highest GGO to declare the official closure of an election.  At that point, neither the ballot or voter-id repos can be written to or decoded.
+Post the closing of all polls/precincts/voter centers, the tallies are more or less immediately available for anyone with public access to execute.  However, post poll closing election officials, voters, and third parties will most likely inspect the data and question any irregularities found.  Irregulars can stem from many different effects and may or may not result in fraudulent ballots.  Ideally, any such fraudulent ballots will be delineated and nullified.
 
-# 6) Post Election Analysis
+As such, until the election is declared officially closed, the final tally of any contest may indeed change as all citizens and officials looks for irregularities.  It is nominally up to the election officials of the root GGO's (the states) to declare the official closure of an election within their GGO.  At that point, neither the ballot or voter-id repos can be changed.
 
-Once the repos are publicly available, even after the election is officially closed, the public is free to analyse the repos.  For example, the tally algorithms can be changed to determine if a different algorithm would have changed the results of a race or contest.
+# 7) Post Election Analysis
 
-## 6.1) Determining Gerrymandering Coefficients
+Once the repos are publicly available, even after the election is officially closed, the public is free to analyse the repos.  For example, the tally algorithms can be changed to determine if a different algorithm would have changed the results of a race or contest.  Since the repos are public and free via an EULA that restricts certain anti-constitutional anti-democratic uses such as trying to sell or selling votes, citizens can clone the repo and, for example, change the tally algorithms and such.
 
-With the ballot and voter-id repos being publicly available and since the individual voter knows both their ballot and their voter-id, they can personally determine how much their vote has be gerrymandered as a function of political party or other third party interest.  (District gerrymandering can occur for reasons other then political party - any powerful enough entity can influence districting so to influence ballot outcomes.)
+## 7.1) Determining Gerrymandering Coefficients
 
-For example, suppose a voter voted for political party A for a state level contest.
+Regardless of the legality of [gerrymandering](https://en.wikipedia.org/wiki/Gerrymandering), given the constitutional guarantee of 'one person one vote', one interpretation of this guarantee is that nothing should diminish or augment 'one person one vote'.  That is, in effect one voter's ballot should not count more or less then another's ballot.  However, whether gerrymandering is or is not illegal is a separate and different question as to whether or not gerrymandering is happening and to what degree it is happening.  All citizens should be able to observe the effects of gerrymandering on the votes in their community.
 
-Given the known addresses of all the voters for that race, and given the ballots for that race (which are independent of address since that information is hidden/encrypted), it is determinable the overall vote for political party A versus the actual representation of political party A in the tallies at the state level.
+With the ballot and voter-id repos being publicly available, it is possible to determine at the various GGO levels the degree of gerrymandering that is present.  For example, if a state has a heavily gerrymandered federal, state, or city districting, then the representation of a political party or individual at that GGO level can vary significantly from the 'popular vote' (given no districting) or given alternative district boundaries.
 
-Thus each voter can see how their ballot is either unrepresented (a positive coefficient) or overrepresented (a negative coefficient) at the state level at a political party overlay.  Given constitutionality of one vote one person, a voter may wish to question the districting in which they live.
+With VOTES, any voter or 3rd party can look at any specific ballot in VOTES, enter an arbitrary address, be it their own specific ballot or not, and VOTES can display the gerrymandering coefficients as a function of the various ways the state or town is currently __and can be__ districted.  The gerrymandering coefficient for each such scenario, be current or hypothetical, can be generated and shown to be positive (this ballot is effectively augmented in representative voting power) or negative (this specific ballot is effectively diminished in representative voting power) and by how much.
+
+Alternatively, a voter can also go to The Public voter-id repo and see the gerrymandering coefficients for the various questions/races on the ballot for that address.  In this latter method the voter enters nothing but needs to remember how they voted on each question/race to see how augmented or diminished their potential votes are for either candidate.
