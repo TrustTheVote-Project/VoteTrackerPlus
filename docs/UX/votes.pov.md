@@ -1,4 +1,4 @@
-Election day workflow from VOTES POV
+Election day workflow from VOTES POV - what the ballot experiences.
 
 # 1) Pre-election day (background)
 
@@ -10,9 +10,9 @@ It is up the precinct to decide on a voter registration deadline.  The deadline 
 
 ## When a voter has been identified and needs a ballot, an election official selects the voter from the VOTES voter-id repo, and VOTES will print a ballot.  The ballot contains a unique digest that neither directly identifies the voter or VOTES electronic scan of the ballot (the ballot digest is not scanned by VOTES).
 
-VOTES only temporarily tracks the ballot digest against the voter while the voter is actually voting via the VOTES voter-id repo.  Once a ballot is printed, the ballot digest is entered in the VOTES voter-id db.  Note that this repo is private at this time.  This information is discarded/erased when the ballot is scanned.  The scanning process changes the voter-id status field from containing the digest of the ballot to the state of 'voted'.
+VOTES only temporarily tracks the blank ballot digest against the voter while the voter is actually voting (via the VOTES private voter-id repo.  Once a ballot is printed, the blank ballot digest is entered in the VOTES voter-id repo.  Note that this repo is private.  In addition the digest not part of the ballot payload - it is only temporarily used to identify the voter while voting.  The ballot scanning process changes the voter-id status field from containing the digest of the ballot to the state of 'voted'.
 
-Note - VOTES is 100% open source so the public can inspect and validate this behavior.  The public is also free to execute this behavior and attempt to test and compromise it.
+Note - VOTES is 100% open source so the public can inspect and validate this behavior.  The public is also free to execute this behavior and attempt to test and compromise it.  All the UX experiences, voter and ballot, are inspectable and are contained in the ballot repo full ledger history.
 
 ## The ballot is given to the voter and the voter fills it in.
 
@@ -22,27 +22,25 @@ Regardless of a double or single checkin, or absentee, early, or UVBM, the ballo
 
 ### Valid Ballots
 
-If it is valid, VOTES updates the VOTES voter-id status field with a new and different digest as well as entering a new a different digest in the VOTES ballot repo.  The voter is marked as having voted.
+If the ballot is valid, VOTES updates the VOTES voter-id status field with a new and different digest as well as entering a new a different digest in the VOTES ballot repo.  The voter is marked as having voted.  The two new digests are double encrypted using the two independent private keys, one from the precinct/state's certificate authority and one from the VOTES SaaS certificate authority.
 
 ### Invalid Ballots
 
-If the ballot is invalid, it is rejected and the reason for the rejection is displayed on the scanned.  The invalid ballot is recorded in a different section of the VOTES ballot repo that is not included in the tally.  Similar to a valid ballot both the voter-id and ballot repos will then contain different digests so that the invalid ballot can be tracked if necessary.
+If the ballot is invalid, it is physically rejected and the reason for the rejection is displayed on the scanner's screen.  There is a shredder next to the VOTES scanner.
 
-If the ballot is invalid, the voter can choose to leave without voting or to fill out another ballot if VOTES has been configured by the election officials to support that UX.  If so, the election official will print another ballot for the voter (address specific with a new/different ballot digest) and the voter can try again.
+If the ballot is invalid, the voter can choose to leave without voting or to fill out another ballot if VOTES has been configured by the election officials to support that UX.  If so, the election official will print another ballot for the voter (address specific with a new/different blank ballot digest) and the voter can try again.
 
-With remote voting (absentee and UVBM etc), it is up to the election officials how they wish to configure their VOTES UX for the voter.  The voter may be allowed to vote in person or not.  They may be notifed or not.
+With remote voting (absentee and UVBM etc), it is up to the election officials how they wish to configure their VOTES UX for the voter.  The voter may be allowed to vote in person or not.  They may or not be notifed of an invalid scan (configurable UX workflow).
 
-Note - to assure anonimity the invalid ballot section is primed with 100 fake invalid ballots such that if there is only one invalid ballot per precinct, that voter's anonymity is not compromised.
+## Validating Ballots during election day
 
-Note -  VOTES repos are full ledger - even if the voter obtains a new ballot and successfully scans it, all is recorded.
+Ballots can be validated during election day but to do so election officials will have had to set up a specific ballot identification station separate from the voting station(s).  Though special security procedures, the process is similar to "Validating Ballots after all-the-polls-close ballot verification below.
 
-## Validating Ballots after the polls close
-
-Ballots can be validated during the election put to do so the election official will have had to set up a specific ballot identification station separate from the votingin station(s).  Though special security issues are handled, the process is basically the same as post all-poll-closed ballot verification.
+## Validating Ballots after the all-the-polls-close
 
 If the voter wishes to validate their specific ballot, they may contact an election official in person without a third person or device, electronic or otherwise, being present.  The election official validates the voter-id and requests a decoding from VOTES of the VOTES voter-id digest.  The request itself is entered into the voter-id repo (full ledger design - another commit) recording the election official and the requester of the information.  VOTES will effectively return the VOTES ballot digest for the voter to inspect.
 
-Note that all the ballots in the ballot repo have ballot digests that are public, so anyone can look up any ballot.  Voter's anonymity is based on the secret is knowing which ballot belongs to which voter.  It is simply this information which is given to the voter in person without the capacity of third party validation.  The election official may decide to show the voter her/his digest or show the voter the ballot contents associated with the digest.
+Note that all the ballots in the ballot repo have ballot digests that are public (once all the polls close), so anyone can look up any ballot.  Voter's anonymity is based on the secret is knowing which ballot belongs to which voter.  It is simply this information which is given to the voter in person without the capacity of third party validation.  The election official may decide to show the voter her/his digest or show the voter the actual ballot contents associated with the digest.
 
 ### What happens when a voter disagrees with their electronic version of their ballot?
 

@@ -34,15 +34,17 @@ The third VOTES repo is a pruned copy of the private, stripped of all voter and 
 
 The VOTES framework maintains three important encrypted digests that are calculated live during the voting process.
 
-The first is a digest that identifies each unique ballot as printed and made available to a voter.  This digest is __ONLY__ tracking the blank ballot - it does not contain any information regarding how the voter may or may not have filled in the ballot.
+The first digest identifies each unique ballot as printed and made available to a voter.  This digest is __ONLY__ tracking the blank ballot - it does not contain any information regarding how the voter may or may not have filled in the ballot.
 
-The second is a double encrypted (via two separate certificate authority private keys) digest associating the VOTES voter-id with the physical ballot.  This digest is stored in the VOTES voter-id repo.  Note that neither the physical ballot nor this repo is publicly available.
+The second digest is a double encrypted (via two separate certificate authority private keys) digest associating the VOTES voter-id with the physical ballot.  This digest is stored in the VOTES voter-id repo.  Note that neither the physical ballot nor this repo is publicly available.
 
-The third is a double encrypted (via two separate certificate authority private keys) digest associating the VOTES voter-id with the electronic copy of the ballot.  Thie digest is stored in a private VOTES SaaS based voter-id repos.  The precinct/state VOTES voter-id repo and the SaaS VOTES voter-id repos are similar but contain separate digests.  They are private to each certificate authority.
+The third digest is a double encrypted (via two separate certificate authority private keys) digest associating the VOTES voter-id with the electronic copy of the ballot.  This digest is stored in a private VOTES SaaS based voter-id repos.  The precinct/state VOTES voter-id repo and the SaaS VOTES voter-id repos are similar but contain separate digests.  They are private to each certificate authority.
 
-Note that post all-polls-close, only the VOTES ballot repo(s) are fully publicly available and that the digests are only in the privately held VOTES voter-id repos.  Every citizen can download (clone) the ballot repo, but only the precinct/state election officials can download/clone the VOTES voter-id repos.  Note that in all cases there are at least two different and independent distributed copies of the full ledger repos, and in the case of the ballots and tallies themselves (the election), it is fully public.
+Note that post all-polls-close, only the VOTES public ballot and voter-id repos are publicly available and that the digests are only in the privately held VOTES voter-id repos.  Every citizen can download (clone) the ballot and public version of the voter-id repo, but only the precinct/state election officials can download/clone the VOTES private voter-id repos.
 
-In addition, a digest stripped version of the VOTES voter-id repo is made publicly available after all-poles-close.  This allows the public to inspect their personal as well as their precinct's limited voter id data sans digests while allowing election officials as well as the VOTES system to independently compare the public and private copes of the VOTES voter-id repos.
+This allows the public to inspect their personal as well as their precinct's limited voter id data sans digests.
+
+Via the two independent private VOTES voter-id repos, election officials and the VOTES SaaS system can independently compare, but only by doubly decrypting via two independently private keys, one held by the precinct and one held by the VOTES SaaS implementation, the voter-id and the associaited physical or electronic ballot.  (Note - decoding a phiysical ballot is independent and a different decoding then decoding an electronic ballot.)  Importantly, each such decoding is recorded in the repos themselves such that the public and the voter have insight to when a voter-id has been decoded.
 
 # 4) What voter UX workflows does VOTES support?
 
