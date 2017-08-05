@@ -16,11 +16,7 @@ At this point the VOTES voter-id repo (which is still private) will indicate the
 
 At this point the VOTES voter-id repo will have a status of 'voted' in addition to a new digest being present.  The VOTES ballot repo will also have a new and different digest present.  Both digests are the results of a double encryption with two different and independent private keys.
 
-Upon successful scan, the voter is free to view an optional visual-only receipt of their ballot scan (similar to a receipt at a POS (point of sale) cash register.  The visual receipt simply contains two identifiers, a random and short, unique word identifying the voter's unique block-chain and an offset into that block-chain.  The POS display is physically set up so that only the voter can see the display.
-
-At the next station a VOTES ballot machine will indicate when the next block chain is available.  The voter is then free to print the block chain receipt.  By matching their offset they can find their ballot digest.  Note that multiple block-chains are built in parallel and multiple (short string) identifiers are used.
-
-This procedure is necessary so to make it difficult for a third person to associate a voter and a ballot or a voter with a specific block-chain.  Regardless, when all the polls close, the voter can look up their ballot via the VOTES ballot repo given a digest.
+Upon successful scan, the voter is free to leave or to inspect their ballot.  To support voters inspecting their ballots during election day, a special election-day inspection station needs to be set up by election officials.  That station / UX experience is similar to post-election day ballot inspection except that the identification of the voter is done once when entering the voting center.
 
 If the scan is not valid, the VOTES display will display the reason for the invalid scan and the ballot is physically rejected from the scanner.  The voter is free to either leave or try again.  To try again, the election official at the scanner hits the "invalidate" button for the ballot, and another ballot with a new digest will be printed.  The original ballot is shredded by the election official - regardless it is no longer scannable and not stored anywhere in VOTES.  (All unscannable ballots are physically rejected by the scanner).  Though VOTES supports the ability for the voter to try again, it is up to the election officials to have configured their voter UX workflow to support additional attempts.  The voter may or may not try again.
 
