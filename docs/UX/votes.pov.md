@@ -64,6 +64,10 @@ Also note that the VOTES EULA restricts the monetary use of a ballot digest or c
 
 This is true both for the potential buyer or seller of ballot contents or voter-id information.  Anyone who attempts or succeeds to execute a financial transaction based on VOTES information will be liable for retribution if they have agreed to the EULA.  Agreeing to the EULA is required for ballot validation.
 
+In addition the EULA prevents the use of the voter-id repo(s) or data contained therein for monitary uses.
+
+In addition, once all-the-polls close, the EULA imposes export restrictions outside the country of origin as well.
+
 ## Additional checks
 
 As ballots are scanned, the total count is available to election officials via the VOTES ballot repo.  In addtion as voters vote, the number of voters are available via the VOTES voter-id repo.  These two repos are separate and are controlled by separate entities.  Both are full ledger databases.  The sums of each must match at all times and can be publicly displayed in block-chain incremental format.
