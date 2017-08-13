@@ -253,6 +253,8 @@ Depending on who is asking for a nullification affects the specific workflow tha
 
 Election officials can also call for the nullification of ballots.
 
+Even with the safeguards and double encryption, the potential for abuse of this feature is high.  As such VOTES requires a minimum number of ballots to be nullified before executing any nullification transaction, somewhat similar to a block-chain model.  It is also possible to disable this feature by precinct by configuration, disabling the nullification capability.
+
 Nominally nullification is not a public process so to protect the identity of the voter - all the public will know is that a decoding occurred (The Public version of the voter-id repo will not know which voter-id was decoded), and that some ballots were nullified (since the ballot repo does indeed change).  When a voter-id is decoded, the record of which ballot was decoded is encrypted.  And in addition that info is limited to The Private and The Internal version of the voter-id repo.
 
 The owner of the ballots will see that their ballot was nullified when they inspect their ballot either via a meeting with an election official (so to see their electronic copy of their physical ballot), or if they already have securely obtained their electronic ballot digest, by direct inspection of that ballot.  Or it might be the case that they receive notification that their voter-id data was decoded if their election officials are sending out that information.

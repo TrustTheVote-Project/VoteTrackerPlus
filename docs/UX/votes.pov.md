@@ -76,9 +76,11 @@ As ballots are scanned, the total count is available to election officials via t
 
 If a voter-id is found to be fraudulent, the ballot can be nullified.  In this case, the precinct's RA requests a nullification of one or more voters - not ballots - from the state's RA.  The requirement of both RA insure that the transaction is recorded in the full ledger - records the who/what/when/why contained in the ballot repo.  Nothing is recorded in the VOTES voter-id repos that compromises the anonymity of the voter.
 
+To greater insure anonymity per precinct a minimum number of ballots need to be nullified before any are processed.  Though the general public can never associate a nullified ballot with a specific voter, the election official(s) that execute the nullification process can determine a specific voter's ballot by nullifying that specific voter (by inspecting the change in the tallies).  Since the potential of abuse is high even with the double encryption, VOTES will require a minimal number of ballots to be voided prior to voiding any.  It should be notes that every citizen will see the tally change, keeping the nullification transparent.
+
 When a ballot is nullified, it is evident (recorded as such) in the ballot repo so that the tally changes.  The precinct's election official may or may not privately notify the voter that their ballot was nullified.  A nullified ballot is NOT recorded in VOTES voter-id repo. 
 
-VOTES stores nullified ballots in a third encrypted (public) that cannot be publicly tied to either of the other two VOTES repos.  The contents of this third repo is also doubly encrypted.  Note that the  voter-id repo does NOT record nullified ballots since voter anonymity is more important then making this data publicly available.  However, election officials are encouraged to record fraudulent voters (fraudulent voter-id's) in their real voter-id databases so to prevent future VOTES voter-id repos from containing such voters.
+VOTES stores nullified ballots in a third encrypted (public) that cannot be publicly tied to either of the other two VOTES repos.  The contents of this third repo is also doubly encrypted.  Note that the  voter-id repo does NOT record nullified ballots since voter anonymity is more important then making this data publicly available.  However, election officials are encouraged to record fraudulent voters (fraudulent voter-id's) in their real voter-id databases.
 
 ## Digest Workflow Summary
 
