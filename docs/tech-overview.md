@@ -155,7 +155,7 @@ The private version of the VOTES voter-id repo only contains the voter's name, a
 
 The private VOTES voter-id repos is never aggregated and is never publicly shared.
 
-The second variant of the VOTES voter-id repo is public (a.k.a. The Public Copy) and only contains the voter's name and address as entered in the state/town private repo.  The public variant repos are organized in a similar manner to VOTES ballot repos via the git submodule hierarchy described above.  However, unlike the ballot repo this repo is only publicly available once all the poles close.  VOTES maintains this repo as an internally updated copy of the private version.
+The second variant of the VOTES voter-id repo is public (a.k.a. The Public Copy) and only contains the voter's name and address as entered in the state/town private repo.  The public variant repos are organized in a similar manner to VOTES ballot repos via the git submodule hierarchy described above.  Like the ballot repo this repo is only publicly available once all the polls close.  VOTES maintains this repo as an internally updated copy of the private version.
 
 The third version of the VOTES voter-id repo is similar to the private variant except that it is VOTES internal only (a.k.a. The Internal Copy).  It also contains two additional fields beyond the voter's name and address, a status field and a VOTES generated digest.
 
@@ -219,7 +219,7 @@ Once a GGO achieves their BFD, their portion of ballot is ready.
 
 Once all the GGO's complete their portions of the ballot, the ballot is said to be done and is made available to all voters.  Due to the inherent design nature of the GGO's, every address in a precinct can obtain their address correct ballot via either the publicly available ballot repo or via their election officials - who obtain it via the public ballot repo as well.
 
-As the precincts/state support it, early voting, absentee voting, and UVBM workflows can commence.  Each precinct/state follow their own workflows regarding when the ballots are actually cast and scanned.  Note that the ballot repo is __not__ publicly updated once ballots are allowed to be entered into VOTES.  Any patches/fixes to the ballot itself post the Ballot Freeze Date is available only as a fork of the ballot repo - a physically separate repo.  Once all polls close, the fork is merged into the original ballot repo on a branch so to record the changes.
+As the precincts/state support it, early voting, absentee voting, and UVBM workflows can commence.  Each precinct/state follow their own workflows regarding when the ballots are actually cast and scanned.  Note that the ballot repo is __not__ publicly updated once ballots are allowed to be entered into VOTES.
 
 ## 6.3) Election Day
 
@@ -233,13 +233,15 @@ Note that some precincts may still be scanning ballots after all the polls close
 
 At this point the general public is free to execute and inspect the tallies as precincts post their results.
 
-## 6.5) Post Election Day
+## 6.5) Election Validation - E2EV
 
-Voters can inspect either their personal physical ballot or its electronic copy by visting in-person an election office.
+Once all the polls close, the ballot and (public) voter-id repos are made fully public, this to provide transparency and allow direct inspection of the election, ballot, and the public copy of the voter-id data.  All elections regardless of their auditability, actually need to be audited.  Thus for N days (configurable per election) past all-polls-closed, the election is in an _under audit_ state.  Risk-limiting audits are performed including E2EV (End To End Validation) where selected precinct's physical ballots are compared with the electronic copies in VOTES.  Note that during this phase no VOTES voter-id repos or decoded - all that is compared are the electronic copies in VOTES and the associated physical ballot.  Note that the each physical ballot contains a blank-ballot unique digest - this is compared to the blank-ballot digests stored in VOTES.
 
-Citizens at large can inspect The Public version of the voter-id repo(s) and the ballot repo(s).  All citizens can look for voter-id issues, ballot issues, election fraud issues, etc.
+In addition to content based E2EV (described above), count based E2EV, where the physical ballots are simply counted and compared against the ballot counts in VOTES, is also randomly performed.
 
-Note that there is nothing in VOTES that produces a single official version of the tally since an official tally is available to all citizens to compute themselves.  The VOTES ballot repo(s) are completely open source.
+In addition, voter-id alignment audits are performed.  This is where the precinct's voter registration rolls are compared to the VOTES voter-id.  This is a E2EV from the starting point of the state's voter-id through to the VOTES public copy (which is derived from the VOTES private copy).
+
+While the election official and independent 3rd-party entities are carrying out the internal auditing process, the public is encouraged to look for signs of voter-id or ballot tampering on the public side.  This includes voter's checking their individual electronic copy as well as their physical ballot.
 
 ### 6.5.1) Ballot Redress and Nullification
 
@@ -261,15 +263,21 @@ The owner of the ballots will see that their ballot was nullified when they insp
 
 In either case the voter can decide whether or not to pursue redress and have the nullification itself nullified.  If the voter pursues redress, that process too is not public so to protect the anonymity of the voter and their ballot.  If they win their case, the original nullification of their ballot is nullified, re-instating their ballot in the tally.
 
-### 6.5.2) Recounts
+### 6.5.2) Close-of-Election
 
-Post the closing of all polls/precincts/voter centers, the tallies are more or less immediately available for anyone with public access to execute.  However, post poll closing election officials, voters, and third parties will most likely inspect the data and question any irregularities found.  Irregulars can stem from many different effects and may or may not result in fraudulent ballots.  Ideally, any such fraudulent ballots will be delineated and nullified.
+After N days post all-polls-close, both the public at large and election officials should have a good sense of the accurateness of the election.  If the auditing process needs to be continued perhaps because of a close race and the degree of error are concerning, it can be.
+
+If the VOTES copy is found to be unfixable due to extensive fraudulent/illicit ballots or tampering, either the ballots can be entered from scratch again in a separate VOTES SaaS instance, or the ballots are physically counted.  Note - this can also be done on a precinct by precinct basis in the case a precinct localized compromise.
 
 As such, until the election is declared officially closed, the final tally of any contest may indeed change as all citizens and officials looks for irregularities.  It is nominally up to the election officials of the root GGO's (the states) to declare the official closure of an election within their GGO.  At that point, neither the ballot or voter-id repos can be changed.
+
+Once the election is officially closed, there is a N day cooling off period so to handle any additional potential or real issues.  After the N day cooling off period, for security the private keys for the certificates are destroyed to insure the anonymity of the voters.
 
 # 7) Post Election Analysis
 
 Once the repos are publicly available, even after the election is officially closed, the public is free to analyse the repos.  For example, the tally algorithms can be changed to determine if a different algorithm would have changed the results of a race or contest.  Since the repos are public and free via an EULA that restricts certain anti-constitutional anti-democratic uses such as trying to sell or selling votes, citizens can clone the repo and, for example, change the tally algorithms and such.
+
+However, the VOTES EULA prohibits the use of VOTES data for monetary or military means.  There are also export restrictions such that VOTES data cannot be exported outside the country of origin.
 
 ## 7.1) Determining Gerrymandering Coefficients
 
