@@ -4,7 +4,14 @@ A Verifiable Open Technology Election System
 
 # Overview
 
-VOTES is a distributed, open-source [voting](https://en.wikipedia.org/wiki/Voting) system that creates transparent, secure, and accurate elections with anonymous individually verifiable ballots.  VOTES maximizes the transparency and trust of an election thoughout the election process.
+VOTES is a distributed, open-source [voting](https://en.wikipedia.org/wiki/Voting) system that creates transparent, secure, and accurate elections with anonymous individually verifiable ballots.  VOTES maximizes the transparency and trust of an election thoughout the election process via:
+
+ - 100% independent paper trail
+ - All software code and data is open-sourced and stored in a full ledger, distributed version control system
+   - No hidden tally points - any citizen/voter can execute the complete tally and inspect all ballots after all-the-polls close
+ - End-to-End-Verification (E2EV) of election results with auditing
+ - Double/triple encoded data with independent Certificate Authorities
+ - Best in class mutual SSL communications with independent channel MFA with anti-bot interrogation points
 
 **END-VOTER ADVANTAGES:**  Using VOTES the voter can validate their ballot as well as the tally of any contest while maintaining voter anonymity. VOTES is 100% transparent, insuring that no entity or person can mishandle or manipulate any contest, ballot, or tally.  VOTES employs multiple modern cryptographic designs and techniques to insure tamper proof electronic communications while employing open source software to insure transparent and trustworthy elections.  Multiple checks and balances are employed including a full and independent physical paper trail.
 
