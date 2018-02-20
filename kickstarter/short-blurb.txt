@@ -1,0 +1,1 @@
+VOTES is a distributed, full-ledger, open-source voting system that creates 100% transparent, secure, and verifiable elections.

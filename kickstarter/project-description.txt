@@ -1,0 +1,18 @@
+What is VOTES?  About
+
+VOTES - a Verifiable Open Technology Election System - addresses several critical issues regarding running elections.  VOTES both creates a physical paper ballot at the voting center as well as an electronic copy.  The electronic copy is stored in a full-ledger, fully-signed repository publicly available after all the poles close.  This public repostory contains both the ballots and tally algorithms of how to count the ballots in each contest.  Once available, every citizen can download a copy and perform the tally.  The specific tally algorithm(s) are included in the repostory.
+
+ - TRANSPARENCY: with VOTES each anonymous electronic copy of each ballot is directly inspectable by everyone.  And everyone can execute the tally themselves bringing full transparency to ballot counting.  All voters have the capability to privately obtain their public key for their ballot from election official so to inspect their personal ballot.  Since all public keys are available to everyone, public keys have no inherent value (as in, VOTES does not create an opportunity or a market in which to sell votes).
+
+ - DATA SECURITY:  VOTES is a signed full ledger based solution similar but different to bitcoin and other cryptocurrencies.  Each change to the application and/or the data is carried forward such that history cannot be changed (imagine that).  The association of the paper ballot to the electronic copy is encrypted such that if the paper ballots are compromised, separate private keys are still required to associate a paper ballot with the eletronic version.  Note that the electronic copy does not contain this information.
+
+The paper ballots are physically secured by the owning GGO.  The VOTES SaaS aolution secures the public and non-public full ledger repositories.
+
+The association of the recorded voter id with the paper ballot (there is NO such association with the electronic copy) is recorded in a non public repository and is independently double encrypted.  One private key is stored with the operator of the VOTES framework (the SaaS solution) and the other key is stored by the owning GGO (in federal elections, the state).  Both private keys are physically air-gapped from the internet.
+
+In addition, each use of a key to decode any piece of data is itself recorded in the repository (ledger) of interest, recording the who/what/when of each instance of decryption.
+
+ - OPERATIONAL SECURITY: When an election is being held, which includes pre-election workflows by election officials, election day workflows specifically including entering ballots cast at polling centers. and post all-the-polls-closed workflows, all network communication is based on best-in-class deeply encrypted mutual-ssl with 2FA interaction points and anti-bot interegation points where appropriate.  The design of the VOTES repositories is distributed and naturally supports network interruptions and outages.  Each voting center or groups of voting centers operate in an independent live manner, checkpointing electronic ballot activity back to the VOTES SaaS servers as opposed to constant live sycnhronization.
+
+ - End-to-End-Verification:  since VOTES creates a completely independent paper trail, VOTES supports an end-to-end verification (E2EV) scheme where at any time the paper ballots can be used to verify the electronic copy.
+ 
