@@ -6,9 +6,9 @@ AN OVERVIEW OF THE WORKFLOWS / USER EXPERIENCE OF VARIOUS ROLES REGARDING THE US
 
 After the voter successfully identifies themselves to the election official, the election official supplies a numbered but anonymous VOTES printed blank ballot.  The ballot contains a checkbox allowing the voter to receive the public key for their ballot.  After completing as much of the ballot as desired in private, the voter transitions to the VOTES ballot casting station.  With optional assistance from an election official, the ballot is scanned and either rejected or accepted.  A rejected ballot is one where some portion of the ballot is either un-readable or non compliant/invalid.  The rejected portion of the ballot and the reason thereof is privately shown to the voter.  A rejected ballot is not accepted by the VOTES ballot casting equipment and is ultimately shredded.
 
-When accepted and if the voter asked for a public key, a receipt is printed containing ~100 public keys.  The voter is then privately shown the index (which public key in the list is theirs).  Note - if the precinct is small or if there are not at least ~100 cast ballots with the same set of GGO's, then the public key is not available until after all the poles close.
+When accepted and if the voter asked for a public key, a receipt is printed containing ~100 public keys.  The voter is then privately shown the index (which public key in the list is theirs).  Note - if the precinct is small or if there are not at least ~100 cast ballots with the same set of GGO's, then the public key is not available.
 
-If rejected, the voter can receive a new blank ballot (again numbered but anonymous) printed at the VOTES ballot casting station.  Or with the help of an election official and after the voter acknowledges that those portions of their ballot that cannot be scanned will in fact not be counted, the ballot can be forced scanned where only the scan-able portions of the ballot are entered.
+If rejected, the voter can receive a new blank ballot (again numbered but anonymous) printed at the VOTES ballot casting station.  Or with the help of an election official and after the voter acknowledges that those portions of their ballot that cannot be scanned will in fact not be counted, the ballot can be forced scanned where only the scan-able portions of the ballot are entered - the unscannable races are not counted.
 
 # 1.2) Once all the polls close, the voter can inspect their specific electronic ballot
 
@@ -18,7 +18,7 @@ It is important to note that the public keys are NEVER made available to voters 
 
 When the voter is physically casting their ballot at a voting center, they are visually (or verbally) given the public key privately as an index into a sufficiently large list of valid public keys.  The list of public keys itself cannot identify the voter's specific ballot.
 
-When voting by mail, absentee ballot, or other by mail systems, the voter is only allowed to receive their public key in a manner by which a third party can verify its authenticity - the public key is delivered is a privately secure manner.
+When voting by mail, absentee ballot, or other by mail systems, the voter is only allowed to receive their public key in a manner by which a third party cannot verify its owner - the public key is delivered is a privately secure manner.  Note that such a capability implies that election officials will handle information that ties a specific ballot to a specific voter.  It is up to the election officials to decide if and how they wish to support optionally giving voters their public keys and if voters wish to have elections officials perform this function.
 
 # 1.3) Once all the polls close, the voter can perform the election tallies
 
@@ -26,19 +26,21 @@ Since the public ledger also contains the tally algorithm for all races and cont
 
 Note that the private keys are never publicly available and in fact are double encrypted requiring two independent certificate authorities to decode while also requiring the full ledger record whenever a key or keys are decoded. 
 
-# 1.4) Once all the polls close, the voter can inspect their physical ballot
+# 1.4) Once all the polls close, the voter can validate their physical ballot
 
-Though VOTES generates and maintains in a secure manner an electronic copy of the ballot, it is the responsibility of the local election officials to maintain the security surrounding the physical ballots.  Depending on the procedures and resources available at the precinct  level, the precinct may support the voter inspecting the their physical ballot, or may not.  Regardless, the possibility of this procedure is important in maintaining public trust in the election since both the physical and electronic copies of the ballot are independently identifiable in a secure non-public manner.  With two copies, one copy can be checked against the other.
+Though VOTES generates and maintains in a secure manner an electronic copy of the ballot, it is the responsibility of the local election officials to maintain the security surrounding the physical ballots.  Depending on the procedures and resources available at the precinct level, the precinct may support the voter validing their physical ballot.  Regardless, the possibility of this procedure is important in maintaining public trust in the election since both the physical and electronic copies of the ballot are independently identifiable in a secure private manner.  With two copies, one copy can be checked against the other.
 
-When physical ballot identification is supported, the voter can physically visit the election official and after properly identifying her/himself, the election official can initiate the identification of the physical ballot.  Similar to privately identifying the electronic ballot to a voter, a physical ballot identification requires both the state (the governing geographical/geopolitical overlay - the governing GGO) and the operators of the VOTES SaaS election to independently decode a private VOTES repository with their independent private keys so to identify a physical ballot.  Doing so requires the creation of a full record of the decoding of such an identification within the private full ledger itself.  This supports full transparency tracking of every ballot identity decoding, limiting the abuse of such a feature.
+If a voter believes that the electronic copy of their ballot is not correct, they can initiate an inspection of their physical ballot if such inspection is supported.
 
-Once this physical ballot identification is made privately available to the local election official, the official can initiate a physical lookup of the physical ballot.  Note - both steps are not automatic and require human interaction and as such neither step is instantaneous.  Both steps require some amount of time to execute - it may require several days depending on the local available resources and the physical security surrounding the physical ballots.
+When physical ballot validation is supported, the voter can physically visit the election official and after properly identifying her/himself and their public key, which may require (TBD) photo based identification beyond that what is required at the voting center, the election official can initiate the validation of the physical ballot.  VOTES maintains data that matches the electronic copy with the physical copy.  Given the voter's public key, the election official can track down the specific matching physical ballot and validate that the entered selections match the electronic copy.  If the voter is still not satisfied, the election official can show the voter the physical ballot in a private manner without the presense of electronic or other recording devices such that no third party can see the physical ballot.  This is because the voter can mark ballots in such a way as to uniquely identify them to themselves or others.  And though 'personalizing' a physical ballot is in general a good thing, is something that necessitates any physical ballot inspection to be done completely isolated from any third party observation.  This includes durinfg any E2EV.
+
+The ability to have voters return to the election officials and inspect their specific physical ballot increases the level of trust in the election.
 
 # 1.5) Absentee ballot and Vote-by-mail ballot identification
 
 When voting by mail or by absentee ballot, the voter's specific public key can only be made available in a private manner similar to section 1.4 above.  By keeping the identity of the public key private, the public key cannot be used to identity the ballot owner (the voter), only the ballot.
 
-The governing GGO can choose its own specific method of revealing a voter's specific public key.  As one example for absentee ballots and vote-by-mail scenarios, the voter might be required to physically visit an election official and after proper identification, the official can then give the voter their specific public key in a private manner similar to the non vote-by-mail scenario above.  The act of identifying an electronic ballot after the polls close requires a double and independent decryption of the ballot identity which is also recorded in the same full ledger private repository.
+The governing GGO can choose its own specific method of revealing a voter's specific public key.  As one example for absentee ballots and vote-by-mail scenarios, the voter might be required to physically visit an election official and after proper identification, the official can then give the voter their specific public key in a private manner similar to the non vote-by-mail scenario above.
 
 # 2) How does an election official interact with VOTES?
 
@@ -56,11 +58,13 @@ At some point the ballot in total is declared done.  Note that all changes to th
 
 The VOTES system handles the printing of the ballots whether the ballots are created via hard or soft copy.
 
+In addition to the ballot repository, the precinct also updates the VOTES voter-id repository with the registers voters, entering the name and the address.
+
 # 2.2) Vote-by-Mail and other pre-election day ballot casting workflows
 
 Vote-by-mail, absentee, and early voting workflows can commence once the ballot is finalized.  In vote-by-mail, each voter's specific ballot is printed and mailed.  Depending on how the precinct is handling absentee and early voting, the ballots may be printed in soft form and emailed or printed as hardcopy and posted.
 
-If the precinct is supporting early voting in person, then the election day workflow is supported.  However, when early voting the public key will not be available until a sufficient number of people have voted so to be able to sufficiently randomize the public keys.  In some cases, the public key will not be available until after all the poles close.
+If the precinct is supporting early voting in person, then the election day workflow is supported.  However, when early voting the public key will not be available until a sufficient number of people have voted so to be able to sufficiently randomize the public keys.  In some cases, the public key will not be available until after all the poles close.  In some cases it will never be available if the minimum number of cast ballots necessary to insure a minimal level of voter anonimity is not attained.
 
 # 2.3) Election day workflows
 
@@ -73,10 +77,6 @@ Once all the poles close, the synchronization intervals continue until all the d
 # 2.4) Post-election day workflows
 
 Once made available, the public repository can be downloaded (cloned) and can be used to independently tally all races and contests.  In addition voters who know their public key can validate their electronic copy of their ballot.
-
-In states that support a VOTES based ballot nullification, auditors can question the validity of specific voters as identified by their name and address as recorded in the VOTES public repository.  Note there is no connection between a voter's name and address and their ballot in the public repo - there is no data that can be used to associate the two pieces of data.  For small precincts or any specific GGO overlay where the minimum number of ballots cast is not great enough so to provide anonymity, the voter name and address information is simply absent from the public repository.
-
-When a voter's name and address is questioned, a private court hearing can decide whether or not the ballot should be annulled.  The details of the ballot annulment process is dependent on the GGO.
 
 # 3) End-to-End Validation (E2EV) Audits
 
