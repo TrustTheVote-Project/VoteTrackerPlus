@@ -1,4 +1,17 @@
-What are the risks and challenges that come with completing your project, and how are you qualified to overcome them?
-================
+The VOTES project is in a multifaceted domain with significant technical, business, and political risks.  This contributes the the challanges and excitment of a VOTES solution.
 
+TECHNICAL RISKS include three more or less separate issues:
 
+1) The design and implementation of the public repositories - basically designing how the analogy of the bitcoin block-chain algorithm works for VOTES.  This is the technology of how the full ledger implementation handles blank and cast ballots, GGOs (geographical/geopolitical overlays), tally algorithms, private and public keys, and the various election workflows.
+
+2) The design and implementation of the certificate authorities and the security model surrounding the authentication and encryption of the data.
+
+3) The operational aspects of the SaaS based implementation of VOTES which includes all things operational, including security during the election itself.
+
+BUSINESS RISKS are significant since a VOTES implementation is purchased either directly by a state or a city to run an election, or the VOTES technology is licensed by an existing election system vendor to incorporate into existing election systems.  Neither are high volume or high margin business opportunities.  There is a business opportunity once VOTES can be commoditized at the SaaS cloud level, but that is not what this kickstarter campaign is targeting - this campaign is targeting the initial step of getting VOTES up and running someplace in the United States.  The final business target is world-wide, bringing transparent, secure, and fast elections to all those interested.
+
+Significant POLITICAL RISKS are also present.  Each state has different rules and restrictions concerning voting procedures.  Though VOTES is designed out of the box to handle such customizations, there is risk that a state may adopt some fundamental restriction that prohibits VOTES from being a viable solution.
+
+Also, though VOTES is NOT a voter identification system, running a VOTES election will record in the VOTES public voter-id repository the names and addresses of the voters.  Though this directly supports the transparency and hence trust in the election, some may see this as a new or additional invasion of privacy.  This inaccurate/incomplete point of view, inaccurate since all voters and their addresses are already in the  public domain, could lead to political resistance to adopting a VOTES solution.
+
+The VOTES team constantly re-evaluates known and potential risks.  The election system domain is multifaceted  and in general is ripe for risk and reward.
