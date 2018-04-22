@@ -4,7 +4,7 @@ VOTES, an acronym for Verifiable Open Technology Election System, is a distribut
 
 2) More technical information on VOTES
 
-VOTES is part an election framework and part an implementation of the necessary digital solutions needed to run an open, transparent, and secure digital based election.  The two major aspects are 1) a publicly available repository that contains a full ledger accounting of the election available post all the polls close; and 2) a SaaS solution for actually running an election.
+VOTES is part an election framework and part an implementation of the necessary digital solutions needed to run an open, transparent, and secure digital based election.  The two major aspects are 1) two publicly available repositories, one containing a full ledger accounting of the election available post all the polls close, and one containing the voter's name and address; and 2) a SaaS solution for actually running an election.
 
 VOTES is open source with the initial release being hosted on github employing the Git software development application as an initial technology prototype.  Those with a greater interest in the technology can visit the github project at https://github.com/relengcom/votes.
 
