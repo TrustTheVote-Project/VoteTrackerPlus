@@ -1,8 +1,30 @@
-What is VOTES?  About
+1) What is VOTES?
 
-VOTES - a Verifiable Open Technology Election System - addresses several critical issues regarding running elections.  VOTES both creates a physical paper ballot at the voting center as well as an electronic copy.  The electronic copy is stored in a full-ledger, fully-signed repository publicly available after all the poles close.  This public repostory contains both the ballots and tally algorithms of how to count the ballots in each contest.  Once available, every citizen can download a copy and perform the tally.  The specific tally algorithm(s) are included in the repostory.
+VOTES, which is an acronym for Verifiable Open Technology Election System, addresses several critical issues regarding running elections.  VOTES both creates a physical paper ballot at the voting center as well as an electronic copy.  The electronic copy is stored in a full-ledger, fully-signed repository publicly available after all the poles close.  This public repostory contains both the blank and cast ballots and tally algorithms of how to count the ballots in each contest.  Once available, every citizen can download a copy and perform the tally of the votes for any contest.  The specific tally algorithm(s) are included in the repostory.
 
- - TRANSPARENCY: with VOTES each anonymous electronic copy of each ballot is directly inspectable by everyone.  And everyone can execute the tally themselves bringing full transparency to ballot counting.  All voters have the capability to privately obtain their public key for their ballot from election official so to inspect their personal ballot.  Since all public keys are available to everyone, public keys have no inherent value (as in, VOTES does not create an opportunity or a market in which to sell votes).
+2) More technical information on VOTES
+
+There is a lot of technology present which really can't/shouldn't be described here.  However, since VOTES is open source and hosted on github, for those with a technical interest of how VOTES is going to work please feel free to visit https://github.com/relengcom/votes.  And feel free to clone the repo and start contributing to the project.
+
+ZZZ maybe include the following from docs/UX/overview.md ?
+
+3) How does an end voter interact with VOTES?
+
+3.2) Once all the polls close, the voter can inspect their specific electronic ballot
+
+3.3) Once all the polls close, the voter can perform the election tallies
+
+3.4) Once all the polls close, the voter can inspect their physical ballot
+
+3.5) Absentee ballot and Vote-by-mail ballot electronic or physical ballot inspection
+
+4) How does an election official interact with VOTES?
+
+5) End to End Validation (E2EV)
+
+6) What does VOTES offer?  What is unique about VOTES?
+
+TRANSPARENCY: with VOTES each anonymous electronic copy of each ballot is directly inspectable by everyone.  And everyone can execute the tally themselves bringing full transparency to ballot counting.  All voters have the capability to privately obtain their public key for their ballot from election official so to inspect their personal ballot.  Since all public keys are available to everyone, public keys have no inherent value (as in, VOTES does not create an opportunity or a market in which to sell votes).
 
  - DATA SECURITY:  VOTES is a signed full ledger based solution similar but different to bitcoin and other cryptocurrencies.  Each change to the application and/or the data is carried forward such that history cannot be changed (imagine that).  The association of the paper ballot to the electronic copy is encrypted such that if the paper ballots are compromised, separate private keys are still required to associate a paper ballot with the eletronic version.  Note that the electronic copy does not contain this information.
 
