@@ -1,3 +1,8 @@
-You can add frequently asked questions to the FAQ tab on your project page once it goes live.
+Frequently Asked Questions
 ================
 
+Why is the funding target $150,000?  What will it be used for?
+
+The $150k will be used to fund one person full time and about 30k for a
+contract for some initial software to demonstrate the creation and casting and
+tallying of ballots.
