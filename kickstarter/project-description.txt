@@ -22,7 +22,7 @@ For casting votes at a physical voting center, there are only a few subtle chang
 
 When successfully scanned, the voter has the option of privately obtaining a copy of their ballot's public key.  Once all the polls close, the public key can be used to inspect their specific electronic copy of their ballot.
 
-Also, once all the polls close any voter can download a copy of the full ledger public repository and count the votes themselves.  All tallies of all contests are publicly executable.  There is no third party, human or machine, that secretly counts the votes.
+Also, once all the polls close any voter can download a copy of the full ledger public repository and count the votes themselves.  All tallies of all contests are publicly executable.  There is no third party, human or machine, that secretly counts the votes.  This is particularly important as communities and states adopt Rank Choice Voting - maximizing transparency and trust in a RCV tally is important during the process of its adoption as well as during the actual election.  And there is no better way to maximize that trust then by allowing all voters to inspect all the code and all the data as well as execute the RCV tally on their own device.
 
 4) How does an election official interact with VOTES?
 
