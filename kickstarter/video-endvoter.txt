@@ -1,43 +1,42 @@
 End voter video script
 ################
 
-Do you know anyone who likes conspiracy theories?  They are a lot of fun and involve a lot, sometimes a whole lot, of creativity.  And creativity is fun.
+Ever been intrigued by a conspiracy theory?  They can be a lot of fun and can involve a lot of creativity.  And creativity is fun.
 
 [a few funny drawings of classic conspiracy theories]
 
-But not _everything_ is better with conspiracy theories.  Take fake news and modern digital warfare.  People with evil intent disrupt democractic governments by creating conspiracy theories that disrupt instead of entertain.  Conspiracy theories can cause regular people to distrust their government, their fellow citizens, confusing lies with reality.  Just like George Orwell’s 1984.
+But not _everything_ is more fun with conspiracy theories.  Take fake news or modern digital warfare.  Evil people and adversaries can disrupt democracies by creating conspiracy theories that disrupt instead of merely being fun.  Conspiracy theories can cause regular people to distrust their their fellow citizens, their own government, confusing lies with reality.  Just like George Orwell’s 1984.  Conspiracy theories are a common weapon in this post internet era of digital warfare.
 
-Some things need to be innately immune to fake news and conspiracy theories.  Some things need to be so transparent that they are inherently secure both in reality and in non-reality.
+Some things need to have strong natural immunity to both fake news and conspiracy theories.  Some things need to be so transparent, so distributed, so open source, that they are inherently secure both in reality and in the non-reality of fake news.
 
-Like public elections.
+Public elections should be just that - public elections should be inherently transparent and open source.  They need to be trusted and be inherently above conspiracy theories.  A democratic republic requires a few basic first principles, and one of them is fair and accurate elections.  Elections need to be trust worthy and naturally immune to digitial warfare, fake news, and conspiracy theories.
 
-Public elections need to be trusted and be inherently above conspiracy theories.  A democratic republic requires a few basic first principles, and one of them is fair and accurate elections.  Elections need to be trust worhy and naturally immune to digitial warfare, fake news, and conspiracy theories.
-
-So, ever wonder what actually, truly, happes to your ballot when you vote?  Did it really get counted correctly?  What about other ballots - where did they come from?  And regardless of how absolutely trustworthy, patriotic, and hardworking your election officials are, what happens when an election is attacked by fake news, digital warfare, and trolls?
+So, ever wonder what actually, truly, happens to your ballot when you vote?  Did it really get counted correctly?  What about other ballots - where did they come from?  Did anyone vote multiple times?  Are claims of ballot fraud fake news or real news?  Regardless of how absolutely trustworthy, patriotic, and hardworking your election officials are, what happens when an election is attacked by fake news and trolls?
 
 Enter VOTES, a Voting Open Technology Election System.
 
-With VOTES, you the voter can verify not only your ballot was scanned and counted correctly, but that all the ballots where correctly scanned. And you the voter can actually perform the same exact tally of the votes as the election official perform, regardless if the tally is a simple plurality tally or a rank choice voting tally.
+With VOTES, you the voter can verify not only your ballot was scanned correctly, but that it and all the ballots were correctly counted.  With VOTES you the voter can actually perform the same exact tally of the votes as election officials, regardless if the tally is a simple plurality tally or a rank choice voting tally.  The tally can be performed on any laptop or computer.
 
-That's right - every voter can inspect the electonic copy of their specific ballot.  And like double entry accounting ledgers where accountants enter every number twice so to best catch errors, with VOTES there is a 100% physical paper ballot and an independent electronic copy, supporting this 1,000 year old best practice.
+That's right - every voter can inspect the electonic copy of their specific ballot.  And like double entry accounting ledgers where accountants enter every number twice so to best catch errors, with VOTES there is a 100% physical paper ballot and an independent electronic copy, supporting this 1,000 year old accounting best practice.
 
-With VOTES every electronic ballot is connected to each paper ballot. 
+With VOTES every electronic ballot is directly connected to each specific paper ballot.
 
-And more importantly, every voter can count the votes on their own personal smart device.  There is no hidden third person that counts the ballots in secret, regardless how trusted and patriotic they may be.
+When an election use VOTES, all the current methods of traditional voting is supported:  early ballots, absentee ballots, physically voting in a voting center, and by vote-by-mail.  Regardless of how one actually casts a ballot, an electronic copy is created with a cryptographic public-only key.  Unlike bitcoin and other common block-chain solutions, with VOTES there is no private key that can be used to identify/connect a ballot with an end voter.  There are no private keys that can be sold to the highest bidder or used to identify a voter.
 
-When an election use VOTES, the voter can vote in person or mail in a ballot.  Regardless of how one actually casts a ballot, VOTES will scan the ballots and create an electronic copy with a cryptographic public-only key.  Unlike bitcoin like block chains and other cryptocurrencies, with VOTES there is no private key that can be used to identify/connect a ballot with an end voter.  There are no private keys that can be sold to the highest bidder. 
+[optional]
 
-There are two important aspects to VOTES.  The first aspect is that your ballot's public key is only privately shown to you in a manner where no one else can confirm or deny that the public key is indeed yours.  These privately shared but public keys have no worth - they cannot be bought or sold - they cannot be used to identify you the voter in any manner.  As you fill out your ballot is privacy, your specific public key is shown only to you when VOTES scans the ballot.  Once scanned, there is no record of who the public key belongs to - its value to someone who wishes to buy your vote is similarly limited to a paper only voting system.
+There are a three important aspects to VOTES.  The first aspect is that your ballot's public key is only privately shown to you in a manner where no one else can confirm or deny that the public key is indeed yours.  These privately shared but public keys have no worth - they cannot be bought or sold - they cannot be used to identify the owner of the ballot.
 
-When the election is over, all public keys are safe to share - there is no private information associated with them, such as which public key belongs to which person.  All that can be done with a public key is identify one specific, anonymous, ballot.
+The second is that VOTES stores all the ballots in a cryptographically sealed full-history ledger.  This technology has important similarities and differences to traditional block chain technologies used cryptocurrencies.  This full ledger includes not just all scanned ballots, but also all the software used to count the ballots as well as all blank ballots and various geopolitical geographical information - the state, county, municipal, and various districting geographical data.  Every change is cryptographically sealed, including the entire history of the versions of the blank ballot as created by election officials as well as all the cast ballots.  The full ledger captures the history of the entire election in a mathicatically immutable form, including the specific tally algorithms and ballots.
 
-The second aspect to VOTES is that all ballots are stored in a cryptographically sealed full-history ledger.  This technology is similar to bitcoin and other cryptocurrencies.  This full ledger includes not just all scanned ballots, but also all the software used to count the ballots as well as all blank ballots and various geopolitical geographical information (the state, county, municipal, and various districting geographical information).  Every change is cryptographically sealed, including the entire history of the versions of the blank ballot as it is created by election officials.  Any piece is cryptographically impossible to alter.  The full ledger captures the history of the entire election in a mathicatically immutable form, including how the ballot tally,
+And if election officials wish to nullify a ballot or a set of ballots, or re-interpret an electronic scan of a ballot, no problem as the VOTES data can be securely updated after the election, with every such change being recorded with full transparency in the cryptographically sealed public ledger.
+
+The third important aspect to VOTES is that it contains a secured and separate, government owned aggregate copy of the voter's names and addresses but with no other information, no other data, and no other associations.  Even the method or time of voting is not recorded.  This secured and private aggregated data helps election officials to determine if a person is voting multipled times via different addresses while maximizing voter anonymity, both during and after the election.
 
 This makes VOTES inherently immune to fake news, trolls, and digital warfare techniques.
 
-So, when election day is over, the VOTES public ledger can be downloaded by any and every voter and election official in full, and election participant can count the ballots.  This is because the ledger contains all the election data, both the tally algorithms whether it be traditional plurity voting or rank choice voting, and all the ballots.
+So, when election day is over, the VOTES public ledger can be downloaded by every voter and election official and the tally executed.  No need to wait for some nebulous third party to count the votes.
 
-Total transparency.
+Total transparency.  All the source code and all the ballot data available to all.
 
-And what about the evil actors and the trolls and the conspiracy theories?  Well, with full and complete transparency where everyone can see all the ballots and count all the votes, there are no dark places, no shadows.  There is no place that a troll can get a conspiracy theory to stick.  Sure there will always be real digital and fake news attacks on any voting system.  But VOTES is inherently trustworthy and transparent, which is a lot more then any other system.
-
+And what about the evil actors and the trolls and the conspiracy theories?  Well, with full and complete transparency, there are no dark places, no shadows, for conspiracy theories to stick.  Sure adversaries to the democratic process will try to cast conspiracy theories at VOTES.  And evil actors will use all known digital warefare techniques to disrupt the actual execution of the election.  But VOTES is inherently trustworthy and transparent, both in design and execution, which is a lot more then any other system.
