@@ -39,14 +39,14 @@ For more information contact Sandy Currier at:  windoverwater at gmail dot com
 
 The basic high level design goals are:
 
-* The voter can validate the accuracy of their vote and its proper tally at any time
-* After all polls close, anyone with access to the open-source public repository and count the votes
-* There are independent paper and electronic trails with the necessary security attributes
+* After the polls close each voter can validate the accuracy of their electronic ballot and its proper tally
+* After the polls close, all citizens can access the open-source public repository and validate the tally as well as inspect the ballot and voter records in their entirety
+* There are independent paper and electronic trails
 * The VOTES system:
   * supports any tally [methodology](https://electology.org/library) / [election system](https://en.wikipedia.org/wiki/Electoral_system) such as plurality, approval, ranked choice voting, etc.
     * supports different tally methodologies at different geographical/geopolitical overlays
     * can be incrementally adopted at different geographical/geopolitical overlays/levels
-  * supports different ballot casting methodologies - physical voting centers, vote-by-mail, early voting, absentee voting
+  * supports different ballot casting scenarios - physical voting centers, vote-by-mail, early voting, absentee voting
   * scales well, is secure, and ensures election accuracy and transparency
   * is easily testable with an integrated test hardness and CI/CD pipelines
     * all code changes require successful test runs, etc.
