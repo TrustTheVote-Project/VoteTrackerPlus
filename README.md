@@ -35,21 +35,20 @@ VOTES is intended to be as compliant as possible with [NIST](https://en.wikipedi
 
 For more information contact Sandy Currier at:  windoverwater at gmail dot com
 
-# Basic Design Goal
+# Basic Design Goals
 
-The basic high level design goals are:
+The basic high level design goals (unordered) are:
 
-* After the polls close each voter can validate the accuracy of their electronic ballot and its proper tally
-* After the polls close, all citizens can access the open-source public repository and validate the tally as well as inspect the ballot and voter records in their entirety
-* There are independent paper and electronic trails
-* The VOTES system:
-  * supports any tally [methodology](https://electology.org/library) / [election system](https://en.wikipedia.org/wiki/Electoral_system) such as plurality, approval, ranked choice voting, etc.
-    * supports different tally methodologies at different geographical/geopolitical overlays
-    * can be incrementally adopted at different geographical/geopolitical overlays/levels
-  * supports different ballot casting scenarios - physical voting centers, vote-by-mail, early voting, absentee voting
-  * scales well, is secure, and ensures election accuracy and transparency
-  * is easily testable with an integrated test hardness and CI/CD pipelines
-    * all code changes require successful test runs, etc.
+* After the polls close, each voter can validate the accuracy of their electronic ballot and its proper tally
+* After the polls close, all citizens can access the open-source public repository and validate the tallies and inspect the ballot and voter records
+* Support independent paper and electronic trails
+* Support any tally [methodology](https://electology.org/library) / [election system](https://en.wikipedia.org/wiki/Electoral_system) such as plurality, approval, ranked choice voting, etc.
+* Support different tally methodologies at different geographical/geopolitical overlays
+  * can be incrementally adopted at different geographical/geopolitical overlays/levels
+* Support different ballot casting scenarios - physical voting centers, vote-by-mail, early voting, absentee voting
+* Scales well, is secure, and ensures election accuracy and transparency
+* Is easily testable with an integrated test hardness and CI/CD pipelines
+  * all code changes require successful test runs, etc.
 * Create a solution that is usable in the 202x US election
 
 # Status - 2019/10/14
