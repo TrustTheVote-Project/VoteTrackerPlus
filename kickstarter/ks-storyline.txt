@@ -1,0 +1,39 @@
+We the people...
+
+1) After you vote, how do you know if your ballot was actually counted correctly?
+
+2) None of us know this
+
+3) And how do you know if the tally of the votes is correct?
+
+4) None of us know this
+
+5) Faith and trust in the democratic process requires that we know that the outcome of elections are accurate
+
+6) Enter VOTES - A Verifiable Open Technology Election System
+
+7) VOTES lets you, me, and each one of us verify that our vote was accurately counted.  And it lets us do that on our own computers.  Or in the cloud.
+
+8) And VOTES lets each one of us, including election officials and the candidate themselves tally all the votes.  And it lets us do that on our own computers.  Or in the cloud.
+
+9) Here is how VOTES works
+
+10) First, VOTES starts with a real paper ballot, regardless if printed by VOTES or not.  When each paper ballot is scanned, the electronic and paper ballots are directly and cryptographically connected with a block-chain like key.  The electronic ballot and key are stored in a cryptographically locked, full-history ballot ledger that is publicly available once all the polls close.
+
+There are two important aspects of this cryptographic key:
+
+11) First, this cryptographic key is a public and not a private key - there are no private keys in VOTES.  This is vastly different than cryptocurrencies and typical block-chain solutions where private ownership is a must.  With public elections it is critical to not have private ownership of a ballot as that would allow someone to sell their vote.  With VOTES there is no way to trace the cryptographic key back to a voter.
+
+12) Second, the key is privately given to the voter in a manner such that no third party can validate who owns that key or any other key.  Only the owner knows for certain which key is theirs - there is no way to validate that to a third party.
+
+13) In person voters who have privately received their key can use that key to look up their specific ballot once the polls have closed and the VOTES ballot ledger has been made available on-line.  Every such voter can confirm that their ballot has been correcty scanned and counted.
+
+For citizens not voting in person, each state can decide if and how they will identify a voter a second time so to allow VOTES to privately pass the key to the voter without a third party being able to intercept or validate the identification.
+
+14) VOTES also benefits election officials by consolidating the geographical/geopolitical boundaries of all the contests into a single distributed database, decreasing the cost and time of running elections.  VOTES contains a complete definition of the geographical boundaries of all the towns, school disctricts, counties, municipalities, states, etc.  It also contains the blank ballot forms required for an election.  With the boundary and blank form data VOTES can accurately generate the correct blank ballot for any and all addresses.  Repeatably and on demand.
+
+15) When an election uses VOTES, all the current methods of traditional voting are supported:  early ballots, absentee ballots, physically voting in a voting center, and vote-by-mail.  
+
+16) VOTES also has the potential to enable citizens to monitor the election for voter-id fraud.  From many dispersed government agencies, any citizen can currently obtain voter registation data that often includes more information than just the voters name and address.  With VOTES a separate, independent, and private ledger containing only voter names and addresses from all voting centers is available to election officials during and after the election.  Depending on state regulations, this data may be made available to all citizens as well.  Citizens can use this data to support or refute claims of voter fraud, maximizing the ability for the citizens themselves to spot false addresses and false people.
+
+17) VOTES - transparent and open source elections by the people, for the people, we the people
