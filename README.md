@@ -4,57 +4,65 @@ A Verifiable Open Technology Election System
 
 # Overview
 
-VOTES is a distributed, open-source [voting](https://en.wikipedia.org/wiki/Voting) system that creates transparent, secure, and accurate elections with anonymous individually verifiable ballots.  VOTES maximizes the transparency and trust of an election thoughout the election process via:
+VOTES is a distributed, open-source [voting](https://en.wikipedia.org/wiki/Voting) system that enables transparent, secure, and accurate elections with full End-to-End (E2E) verifiable ballots.  VOTES maximizes the transparency and trust of an election throughout the election process by:
 
- - 100% independent paper trail
- - All software code and data is open-sourced and stored in a full ledger, distributed [Merkle tree](https://en.wikipedia.org/wiki/Merkle_tree) based version control system
- - A secure but anonymous on-line full copy/ledger of the physical paper ballots
- - No hidden tally points - any citizen/voter can execute the complete tally of any contest/question and inspect all ballots after all-the-polls close and the VOTES repositories are made available
- - End-to-End-Verification (E2EV) of election results with auditing
- - Best in class mutual SSL/TSL digital communications with independent multi factor authentication with anti-bot interrogation points
+- allowing each voter to verify that their ballot is electrontically cast and collected as intended
+- allowing each voter to verify that their ballot has been correctly counted as collected
 
-**END-VOTER ADVANTAGES:**  Using VOTES allows the voter to validate their ballot as well as the tally of any contest while maintaining voter anonymity. VOTES is 100% transparent, insuring that no entity or person can mishandle or manipulate any contest, ballot, or tally.  VOTES employs multiple modern cryptographic designs and techniques to insure tamper proof electronic communications while employing open source software to supply transparent and trustworthy elections.
+VOTES is an open source distributed database/repository and application that supports
 
-**ELECTION-OFFICIAL ADVANTAGES:** Using VOTES minimizes the overhead and expense of integrating the information and data originating from multiple towns, districts, etc. regarding running an election.  VOTES distributes checks and balances such that state officials control what they need to while allowing local and federal officials to efficiently enter, test, and validate the data for which they are responsible.  VOTES also exposes the execution of the ballot count in an open-source manner such that there is full transparency of the tally.  The incremental tallies are effectively immediately available to the voters and election officials alike as voting centers push their changes into the VOTES repositories.  Trust in the ballots and the tally is maximized to levels only available in 100% open source projects - there is no hidden code or data.
+- storing all the electronically interpreted scans of the paper ballots in a secure and anonymous manner
+- executing the tally of all the races via software code contained within repository
+- creating blank ballots as a function of address
+- storing the address and name of every person who casts a ballot without the association of any other information - the ballots are 100% anonymous
 
-**TECH ADVANTAGES:** VOTES allows the voter to anonymously validate their ballot and its accurate inclusion in an election.  VOTES is highly immune to hacking and compromise due to its distributed, open-source, full-ledger Merkle tree design, similar to various cryptocurrencies.  The VOTES technical design insures both a central authority responsible for supervising the election as well as no single source of truth that can be compromised from within or without.  All communication channels employ full mutual ssl/TLS via dedicated certificate authorities and channel independent multi factor crowd authentication.  VOTES also increases the difficulty of creating a market for the purchasing and selling of ballots by minimizing the opportunity of 3rd-party validation of ballots.  It fully supports traditional in-person balloting as well as vote-by-mail, early voting, and absentee voting, and any combination thereof.
+VOTES is not:
 
-**TRANSPARENCY, TRUST, and E2EV:**   VOTES is __not__ a voter identification system, but VOTES does record the names and addresses of the voters in the public repository.  There is no correlation between the voter-id and the cast ballot even though both are maintained by VOTES.  However, with the full ledger copy, election end-to-end-verification can proceed more efficiently and with greater scope given the homogeneity of the VOTES implementation and the VOTES connection between the specific physical ballot and the specific electronic copy and vice versa.
+- a voter ID solution
+- a voter registration solution
+- a ballot scanner nor contains ballot scanning software - VOTES receives the interpreted ballot from the ballot scanner, which could be a traditional mechanical scanner or a smart phone application
+- a replacement for paper ballots - VOTES supports a full E2E verified election in addition to a completely independent paper trail of the paper ballots
 
-Since VOTES includes the tally algorithm, trust in the complete electronic portion of the election is maximized.  This is particularly true for [Rank Choice Voting](http://www.fairvote.org/rcv#rcvbenefits) tallies.  As communities and state investigate and adopt RCV, being able to do so with VOTES maximizes the transparency and trust with these more complicated tallying algorithms.
+VOTES is implemented as a distributed repository and several embedded applications contained within the repository that store and process the electrically scanned and interpreted ballots.  This repository is a distributed [Merkle tree](https://en.wikipedia.org/wiki/Merkle_tree) that contains a full ledger of all the transactions that have occurred during the election process, nominally starting months prior to election day.  This includes the GIS information for each geographical/geopolitical boundary (the state, county, town, school district, precinct, etc), the (automatic) layout of the blank ballots for each address, and the (potentially different) tallies for each race.  This same repository then also records the (completely anonymous) cast ballots as well as the names and addresses of those voting.
 
-With VOTES both the physical and electronic copy can be inspected and compared with complete voter anonymity while also supporting voter validation of their cast ballot.
+# How Does VOTES Work?
 
-**GERRYMANDERING ADVANTAGES:**  VOTES does not solve [gerrymandering](https://en.wikipedia.org/wiki/Gerrymandering) nor the inherent shortcomings of district based plurality voting failing to achieve accurate [proportional representation](https://en.wikipedia.org/wiki/Proportional_representation).  However, VOTES does allow the direct inspection of their combined affect.  On any geographical/geopolitical overlay (GGO), any specific ballot's over or under proportional representation by party or affiliation can be calculated and displayed as a function of an anonymous address.  This allows the individual voter to directly see any effects of potential gerrymandering on their ballot.
+## A Physical Voting Center Example
 
-Though VOTES does not solve gerrymandering nor the negative affects of various [voting systems](https://en.wikipedia.org/wiki/Electoral_system), VOTES does cast light and transparency on both.  Being open source and full ledger based, VOTES allows any GGO (a state, precinct, municipality, city/town, school district, etc) to experiment with, share, and leverage different voting systems and/or [tally algorithms](https://en.wikipedia.org/wiki/Ranked_voting).
+When a voter casts their ballot in a physical voting, the ballot is scanned and interpreted (parsed) at the scanner.  A private screen (for example, a cell phone connected to the scanner and not connected to the internet) displays the interpreted results.  If the results are incorrect, the voter cancels the ballot, the ballot is destroyed, and the voter tries again.
 
-**BUSINESS ADVANTAGES:**  VOTES can be adopted by existing election solution providers ([ESS/Diebold](http://www.essvote.com/about/), [ClearBallot](http://www.clearballot.com/), etc.), public or private agencies during the [RFP](https://en.wikipedia.org/wiki/Request_for_proposal) process for voting machines, by UVBM ([Universal Vote By Mail](http://washingtonmonthly.com/magazine/janfeb-2016/vote-from-home-save-your-country/)) proponents/solutions, or anyone wishing to provide election systems/solutions.  The operational business model behind VOTES is a  [SaaS](https://en.wikipedia.org/wiki/Software_as_a_service) solution capable of handling national, state, town, or private elections.
+Once a scan of the ballot has been approved by the voter, the interpreted results are added to the VOTES repository.  Via the same private screen, the voter is shown an index number between 1 and 100.  In addition a ballot printer prints a page with 100 valid and specially selected ballot digests indexed between 1 and of 100.  The privately displayed index indicates which digest belongs to the voter.  The transfer of this number from VOTES to the voter and the selection of the 100 public digests are done so that the voter's digest cannot be validated by a third party - there is no soft or hard copy retention of the index once it is displayed.
+
+Once all the polls close, the full election ledger that contains all the ballots and election software is publicly made available.  The voters with a digest can look up their digest in the VOTES repository to confirm that their ballot has been properly collected.
+
+In addition to and separate of this validation, each voter or election officials who has downloaded the VOTES repository can execute the election tallies directly on their computer devices.  There is no reliance on a single trusted source for the tally.
+
+In addition to the ballot and tally validations, each voter and election official can inspect their local neighborhood or any other neighborhood for suspicious names and addresses.  This level of transparency will combat conspiracy theories proposed by disgruntled candidates as well as third parties.  It will allow election officials to quickly investigate suspicious voting.
+
+All of the above increase the trust and transparency of an election.
+
+## Vote by Mail Example
+
+In vote-by-mail scenarios, the ballots are mailed to the election officials.  Note that in vote-by-mail scenarios both election officials and the electorate have placed trust in all the voters that they will not sell their mail-in ballot for compensation.  Using VOTES will not directly validate that voter has not done this.
+
+Note that election officials have multiple options for configuring VOTES regarding handling vote-by-mail scenarios.  For example, election officials could configure VOTES such that:
+
+- VOTES prints the 100 digests per ballot and mails this back to the voter
+- VOTES prints a URL for the 100 digests and mails, emails, or txt's the URL back to the voter
+
+In both cases, the voter's secret index number can either simply be discarded, be returned to the voter by mail or some other method of delivery, or be secretly revealed (similarly to in-person voting) later by an election official at a town center.  In this latter scenario the election official must be able to accurately identify the voter and record the fact that a secret index was given out.
+
+Regardless of whether a vote-by-mail voter receives their ballot digest, once all the polls close the VOTES repository is made publicly available.  Vote-by-mail voters who know their digest can check their ballot.  Regardless, all the voters can still tally all the races and check the voter names and addresses in their neighborhood for potential inconsistencies.  This latter check offers transparency into vote-by-mail ballots as soon as the VOTES repository is available.
+
+# Additional Details
 
 VOTES is intended to be as compliant as possible with [NIST](https://en.wikipedia.org/wiki/National_Institute_of_Standards_and_Technology)'s [voting](https://www.nist.gov/itl/voting) efforts (see the [HAVA](https://en.wikipedia.org/wiki/Help_America_Vote_Act) Act).
 
 For more information contact Sandy Currier at:  windoverwater at gmail dot com
 
-# Basic Design Goals
-
-The basic high level design goals (unordered) are:
-
-* After the polls close, each voter can validate the accuracy of their electronic ballot and its proper tally
-* After the polls close, all citizens can access the open-source public repository and validate the tallies and inspect the ballot and voter records
-* Support independent paper and electronic trails
-* Support any tally [methodology](https://electology.org/library) / [election system](https://en.wikipedia.org/wiki/Electoral_system) such as plurality, approval, ranked choice voting, etc.
-* Support different tally methodologies at different geographical/geopolitical overlays
-  * can be incrementally adopted at different geographical/geopolitical overlays/levels
-* Support different ballot casting scenarios - physical voting centers, vote-by-mail, early voting, absentee voting
-* Scales well, is secure, and ensures election accuracy and transparency
-* Is easily testable with an integrated test hardness and CI/CD pipelines
-  * all code changes require successful test runs, etc.
-* Create a solution that is usable in the 202x US election
-
-# Status - 2019/10/14
+# Status - 2020/02/14
 
 VOTES is currently in the design phase - still working out the basics.
 * Looking for volunteers to help in any way
 * Working on a kickstarter campaign
 * Looking into potential funding
-* See the [docs](https://github.com/relengcom/votes/tree/master/docs) directory for more information
