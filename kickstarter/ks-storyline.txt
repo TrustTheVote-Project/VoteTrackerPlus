@@ -20,7 +20,7 @@ We the people...
 
 10) First, VOTES starts with a real paper ballot, regardless if printed by VOTES or not.  When each paper ballot is scanned, the electronic and paper ballots are directly and cryptographically connected with a block-chain like key.  The electronic ballot and key are stored in a cryptographically locked, full-history ballot ledger that is publicly available once all the polls close.
 
-There are two important aspects of this cryptographic key:
+There are two critically important aspects of this cryptographic key:
 
 11) First, this cryptographic key is a public and not a private key - there are no private keys in VOTES.  This is vastly different than cryptocurrencies and typical block-chain solutions where private ownership is a must.  With public elections it is critical to not have private ownership of a ballot as that would allow someone to sell their vote.  With VOTES there is no way to trace the cryptographic key back to a voter.
 
@@ -34,6 +34,6 @@ For citizens not voting in person, each state can decide if and how they will id
 
 15) When an election uses VOTES, all the current methods of traditional voting are supported:  early ballots, absentee ballots, physically voting in a voting center, and vote-by-mail.  
 
-16) VOTES also has the potential to enable citizens to monitor the election for voter-id fraud.  From many dispersed government agencies, any citizen can currently obtain voter registation data that often includes more information than just the voters name and address.  With VOTES a separate, independent, and private ledger containing only voter names and addresses from all voting centers is available to election officials during and after the election.  Depending on state regulations, this data may be made available to all citizens as well.  Citizens can use this data to support or refute claims of voter fraud, maximizing the ability for the citizens themselves to spot false addresses and false people.
+16) VOTES also has the potential to enable citizens to monitor the election for voter id fraud.  From many dispersed government agencies, any citizen can currently obtain voter registation data that often includes more information than just the voters name and address.  With VOTES a separate, independent, and private ledger consolidating only voter names and addresses election wide from all voting centers is available to election officials during and after the election.  Depending on state regulations, this data may be made available to all citizens as well.  Citizens can use this database to support or refute claims of voter fraud, maximizing the ability for the citizens themselves to spot false addresses and false people.
 
 17) VOTES - transparent and open source elections by the people, for the people, we the people
