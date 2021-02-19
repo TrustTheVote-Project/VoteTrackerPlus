@@ -149,24 +149,24 @@ Note that during these workflows, the Git repo can be pushed upstream to a remot
 
 The primary goal of the kickstarter campaign is to raise the funds to develop VOTES into a demonstrable prototype.  With a working prototype VOTES can be demonstrated to city and state election officials and the public at large.  It will maximize that a VOTES or similar are derivitive solution be developed as soon as possible.  Clear and free and transparent peer review by the general public is key.  Since VOTES is a disruptive solution, a working prototype greatly increases the ability to win an RFPs (Request For Proposals) to create a VOTES solution for an upcoming election.  By winning one or more such RFPs, the VOTES project will receive the funding necessary to actually be used in a public election.
 
-Just to be clear:
+Software Disclaimer:
 
-**THIS KICKSTARTER CAMPAIGN IS RAISING FUNDS FOR THE RESEARCH AND DEVELOPMENT OF AN OPEN SOURCE, E2EV ELECTION SYSTEM CALLED VOTES.  IT IS NOT FUNDING THE IMMEDIATE AND DIRECT PRODUCTIZATION OF AN OPEN SOURCE E2EV ELECTION SYSTEM.  PLEDGES ARE BEING CONSIDERED AS DONATIONS/GIFTS TO FURTHER THE DEVELOPMENT OF VOTES WITH NO EXPECTATIONS OF ANY PRODUCT OR VALUE IN EXCHANGE.  THIS PROJECT IS EXTREMELY RISKY INVESTMENT!**
+**THIS FUNDRAISING CAMPAIGN IS RAISING FUNDS FOR THE RESEARCH AND DEVELOPMENT OF AN OPEN SOURCE, E2EV ELECTION SYSTEM CALLED VOTES.  IT IS NOT FUNDING THE IMMEDIATE AND DIRECT PRODUCTIZATION OF ANY SUCH ELECTION SYSTEM.  PLEDGES ARE CONSIDERED AN DONATION/GIFT TO FURTHER THE DEVELOPMENT OF VOTES WITH NO EXPECTATIONS OF ANY SPECIFIC PRODUCT TIMELINE.  A DONATION TO THIS PROJECT IS AN EXTREMELY RISKY INVESTMENT!**
 
-Election systems need to go through a separate and extensive RFP process in every voting juridiction, which for the United States is over 8,000 jurisdictions.  This campaign is an attempt to get VOTES into an initial set of RFP conversations and then into a working prototype.
+Election systems need to go through a separate and extensive RFP process in every voting juridiction, which for the United States numbers more than 8,000.  This campaign is an attempt to get VOTES into an initial set of RFP conversations and then into a working prototype.
 
 If no RFP is signed, a secondary goal is that the kickstarter funding will allow enough technology to be created and demonstrated such that some form of public or private investing can occur, or for an existing election system vendor to independently adopt the technology.
 
-Regardless of any financial outcome, a fundamental goal is to make elections more transparent, secure, and trustworthy.  Even if our funding goal is not reached, the kickstarter campaign can be considered successful if VOTES is reviewed by more voters, election scientists, and technology experts.  Being open source, such a review is critically important for any next generation digital election solution and serve as an important open source reference.
+Regardless of any financial outcome, a fundamental goal is to make elections more transparent, secure, and trustworthy.  Even if our funding goal is not reached, the kickstarter campaign can be considered successful if VOTES is reviewed by more voters, election scientists, and technology experts.  Being open source, such a review is critically important for any next generation digital election solution and can serve as an important open source reference.
 
 # 8) Why raise $100,000?
 
-The first $100,000 allows me, Sandy Currier, to work on VOTES full time for about one year with some amount software development subcontracting.  For each additional $25,000 raised, additional software development subcontracting can be added for developing the VOTES prototype and test framework.
+The first $100,000 allows me, Sandy Currier, to work on VOTES full time for about one year with some amount software development subcontracting.  For each additional $25,000 raised, additional software development subcontracting can be added for developing the VOTES prototype and test framework.  The more resources that are raised, the more work can be done in a shorter time frame.
 
 # 9) Who is behind VOTES?
 
-Sandy Currier started thinking about VOTES after a 2016 Thanksgiving Holiday gathering.  A lively discussion occurred concerning whether anyone was sure their vote had ever actually been counted, and if block-chain technology could be used for public elections.  He rejected block chains as a viable solution and was hoodwinked into accepting the challenge of looking into it and reporting back the following year.
+Sandy Currier started thinking about VOTES after a 2016 Thanksgiving Holiday gathering.  A lively discussion occurred concerning whether anyone was sure their vote had ever actually been counted, and if block-chain technology could be used verify that.  He rejected block chains as a viable solution and was eventually hoodwinked into accepting the challenge of looking into open source, transparent, E2EV election systems, and reporting back the following year.
 
-Over the next few years Sandy investigated the history and current state of the science and art of voting technologies.  He sat in on numerous meetings at MIT concerning voting policy, operations, trends, security, and technology.  He discussed ideas with MIT professors, election officials, and private sector experts.  He is now trying to work on VOTES full time.
+Over the next few years Sandy investigated the history and current state of the science and art of voting technologies.  He sat in on numerous meetings at MIT concerning voting policies and election systems.  He discussed ideas with MIT professors, election officials, and private sector experts.  He is now trying to work on VOTES full time.
 
-Sandy graduated from MIT in 1986 and has worked in the high-tech sector for 34 years.  He's developed solutions for start-ups, Fortune 500 companies, and has run his own software company.  His bio is available at https://www.linkedin.com/in/toolsmith/Outline
+Sandy graduated from MIT in 1986 and has worked in the high-tech sector for 35 years.  He's developed solutions for start-ups, Fortune 500 companies, and has run his own software company.  His bio is available at https://www.linkedin.com/in/toolsmith/Outline
