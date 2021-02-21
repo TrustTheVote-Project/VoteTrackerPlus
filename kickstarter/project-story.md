@@ -9,17 +9,17 @@
 
 # 1) What is VOTES?
 
-VOTES is a distributed, open-source [voting](https://en.wikipedia.org/wiki/Voting) system that enables transparent, secure, and accurate elections with full [End-to-end](https://en.wikipedia.org/wiki/End-to-end_auditable_voting_systems) (E2E) verifiable ballots.  VOTES maximizes the transparency and trust of an election throughout the election process by:
+VOTES is a distributed, open-source [voting](https://en.wikipedia.org/wiki/Voting) system that enables transparent, secure, and accurate elections with full voter based [End-to-end](https://en.wikipedia.org/wiki/End-to-end_auditable_voting_systems) verifiable (E2EV) ballots.  VOTES maximizes the transparency and trust of an election throughout the election process by:
 
 - allowing each voter to verify that their ballot is electronically cast, collected, and counted as intended
 - allowing each voter to verify the tally of all the ballot questions
 - allowing each voter to inspect their neighborhood for fraudulent voters and/or addresses
 - allowing election officials to inspect all the voter names and addresses across the entire electorate for possible voter and ballot fraud
-- encryptographically associating the anonymous paper ballots with the anonymous VOTERS digital copies, insuring that neither set is tampered or fraudulently altered, as well as supplying a third copy directly to the voter themselves, thus creating 3 separate copies of the anonymous but cryptographically signed ballot data
+- cryptographically associating the anonymous paper ballots with the anonymous VOTERS digital copies, insuring that neither set is tampered or fraudulently altered as well as supplying a third copy directly to the voter themselves, thus creating 3 separate copies of the anonymous but cryptographically signed ballot data
 
 VOTES is an open source distributed database/repository and application that supports
 
-- full End-to-End (E2E) validation of the paper and digital ballots
+- full End-to-End validation (E2EV) of the paper and digital ballots
 - storing all the electronically interpreted scans of the paper ballots in a secure and anonymous manner
 - executing the tally of all the races via 100% open source software contained within the same repositories as the ballot data
 - creating blank ballots as a function of address
@@ -32,31 +32,31 @@ VOTES is NOT a:
 - ballot scanner nor contains ballot scanning software - VOTES receives the interpreted ballot from the ballot scanner, which could be a traditional mechanical scanner, smart phone application, or manually from an election official
 - replacement for paper ballots - VOTES requires the balloting process to start with a paper ballot
 
-VOTES is implemented as a distributed set of repositories containing open-source applications that store and process the electronically interpreted scanned ballots.  These repositories are a distributed [Merkle tree](https://en.wikipedia.org/wiki/Merkle_tree) database/repository that contains a full ledger history of all the transactions that have occurred during the election process, nominally starting months prior to election day.  The Merkle tree contains a full change history of the following components that comprise a VOTES election:
+VOTES is implemented as a distributed set of repositories containing open-source applications that store and process the electronically interpreted scanned ballots.  These repositories are managed as a distributed [Merkle tree](https://en.wikipedia.org/wiki/Merkle_tree) database that contains a full ledger history of all the transactions that have occurred during the election process, nominally starting months prior to election day.  The Merkle tree contains a full change history of the following components that comprise a VOTES election:
 
 - The GIS information for each geographical geopolitical overlay (GGO) boundary (the state, county, town, school district, precinct, etc boundaries).  This includes the capability to automatically print blank ballots as a function of address.
-- All the software applications relavent to the election, including for example the application to tally each question on any ballot, regardless of tally methodology be it plurality, ranked choice, approval, etc.
-- A repository of the scanned/interpreted anonymous ballots themselves as the election data
+- All the software applications relavent to the election, including for example the application to tally each ballot question, regardless of tally methodology be it plurality, ranked choice, approval, etc.
+- A repository of the scanned/interpreted anonymous ballots themselves as election data
 - A repository of the names and addresses only of the individuals who have voted as election data
 
-In summary, the VOTES distributed repositories store both the open source software and the data that comprise the entire election process, from months prior election day, the election day itself, and post election day as additional ballots may be counted or recounted.  VOTES also handles election data being legally challenged and redacted.
+In summary, the VOTES distributed repositories store both the open source software and the data that comprise the entire election process, from months prior election day, the election day itself, and post election day as additional ballots may be counted or recounted.  VOTES also handles election data being legally challenged and redacted, again recording such actions transparently in the same Merkle tree databases.
 
 # 2) What is unique about VOTES?
 
-There are several different efforts and products that offer secure elections and E2E verification, such as [Helios Voting](https://heliosvoting.org/), [Scantegrity](https://en.wikipedia.org/wiki/Scantegrity), [Pret-a-Voter](https://en.wikipedia.org/wiki/Pr%C3%AAt_%C3%A0_Voter), [STARVote](https://www.usenix.org/conference/evtwote13/workshop-program/presentation/bell), and [ElectionGuard](https://freeandfair.us/electionguard/).  And there are many DIY home voting initiatives as well.  Every effort is worth considering and helps advance the science and art of digital voting and election systems.  All such efforts are worthwhile as digital based voting is a very challenging and complicated space technically, politically, and user experience wise - it is ripe for a disruptive solution.  To help understand a fundamental aspect of any digital voting solution, digital solutions can be divided into four basic types:
+There are several different efforts and products that offer secure elections and E2EV (though not necessarily end-voter based E2EV), such as [Helios Voting](https://heliosvoting.org/), [Scantegrity](https://en.wikipedia.org/wiki/Scantegrity), [Pret-a-Voter](https://en.wikipedia.org/wiki/Pr%C3%AAt_%C3%A0_Voter), [STARVote](https://www.usenix.org/conference/evtwote13/workshop-program/presentation/bell), and [ElectionGuard](https://freeandfair.us/electionguard/).  And there are many DIY home voting initiatives as well.  Every effort is worth considering and helps advance the science and trustworthiness of digital voting and election systems.  All such efforts are worthwhile as digital based voting is a challenging and complicated space technically, politically, and user experience wise - it is ripe for a disruptive solution.  To help understand a fundamental aspect of any digital voting solution, digital solutions can be divided into four basic types:
 
 - 1) those without a paper ballot which create only one source of truth stored as digital information (ignoring data backups, redundancy, etc).  THIS IS NOT RECOMMENDED
 - 2) those that require a paper ballot and create a single digital copy of it (ignoring backups, data redundancy etc), creating two sources of truth, one paper and one digital, that are either directly or indirectly bound, with the both data and software not being open source.  BETTER, BUT NOT GOOD ENOUGH.
 - 3) similar to number 2, but includes encryptions and private keys to allow some type of inspection by some type of third party.  MAYBE BETTER, BUT ADDS COMPLEXITY AND VULNERABILITIES, INCREASING THE ATTACK SURFACE
-- 4) those that require a paper ballot and create a digital copy of it with multiple independent copies of the truth distributed back to the voters themselves,  without private key based encryption.  BEST
+- 4) those that require a paper ballot and create a digital copy of it with multiple independent copies of the truth distributed back to the voters themselves, without private key based encryption.  BEST
 
 In addition, there is the important aspect of who can be trusted in an election, with one important constituite being the voter themselves.  Other important constituites are the election officials that staff/handle the physical ballots, the federal government that approves the election results, and the ballot scanning device manufacturer.  Note - VOTES is not a ballot scanning device manufacturer.
 
 Currently only VOTES is a type 4 election system.  With VOTES there are three separate copies of the ballot data:
 
 - The first is a paper ballot controlled and secured by the election officials.
-- The second is a digital copy of the personally voter-approved interpreted digital scan of their ballot stored in the VOTES repository.   The data at rest aspects of this digital copy is controlled and secured via a Merkle tree based solution and stored as 100% open source software that is also contained in the same repository as the ballot contents.
-- The third copy is a partial copy of the ballot data handed back to the voter on a 8.5"x11" sheet secured by the GUIDs and digests generated by VOTES.
+- The second is a digital copy of the personally voter-approved interpreted digital scan of their ballot stored in the VOTES repository.   The data-at-rest aspects of this digital copy is controlled and secured via a Merkle tree based solution and stored as 100% open source software that is also contained in the same repository as the ballot contents.  The data-in-movememt aspects of this data is secured operationally throughout the entire election process (typically many months).
+- The third copy is a partial copy of the ballot data handed back to the voter on a 8.5"x11" sheet secured by the cryptographic GUIDs (Global Unique Identifiers) and digests generated by VOTES.
 
 With these three independent sources of truth, a compromise by any one can be validated by the other two.  In addition and most importantly the voter themselves can validate their own specific ballot as well as the tally of their ballot without relying on the other entities!  This is part of the power of three copies of the ballot contents with one being literally in the hands of the voters themselves.
 
@@ -149,7 +149,7 @@ Note that during these workflows, the Git repo can be pushed upstream to a remot
 
 The primary goal of the kickstarter campaign is to raise the funds to develop VOTES into a demonstrable prototype.  With a working prototype VOTES can be demonstrated to city and state election officials and the public at large.  It will maximize that a VOTES or similar are derivitive solution be developed as soon as possible.  Clear and free and transparent peer review by the general public is key.  Since VOTES is a disruptive solution, a working prototype greatly increases the ability to win an RFPs (Request For Proposals) to create a VOTES solution for an upcoming election.  By winning one or more such RFPs, the VOTES project will receive the funding necessary to actually be used in a public election.
 
-Software Disclaimer:
+Fundraiser Disclaimer:
 
 **THIS FUNDRAISING CAMPAIGN IS RAISING FUNDS FOR THE RESEARCH AND DEVELOPMENT OF AN OPEN SOURCE, E2EV ELECTION SYSTEM CALLED VOTES.  IT IS NOT FUNDING THE IMMEDIATE AND DIRECT PRODUCTIZATION OF ANY SUCH ELECTION SYSTEM.  PLEDGES ARE CONSIDERED AN DONATION/GIFT TO FURTHER THE DEVELOPMENT OF VOTES WITH NO EXPECTATIONS OF ANY SPECIFIC PRODUCT TIMELINE.  A DONATION TO THIS PROJECT IS AN EXTREMELY RISKY INVESTMENT!**
 
