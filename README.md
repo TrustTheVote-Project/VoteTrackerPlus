@@ -44,7 +44,7 @@ The following is a short and incomplete list of other and past voting projects:
 
 For more information contact Sandy Currier at:  windoverwater at gmail dot com
 
-# Status - 2020/02/14
+# Status - 2021/02/21
 
 VOTES is currently in the design phase - still working out the basics and trying to obtain credible peer reviews.  The current priorities are:
 * Looking for technical, legal, and UX design peer reviews
