@@ -47,7 +47,11 @@ For more information contact Sandy Currier at:  windoverwater at gmail dot com
 # Status - 2021/02/21
 
 VOTES is currently in the design phase - still working out the basics and trying to obtain credible peer reviews.  The current priorities are:
-* Looking for technical, legal, and UX design peer reviews
+* Looking for technical, legal, and UX design peer reviews; positive, negative or neutral
 * Looking for volunteers to help in any way
 * Working on a kickstarter/gofundme campaign
 * Looking into potential funding
+
+The kiskstarter project is nearly complete and ready to launch.  The project video is available at [https://www.youtube.com/watch?v=V0EuZHNHZ6A](https://www.youtube.com/watch?v=V0EuZHNHZ6A).  However, the launch is being delayed until adequate peer reviews have been given so to independently establish the efficacy and viability of a VOTES approach to an election.  Donating money and time to a doomed project is not a good thing.  So, if you watch the above videa and/or read any of the summaries and can offer strong feedback, it would be greatly appreciated.  It is possible that many people would appreciate it.
+
+There is a project blog at [https://releng.com/blog](https://releng.com/blog)
