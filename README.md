@@ -19,7 +19,7 @@ VOTES is an open source distributed database/repository and application that sup
 * executing the tally of all the races via 100% open source software contained within the same repositories as the ballot data
 * creating blank ballots as a function of address
 * storing the address and name of all the voters who cast a ballot without the association of any other information - the ballots are 100% anonymous
-    * if there is a previous election, VOTES can track the voter's name and address across election allowing greater insight and transparency into potential voter and election fraud
+    * if there is a previous election, VOTES can track the voter's name and address across elections allowing greater insight and transparency into potential voter and election fraud
 
 
 VOTES is NOT a:
