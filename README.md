@@ -35,7 +35,7 @@ For a more detailed overview, see the file [./kickstarter/project-story.md](./ki
 
 VOTES is intended to be compliant to the extent that it makes sense with [NIST](https://en.wikipedia.org/wiki/National_Institute_of_Standards_and_Technology)'s [voting](https://www.nist.gov/itl/voting) efforts (see the [HAVA](https://en.wikipedia.org/wiki/Help_America_Vote_Act) Act).
 
-VOTES will attempt to leverage as much code and prior art from such projects as [VotingWorks](https://voting.works/).
+VOTES will attempt to leverage as much code and prior art from such projects as [VotingWorks](https://voting.works/).  It may be the case that VOTES will first be intergrated with VotingWorks as a proof-of-concept.
 
 The following is a short and incomplete list of other and past voting projects:
 * [Helios Voting](https://heliosvoting.org/) 
@@ -43,6 +43,7 @@ The following is a short and incomplete list of other and past voting projects:
 * [Pret-a-Voter](https://en.wikipedia.org/wiki/Pr%C3%AAt_%C3%A0_Voter) 
 * [STARVote](https://www.usenix.org/conference/evtwote13/workshop-program/presentation/bell) 
 * [ElectionGuard](https://freeandfair.us/electionguard/) 
+* [VotingWorks](https://www.voting.works/) (and [VotingWorks Suite](https://docs.voting.works/vxsuite/))
 
 For more information contact Sandy Currier at:  windoverwater at gmail dot com
 
