@@ -3,9 +3,12 @@
 2) What is unique about VOTES?
 3) VOTES is and leverages open source software
 4) How does VOTES work?
-5) What is the KickStarter campaign funding?
-6) Why raise $100,000?
-7) Who is behind VOTES? 
+5) End-to-End Voter Validation (E2EV)
+6) High Level Tech Summary of Scanning a Ballot
+7) Security
+8) What is the KickStarter campaign funding?
+9) Why raise $100,000?
+10) Who is behind VOTES? 
 
 # 1) What is VOTES?
 
@@ -20,7 +23,7 @@ VOTES is a distributed, open-source [voting](https://en.wikipedia.org/wiki/Votin
 VOTES is an open source distributed database/repository and application that supports
 
 - full End-to-End validation (E2EV) of the paper and digital ballots
-- storing all the electronically interpreted scans of the paper ballots in a secure and anonymous manner
+- storing all the [cast vote records](https://pages.nist.gov/ElectionGlossary/#cast-vote-record) (CVR) in a secure and anonymous manner
 - executing the tally of all the races via 100% open source software contained within the same repositories as the ballot data
 - creating blank ballots as a function of address
 - storing the address and name of all the voters who cast a ballot without the association of any other information - the ballots are 100% anonymous
@@ -32,11 +35,11 @@ VOTES is NOT a:
 - ballot scanner nor contains ballot scanning software - VOTES receives the interpreted ballot from the ballot scanner, which could be a traditional mechanical scanner, smart phone application, or manually from an election official
 - replacement for paper ballots - VOTES requires the balloting process to start with a paper ballot
 
-VOTES is implemented as a distributed set of repositories containing open-source applications that store and process the electronically interpreted scanned ballots.  These repositories are managed as a distributed [Merkle tree](https://en.wikipedia.org/wiki/Merkle_tree) database that contains a full ledger history of all the transactions that have occurred during the election process, nominally starting months prior to election day.  The Merkle tree contains a full change history of the following components that comprise a VOTES based election:
+VOTES is implemented as a distributed set of repositories containing open-source applications that store and process the [cast vote records](https://pages.nist.gov/ElectionGlossary/#cast-vote-record).  These repositories are managed as a distributed [Merkle tree](https://en.wikipedia.org/wiki/Merkle_tree) database that contains a full ledger history of all the transactions that have occurred during the election process, nominally starting months prior to election day.  The Merkle tree contains a full change history of the following components that comprise a VOTES based election:
 
 - The GIS information for each geographical geopolitical overlay (GGO) boundary (the state, county, town, school district, precinct, etc boundaries).  This includes the capability to automatically print blank ballots as a function of address.
 - All the software applications relavent to the election, including for example the application to tally each ballot question, regardless of tally methodology be it plurality, ranked choice, approval, etc.
-- A repository of the scanned/interpreted anonymous ballots themselves as election data
+- A repository of the  anonymous cast vote records as election data
 - A repository of the names and addresses only of the individuals who have voted as election data
 
 In summary, the VOTES distributed repositories store both the open source software and the data that comprise the entire election process, from months prior election day, the election day itself, and post election day as additional ballots may be counted or recounted.  VOTES also handles election data being legally challenged and redacted, again recording such actions transparently in the same Merkle tree databases.
@@ -55,7 +58,7 @@ In addition, there is the important aspect of who can be trusted in an election,
 Currently only VOTES is a type 4 election system.  With VOTES there are three separate copies of the ballot data:
 
 - The first is a paper ballot controlled and secured by the election officials.
-- The second is a digital copy of the personally voter-approved interpreted digital scan of their ballot stored in the VOTES repository.   The data-at-rest aspects of this digital copy is controlled and secured via a Merkle tree based solution and stored as 100% open source software that is also contained in the same repository as the ballot contents.  The data-in-movememt aspects of this data is secured operationally throughout the entire election process (typically many months).
+- The second is a digital copy of the personally voter-approved cast vote record of their ballot stored in the VOTES repository.   The data-at-rest aspects of this digital copy is controlled and secured via a Merkle tree based solution and stored as 100% open source software that is also contained in the same repository as the ballot contents.  The data-in-movememt aspects of this data is secured operationally throughout the entire election process (typically many months).
 - The third copy is a partial copy of the ballot data handed back to the voter on a 8.5"x11" sheet secured by the cryptographic GUIDs (Global Unique Identifiers) and digests generated by VOTES.
 
 With these three independent sources of truth, a compromise by any one can be validated by the other two.  In addition and most importantly the voter themselves can validate their own specific ballot as well as the tally of their ballot without relying on the other entities!  This is part of the power of three copies of the ballot contents with one being literally in the hands of the voters themselves.
@@ -80,14 +83,14 @@ The following is a high level walk through of what a voter would experience when
  
 - The voter proceeds to location #2 to privately fill out the ballot.  No active recording devices are allowed caveat local regulations to the contrary.
  
-- The voter proceeds to location #3 and inserts their ballot into the ballot scanner, which is not part of VOTES.  S/he privately reviews the electronic interpretation of their ballot.  At this point the voter can accept or reject the digital scan of their paper ballot.  If the voter rejects the scan, the ballot is voided and s/he obtains a new blank ballot, returning to location #2 to try again.  If the voter accepts the scan, the physical ballot is accepted and the scan of the ballot is permanently stored in VOTES.  The scanner will then print a sheet of paper with 100 rows of ballot data on it.  The scanner will also privately display to the voter the offset in the sheet of their specific ballot.  Technical details of this step is described in section 5 below.
+- The voter proceeds to location #3 and inserts their ballot into the ballot scanner, which is not part of VOTES.  S/he privately reviews the electronic interpretation of their ballot.  At this point the voter can accept or reject the digital scan of their paper ballot.  If the voter rejects the interpretation of the scan, the ballot is voided and s/he obtains a new blank ballot, returning to location #2 to try again.  If the voter accepts the interpretation of the scan, the physical ballot is accepted and the scan of the ballot is permanently stored in VOTES.  The scanner will then print a sheet of paper with 100 rows of ballot data on it.  The scanner will also privately display to the voter the offset in the sheet of their specific ballot.  Technical details of this step is described in section 5 below.
  
-- The voting center optionally offers location #4, where a voter can place their sheet face down on a VOTES scanner which is not a ballot scanner.  Unlike location #3 that validates the scan of the ballot and updates the VOTES database with the new ballot, location #4 solely validates that the voter's handout which includes their ballot as well as 99 other ballots.  Specifically all 100 rows of ballot data is validated against the live VOTES Merkle database for the election.  The VOTES scanner at location #4 will display an invalid indication if any of the ballot data on the voter's handout is not currently correct in the live VOTES databases.
+- The voting center optionally offers location #4, where a voter can place their sheet face down on a VOTES scanner which is not a ballot scanner.  Unlike location #3 that validates the interpretation of the scan of the ballot and updates the VOTES database with the new ballot, location #4 solely validates that the voter's handout which includes their ballot as well as 99 other ballots.  Specifically all 100 rows of ballot data is validated against the live VOTES Merkle database for the election.  The VOTES scanner at location #4 will display an invalid indication if any of the ballot data on the voter's handout is not currently correct in the live VOTES databases.
 
 **Three important clarifications:**
 
-- There is no publicly available 'image scan' of the paper ballot - VOTES only makes available the interpreted ballot and the digest pairs.  The actual image scan is controlled by the ballot scanner manufacturer.
-- Once all the polls have closed and enough ballots have been scanned and the voters' names and addresses have been recorded, the VOTES repositories can be made publicly available.  The repos include the tally algorithms that are executed to tally the election, the scanned ballot data, and, independently, all the voter names and addresses. (There is 100% no connection between a voter's name and address and their ballot anywhere in VOTES or on the printed ballots.)  The repo allows every voter to once again verify that their ballot is correctly recorded using their public digests as well as to execute the tally on their smart devices. It also allows neighborhoods to self-patrol for fraudulent people or addresses as well as state and federal investigations to scan for unauthorized or fraudulent registered voters across the entire electorate.
+- There is no publicly available 'image scan' of the paper ballot - VOTES only makes available the interpreted ballot and the digest pairs.  The actual image scan is controlled by the ballot scanner manufacturer and the election officials
+- Once all the polls have closed and enough ballots have been cast and the voters' names and addresses have been recorded, the VOTES repositories can be made publicly available.  The repos include the tally algorithms that are executed to tally the election, the cast vote records, and, independently, all the voter names and addresses. (There is 100% no connection between a voter's name and address and their ballot anywhere in VOTES or on the printed ballots.)  The repo allows every voter to once again verify that their ballot is correctly recorded using their public digests as well as to execute the tally on their smart devices. It also allows neighborhoods to self-patrol for fraudulent people or addresses as well as state and federal investigations to search for unauthorized or fraudulent registered voters across the entire electorate.
 - As the hours and days pass and additional ballots continue to be scanned and added to the VOTES Merkle based repositories, rolling public updates continue, allowing for constant E2EV as well as intermediary ballot tallies.  Note that all citizens and election officials can download the latest repositories and verify and tally the election results.
 
 ## 4b) Vote by mail Example - what happens to the ballot
@@ -108,7 +111,7 @@ After all the polls close, VOTES already contains the tested, verified, and open
 
 # 5) End-to-End Voter Validation (E2EV)
 
-VOTES directly supports E2EV by providing three separate copies of the voter's ballot.  The first is the physical ballot controlled by the local election officials.  The second is the digital scan of the ballot as approved by the voter and stored in the VOTES public repository.  The third copy is a partial copy of the VOTES data given to the voter on a 8.5"x11" paper containing encrypted and randomized digests of the voter's ballot.  These three different copies in addition the inherent properties of the Merkle tree database support multiple and different E2EV pathways.  The physical ballots can be independently sampled and compared to the electronic copies both in count, content, and via statistical sampling.  Each voter can validate their individual paper copy against the public repository as well.  In addition, voters in possession of their ballot's row index can inspect their specific digital ballot.
+VOTES directly supports E2EV by providing three separate copies of the voter's ballot.  The first is the physical ballot controlled by the local election officials.  The second is the cast vote record as approved by the voter and stored in the VOTES public repository.  The third copy is a partial copy of the VOTES data given to the voter on a 8.5"x11" paper containing encrypted and randomized digests of the voter's ballot.  These three different copies in addition the inherent properties of the Merkle tree database support multiple and different E2EV pathways.  The physical ballots can be independently sampled and compared to the electronic copies both in count, content, and via statistical sampling.  Each voter can validate their individual paper copy against the public repository as well.  In addition, voters in possession of their ballot's row index can inspect their specific digital ballot.
 
 And with the open source copy of the names and addresses of the entire electorate, election officials as well as any voter can analyze by various methods the accuracy of those names and addresses.
 
@@ -145,7 +148,26 @@ Lastly, a random set of X questions are selected and merged into the local votin
 
 Note that during these workflows, the Git repo can be pushed upstream to a remote server if so configured.  Or the file system itself can be backed up, however data redundancy and data resilience have been designed.  (This is another operational design decision to be decided during election planning.)
 
-# 7) What is the kickstarter campaign funding?
+# 7) Security
+
+The security of an election system is paramount.  The election system must supply a tamper proof and accurate election in both reality and appearance.
+
+In addition, the security model must also be easily understood and trustable by the casual voter at a high level while its efficacy be completely verifiable and provable by cryptographic experts at all levels.
+
+And both these domains are not static - they are continually evolving and being re-evaluated in a transparent open-book manner, available to all voters and election officials.  That is how and why VOTES technically looks like it does.  In summary:
+
+- VOTES is 100% open source
+- the VOTES repositories include all the code to tally the vote and all the data that comprises an election
+- VOTES requires a paper ballot that is tracked with the digital electronic interpretation of the ballot
+- all the ballot data at rest is un-encrypted and anonymous - no private keys are required to decrypt anything
+- the base Merkle Tree is protected by SHA-256 encryption combined with additional security protocols 
+- all data in movement is done so under standard and well understood and fully hardened [PKI](https://en.wikipedia.org/wiki/Public_key_infrastructure) (public-private key), [PGP](https://en.wikipedia.org/wiki/Pretty_Good_Privacy) (Pretty Good Privacy), and the latest [TSL](https://en.wikipedia.org/wiki/Transport_Layer_Security) protocols with additional app-level 2FA
+
+In short, VOTES is **NOT** proposing, creating, or adding a new encryption protocol or scheme - it is more simply leveraging existing military and industrial best practices.
+
+For a more security information, see the file [./docs/informal-security-description.md](./docs/informal-security-description.md) in this git repo.
+
+# 8) What is the kickstarter campaign funding?
 
 The primary goal of the kickstarter campaign is to raise the funds to develop VOTES into a demonstrable prototype.  With a working prototype VOTES can be demonstrated to city and state election officials and the public at large.  It will maximize that a VOTES or similar are derivitive solution be developed as soon as possible.  Clear and free and transparent peer review by the general public is key.  Since VOTES is a disruptive solution, a working prototype greatly increases the ability to win an RFPs (Request For Proposals) to create a VOTES solution for an upcoming election.  By winning one or more such RFPs, the VOTES project will receive the funding necessary to actually be used in a public election.
 
@@ -159,11 +181,11 @@ If no RFP is signed, a secondary goal is that the kickstarter funding will allow
 
 Regardless of any financial outcome, a fundamental goal is to make elections more transparent, secure, and trustworthy.  Even if our funding goal is not reached, the kickstarter campaign can be considered successful if VOTES is reviewed by more voters, election scientists, and technology experts.  Being open source, such a review is critically important for any next generation digital election solution and can serve as an important open source reference.
 
-# 8) Why raise $100,000?
+# 9) Why raise $100,000?
 
 The first $100,000 allows me, Sandy Currier, to work on VOTES full time for about one year with some amount software development subcontracting.  For each additional $25,000 raised, additional software development subcontracting can be added for developing the VOTES prototype and test framework.  The more resources that are raised, the more work can be done in a shorter time frame.
 
-# 9) Who is behind VOTES?
+# 10) Who is behind VOTES?
 
 Sandy Currier started thinking about VOTES after a 2016 Thanksgiving Holiday gathering.  A lively discussion occurred concerning whether anyone was sure their vote had ever actually been counted, and if block-chain technology could be used verify that.  He rejected block chains as a viable solution and was eventually hoodwinked into accepting the challenge of looking into open source, transparent, E2EV election systems, and reporting back the following year.
 
