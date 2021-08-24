@@ -18,7 +18,7 @@ VOTES is a distributed, open-source [voting](https://en.wikipedia.org/wiki/Votin
 - allowing each voter to verify the tally of all the ballot questions
 - allowing each voter to inspect their neighborhood for fraudulent voters and/or addresses
 - allowing election officials to inspect all the voter names and addresses across the entire electorate for possible voter and ballot fraud
-- cryptographically associating the anonymous paper ballots with the anonymous VOTERS digital copies, insuring that neither set is tampered or fraudulently altered as well as supplying a third copy directly to the voter themselves, thus creating 3 separate copies of the anonymous but cryptographically signed ballot data
+- cryptographically associating the anonymous paper ballots with the anonymous VOTES digital copies, insuring that neither set is tampered or fraudulently altered as well as supplying a third copy directly to the voter themselves, thus creating 3 separate copies of the anonymous but cryptographically signed ballot data
 
 VOTES is an open source distributed database/repository and application that supports
 
