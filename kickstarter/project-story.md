@@ -173,7 +173,7 @@ The primary goal of the kickstarter campaign is to raise the funds to develop VO
 
 Fundraiser Disclaimer:
 
-**THIS FUNDRAISING CAMPAIGN IS RAISING FUNDS FOR THE RESEARCH AND DEVELOPMENT OF AN OPEN SOURCE, E2EV ELECTION SYSTEM CALLED VOTES.  IT IS NOT FUNDING THE IMMEDIATE AND DIRECT PRODUCTIZATION OF ANY SUCH ELECTION SYSTEM.  PLEDGES ARE CONSIDERED AN DONATION/GIFT TO FURTHER THE DEVELOPMENT OF VOTES WITH NO EXPECTATIONS OF ANY SPECIFIC PRODUCT TIMELINE.  A DONATION TO THIS PROJECT IS AN EXTREMELY RISKY INVESTMENT!**
+**THIS FUNDRAISING CAMPAIGN IS RAISING FUNDS FOR THE RESEARCH AND DEVELOPMENT OF AN OPEN SOURCE, E2EV ELECTION SYSTEM CALLED VOTES.  IT IS NOT FUNDING THE IMMEDIATE AND DIRECT PRODUCTIZATION OF ANY SUCH ELECTION SYSTEM.  PLEDGES ARE CONSIDERED AN DONATION/GIFT TO FURTHER THE DEVELOPMENT OF VOTES WITH NO EXPECTATIONS OF ANY SPECIFIC PRODUCT TIMELINE, DELIVERY, OR EVEN EVENTUAL DELIVERABILITY.  A DONATION TO THIS PROJECT IS AN EXTREMELY RISKY INVESTMENT IN A NON-PARTISAN, OPEN SOURCE, ELECTION AND VOTING SYSTEM !**
 
 Election systems need to go through a separate and extensive RFP process in every voting juridiction, which for the United States numbers more than 8,000.  This campaign is an attempt to get VOTES into an initial set of RFP conversations and then into a working prototype.
 
@@ -183,11 +183,11 @@ Regardless of any financial outcome, a fundamental goal is to make elections mor
 
 # 9) Why raise $100,000?
 
-The first $100,000 allows me, Sandy Currier, to work on VOTES full time for about one year with some amount software development subcontracting.  For each additional $25,000 raised, additional software development subcontracting can be added for developing the VOTES prototype and test framework.  The more resources that are raised, the more work can be done in a shorter time frame.
+The first $100,000 allows me, Sandy Currier, to hire software developers to create an initial prototype of VOTES.  It will also allow me to work on VOTES for about one year in a mostly unpaid role.  For each additional $25,000 raised, additional software development subcontracting can be added for developing the VOTES prototype.  The more resources that are raised, the more work can be done in a shorter time frame.
 
 # 10) Who is behind VOTES?
 
-Sandy Currier started thinking about VOTES after a 2016 Thanksgiving Holiday gathering.  A lively discussion occurred concerning whether anyone was sure their vote had ever actually been counted, and if block-chain technology could be used verify that.  He rejected block chains as a viable solution and was eventually hoodwinked into accepting the challenge of looking into open source, transparent, E2EV election systems, and reporting back the following year.
+Sandy Currier started working on VOTES after a 2016 Thanksgiving Holiday gathering.  A lively discussion occurred concerning whether anyone was sure their vote had ever actually been counted, and if block-chain technology could be used verify that.  He rejected block chains as a viable solution and was eventually hoodwinked into accepting the challenge of looking into open source, transparent, E2EV election systems, and reporting back the following year.
 
 Over the next few years Sandy investigated the history and current state of the science and art of voting technologies.  He sat in on numerous meetings at MIT concerning voting policies and election systems.  He discussed ideas with MIT professors, election officials, and private sector experts.  He is now trying to work on VOTES full time.
 
