@@ -1,4 +1,0 @@
-VOTES - a verifiable open technology election system - increases the security, accuracy, and trustworthiness of a paper ballot election by:
-- giving cryptographically anonymized ballot receipts back to the voter
-- providing each voter full access to all the data and software
-- allowing each voter to execute the tally and inspect the voter rolls
