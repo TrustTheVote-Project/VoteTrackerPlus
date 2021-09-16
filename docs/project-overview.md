@@ -4,18 +4,31 @@ A Verifiable Open Technology Election System
 
 # 1) Overview of VOTES
 
-VOTES is a distributed, open-source project aimed at increasing the security, accuracy, and trustworthiness of paper ballot elections by:
-- giving cryptographically anonymized ballot receipts back to the voter
-- providing each voter full access to all the anonymous ballot data and election software
-- allowing each voter to individually execute the tally and inspect voter rolls
+VOTES is a Verifiable Open Technology Election System that increases the security, accuracy, and trustworthiness of a paper ballot election by:
 
-It is a fully open source [election](https://en.wikipedia.org/wiki/Election) and [voting](https://en.wikipedia.org/wiki/Voting) solution and framework.  As a framework VOTES includes the complete historical software provenance of all the software and ballot data changes pre election as well as all the recording of the CVR of the election itself.  As a direct solution VOTES is immediately usable in any public or private election.  Each pre election software change, either code or ballot data, is authenticated and tracked and automatically run through a fully automated DevSecOps CI/CD pipeline prior.  Each election recording of either the voter ID or their anonymous CVR is also authenticated and tracked.
+1) giving a cryptographically anonymized and secured ballot receipt back to the voter
 
-VOTES is also 100% non-partisan.  It is based on accuracy and transparency.  As long as any sectarian/partisian segment of the population believes in accuracy and transparency, any such segment will be able to accept a valid VOTES backed election or be able to demonstrate publicly and transparently its inaccuracy.
+2) allowing each voter to execute the official tally, anonymously inspect their ballot, and to inspect the public voter ID rolls
 
-One key unique and key aspect of VOTES is that it offers to the voter a special ballot receipt that contains an anonymous piece of the live local CVR data cryptographically tied to the specific election being supported by VOTES.  This offers a third voter controlled copy of the election data.
+3) cryptographically recording the history of the election as it occurs in real time and distributing that data back to both the election officials and the voters
 
-# 2) Basic Voter In-place Experience (UX)
+VOTES is a fully open source [election](https://en.wikipedia.org/wiki/Election) and [voting](https://en.wikipedia.org/wiki/Voting) solution and framework.  As a framework VOTES includes the complete historical software provenance of all the software and ballot data changes pre election as well as all the recording of the [Cast Vote Records](https://pages.nist.gov/ElectionGlossary/#cast-vote-record) (CVRs)) of the election itself.  As a direct solution VOTES is immediately usable in any public or private election.  Each pre election software change, either code or ballot data, is authenticated and tracked and automatically run through a fully automated DevSecOps CI/CD pipeline prior.  Each election recording of either the voter ID or their anonymous CVR is also authenticated and tracked.
+
+# 2) Why is VOTES non partisan and non sectarian while being accurate and trustworthy?
+
+First, VOTES is 100% open source - it is owned and verified by the people even when operated by a small number of representatives of the people.  VOTES is about accurate and trustworthy elections and not about advancing any particular political or sectarian agenda.  VOTES applies technology and cryptography to validate the full history of events that occur prior to, during, and after election day.  It records history as it happens in an anonymous and cryptographically sound and sealed manner.  It records the change history of all the software used in the election as well as all the CVRs (the interpreted ballots) and public voter ID roll information.  Similar but very different to block chain technologies that ensure the legitimacy and accuracy of cryptocurrency transactions, VOTES supplies a greater guarantee and degree of trust due to the details of the additional cryptographic checks and balances within VOTES and the distributed nature of the inherent [Merkle tree](https://en.wikipedia.org/wiki/Merkle_tree).
+
+As long as any partisan segment of the population believes in accuracy and transparency, such groups will eventually be able to either publicly demonstrate the inaccuracy of the election or have an partisan independent and transparent proof that the election was trustworthy.  VOTES adds significant checks and balances above and beyond Risk Limiting Audits and paper ballot recounts.
+
+One unique and key aspect of VOTES is that it offers to the voter a special ballot paper receipt that contains a cryptographically sealed and anonymous slice of the specific live and local ballot and election data.  This places in the hands of the voter anonymous but critical evidence of the election as well as their specific ballot.
+
+A second unique and key aspect of VOTES is that it cryptographically ties the paper ballots with the digitally scanned [ballot images](https://pages.nist.gov/ElectionGlossary/#ballot-image) and with the CVRs such that it is practically impossible to add, change, or drop a paper ballot once it has been scanned.  The same holds true for the scanned ballot image and for paper voter receipt distributed to the voters.
+
+A third unique and key aspect of VOTES is that with VOTES every voter can execute the same exact tally that election officials perform.  Whether a specific contest is [plurality](https://en.wikipedia.org/wiki/Plurality_voting), [Rank Choice Vote](https://pages.nist.gov/ElectionGlossary/#ranked-choice-voting), or some other [electoral system](https://en.wikipedia.org/wiki/Electoral_system#Types_of_electoral_systems), all such tallies can be executed and checked by any voter for accuracy.
+
+A fourth unique and key aspect of VOTES is that the already public voter ID rolls are now made publicly available secured by the same underlying capabilities of a [Merkle tree](https://en.wikipedia.org/wiki/Merkle_tree).  The VOTES voter ID rolls are available in one place immediately after all the polls close, allowing every voter to validate that there are no fake names or addresses in their neighborhood.  Election officials can now perform risk limiting voter ID audits to determine if anyone is voting in multiple locations or if fake individuals have been allowed to cast a ballot.
+
+# 3) Basic Voter In-place Experience (UX)
 
 From the voter's point of view, VOTES is primarily a backoffice implementation that generates cryptographic metadata associated with each [Cast Vote Record](https://pages.nist.gov/ElectionGlossary/#cast-vote-record) (CVR) for storing, retrieving, inspecting, and tallying the CVRs.  As such, the voter's current in-place voting experience changes in a few subtle but significant ways.  The following describes these changes in more or less chronological order from current in-place voting experiences.
 
@@ -39,17 +52,17 @@ In addition, once all the polls close the VOTES voter ID rolls also available by
 
 Note that with all the data and code available to the electorate, alternate facts, illegitimate narratives, or other attempts at casting doubt on the election can eventually be publicly shown to be false.  And if either the physical ballots are compromised, or if the live VOTES data is compromised, or if individual or groups of individual collude and generate false narratives or data, the accuracy or inaccuracy of such data and narratives can be determined transparently and universally among the electorate.  With VOTES there is no single party that privately determines the accuracy of the VOTES data.
 
-# 3) Basic Election Official Experience (UX)
+# 4) Basic Election Official Experience (UX)
 
 VOTES brings significant election transparency to the entire election process by creating two additional CVR copies of the original paper ballots.  By simply using VOTES election officials leverage an open source validation of their ballot handling process that has come under increasing partisan attack.  The changes that election officials will witness when using a VOTES based election and voting system are chronologically summarized as follows.
 
-# 3.1) Pre Election Day Summary
+# 4.1) Pre Election Day Summary
 
 Leading up to the election, election officials can iterate over the ballot design and GGO boundaries similar to standard software development practices.  All changes are authenticated to the person making the change and all changes are run against standard automated tests.  Election officials can validate that every address receives the correct ballot via the GGO automated testing that VOTES supports.
 
 Once a precinct finalizes a ballot, that ballot becomes available for early voting.  Early ballots can be entered into VOTES at any time, including prior, during, or after election day as configured by the VOTES configuration for that election.
 
-## 3.2) Day of Election Summary
+## 4.2) Day of Election Summary
 
 First, with VOTES, all blank ballots can be generated on demand at the voter ID identification station.  There is no need to guess how many blank ballots to print beforehand.
 
@@ -63,14 +76,12 @@ In addition the paper ballot is printed with a cryptographic GUID that anonymous
 
 VOTES also gives the voter a CVR receipt that anonymously and cryptographically contains some of the same information.  This creates a third copy of the data, distributed to the voters themselves.  
 
-## 3.4) Post Election-Day Summary
+## 4.4) Post Election-Day Summary
 
 Once the polls close read-only copies of the VOTES data, which contain the same Merkle Trees originally created by the election officials augmented with all the CVR submitted by the voters, can be made available.  VOTES supports incremental releases to the public of this data.
 
 Thus, the voters themselves can download copies of the election data, validate that their ballots are correctly contained within the elections, and tally all the contests themselves.  This is a game changing capability regarding assessing the accuracy and trustworthiness of election.
 
-# 4) Partisan and Sectarian Responses to VOTES
+# 5) Summary
 
-VOTES is inherently both 100% open source for full transparency and 100% non partisan.  VOTES is about accurate and trustworthy elections and not about advancing any particular political party or other sectarian based agendas.  It does advance partisian voting rights issues.  Thegoal of the Merkle Tree inherent in the design of VOTES is to secure the history of the election as it occurs in real time with enough anonymity and trustworthiness and to distribute the data across all the stake holders.  This distribution of the data as a set of Merkel Trees and in the manner described above maximizes the trustworthiness and accuracy of an election, and is a significant increase in such from current election technologies.
-
-In summay, the 100% open source nature of VOTES in both design and implementation allows any political party that holds accurate and trustworthy elections as a primary goal and requirement of democracy to use, inspect, question, enhance, and trust VOTES.
+In summary, VOTES is a 100% open source election and voting system, operated by election officials while being owned and verified by the people, that increases the security, accuracy, and trustworthiness of a paper ballot election.
