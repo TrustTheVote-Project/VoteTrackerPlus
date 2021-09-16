@@ -4,6 +4,4 @@ VOTES is a Verifiable Open Technology Election System that increases the securit
 
 - allowing each voter to execute the official tally, anonymously inspect their ballot, and to inspect the public voter ID rolls
 
-- cryptographically recording the history of the election as it occurs in real time and distributing that data back to both the election officials and the voters
-
-With three effectively separate copies of the data, VOTES provides a never before realized compelling and transparent level of election accuracy and trustworthiness.
+- cryptographically recording the history of the election as it occurs in real time, prior to, during, and after election day

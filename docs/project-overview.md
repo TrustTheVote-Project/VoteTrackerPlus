@@ -10,7 +10,7 @@ VOTES is a Verifiable Open Technology Election System that increases the securit
 
 - allowing each voter to execute the official tally, anonymously inspect their ballot, and to inspect the public voter ID rolls
 
-- cryptographically recording the history of the election as it occurs in real time and distributing that data back to both the election officials and the voters
+- cryptographically recording the history of the election as it occurs in real time, prior to, during, and after election day
 
 VOTES is a fully open source [election](https://en.wikipedia.org/wiki/Election) and [voting](https://en.wikipedia.org/wiki/Voting) solution and framework.  As a framework VOTES includes the complete historical software provenance of all the software and ballot data changes pre election as well as all the [Cast Vote Records](https://pages.nist.gov/ElectionGlossary/#cast-vote-record) (CVRs).  As a direct solution VOTES is immediately usable in any public or private election.  Each pre election software change, either code or ballot data, is authenticated and tracked and automatically run through a fully automated DevSecOps CI/CD security pipeline.  During an election each CVR is added to this same provenance in a cryptographically secure and anonymous manner.
 
