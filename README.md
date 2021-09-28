@@ -31,7 +31,7 @@ VOTES is NOT a:
 
 # Additional Details
 
-For a more detailed overview, see the file [./kickstarter/project-story.md](./kickstarter/project-story.md) in this git repo.
+For a more detailed overview, see the file [./docs/project-overview.md](./docs/project-overview.md) in this git repo.  The docs folder also contains the current [pitch](./docs/pitch.md) as well as an [informal security description](./docs/informal-security-description.md).
 
 VOTES is intended to be compliant to the extent that it makes sense with [NIST](https://en.wikipedia.org/wiki/National_Institute_of_Standards_and_Technology)'s [voting](https://www.nist.gov/itl/voting) efforts (see the [HAVA](https://en.wikipedia.org/wiki/Help_America_Vote_Act) Act).
 
