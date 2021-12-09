@@ -1,7 +1,9 @@
-VOTES is a Verifiable Open Technology Election System that increases the security, accuracy, and trustworthiness of a paper ballot election by:
+VoteTracker+ (a.k.a. Vote Tracker Plus, VTP, and previously known as VOTES) an open software ballot tracking system that increases the security, accuracy, and trustworthiness of a paper ballot election by cryptographically tracking the paper ballots.
 
-- giving a cryptographically anonymized and secured ballot receipt back to the voter
+VoteTracker+:
 
-- allowing each voter to execute the official tally, anonymously inspect their ballot, and to inspect the public voter ID rolls
+- directly supplies a cryptographically anonymized ballot receipt back to the voter, allowing the voter to validate that their specific ballot has been interpreted, recorded, and tallied as intended
 
-- cryptographically recording the history of the election as it occurs in real time, prior to, during, and after election day
+- cryptographically records and seals the entire history of the election as it occurs in real time
+
+- allows the public to inspect and validate the official Cast Vote Records and tally as well as the aggregate voter ID rolls across the entire electorate
