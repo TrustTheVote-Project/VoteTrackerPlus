@@ -1,4 +1,4 @@
-VoteTracker+ (a.k.a. Vote Tracker Plus, VTP, and previously known as VOTES) an open software ballot tracking system that increases the security, accuracy, and trustworthiness of a paper ballot election by cryptographically tracking the paper ballots.
+VoteTracker+ is an open software ballot tracking system that increases the security, accuracy, and trustworthiness of a paper ballot election by cryptographically tracking the paper ballots.
 
 VoteTracker+:
 
