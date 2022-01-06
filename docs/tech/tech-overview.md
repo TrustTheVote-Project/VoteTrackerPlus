@@ -80,9 +80,9 @@ Contains the ballot information for this GGO if there is ballot information.  Fo
 
 Each GGO contributes to the ballot that is presented to the voter at the precinct/Voting Center (VC).
 
-#### ./votes
+#### ./CVRs
 
-Votes are _collected_ in the votes folder.  The default configuration is that only GGO repos that have a precinct/VC will be collecting votes.  However it is configurable for a precinct/VC to commit votes to a parent GGO repo.  So, the root GGO repo in most cases would not directly contain any votes since it would not have a precinct/VC associated with it.
+Votes are _collected_ in the CVRs (Cast Vote Records) folder.  The default configuration is that only GGO repos that have a precinct/VC will be collecting votes.  However it is configurable for a precinct/VC to commit votes to a parent GGO repo.  So, the root GGO repo in most cases would not directly contain any votes since it would not have a precinct/VC associated with it.
 
 ### 3.3.1) Child GGO's - Git Submodules
 
@@ -92,30 +92,36 @@ A child GGO is one where the VOTES Certificate Authority (CA) for this GGO creat
 
 The \<sub GGO class name> is an arbitrary I18n name given to the specific intermediate CA's assigned by this CA.  For the US election this would be the 50 states plus any territory or other geographical geopolitical location.  (If voting is taking place electronically via the internet or other network, other or additional location coordinates will apply.)  This configuration info is also located in the ./info folder.
 
-The following are examples.
+The following are examples relative from the current GGO:
 
-#### ./ggos/state/Alabama, Alaska, Arizona, ...
+#### A US national election root level example
 
 The US national GGO will define 50 git submodules under the ggos subfolder.
 
-#### ./ggos/town/Abbeville, Adamsville, Addison, ...
+./ggos/states/Alabama, Alaska, Arizona, ...
+
+#### A US national election at the state level
 
 Each state entity (specifically each sub GGO who has been delegated as an intermediate certificate authority) can independently select its sub GGO class name for their state.  As an example Alabama may use the I18n string _town_ in its VOTES repo as above.
+
+./ggos/towns/Abbeville, Adamsville, Addison, ...
 
 ### 3.3.2) Multiple / Parallel GGOs
 
 It is possible to have multiple and different classes of sub GGOs. For a state with both towns, counties, boroughs, congressional districts, school districts etc that can overlap in effectively arbitrary ways.  In the VOTES framework this is implemented as multiple/sibling \<sub GGO class names>:
 
-#### ./ggos/county/Alameda, Alpine, Amador, ...
-#### ./ggos/town/Adelanto, Agoura Hills, Alameda, ...
+#### ./ggos/counties/Alameda, Alpine, Amador, ...
+#### ./ggos/towns/Adelanto, Agoura Hills, Alameda, ...
 
 The above may be how California decides to handle its counties and towns.
 
-Regardless of the number of different sub GGO class names, the __info__ section will determine how the sub GGO's are handled.  In addition, though a state, county, or town repo can be cloned in isolation, doing so will not result in a valid VOTES clone.  A valid VOTES clone of the election will include the repo hierarchy from the root repo, including all sibling GGO's in the hierarchy.  In this manner a California precinct/VC repo will also contain the town and county submodule/subtree repo trees and information.
+The sibling and multiple inheritance of teh GGO's is flexible and configurable.  That is, it it possible for a state to have some towns in counties and some town not in any county.  And some towns may share school boards in the case of regional school systems.
+
+Regardless of the number of different sub GGO class names, the __info__ section will determine how the sub GGO's are handled.  In addition, though a state, county, or town repo can be cloned in isolation, doing so will not result in a valid VOTES clone.  A valid VOTES clone of the election will include the repo hierarchy from the root repo, including all sibling GGO's in the hierarchy that take part in any of the sub GGOs.  Again this is configured in the info folder.  In this manner a California precinct/VC repo will also contain the town and county submodule/subtree repo trees and information.  One of several reasons for this is so that the correct blank ballots can be generated and marked by voters.
 
 In the California case, each town will in fact get a copy of those counties to which it has an overlay with.  A specific town may reside within multiple counties and a county will usually contain multiple towns.  It is configurable via the __info__ folder whether in this case California defines how the two GGO's overlay (which towns are in which county and vice versa) or if the counties or towns decide that.  Technical note - California actually owns the authority to decide but can pass the authority to either the county or town to define that information.
 
-Regardless of delegation of the definition, each town and county clone only the relevant upstream and sibling repos.  At some level in this hierarchical tree, a GGO will want to actually collect votes on election day.  Actual votes are collected in the votes folder but require the repo to be configured as such, again via data in the ./info section.
+Regardless of delegation of the definition, each town and county clone only the relevant upstream and sibling repos.  At some level in this hierarchical tree, a GGO will want to actually collect votes on election day.  Actual votes are collected in the CVRs folder but require the repo to be configured as such, again via data in the ./info section.
 
 As an example, the following section assumes the town of Cambridge Massachusetts.  When the city of Cambridge clones the VOTES repo for the 2018 election, assuming that all the parent GGO are indeed participating in a VOTES framework, the directory tree will look someting like:
 
@@ -124,17 +130,17 @@ US-2018-National-Election/.git
                           info
                           ballot
                           bin
-                          votes
+                          CVRs
                           ggos/Massachusetts/.git
                                              info
                                              ballot
                                              bin
-                                             votes
+                                             CVRs
                                              ggos/Cambridge/.git
                                                             info
                                                             ballot
                                                             bin
-                                                            votes
+                                                            CVRs
                                                             ggos/5th Congressional District
                                                                  7th Congressional District
                                                                  ward 1-1
