@@ -62,13 +62,13 @@ Each repo contains the information authored by each GGO.  However, per the git s
 
 So the root most GGO is that git repo _owned/authored_ by the VOTES root authority of the cert chain for the 2020 US election (_the election_).  In this case the agency deemed responsible for actually running the 2020 national US election would be the VOTES root authority.  The folder structure for VOTES repos is:
 
-#### ./info
+#### ./config
 
 Contains configuration data for this GGO in yaml form (unless it really needs to be xml or something else).  Yaml is more human readable and more (git) merge-able.  If so necessary it can be translated into xml when needed.
 
 #### ./bin
 
-Contains executables directly associated with the VOTES repos are located in this folder.  Includes the executables necessary to tally the various contests and leverages configuration data.  For example the tally scheme for a GGO or a contest within the GGO can be configured in ./info while the actual algorithms and tally code is implemented in ./bin.
+Contains executables directly associated with the VOTES repos are located in this folder.  Includes the executables necessary to tally the various contests and leverages configuration data.  For example the tally scheme for a GGO or a contest within the GGO can be configured in ./config while the actual algorithms and tally code is implemented in ./bin.
 
 For a US presidential election, due to the electorial college the states tally function will mirror/implement the states electorial tally function, which is basically a summation.  However different states do it differently, and in the case of the electoral college the electors actually must vote, so the tally function non binding and perfunctory only.
 
@@ -86,11 +86,11 @@ Votes are _collected_ in the CVRs (Cast Vote Records) folder.  The default confi
 
 ### 3.3.1) Child GGO's - Git Submodules
 
-A child GGO is one where the VOTES Certificate Authority (CA) for this GGO creates an intermediate CA and allocates/associates sub GGO information with the ./info folder.  The git submodule tree looks like the following:
+A child GGO is one where the VOTES Certificate Authority (CA) for this GGO creates an intermediate CA and allocates/associates sub GGO information with the ./config folder.  The git submodule tree looks like the following:
 
 #### ./ggos/\<sub GGO class name>/\<instances name>
 
-The \<sub GGO class name> is an arbitrary I18n name given to the specific intermediate CA's assigned by this CA.  For the US election this would be the 50 states plus any territory or other geographical geopolitical location.  (If voting is taking place electronically via the internet or other network, other or additional location coordinates will apply.)  This configuration info is also located in the ./info folder.
+The \<sub GGO class name> is an arbitrary I18n name given to the specific intermediate CA's assigned by this CA.  For the US election this would be the 50 states plus any territory or other geographical geopolitical location.  (If voting is taking place electronically via the internet or other network, other or additional location coordinates will apply.)  This configuration info is also located in the ./config folder.
 
 The following are examples relative from the current GGO:
 
@@ -117,41 +117,45 @@ The above may be how California decides to handle its counties and towns.
 
 The sibling and multiple inheritance of teh GGO's is flexible and configurable.  That is, it it possible for a state to have some towns in counties and some town not in any county.  And some towns may share school boards in the case of regional school systems.
 
-Regardless of the number of different sub GGO class names, the __info__ section will determine how the sub GGO's are handled.  In addition, though a state, county, or town repo can be cloned in isolation, doing so will not result in a valid VOTES clone.  A valid VOTES clone of the election will include the repo hierarchy from the root repo, including all sibling GGO's in the hierarchy that take part in any of the sub GGOs.  Again this is configured in the info folder.  In this manner a California precinct/VC repo will also contain the town and county submodule/subtree repo trees and information.  One of several reasons for this is so that the correct blank ballots can be generated and marked by voters.
+Regardless of the number of different sub GGO class names, the __config__ section will determine how the sub GGO's are handled.  In addition, though a state, county, or town repo can be cloned in isolation, doing so will not result in a valid VOTES clone.  A valid VOTES clone of the election will include the repo hierarchy from the root repo, including all sibling GGO's in the hierarchy that take part in any of the sub GGOs.  Again this is configured in the config folder.  In this manner a California precinct/VC repo will also contain the town and county submodule/subtree repo trees and information.  One of several reasons for this is so that the correct blank ballots can be generated and marked by voters.
 
-In the California case, each town will in fact get a copy of those counties to which it has an overlay with.  A specific town may reside within multiple counties and a county will usually contain multiple towns.  It is configurable via the __info__ folder whether in this case California defines how the two GGO's overlay (which towns are in which county and vice versa) or if the counties or towns decide that.  Technical note - California actually owns the authority to decide but can pass the authority to either the county or town to define that information.
+In the California case, each town will in fact get a copy of those counties to which it has an overlay with.  A specific town may reside within multiple counties and a county will usually contain multiple towns.  It is configurable via the __config__ folder whether in this case California defines how the two GGO's overlay (which towns are in which county and vice versa) or if the counties or towns decide that.  Technical note - California actually owns the authority to decide but can pass the authority to either the county or town to define that information.
 
-Regardless of delegation of the definition, each town and county clone only the relevant upstream and sibling repos.  At some level in this hierarchical tree, a GGO will want to actually collect votes on election day.  Actual votes are collected in the CVRs folder but require the repo to be configured as such, again via data in the ./info section.
+Regardless of delegation of the definition, each town and county clone only the relevant upstream and sibling repos.  At some level in this hierarchical tree, a GGO will want to actually collect votes on election day.  Actual votes are collected in the CVRs folder but require the repo to be configured as such, again via data in the ./config section.
 
 As an example, the following section assumes the town of Cambridge Massachusetts.  When the city of Cambridge clones the VOTES repo for the 2018 election, assuming that all the parent GGO are indeed participating in a VOTES framework, the directory tree will look someting like:
 
 ```
 US-2018-National-Election/.git
-                          info
+                          config
                           ballot
                           bin
-                          CVRs
                           ggos/Massachusetts/.git
-                                             info
+                                             config
                                              ballot
-                                             bin
-                                             CVRs
                                              ggos/Cambridge/.git
-                                                            info
+                                                            config
                                                             ballot
-                                                            bin
-                                                            CVRs
-                                                            ggos/5th Congressional District
-                                                                 7th Congressional District
-                                                                 ward 1-1
-                                                                 ward 1-2
+                                                            CVRs (a batch scanner for the city of Cambridge)
+                                                            ggos/5th Congressional District/.git
+                                                                                            config
+                                                                                            ballot
+                                                                                            CVRs
+                                                                 7th Congressional District/.git
+                                                                                            config
+                                                                                            ballot
+                                                                                            CVRS
+                                                                 ward 1-1/{config,ballot}
+                                                                 ward 1-2/{config,ballot}
                                                                  ...
-                                                                 ward 11-2
-                                                                 ward 11-3
+                                                                 ward 11-2/{config,ballot}
+                                                                 ward 11-3/{config,ballot}
 ```
 Each Congressional District and Ward would have a git repo where there respective ballot contests can be entered.  When the voter gets a ballot from the VC (either an absentee, early, or on election day ballot), the VOTES framework will generate the correct ballot for the address.
 
 Implementation note: it is possible for precincts/VC to share the same repo or leverage a parent repo to cast votes into - it is configurable into which repo a precinct/VC submits votes to.
+
+GGOs that are not configured to scan actual ballots are not a separate git repo - they simply are a folder with the necessary config and ballot files necessary to specify the information necessary to add contests to the ballot for the governing GGO.
 
 # 4) The Voter ID Repo
 
