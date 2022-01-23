@@ -30,9 +30,9 @@ As it is also possible to batch scan ballots from different 'precincts' in one l
 
 Note that not every GGO needs to have a dedicated git repo - git repos are allocated via scanning locations (as in, physical VTP ballot scanners).  GGO's that do not have a dedicated git repo will still have a config.yaml and blank ballot file that specifies the GGO contests and other info.
 
-# 3) Git Command Sequence
+# 3) Git Command Sequence (Voting Center)
 
-There are four separate groups of git commands:
+There are more or less four different sequences of git commands for the Voting Center VTP ballot scanner and git server:
 
 1) Initialization of the voting center's git server
 2) Initialization of a VTP ballot scanner
@@ -104,7 +104,9 @@ $ # privately display N to the voter
 
 ## 3.4) Server side sequence: per contest example
 
-```
+This is always on the master branch.
+
+```bash
 $ git pull
 $ git merge --no-ff --no-commit <contest>/<short GUID>
 $ openssl rand -base64 48 > CVRs/contest.cvr
@@ -114,6 +116,9 @@ $ git push origin master
 $ git push origin :<contest>/<short GUID>
 ```
 
-4) To see the results as pushed to the local upstream repo:
+## 3.5) To see the results as so far pushed to the VTP git server:
 
-- nw git log --topo-order --no-merges contest.cvr
+```bash
+$ git pull origin master
+$ git log --topo-order --no-merges contest.cvr
+```
