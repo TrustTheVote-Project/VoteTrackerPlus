@@ -1,89 +1,131 @@
-AN OVERVIEW OF THE WORKFLOWS / USER EXPERIENCE OF VARIOUS ROLES REGARDING THE USE OF VOTES
+# An Overview of the workflows / user experience (UX) of various roles regarding the use of VoteTracker+
 
-# 1) How does an end voter interact with VOTES?
+## 1) How does an end voter interact with VoteTacker+?
 
-# 1.1) For the voter who physically casts a ballot at a voting center, the experience is mostly the same but with a few minor tweaks.
+## 1.1) Overview of an in-person voter physically casting a ballot
 
-After the voter successfully identifies themselves to the election official, the election official supplies a numbered but anonymous VOTES printed blank ballot.  The ballot contains a checkbox allowing the voter to receive the public key for their ballot.  After completing as much of the ballot as desired in private, the voter transitions to the VOTES ballot casting station.  With optional assistance from an election official, the ballot is scanned and either rejected or accepted.  A rejected ballot is one where some portion of the ballot is either un-readable or non compliant/invalid.  The rejected portion of the ballot and the reason thereof is privately shown to the voter.  A rejected ballot is not accepted by the VOTES ballot casting equipment and is ultimately shredded.
+1) The voter identifies themself to an election official
+2) The election official verifies their identity and registration status
+3) The election official gives the voter an address correct blank ballot
+4) The voter proceeds to a private location to complete as much of the ballot as desired
+5) The voter proceeds to a second semi private location generally observable by an election official
+    1) The voter privately inserts their ballot into a VTP scanner
+    2) The scanner displays the Cast Vote Record for all the contests on the ballot.  Blank contests are indicated as such.  Improperly marked contests are indicated as such and block the ballot from being accepted.
+    3) Before the election started accepting ballots, elections officials have configured the options that the voter has when a contest has been improperly marked via the CVR stage.  Options include receiving a new blank ballot, correcting the current ballot, marking the contest as no vote and proceeding, etc.  For this workflow description, the voter corrects their current ballot and successfully attains an accurate and complete CVR set.
+    4) The CVR are accepted by the VTP scanner
+    5) The VTP privately displays a screen only observable by the voter their row offset for their ballot receipt
+    6) The ballot receipt is printed for the voter to take
+6) Optional step - the voter proceeds to a second checkout voter ID location to re-identify themselves to another election official
 
-When accepted and if the voter asked for a public key, a receipt is printed containing ~100 public keys.  The voter is then privately shown the index (which public key in the list is theirs).  Note - if the precinct is small or if there are not at least ~100 cast ballots with the same set of GGO's, then the public key is not available.
+## 1.2) Absentee ballot and Vote-by-mail ballot identification
 
-If rejected, the voter can receive a new blank ballot (again numbered but anonymous) printed at the VOTES ballot casting station.  Or with the help of an election official and after the voter acknowledges that those portions of their ballot that cannot be scanned will in fact not be counted, the ballot can be forced scanned where only the scan-able portions of the ballot are entered - the unscannable races are not counted.
+1) The voter successfully receives the absentee or vote-by-mail ballot from their election officials
+2) The voter fills in the ballot as much as desired
+3) If supported by how the election was configured by the election officials, the voter may be able to indicate the following options on their ballot:
+    - receive their ballot receipt in the mail or by some other delivery mechanism
+    - by notified (and by how and when and with what limitations) if their ballot receives an invalid CVR contest scan with or without the ballot being accepted
+4) The voter mails or delivers the absentee/vote-by-mail ballot to their election officials
+5) Depending on what is supported, the voter may receipt their ballot receipt
 
-# 1.2) Once all the polls close, the voter can inspect their specific electronic ballot
+## 1.3) Accessibility Notes
 
-Once all the polls close, the voter can inspect their electronic ballot in two ways.  They can download the ballot public ledger (the repository) and lookup their ballot via their public key.  The ledger contains all the cast ballots via their public keys, so every voter can validate their electronic copy of their ballot.
+For those voters who have accessibility issues, an election official or personal helper can accompany the voter through the in-person or remote voting experience.
 
-It is important to note that the public keys are NEVER made available to voters in a manner that allows the any third party to identify a specif  ballot with a specific voter even when a third party is given the public key.  For example:
+An additional option is that election officials have the option of providing an independent ballot marking station where instead of the voter physically marking a ballot, the voter privately marks a touch screen and prints an accurately marked ballot.  In this case the voter does not receive a physical blank ballot when first identifying themselves to election officials.
 
-When the voter is physically casting their ballot at a voting center, they are visually (or verbally) given the public key privately as an index into a sufficiently large list of valid public keys.  The list of public keys itself cannot identify the voter's specific ballot.
+## 1.4) The voter can inspect their ballot receipt prior to leaving the voting center
 
-When voting by mail, absentee ballot, or other by mail systems, the voter is only allowed to receive their public key in a manner by which a third party cannot verify its owner - the public key is delivered is a privately secure manner.  Note that such a capability implies that election officials will handle information that ties a specific ballot to a specific voter.  It is up to the election officials to decide if and how they wish to support optionally giving voters their public keys and if voters wish to have elections officials perform this function.
+After leaving the primary ballot casting area and before leaving the voting center, election officials can optionally make available and additional stand along, readonly VTP ballot verifier that can scan a ballot receipt and validate the inclusion of all the individual contest receipts as printed on the ballot receipt.  This informs the voter that their contests have been properly recorded in the VTP ledger.
 
-# 1.3) Once all the polls close, the voter can perform the election tallies
+## 1.5) Once all the polls close, the voter can inspect their specific electronic ballot
 
-Since the public ledger also contains the tally algorithm for all races and contests for all ballots, the voter can perform their own instance of the tally.  Since the ledger is cryptographically sealed, all copies of the ledger are known to be the same.
+Once all the polls close, readonly clones of the official VTP election repositories are made publicly available.  Voters with a voter receipt and either manualy enter contest public keys or scan the entire receipt.  Either way, they can verify all 100 sets of contest receipts against the official repos.  As election officials push updates to their official election repos, the readonly clones are updated as the pull requests are validated and merged in.  As such, some voters will have to wait until their ballot CVRs are successfully pushed.
 
-Note that the private keys are never publicly available and in fact are double encrypted requiring two independent certificate authorities to decode while also requiring the full ledger record whenever a key or keys are decoded. 
+Alternatively, the voter can download copies of the readonly repositories and perform the same queries offline.
 
-# 1.4) Once all the polls close, the voter can validate their physical ballot
+It is important to note that the public keys are NEVER made available to voters in a manner that allows the any third party to identify a specific ballot with a specific voter even when a third party is given the public key.
 
-Though VOTES generates and maintains in a secure manner an electronic copy of the ballot, it is the responsibility of the local election officials to maintain the security surrounding the physical ballots.  Depending on the procedures and resources available at the precinct level, the precinct may support the voter validing their physical ballot.  Regardless, the possibility of this procedure is important in maintaining public trust in the election since both the physical and electronic copies of the ballot are independently identifiable in a secure private manner.  With two copies, one copy can be checked against the other.
+If the voter remembers their specific offset into their ballot receipt, then can inspect their actual CVRs.
 
-If a voter believes that the electronic copy of their ballot is not correct, they can initiate an inspection of their physical ballot if such inspection is supported.
+## 1.6) Once all the polls close, voters can inspect the VTP voter_ID repositories
 
-When physical ballot validation is supported, the voter can physically visit the election official and after properly identifying her/himself and their public key, which may require (TBD) photo based identification beyond that what is required at the voting center, the election official can initiate the validation of the physical ballot.  VOTES maintains data that matches the electronic copy with the physical copy.  Given the voter's public key, the election official can track down the specific matching physical ballot and validate that the entered selections match the electronic copy.  If the voter is still not satisfied, the election official can show the voter the physical ballot in a private manner without the presense of electronic or other recording devices such that no third party can see the physical ballot.  This is because the voter can mark ballots in such a way as to uniquely identify them to themselves or others.  And though 'personalizing' a physical ballot is in general a good thing, is something that necessitates any physical ballot inspection to be done completely isolated from any third party observation.  This includes durinfg any E2EV.
+Once all the polls close, voters can also download/clone copies of the readonly voter_ID repositories.  These are separate git repositories that record the VTP voter IDs, which are solely voter name and address.
 
-The ability to have voters return to the election officials and inspect their specific physical ballot increases the level of trust in the election.
+However, regardless of WITSEC (see below) programs or not, the voter id rolls are already publicly available.  However, most voters do not have easy access to them, which is both a postive and a negative.  However, with regards to the trustworthiness of an election, supporting easy access to the VTP filtered voter id data allows voter in real time to inspect the voter id information for their neighborhood as well as neighborhoods where they may suspect voter id fraud.  By make the data available, false narratives and mis information can be more quickly and more believably be corrected.
 
-# 1.5) Absentee ballot and Vote-by-mail ballot identification
+### 1.6.1) WIP/WITSEC Notes
 
-When voting by mail or by absentee ballot, the voter's specific public key can only be made available in a private manner similar to section 1.4 above.  By keeping the identity of the public key private, the public key cannot be used to identity the ballot owner (the voter), only the ballot.
+VTP does not directly impact [WPP/WITSEC](https://en.wikipedia.org/wiki/United_States_Federal_Witness_Protection_Program) programs in the at the federal level, the voter's name has already been changed.  State level WITSEC programs will work as well as they do given however the state identifies individuals at the voting center in their WITSEC program.
 
-The governing GGO can choose its own specific method of revealing a voter's specific public key.  As one example for absentee ballots and vote-by-mail scenarios, the voter might be required to physically visit an election official and after proper identification, the official can then give the voter their specific public key in a private manner similar to the non vote-by-mail scenario above.
+## 1.7) Once all the polls close, the voter can perform all the ballot tallies
 
-# 2) How does an election official interact with VOTES?
+Since the VTP repositories, a.k.a. the election public ledgers, also contain the tally algorithm for all contests for all ballots, the voter can perform their own tally on their own device.  Since the ledger is cryptographically sealed, all legitimate copies of the ledger are known to be the same.
 
-The election official interaction depends on whether the phase of the election is pre-election day, election day, or post-election day.
+## 1.8) The voter can tell if their ballot is removed from the tally
 
-# 2.1) Pre-election workflows
+If election officials decide to remove a ballot or a set of ballots from the election, for example under a court order or some other direction, the election officials will scan the physical ballots in a special VTP scanner that will match the VTP physical ballot ID with that of the associated contest CVRs, and remove them from the appropriate VTP repositories.  As with voter ballot scanning, these individual commits must be git PGP signed, pushed, reviewed, and merged.  The full history of the removal of ballots will be transparent to the electorate, supporting the possibility of reverse litigation.
 
-At the state level (in the US this would be the _outer_ GGO level), in an interative agile software development manner the state election officials would start to fill in their portion of the ballot.  The VOTES public repo comes with a test framework that allows the state election officials to test their portion of the ballot with the portions of the ballot thus far published by the other GGOs.  This is true both for ballot questions whether they be races or questions.
+## 1.9) Voters can inspect their voter registration status as entered into VTP
 
-Similarly, each GGO can independently iterate on their portions of the ballot.
+For precincts that adopt the VTP registration data as a valid source of truth regarding who is registered to vote, voters in those precincts will be able to validate their registration status.  As more precincts adopt VTP as a valid source of truth, pre-voting registration audits can more effectively be performed to validate the legitimacy of registered voters across the entire electorate.
 
-Note that each GGO maintains a definition of what is required to have that portion of the ballot be present (to be presented) to a specific voter.  Each voter is associated with some address or some other identifying characteristic.  Nominally it is their address.  For a state, the voter must be a resident of the state (the voter's address must be within the state).  The same is true for a precinct, town, county, school district, etc.  Each GGO has more or less a GPS/location based identification.  When a specific voter is to recieve their ballot, by any means, their ballot is custom printed for that address.
+## 2) How does an election official interact with VOTES?
 
-At some point the ballot in total is declared done.  Note that all changes to the ballot have authors and all changes are included in the full public ledger.  (Implentation note - since the prototype is using git as the repository technology, distributed git workflows generally apply.)
+The election official interactions with VTP elections will be different depending on the phase of the election, whether it is pre, during/active, or post election.  Here pre-election workflows refer to all the election official workflows and activities prior to the first scan/entry/count of the first ballot anywhere or by any means.  The pre-election phase ends when the first ballot somewhere is scanned/entered/counted.  The 'during' or 'active' election phase is when ballots are being scanned/entered/counted.  NIST implies this phase starts when the first [voting session](https://pages.nist.gov/ElectionGlossary/#voting-session) regardless if the ballot is cast as in person, absentee, early voting, or vote-by-mail.  The active election phase ends when _all the polls close_.  _All the polls close_ is when it is no longer possible to cast a new ballot anywhere again regardless of the type of voting session (in-person, early, absentee, by mail, etc).  This excludes ballots that have already been _accepted_ and not yet scanned/entered/counted.  Note that the specific and detailed definition of _accepted_ can vary from state to state.
 
-The VOTES system handles the printing of the ballots whether the ballots are created via hard or soft copy.
+## 2.1) Pre-election workflows
 
-In addition to the ballot repository, the precinct also updates the VOTES voter-id repository with the registers voters, entering the name and the address.
+When an election is initiated, the root election GGO will fork the VTP product repositories.  If there was a previous VTP election, the git changes of that prior election can be merged into the new fork, perhaps significantly reducing the costs of configuring the new election.
 
-# 2.2) Vote-by-Mail and other pre-election day ballot casting workflows
+The election officials across the GGOs of the election will work both independently on their own configuration as well as with the other GGOs.  All the changes will git push into the VTP election repos for this specific election and be pulled back down by the GGOs.  As per the "../tech/github-devsecops-overview.md" overview there is an always on CI/CD pipeline vetting all pushed changes before a change can be merged into the VTP root level repositories and pulled by other GGOs.  Note - similar to any software development project using git, GGOs can freely share changes directly between themselves if they so choose.  But regardless of that level a sharing, all changes need to pass the CI/CD pipeline before merging into the root repositories.
 
-Vote-by-mail, absentee, and early voting workflows can commence once the ballot is finalized.  In vote-by-mail, each voter's specific ballot is printed and mailed.  Depending on how the precinct is handling absentee and early voting, the ballots may be printed in soft form and emailed or printed as hardcopy and posted.
+A primary design point of VTP is the efficacy of the CI/CD pipeline that are an integral part of VTP.  Changes can be vetted in minimal time and thus with minimal cost, including changes to the GGO's specific ballot sections.  The CI/CD pipeline includes tests to make sure the correct addresses are receiving the correct contests.
 
-If the precinct is supporting early voting in person, then the election day workflow is supported.  However, when early voting the public key will not be available until a sufficient number of people have voted so to be able to sufficiently randomize the public keys.  In some cases, the public key will not be available until after all the poles close.  In some cases it will never be available if the minimum number of cast ballots necessary to insure a minimal level of voter anonimity is not attained.
+At some point the complete blank ballot is declared both accurate and complete.  Note that all changes to the ballot have authors and all changes are included in the full public ledger.  Note that VTP can print address specific ballots on demand as well as making available soft copies that any voter can view beforehand.
 
-# 2.3) Election day workflows
+At this time any GGO that will be accepting and scanning ballots, nominally at the precinct level, will enter voter id into VTP if they are using another system to track voter registration.  The automatic import of voter id information will be supported for various data formats.  And with all things VTP, these voter registration commits will also need to be PGP signed and pushed to the VTP root repositories.
 
-On election day in a voting center, the election official workflows match that of section 1.1 above.  Election officials first identity the voter.  Once identified, a ballot specific to their address is supplied, either being printed on demand or from a pre-printed supply.  An election official leads the voter to a private voting location where the ballot can be filled out privately.  The voter then proceeds to the VOTES ballot casting location where the ballot is scanned and is either accepted or rejected.  See section 1.1.
+## 2.2) Vote-by-Mail and other pre-election workflows
 
-As ballots are cast, the ballots are processed by the VOTES system both locally at the voting center and via the SaaS implementation.  At certain intervals the local data is securely pushed to the SaaS implementation.  Both sets of data are independently monitored by both local and remote officials.  The security monitoring is continuous.
+Vote-by-mail, absentee, and early voting workflows can commence once the ballot is finalized.  Scanning/entering/counting ballots will transition the VTP election phase from pre-election to active-election.
 
-Once all the poles close, the synchronization intervals continue until all the data has been synchronized.  Once all the precincts have synchronized their data with the SaaS implementation and the security monitoring has addressed all the real and potential issues that have occurred, both independent CA authorities can declare the election sealed.  Once declared sealed by both authorities, the final public key(s) in the public VOTES repository are made available as well as the full ledger repository itself.  Note - the same is done for the non-public VOTES repository key(s) except that the repository itself remains private.
+In vote-by-mail and absentee, depending on how the precinct is handling vote-by-mail and absentee, the ballots may be created in soft form and emailed/digitally delivered or printed as hardcopy and physically posted.
 
-# 2.4) Post-election day workflows
+If the precinct is supporting early voting in person, then an election day workflow is supported in a physical voting center.  As with election day in-person voting, a ballot receipt will not be available until a sufficient number of people have voted so to be able to sufficiently randomize the public keys.
 
-Once made available, the public repository can be downloaded (cloned) and can be used to independently tally all races and contests.  In addition voters who know their public key can validate their electronic copy of their ballot.
+## 2.3) Election day workflows
 
-# 3) End-to-End Validation (E2EV) Audits
+On election day in a voting center, the election official workflows match the in-person voter workflow described in section 1.1 above.  Specifically:
 
-As a quick background, the first voter end-point for E2EV occurs when the voter casts her/his ballot, regardless of how that happens (physically at a voting center, by mail, by absentee, etc).  A second voter end point is the VOTES public repository that contains the blank and cast ballots, the tally algorithms, and other public information.  A third voter end point is the secured physical ballots.
+1) An election official asks the voter to identity themselves
+2) An election official verifies their identity and registration status
+3) An election official gives the voter an address specific blank ballot
+4) An election official directs/assists the voter to a private location to fill in their ballot
+5) An election official directs/assists the voter to a semi private VTP scanner.  The election observes from a distance:
+    1) Observes the voter privately inserting their ballot into a VTP scanner
+    2) Observer the voter accept/reject the ballot.  Note that the election cannot tell at this whether the ballot was accepted or rejected.
+    3) Depending on the VTP configuration for this voting center, the election official may:
+       1) Assist the voter in destroying their current ballot and obtaining a new ballot if they rejected their current ballot
+       2) Assist the voter in returning to a private location to correct their ballot
+       3) Assist the voter to checking out from the voting center if their ballot was accepted by the VTP scanner.  The voter may or may not have decided to receive a ballot receipt.
+6) Optional step - the voter proceeds to a second checkout voter ID location to re-identify themselves to another election official
+7) Optional step - an election official may direct/assist the voter to a VTP ballot verifier scanner outside the primary voting area.  This is where the voter can verify prior to leaving the voting center that their ballot has been entered into the tally and is now part of the VTP ledger.
 
-E2EV procedures occur without decoding/identifying the ballot owners as with current non-VOTES managed elections and can occur against any of the three above end points.
+## 2.4) Post-election day workflows
 
-TBD: see E2EV auditing references
+Once all the polls close, election officials proceed with their post election day activities.  With a VTP election, this will include various audits as well as verifying that all the ballots have been pushed from all the VTP scanners to the VTP git server handling the voter center.  Ultimately the VTP git server changes will need to be pushed to the VTP election remote servers, a pull request created following the various authentication, authorization, and security protocols.  Once the pull request has been merged, it will be available from the VTP root servers.
 
-Without decoding the ballot owners, election officials can compare the physical ballots not just in a tally manner as with today's non-VOTES elections, but can also compare the physical ballots against the individual electronic copies maintained in VOTES.  Audit teams will be able to leverage database queries to actually match physical ballots with their specific electronic copies and detect anomalies.
+Note - the public never accesses the VTP root servers - the public only can access the readonly clones of the secured VTP election servers.
+
+Note - the update the VTP election servers by the voting center election officials can occur by several different means, either electronically or manually by actual delivery of the VTP server or a copy of the VTP data.
+
+## 3) End-to-End Validation (E2EV) Audits
+
+E2EV audits can occur almost at any time, but primarily and should occur after all the polls close so to not interrupt election officials and not require audits of the auditors (since in that case they would then be part of the election and subject to auditing as well).  Note that nominally and for reasons of transparency and trust, VTP only audits occur on the public readonly copies of the data as that is the data that the public will also be scrutinizing.  Because of the low latency of the VTP solution, VTP based audits, whether they concern the ballots or the recorded voter IDs, can be performed by anyone.
+
+The VTP only audits are different than paper audits that can/should also occur.  The paper based audits can be done either by election officials or by qualified 3rd party independent teams.  Note that the VTP scanner will securely mark the paper ballot and associate it with its digital scan.  The mark is created in an anonymous and cryptographic manner such that given a paper ballot, one can identify the associated contest CVRs.  Thus if a specific ballot or a set of ballots are deemed to be illegitimate, they can be removed by an election official by adding an additional git commit to the associated VTP repository.  As with all git commits, the commit must be PGP signed, pushed, pull requested, approved, and merged.
+
+An important aspect regarding this step is that the voter whose ballot has been rejected needs to be able to know this and be given the opportunity to challenge its removal if they so choose.  Note that the ballot receipts have been cryptographically created in such a way that one needs direct access to a set of operational private keys specifically generated for the specific election.  These keys, associated with but in addition to the [CA](https://en.wikipedia.org/wiki/Certificate_authority) chain created for this election, are distributed in a certain way to competing and separate parties such that voters and other 3rd parties cannot create legitimate ballot receipts.
+
+Given the anonymous nature of a VTP election, E2EV procedures will not be able to decode or identify ballot owners without a collusion between a super majority of the voters, election officials, and auditors.  That is, if most everyone is colluding to hold an illegitimate election, then an illegitimate election can occur.
+

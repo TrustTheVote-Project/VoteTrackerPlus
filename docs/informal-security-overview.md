@@ -26,6 +26,8 @@ VOTES is not introducing a new cryptographic protocol, such as for example when 
 
 However, one aspect of VOTES is that a 8"x11" sheet of standard printer paper is printed with 100 (TBD) rows of [cast vote record](https://pages.nist.gov/ElectionGlossary/#cast-vote-record) [SHA-256](https://en.wikipedia.org/wiki/SHA-2) digests of which 99 are randomly selected from random ballots.  VOTES also records the cast vote records into the Git based [Merkle Tree](https://en.wikipedia.org/wiki/Merkle_tree) in random order.  Both instances of this randomization neet to be cryptographical vetted.
 
+Note that there are no private keys associate with the public keys printed on the ballot receipt nor contained throughout the VTP ballot and voter_ID repositories.  The only private keys contained or active in a VTP election are those public and private keys employed to set TLS connections and PGP and additional 2FA channels.  There are also private keys used to create and manage the CA chain used to administer an election as well as those to manage and operate the GitHub VTP servers, etc.
+
 ## 5) The VOTES Attack Surface - a Decomposition into Five Domains
 
 ### 5a) Data-at-Rest
