@@ -32,7 +32,8 @@ Where <scanner id> is the alphanumeric VTP identification of the physical scanne
    ]
  }
 }
-
+```
+```
 Where:
 
 "tree"                is tied to the GGO layout for this specific election
@@ -41,7 +42,6 @@ Where:
 "election id digest"  is a cryptographic fixed length key generated from the CA chain for the current election
 "size"                is the file size in bytes of the CVR record being committed
 "values"              contains the values of the contest
-
 ```
 
 Note that the actual data structure of "values" depends on the contest details, such as the tally mechanism (rank choice vote, plurality, instent runoff, etc.) as well as number of positions being filled.
