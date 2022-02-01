@@ -8,10 +8,11 @@ Per the overview of the VTP git directory and submodule layout as described in .
 
 Per the git submodule layout, the git repo ultimately  associated with CVRs will have a CVRs subdirectory.  In the CVRs directory there is a single file called 'contest.cvr'.  The contest.cvr file will contain a JSON rendering of a specific contest on the voter's ballot.  Each contest will be checked into a separate git branch albeit the same file.  The git branching naming convention is something like the following:
 
-$ git checkout -b <scanner id>/<contest> <random master branch commit>
+  $ git checkout -b <scanner id>/<contest> <random master branch commit>
 
 Where <scanner id> is the alphanumeric VTP identification of the physical scanner and <contest> is the unique contest name for this voting center.  The JSON payload looks something like the following:
 
+```json
 {"CVR": {
  "tree": "GGOs/states/California/GGOs/towns/Alameda/CVRs",
  "vote center": "Emeryville Senior Center",
@@ -21,6 +22,7 @@ Where <scanner id> is the alphanumeric VTP identification of the physical scanne
    ]
  }
 }
+```
 
 The value of the 'tree' key is tied to the GGO layout for this specific election.  The value of "vote center" is the unique identification of the physical vote center where ballots are being scanned.  "contest" is the unique contest name/identification.  And "values" contains the values of the contest.  Note that the actual data structure of "values" depends on the contest details, such as the tally mechanism (rank choice vote, plurality, instent runoff, etc.) as well as number of positions being filled.
 
@@ -74,7 +76,7 @@ GIT_EDITOR=true git merge
 Once the voter blesses their interpretation of their ballot into CVRs, the following is the basic git sequence to create the voter's specific ballot per contest public git commit digests (a.k.a. VTP public keys).  Note - the below is executed for each contest on the ballot regardless if the voter left the contest unmarked.
 
 
-```
+```bash
 $ git checkout -b <contest>/<short GUID> <random master branch commit>
 $ place JSON payload in CVRs/contest.cvr
 $ git add CVRs/contest.cvr
@@ -95,7 +97,7 @@ Note that each VTP scanner has an ID which is included with the VTP ballot finge
 To generate the actual voter receipt, assuming that at least 100 ballots have been submitted to the local VTP git server, for each contest on the voter's ballot:
 
 
-```
+```bash
 $ # select a random and anonymized set of 99 digests (for each of the contests)
 $ # select a random number N between 1 and 100
 $ # print 100 rows of contest digests, each contest being a column, with row N being the voter's
