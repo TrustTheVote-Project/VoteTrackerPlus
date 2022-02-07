@@ -1,4 +1,6 @@
-[VC](https://pages.nist.gov/ElectionGlossary/#vote-center) python executables
+# Basic [VC](https://pages.nist.gov/ElectionGlossary/#vote-center) python executables
+
+Some initial/basic python executables geared to supporting a VTP demo
 
 ## 1) accept_ballot.py
 - runs on a VTP scanner
@@ -47,7 +49,7 @@
 - will cast N ballots according to the parameters provided (exact, probability, whatever)
 - will call cast_a_ballot.py N times
 
-The next set is a TBD list of tally functions
+# The next set is a TBD list of tally functions
 
 ## 8) tally_contest.py
 - runs anywhere
@@ -63,7 +65,9 @@ The next set is a TBD list of tally functions
 - input: all the election repositories (should be obvious but might as well clearly state it)
 - output: the json/yaml output of the tally of all the contests.  Various details are printed per optional switches.
 
-Some initial audit support utilities
+# Audit Executables
+
+These are supporting auditing of the VTP and VTP data.  This is different than paper ballot audits or digital scan audits.
 
 ## 10) tally_specific_contest_file.py
 - run anywhere
@@ -88,3 +92,13 @@ Some initial audit support utilities
   - missing contests and other missing data
   - invalid commits via either invalid metadata or file content
   - un-enforced operational standards (commits with PGP keys, evidence of history re-writes)
+
+# Tests Executables
+
+The above audit utilities are not DevSecOps CI/CD tests.  As part of the DevSecOps pipeline all the executables will have unit tests etc.  For example, there will be CI/CD tests that include validating the various tally algorithms, such as RCV, plurality, etc.
+
+There will be system tests which include mock elections that contains both fixed and random ballot-content balloting.
+
+There will also be configuration consistency testing which basically validates that the correct blank ballots are generated for specific addresses.
+
+There will also be operational non-compliance/error insertion testing which includes attack/failure scenarios to validate that VTP correctly reports the error at insertion time and handles it as designed.
