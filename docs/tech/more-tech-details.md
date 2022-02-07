@@ -127,24 +127,24 @@ As an example, the following section assumes the town of Cambridge Massachusetts
 
 ```
 US-2018-National-Election/.git
-                          config
-                          ballot
+                          config.yaml
+                          ballot.rst
                           bin
                           ggos/Massachusetts/.git
-                                             config
-                                             ballot
+                                             config.yaml
+                                             ballot.rst
                                              ggos/Cambridge/.git
-                                                            config
-                                                            ballot
+                                                            config.yaml
+                                                            ballot.rst
                                                             CVRs (a batch scanner for the city of Cambridge)
                                                             ggos/5th Congressional District/.git
-                                                                                            config
-                                                                                            ballot
+                                                                                            config.yaml
+                                                                                            ballot.rst
                                                                                             CVRs
                                                                  7th Congressional District/.git
-                                                                                            config
-                                                                                            ballot
-                                                                                            CVRS
+                                                                                            config.yaml
+                                                                                            ballot.rst
+                                                                                            CVRs
                                                                  ward 1-1/{config,ballot}
                                                                  ward 1-2/{config,ballot}
                                                                  ...

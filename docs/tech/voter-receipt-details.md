@@ -97,18 +97,21 @@ Once the voter blesses their interpretation of their ballot into CVRs, the follo
 
 
 ```bash
-$ git checkout -b <contest>/<short GUID> <random master branch commit>
-$ # place JSON payload in CVRs/contest.cvr
+# pre-condition: scanner places JSON payload in CVRs/ballot.cvr post voter's approval step
+# VTP python code validates ballot.cvr, initiates ballot casting, and loops over each contest:
+$ git checkout -b <contest>/<short branch GUID> <random master branch commit>
 $ git add CVRs/contest.cvr
 $ git commit -F CVRs/contest.cvr
-$ git push origin <contest>/<short GUID>
+$ git push origin <contest>/<short branch GUID>
 $ # Note - if there is a collision, pick another random number and try again
+# VTP python code completes ballot casting by marking paper and digital image with an <election ballot GUID>
 
 Where:
 
-<contest> is the VTP contest identifier
-<short GUID> is a short and random and non repeating number for this repo
+<contest>                     is the VTP contest identifier
+<short branch GUID>           is a short, random, and non repeating GUID for this repo
 <random master branch commit> is a random master branch commit
+<election ballot GUID>        is a election (CA chain) specific and random, anonymous GUID
 ```
 
 Note that each VTP scanner has an ID which is included with the VTP ballot fingerprint recorded/associated with both the digital image of the ballot and the physical ballot itself.
