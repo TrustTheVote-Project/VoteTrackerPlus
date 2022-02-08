@@ -83,7 +83,7 @@ These are supporting auditing of the VTP and VTP data.  This is different than p
 - input: all the election repositories (should be obvious but might as well clearly state it)
 - output: pass/fail assessment of the config files
 
-## 11) audit_election.py
+## 12) audit_election.py
 - run anywhere
 - for VTP audit purposes
 - will slurp all the config.yaml as well as the CVR's and run various validations to the accuracy of the election
