@@ -17,23 +17,22 @@
 #   with this program; if not, write to the Free Software Foundation, Inc.,
 #   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
-"""accept_ballot-py - command line level script to accept a ballot.
+"""cast_a_ballot-py - command line level test script to automatically cast a ballot.
 
-See './accept_ballot.py -h' for usage information.
+See './cast_a_ballot.py -h' for usage information.
 
 See ../docs/tech/executable-overview.md for the context in which this file was created.
 
 """
 
 # pylint: disable=C0413   # import statements not top of file
-import subprocess
 import json
 import sys
 import argparse
 import logging
 #  Not currently used/imported:  critical, error, warning, info, debug
-from logging import info
-import secrets
+#from logging import info
+#import secrets
 
 # save the user from themselves
 if not sys.version_info.major == 3 and sys.version_info.minor >= 9:
@@ -54,66 +53,15 @@ BALLOT_FILE = "CVRs/ballot.cvr"
 the installation location, of the location of the incoming ballot.json file
 for the current incoming scanned ballot."""
 
+BLANK_BALLOT_FILE = "CVRs/blank_ballot.json"
+"""The default location from the CWD of this program, which is different than
+the installation location, of the location of a blank ballot associated with
+the address that is being tested.  The json version only includes the ballot
+data - https://pages.nist.gov/ElectionGlossary/#ballot-data - and not
+instructions or descriptions or verbiage associated with a contest or ballot.
+contests"""
+
 # Functions
-# ZZZ this probably wants to shift to a class at some point
-def run_shell_cmd(argv, check=False):
-    """Run a shell command with logging and error handling.  Raises a
-    CalledProcessError if the shell command fails - the caller needs to
-    deal with that.  Can also raise a TimeoutExpired exception.
-
-    Nominally returns a CompletedProcess instance.
-
-    See for example https://docs.python.org/3.9/library/subprocess.html
-    """
-
-    info(f"Running \"{' '.join(argv)}\"")
-    if args.printonly:
-        return subprocess.CompletedProcess(argv, 0, stdout=None, stderr=None)
-    return subprocess.run(argv, timeout=SHELL_TIMEOUT, check=check)
-
-def checkout_new_contest_branch(contest, branchpoint):
-    """Will checkout a new branch for a specific contest.  Since there
-    is no code yet to coordinate the potentially multiple scanners
-    pushing to the same VC VTP git remote, use a highly unlikely GUID
-    and try up to 3 times to get a unique branch.
-    """
-
-    # first attempt at a new unique branch
-    branch = contest + "/" + secrets.token_hex(5)
-    current_branch = run_shell_cmd(["git", "rev-parse", "--abbrev-ref", "HEAD"], check=True).stdout
-    # if after 3 tries it still does not work, raise an error
-    max_tries = 3
-    count = 1
-    while count < max_tries:
-        count += 1
-        cmd1 = run_shell_cmd(["git", "checkout", "-b", branch, branchpoint])
-        if cmd1.returncode == 0:
-            # Created the local branch - see if it is push-able
-            cmd2 = run_shell_cmd(["git", "push", "-u", "origin", branch])
-            if cmd2.returncode == 0:
-                # success
-                return branch
-            # At this point there was some type of push failure - delete the
-            # local branch and try again
-            run_shell_cmd(["git", "checkout", current_branch], check=True)
-            run_shell_cmd(["git", "branch", "-D", branch], check=True)
-        # At this point the local did not get created - try again
-        branch = contest + "/" + secrets.token_hex(9)
-
-    # At this point the remote branch was never created and in theory the local
-    # tries are also deleted
-    raise Exception(f"could not create git branch {branch} on the third attempt")
-
-def add_commit_push_contest(branch):
-    """Will git add and commit the new contest content
-    """
-    # If this fails,
-    run_shell_cmd(["git", "add", CONTEST_FILE])
-    run_shell_cmd(["git", "commit", "-F", CONTEST_FILE])
-    # Note - if there is a collision, pick another random number and try again
-    run_shell_cmd(["git", "push", "origin", branch])
-    return 0
-
 # ZZZ this probably wants to shift to a class at some point
 def slurp_a_ballot(ballot_file):
     """Will slurp the json version of a blank ballot and return it"""
@@ -124,6 +72,18 @@ def slurp_a_ballot(ballot_file):
         json_doc = json.load(file)
     return json_doc
 
+def create_a_mock_ballot(ballot):
+    """Will create a ballot.cvr file from a ballot dictionary."""
+
+    json_file = BALLOT_FILE
+    # OS and json syntax errors are just raised at this point
+    # ZZZ - need an gestalt error handling plan at some point
+    if args.printonly:
+        print(f"{json.dumps(ballot)}")
+        return
+    with open(json_file, 'w', encoding="utf8") as outfile:
+        json.dump(ballot, outfile)
+    return
 
 ################
 # arg parsing
@@ -162,25 +122,16 @@ def main():
     model has been chosen.
     """
 
-    # read in ballot.json
-    the_ballot = slurp_a_ballot(BALLOT_FILE)
-
-    # the voter's row of digests
-    contest_receipts = []
+    # create a dictionary of the ballot of interest
+    a_ballot = slurp_a_ballot(BLANK_BALLOT_FILE)
 
     # loop over contests
-    for contest in the_ballot.contests:
-        # select a branchpoint
-        branchpoint = "bar"
-        # atomically create the branch locally and remotely
-        branch = checkout_new_contest_branch(contest, branchpoint)
-        # commit the voter's choice and push it
-        digest = add_commit_push_contest(branch)
-    contest_receipts.append(digest)
+    for contest in a_ballot.contests:
+        # choose something
+        a_ballot.vote_a_contest(contest, choose=1)
 
-    # if possible print the ballot receipt
-
-    # if possible, print the voter's offset
+    # write it out
+    create_a_mock_ballot(a_ballot)
 
 if __name__ == '__main__':
     args = parse_arguments()
