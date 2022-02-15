@@ -5,3 +5,7 @@
 
 # Mac
 .DS_Store
+
+# pytest
+__pycache__
+.pytest_cache

@@ -35,21 +35,15 @@ import logging
 from logging import info
 import secrets
 
-# save the user from themselves
-if not sys.version_info.major == 3 and sys.version_info.minor >= 9:
-    print("Python 3.9 or higher is required.")
-    print(f"You are using Python {sys.version_info.major}.{sys.version_info.minor}.")
-    sys.exit(1)
-
 # Globals for now
 # ZZZ needs to be classed or moved to a config file somewhere
-CONTEST_FILE = "CVRs/contest.cvr"
+CONTEST_FILE = "CVRs/contest.json"
 """Temporary global variable for the location of the contest cvr file"""
 
 SHELL_TIMEOUT = 15
 """How long to wait for a generic shell command to complete - maybe a bad idea"""
 
-BALLOT_FILE = "CVRs/ballot.cvr"
+BALLOT_FILE = "CVRs/ballot.json"
 """The default location from the CWD of this program, which is different than
 the installation location, of the location of the incoming ballot.json file
 for the current incoming scanned ballot."""
