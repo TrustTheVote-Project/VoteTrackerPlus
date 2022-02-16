@@ -17,9 +17,9 @@
 #   with this program; if not, write to the Free Software Foundation, Inc.,
 #   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
-"""cast_a_ballot.py - command line level test script to automatically cast a ballot.
+"""create_blank_ballot.py - command line level test script to automatically cast a ballot.
 
-See './cast_a_ballot.py -h' for usage information.
+See './create_blank_ballot.py -h' for usage information.
 
 See ../docs/tech/executable-overview.md for the context in which this file was created.
 
@@ -30,9 +30,7 @@ import json
 import sys
 import argparse
 import logging
-#  Not currently used/imported:  critical, error, warning, info, debug
-#from logging import info
-#import secrets
+from logging import info
 
 # Globals for now
 # ZZZ needs to be classed or moved to a config file somewhere
@@ -57,49 +55,61 @@ contests"""
 
 # Functions
 # ZZZ this probably wants to shift to a class at some point
-def slurp_a_ballot(ballot_file):
-    """Will slurp the json version of a blank ballot and return it"""
+def slurp_all_config_files():
+    """Will slurp all the config files in a VTP election tree and return
+    the resulting dictionary.
+    """
+
+    # walk the VTP election tree in read all the config files
+    info("Walking VTP election tree")
+    election_config = {}
 
     # OS and json syntax errors are just raised at this point
     # ZZZ - need an gestalt error handling plan at some point
-    with open(ballot_file, 'r', encoding="utf8") as file:
-        json_doc = json.load(file)
-    return json_doc
+#    with open(ballot_file, 'r', encoding="utf8") as file:
+#        json_doc = json.load(file)
+    return election_config
 
-def create_a_mock_ballot(ballot):
-    """Will create a ballot.json file from a ballot dictionary."""
+def create_a_blank_ballot(address, election_config):
+    """Will create a blank ballot.json file for a given address.
+    """
 
-    json_file = BALLOT_FILE
+    # lookup up the address across all GGO's and create the ballot
+    # dictionary for it
+    info(f"Looking up address \"{' '.join(address)}\" in {election_config}")
+    blank_ballot = {}
+
     # OS and json syntax errors are just raised at this point
     # ZZZ - need an gestalt error handling plan at some point
     if args.printonly:
-        print(f"{json.dumps(ballot)}")
+        print(f"{json.dumps(blank_ballot)}")
         return
-    with open(json_file, 'w', encoding="utf8") as outfile:
-        json.dump(ballot, outfile)
+    with open(BLANK_BALLOT_FILE, 'w', encoding="utf8") as outfile:
+        json.dump(blank_ballot, outfile)
     return
 
 ################
 # arg parsing
 ################
 def parse_arguments():
-    """Parse arguments from a command line
-    """
+    """Parse command line arguments"""
 
-    parser = argparse.ArgumentParser(description='''\
-    accept_ballot.py will run the git based workflow on a VTP scanner node to
-    accept the json rendering of the cast vote record of a voter's ballot.  The
-    json file is read, the contests are extraced and submitted to separate git
-    branches, one per contest, and pushed back to the Voter Center's VTP
-    remote.
+    parser = argparse.ArgumentParser(description=
+    """create_blank_ballot.py will parse all the config.yaml files in
+    the current VTP election git tree and create a blank ballot based
+    on the supplied address.
 
-    In addition a voter's ballot receipt and offset are optionally printed.''',
-        formatter_class=argparse.RawDescriptionHelpFormatter)
+    ZZZ - in the future some other argument can be supported to print
+    for example all possible unique blank ballots found in the current
+    VTP election tree.
+    """)
 
-    parser.add_argument('-v', metavar='verbosity', type=int, default=3,
-                            help='0 critical, 1 error, 2 warning, 3 info, 4 debug (def=3)')
+    parser.add_argument('-a', "address",
+                            help="a comma separated address")
+    parser.add_argument("-v", metavar="verbosity", type=int, default=3,
+                            help="0 critical, 1 error, 2 warning, 3 info, 4 debug (def=3)")
     parser.add_argument("-n", "--printonly", action="store_true",
-                            help='will printonly and not write to disk (def=True)')
+                            help="will printonly and not write to disk (def=True)")
 
     parsed_args = parser.parse_args()
     verbose = {0: logging.CRITICAL, 1: logging.ERROR, 2: logging.WARNING,
@@ -116,16 +126,11 @@ def main():
     model has been chosen.
     """
 
-    # create a dictionary of the ballot of interest
-    a_ballot = slurp_a_ballot(BLANK_BALLOT_FILE)
-
-    # loop over contests
-    for contest in a_ballot.contests:
-        # choose something
-        a_ballot.vote_a_contest(contest, choose=1)
+    # create a dictionary of the config.yaml data
+    election_config = slurp_all_config_files()
 
     # write it out
-    create_a_mock_ballot(a_ballot)
+    create_a_blank_ballot(args.address, election_config)
 
 if __name__ == '__main__':
     args = parse_arguments()
