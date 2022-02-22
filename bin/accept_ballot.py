@@ -25,6 +25,7 @@ See ../docs/tech/executable-overview.md for the context in which this file was c
 
 """
 
+# Standard imports
 # pylint: disable=C0413   # import statements not top of file
 import subprocess
 import json
@@ -35,18 +36,8 @@ import logging
 from logging import info
 import secrets
 
-# Globals for now
-# ZZZ needs to be classed or moved to a config file somewhere
-CONTEST_FILE = "CVRs/contest.json"
-"""Temporary global variable for the location of the contest cvr file"""
-
-SHELL_TIMEOUT = 15
-"""How long to wait for a generic shell command to complete - maybe a bad idea"""
-
-BALLOT_FILE = "CVRs/ballot.json"
-"""The default location from the CWD of this program, which is different than
-the installation location, of the location of the incoming ballot.json file
-for the current incoming scanned ballot."""
+# Local import
+from common import Globals
 
 # Functions
 # ZZZ this probably wants to shift to a class at some point
@@ -63,7 +54,8 @@ def run_shell_cmd(argv, check=False):
     info(f"Running \"{' '.join(argv)}\"")
     if args.printonly:
         return subprocess.CompletedProcess(argv, 0, stdout=None, stderr=None)
-    return subprocess.run(argv, timeout=SHELL_TIMEOUT, check=check)
+    return subprocess.run(argv, timeout=Globals.get('SHELL_TIMEOUT')
+, check=check)
 
 def checkout_new_contest_branch(contest, branchpoint):
     """Will checkout a new branch for a specific contest.  Since there
@@ -102,8 +94,8 @@ def add_commit_push_contest(branch):
     """Will git add and commit the new contest content
     """
     # If this fails,
-    run_shell_cmd(["git", "add", CONTEST_FILE])
-    run_shell_cmd(["git", "commit", "-F", CONTEST_FILE])
+    run_shell_cmd(["git", "add", Globals.get('CONTEST_FILE')])
+    run_shell_cmd(["git", "commit", "-F", Globals.get('CONTEST_FILE')])
     # Note - if there is a collision, pick another random number and try again
     run_shell_cmd(["git", "push", "origin", branch])
     return 0
@@ -136,15 +128,15 @@ def parse_arguments():
     In addition a voter's ballot receipt and offset are optionally printed.''',
         formatter_class=argparse.RawDescriptionHelpFormatter)
 
-    parser.add_argument('-v', metavar='verbosity', type=int, default=3,
-                            help='0 critical, 1 error, 2 warning, 3 info, 4 debug (def=3)')
+    parser.add_argument("-v", "--verbosity", type=int, default=3,
+                            help="0 critical, 1 error, 2 warning, 3 info, 4 debug (def=3)")
     parser.add_argument("-n", "--printonly", action="store_true",
-                            help='will printonly and not write to disk (def=True)')
+                            help="will printonly and not write to disk (def=True)")
 
     parsed_args = parser.parse_args()
     verbose = {0: logging.CRITICAL, 1: logging.ERROR, 2: logging.WARNING,
                    3: logging.INFO, 4: logging.DEBUG}
-    logging.basicConfig(format='%(message)s', level=verbose[parsed_args.v], stream=sys.stdout)
+    logging.basicConfig(format="%(message)s", level=verbose[parsed_args.v], stream=sys.stdout)
     return parsed_args
 
 ################
@@ -157,7 +149,7 @@ def main():
     """
 
     # read in ballot.json
-    the_ballot = slurp_a_ballot(BALLOT_FILE)
+    the_ballot = slurp_a_ballot(Globals.get('BALLOT_FILE'))
 
     # the voter's row of digests
     contest_receipts = []

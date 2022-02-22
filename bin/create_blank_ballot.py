@@ -25,6 +25,7 @@ See ../docs/tech/executable-overview.md for the context in which this file was c
 
 """
 
+# Standard imports
 # pylint: disable=C0413   # import statements not top of file
 import json
 import sys
@@ -32,26 +33,8 @@ import argparse
 import logging
 from logging import info
 
-# Globals for now
-# ZZZ needs to be classed or moved to a config file somewhere
-CONTEST_FILE = "CVRs/contest.json"
-"""Temporary global variable for the location of the contest cvr file"""
-
-SHELL_TIMEOUT = 15
-"""How long to wait for a generic shell command to complete - maybe a bad idea"""
-
-BALLOT_FILE = "CVRs/ballot.json"
-"""The default location from the CWD of this program, which is different than
-the installation location, of the location of the incoming ballot.json file
-for the current incoming scanned ballot."""
-
-BLANK_BALLOT_FILE = "CVRs/blank_ballot.json"
-"""The default location from the CWD of this program, which is different than
-the installation location, of the location of a blank ballot associated with
-the address that is being tested.  The json version only includes the ballot
-data - https://pages.nist.gov/ElectionGlossary/#ballot-data - and not
-instructions or descriptions or verbiage associated with a contest or ballot.
-contests"""
+# Local imports
+from common import Globals, Address
 
 # Functions
 # ZZZ this probably wants to shift to a class at some point
@@ -84,7 +67,7 @@ def create_a_blank_ballot(address, election_config):
     if args.printonly:
         print(f"{json.dumps(blank_ballot)}")
         return
-    with open(BLANK_BALLOT_FILE, 'w', encoding="utf8") as outfile:
+    with open(Globals.get('BLANK_BALLOT_FILE'), 'w', encoding="utf8") as outfile:
         json.dump(blank_ballot, outfile)
     return
 
@@ -104,9 +87,9 @@ def parse_arguments():
     VTP election tree.
     """)
 
-    parser.add_argument('-a', "address",
+    parser.add_argument('-a', "--address",
                             help="a comma separated address")
-    parser.add_argument("-v", metavar="verbosity", type=int, default=3,
+    parser.add_argument("-v", "--verbosity", type=int, default=3,
                             help="0 critical, 1 error, 2 warning, 3 info, 4 debug (def=3)")
     parser.add_argument("-n", "--printonly", action="store_true",
                             help="will printonly and not write to disk (def=True)")
@@ -114,7 +97,8 @@ def parse_arguments():
     parsed_args = parser.parse_args()
     verbose = {0: logging.CRITICAL, 1: logging.ERROR, 2: logging.WARNING,
                    3: logging.INFO, 4: logging.DEBUG}
-    logging.basicConfig(format='%(message)s', level=verbose[parsed_args.v], stream=sys.stdout)
+    logging.basicConfig(format='%(message)s',
+                            level=verbose[parsed_args.verbosity], stream=sys.stdout)
     return parsed_args
 
 ################
@@ -129,8 +113,11 @@ def main():
     # create a dictionary of the config.yaml data
     election_config = slurp_all_config_files()
 
+    # parse the address
+    the_address = Address(csv=args.address)
+
     # write it out
-    create_a_blank_ballot(args.address, election_config)
+    create_a_blank_ballot(the_address, election_config)
 
 if __name__ == '__main__':
     args = parse_arguments()
