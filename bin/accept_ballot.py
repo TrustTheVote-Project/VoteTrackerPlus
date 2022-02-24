@@ -27,36 +27,16 @@ See ../docs/tech/executable-overview.md for the context in which this file was c
 
 # Standard imports
 # pylint: disable=C0413   # import statements not top of file
-import subprocess
 import json
 import sys
 import argparse
 import logging
-#  Not currently used/imported:  critical, error, warning, info, debug
-from logging import info
 import secrets
 
 # Local import
-from common import Globals
+from common import Globals, Shellout
 
 # Functions
-# ZZZ this probably wants to shift to a class at some point
-def run_shell_cmd(argv, check=False):
-    """Run a shell command with logging and error handling.  Raises a
-    CalledProcessError if the shell command fails - the caller needs to
-    deal with that.  Can also raise a TimeoutExpired exception.
-
-    Nominally returns a CompletedProcess instance.
-
-    See for example https://docs.python.org/3.9/library/subprocess.html
-    """
-
-    info(f"Running \"{' '.join(argv)}\"")
-    if args.printonly:
-        return subprocess.CompletedProcess(argv, 0, stdout=None, stderr=None)
-    return subprocess.run(argv, timeout=Globals.get('SHELL_TIMEOUT')
-, check=check)
-
 def checkout_new_contest_branch(contest, branchpoint):
     """Will checkout a new branch for a specific contest.  Since there
     is no code yet to coordinate the potentially multiple scanners
@@ -66,23 +46,23 @@ def checkout_new_contest_branch(contest, branchpoint):
 
     # first attempt at a new unique branch
     branch = contest + "/" + secrets.token_hex(5)
-    current_branch = run_shell_cmd(["git", "rev-parse", "--abbrev-ref", "HEAD"], check=True).stdout
+    current_branch = Shellout.run(["git", "rev-parse", "--abbrev-ref", "HEAD"], check=True).stdout
     # if after 3 tries it still does not work, raise an error
     max_tries = 3
     count = 1
     while count < max_tries:
         count += 1
-        cmd1 = run_shell_cmd(["git", "checkout", "-b", branch, branchpoint])
+        cmd1 = Shellout.run(["git", "checkout", "-b", branch, branchpoint])
         if cmd1.returncode == 0:
             # Created the local branch - see if it is push-able
-            cmd2 = run_shell_cmd(["git", "push", "-u", "origin", branch])
+            cmd2 = Shellout.run(["git", "push", "-u", "origin", branch])
             if cmd2.returncode == 0:
                 # success
                 return branch
             # At this point there was some type of push failure - delete the
             # local branch and try again
-            run_shell_cmd(["git", "checkout", current_branch], check=True)
-            run_shell_cmd(["git", "branch", "-D", branch], check=True)
+            Shellout.run(["git", "checkout", current_branch], check=True)
+            Shellout.run(["git", "branch", "-D", branch], check=True)
         # At this point the local did not get created - try again
         branch = contest + "/" + secrets.token_hex(9)
 
@@ -94,10 +74,10 @@ def add_commit_push_contest(branch):
     """Will git add and commit the new contest content
     """
     # If this fails,
-    run_shell_cmd(["git", "add", Globals.get('CONTEST_FILE')])
-    run_shell_cmd(["git", "commit", "-F", Globals.get('CONTEST_FILE')])
+    Shellout.run(["git", "add", Globals.get('CONTEST_FILE')])
+    Shellout.run(["git", "commit", "-F", Globals.get('CONTEST_FILE')])
     # Note - if there is a collision, pick another random number and try again
-    run_shell_cmd(["git", "push", "origin", branch])
+    Shellout.run(["git", "push", "origin", branch])
     return 0
 
 # ZZZ this probably wants to shift to a class at some point
