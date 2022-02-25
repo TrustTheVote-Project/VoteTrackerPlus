@@ -20,6 +20,7 @@
 """A kitchen sync for VTP classes for the moment"""
 
 import os
+import re
 import subprocess
 #  Other imports:  critical, error, warning, info, debug
 from logging import info
@@ -180,13 +181,23 @@ class ElectionConfig:
     """
 
     # Legitimate top-level keys
-    __static_keys = ['GGOs', 'contests', 'submodules', 'vote centers']
+    __root_keys = ['GGOs', 'contests', 'submodules', 'vote centers']
+
+    @staticmethod
+    def is_valid_ggo_string(arg):
+        """Check to see if it is a string without illegal characters."""
+        if not isinstance(arg, str):
+            raise TypeError(f"The GGO value is not a string ({arg})")
+        if re.search(r'[^A-Za-z0-9_\-\.]', arg):
+            raise ValueError(f"The GGO value contains unsupported characters ({arg})")
+        # ZZZ need a bunch more QA checks here and one day deal with unicode
 
     def __init__(self):
         """Stubbed out for now - returns an object reading to be
         populated with _this_ election config data.
         """
-
+        # The VTP ElectionConfig dictionary of all the parsed config.yaml files
+        self.config = {}
         # Determine the directory of the root config.yaml file
         result = Shellout.run(["git", "--rev-parse", "--show-superproject-working-tree"],
                                       check=True)
@@ -198,24 +209,71 @@ class ElectionConfig:
             raise EnvironmentError("The CWD of the current process is not in the a VTP git \
             root workspace")
         self.git_rootdir = result.stdout.strip
+        self.root_config_file = os.path.join(self.git_rootdir, Globals.get("CONFIG_FILE"))
+        self.parsed_configs = ["."]
 
-    def get_static_key(self, name):
+    def get_root_key(self, name):
         """A generic top level key getter - will raise a NameError if name is not defined"""
-        if name in ElectionConfig.__static_keys:
+        if name in ElectionConfig.__root_keys:
             return getattr(self, name)
         raise NameError(f"Name {name} not accepted/defined for set()")
 
-    def slurp_root_config(self):
-        """Given an ElectionConfig, read the root config"""
+    def parse_configs(self):
+        """Will inspect the data in the root config and load the
+        entire election config tree.  The walk is depth first and
+        hitting a node twice is an error.
 
-        config_file = os.path.join(self.git_rootdir, Globals.get("CONFIG_FILE"))
-        # read it
-        with open(config_file, 'r', encoding="utf8") as file:
-            yaml_doc = yaml.load(file, Loader=yaml.FullLoader)
-
+        The GGOs and config.yaml basically represent a double entry
+        accounting system - both must exist for the specific
+        config.yaml to be loaded.
+        """
+        # read the root config
+        with open(self.root_config_file, 'r', encoding="utf8") as file:
+            self.config = yaml.load(file, Loader=yaml.FullLoader)
         # sanity-check it
-        bad_keys = [key for key in yaml_doc if not key in ElectionConfig.__static_keys]
+        bad_keys = [key for key in self.config if not key in ElectionConfig.__root_keys]
         if bad_keys:
             raise KeyError(f"The following keys are not supported: {bad_keys}")
 
-        return yaml_doc
+        def recursively_parse_tree(subdir, subtree):
+            """Something to recursivelty parse the GGO tree"""
+            # If there are GGOs, parse each one
+            if "GGOs" in subtree:
+                for ggo_kind, ggo_list in subtree["GGOs"].items():
+                    ElectionConfig.is_valid_ggo_string(ggo_kind)
+                    if not isinstance(ggo_list, list):
+                        raise TypeError(f"The GGO kind value is not a list ({ggo_kind})")
+                    ggo_subdir_abspath = os.path.join(self.git_rootdir, subdir, ggo_kind)
+                    for ggo in ggo_list:
+                        ElectionConfig.is_valid_ggo_string(ggo)
+                        ggo_file = os.path.join(ggo_subdir_abspath, ggo)
+                        # read the child config
+                        with open(ggo_file, 'r', encoding="utf8") as file:
+                            this_config = yaml.load(file, Loader=yaml.FullLoader)
+                            # sanity-check it
+                            bad_keys = [key for key in this_config
+                                            if not key in ElectionConfig.__root_keys]
+                            if bad_keys:
+                                raise KeyError(f"The following keys are not supported: {bad_keys}")
+                            # Do not hit a node twice - it is a config error if so
+                            next_subdir = os.path.join(subdir, ggo_kind, ggo)
+                            if next_subdir in self.parsed_configs:
+                                raise LookupError(f"Atttempting to load the config file located at \
+                                ({next_subdir}) a second time")
+                            self.parsed_configs.append(next_subdir)
+                            # Add this dictionary and ggo relative subdir
+                            if "GGO-tree" not in subtree:
+                                subtree["GGO-tree"] = {}
+                            if ggo_kind not in subtree["GGO-tree"]:
+                                subtree["GGO-tree"][ggo_kind] = {}
+                            subtree["GGO-tree"][ggo_kind][ggo] = this_config
+                            # Record the relative ggo subdir
+                            subtree["GGO-subdir"] = next_subdir
+                            # Recurse - depth first is ok
+                            recursively_parse_tree(subtree["GGO-subdir"],
+                                                       subtree["GGO-tree"][ggo_kind][ggo])
+
+        # Now recursively walk the tree (depth first)
+        recursively_parse_tree ("", self.config)
+
+# EOF
