@@ -35,31 +35,16 @@ from logging import info
 
 # Local imports
 from common import Globals, Address
+from election_config import ElectionConfig
 
 # Functions
-# ZZZ this probably wants to shift to a class at some point
-def slurp_all_config_files():
-    """Will slurp all the config files in a VTP election tree and return
-    the resulting dictionary.
-    """
-
-    # walk the VTP election tree in read all the config files
-    info("Walking VTP election tree")
-    election_config = {}
-
-    # OS and json syntax errors are just raised at this point
-    # ZZZ - need an gestalt error handling plan at some point
-#    with open(ballot_file, 'r', encoding="utf8") as file:
-#        json_doc = json.load(file)
-    return election_config
-
-def create_a_blank_ballot(address, election_config):
+def create_a_blank_ballot(address, config):
     """Will create a blank ballot.json file for a given address.
     """
 
     # lookup up the address across all GGO's and create the ballot
     # dictionary for it
-    info(f"Looking up address \"{' '.join(address)}\" in {election_config}")
+    info(f"Looking up address \"{' '.join(address)}\" in {config}")
     blank_ballot = {}
 
     # OS and json syntax errors are just raised at this point
@@ -110,14 +95,22 @@ def main():
     model has been chosen.
     """
 
-    # create a dictionary of the config.yaml data
-    election_config = slurp_all_config_files()
+    # Create an VTP election config object
+    the_election_config = ElectionConfig()
+    the_election_config.parse_configs()
 
-    # parse the address
+    # Parse the address nominally supplied via the args. ZZZ -
+    # existing packages look out-of-date and US centric. But the idea
+    # is that the actual town will know the latest and greatest and
+    # that may/will be out of date with regards to any cached info.
+    # So, for now assume that the street address map will be imported
+    # somehow and that each GGO for the address will also be imported
+    # somehow. And all that comes later - for now just map an address
+    # to a town.
     the_address = Address(csv=args.address)
 
     # write it out
-    create_a_blank_ballot(the_address, election_config)
+    create_a_blank_ballot(the_address, the_election_config)
 
 if __name__ == '__main__':
     args = parse_arguments()
