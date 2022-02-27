@@ -100,13 +100,14 @@ def main():
     the_election_config.parse_configs()
 
     # Parse the address nominally supplied via the args. ZZZ -
-    # existing packages look out-of-date and US centric. But the idea
-    # is that the actual town will know the latest and greatest and
-    # that may/will be out of date with regards to any cached info.
-    # So, for now assume that the street address map will be imported
-    # somehow and that each GGO for the address will also be imported
-    # somehow. And all that comes later - for now just map an address
-    # to a town.
+    # existing address parsing packages look out-of-date and US
+    # centric. But the idea is that the actual town will know the
+    # latest and greatest and that any other data may/will be out of
+    # date, particularly if the voting center can update records on
+    # the fly. So, for now assume that the street address map will be
+    # imported somehow and that each GGO for the address will also be
+    # imported somehow. And all that comes later - for now just map an
+    # address to a town.
     the_address = Address(csv=args.address)
 
     # write it out

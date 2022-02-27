@@ -81,7 +81,8 @@ class ElectionConfig:
     """
 
     # Legitimate top-level keys
-    _root_keys = ['GGOs', 'contests', 'submodules', 'vote centers']
+    _root_config_keys = ['GGOs', 'contests', 'submodules', 'vote centers']
+    _root_address_map_keys = ['includes']
 
     @staticmethod
     def is_valid_ggo_string(arg):
@@ -98,6 +99,7 @@ class ElectionConfig:
         """
         # The VTP ElectionConfig dictionary of all the parsed config.yaml files
         self.config = {}
+        self.address_map = {}
         # Determine the directory of the root config.yaml file
         result = Shellout.run(["git", "--rev-parse", "--show-superproject-working-tree"],
                                       check=True)
@@ -110,11 +112,12 @@ class ElectionConfig:
             root workspace")
         self.git_rootdir = result.stdout.strip
         self.root_config_file = os.path.join(self.git_rootdir, Globals.get("CONFIG_FILE"))
+        self.root_address_map_file = os.path.join(self.git_rootdir, Globals.get("ADDRESS_MAP_FILE"))
         self.parsed_configs = ["."]
 
     def get_root_key(self, name):
         """A generic top level key getter - will raise a NameError if name is not defined"""
-        if name in ElectionConfig._root_keys:
+        if name in ElectionConfig._root_config_keys:
             return getattr(self, name)
         raise NameError(f"Name {name} not accepted/defined for set()")
 
@@ -126,14 +129,25 @@ class ElectionConfig:
         The GGOs and config.yaml basically represent a double entry
         accounting system - both must exist for the specific
         config.yaml to be loaded.
+
+        This will load both the config and address_map yaml data
         """
-        # read the root config
+
+        # read the root config and address_map files
         with open(self.root_config_file, 'r', encoding="utf8") as file:
             self.config = yaml.load(file, Loader=yaml.FullLoader)
         # sanity-check it
-        bad_keys = [key for key in self.config if not key in ElectionConfig._root_keys]
+        bad_keys = [key for key in self.config if not key in ElectionConfig._root_config_keys]
         if bad_keys:
-            raise KeyError(f"The following keys are not supported: {bad_keys}")
+            raise KeyError(f"The following config keys are not supported: {bad_keys}")
+
+        # read the root address_map and sanity check that
+        with open(self.root_address_map_file, 'r', encoding="utf8") as file:
+            self.address_map = yaml.load(file, Loader=yaml.FullLoader)
+        bad_keys = [key for key in self.address_map if not key in
+                        ElectionConfig._root_address_map_keys]
+        if bad_keys:
+            raise KeyError(f"The following address_map keys are not supported: {bad_keys}")
 
         def recursively_parse_tree(subdir, subtree):
             """Something to recursivelty parse the GGO tree"""
@@ -146,32 +160,51 @@ class ElectionConfig:
                     ggo_subdir_abspath = os.path.join(self.git_rootdir, subdir, ggo_kind)
                     for ggo in ggo_list:
                         ElectionConfig.is_valid_ggo_string(ggo)
-                        ggo_file = os.path.join(ggo_subdir_abspath, ggo)
+                        ggo_file = os.path.join(ggo_subdir_abspath, ggo, Globals.get("CONFIG_FILE"))
                         # read the child config
                         with open(ggo_file, 'r', encoding="utf8") as file:
                             this_config = yaml.load(file, Loader=yaml.FullLoader)
                             # sanity-check it
                             bad_keys = [key for key in this_config
-                                            if not key in ElectionConfig._root_keys]
+                                            if not key in ElectionConfig._root_config_keys]
                             if bad_keys:
-                                raise KeyError(f"The following keys are not supported: {bad_keys}")
+                                raise KeyError(f"The following config keys are not supported: \
+                                {bad_keys}")
+
                             # Do not hit a node twice - it is a config error if so
                             next_subdir = os.path.join(subdir, ggo_kind, ggo)
                             if next_subdir in self.parsed_configs:
                                 raise LookupError(f"Atttempting to load the config file located at \
                                 ({next_subdir}) a second time")
                             self.parsed_configs.append(next_subdir)
+
                             # Add this dictionary and ggo relative subdir
-                            if "GGO-tree" not in subtree:
-                                subtree["GGO-tree"] = {}
-                            if ggo_kind not in subtree["GGO-tree"]:
-                                subtree["GGO-tree"][ggo_kind] = {}
-                            subtree["GGO-tree"][ggo_kind][ggo] = this_config
-                            # Record the relative ggo subdir
+                            if "GGO-subtree" not in subtree:
+                                subtree["GGO-subtree"] = {}
+                            if ggo_kind not in subtree["GGO-subtree"]:
+                                subtree["GGO-subtree"][ggo_kind] = {}
+                            subtree["GGO-subtree"][ggo_kind][ggo] = this_config
                             subtree["GGO-subdir"] = next_subdir
+
+                            # Before recursing, read in address_map
+                            address_map_file = os.path.join(ggo_subdir_abspath, ggo,
+                                                            Globals.get("ADDRESS_MAP_FILE"))
+                            with open(address_map_file, 'r', encoding="utf8") as am_file:
+                                this_address_map = yaml.load(am_file, Loader=yaml.FullLoader)
+                                # sanity-check it
+                                bad_keys = [key for key in this_address_map
+                                                if not key in ElectionConfig._root_address_map_keys]
+                                if bad_keys:
+                                    raise KeyError(f"The following address_map keys are not \
+                                    supported: {bad_keys}")
+                                # Add the incoming address_map dictionary to the dictionary
+                                if "GGO-address-map" not in subtree:
+                                    subtree["GGO-address-map"] = {}
+                                subtree["GGO-address-map"] = this_config
+
                             # Recurse - depth first is ok
                             recursively_parse_tree(subtree["GGO-subdir"],
-                                                       subtree["GGO-tree"][ggo_kind][ggo])
+                                                       subtree["GGO-subtree"][ggo_kind][ggo])
 
         # Now recursively walk the tree (depth first)
         recursively_parse_tree ("", self.config)

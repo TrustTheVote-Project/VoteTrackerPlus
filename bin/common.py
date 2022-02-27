@@ -104,9 +104,13 @@ class Address:
             self.number = kwargs['number']
             self.street = kwargs['street']
             self.substreet = "" if 'substreet' not in kwargs else kwargs['substreet']
-            self.town = kwargs['town']
+            self.town = "" if 'town' not in kwargs else kwargs['town']
+            self.state = "" if 'state' not in kwargs else kwargs['state']
+            self.country = "" if 'country' not in kwargs else kwargs['country']
+            self.zipcode = "" if 'zipcode' not in kwargs else kwargs['zipcode']
         else:
-            raise NameError("The only supported constructor keyword at this time is csv")
+            raise NameError(f"The only supported constructor keyword at this time is \
+            csv string or the following explicit list: {Address._keys}")
 
     def get(self, name):
         """A generic getter - will raise a NameError if name is not defined"""
