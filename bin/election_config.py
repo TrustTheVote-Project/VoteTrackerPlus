@@ -101,16 +101,16 @@ class ElectionConfig:
         self.config = {}
         self.address_map = {}
         # Determine the directory of the root config.yaml file
-        result = Shellout.run(["git", "--rev-parse", "--show-superproject-working-tree"],
-                                      check=True)
+        result = Shellout.run(["git", "rev-parse", "--show-superproject-working-tree"],
+                                      check=False, capture_output=True, text=True)
         if not result.stdout == "":
-            raise EnvironmentError(f"The CWD of the current process is not in the superprohect \
-            working tree ({result.stdout})")
-        result = Shellout.run(["git", "--rev-parse", "--show-toplevel"], check=True)
+            raise EnvironmentError(("The CWD of the current process is not in the superproject"
+                                    f"working tree ({result.stdout})"))
+        result = Shellout.run(["git", "rev-parse", "--show-toplevel"], check=True,
+                                  capture_output=True, text=True)
         if result.stdout == "":
-            raise EnvironmentError("The CWD of the current process is not in the a VTP git \
-            root workspace")
-        self.git_rootdir = result.stdout.strip
+            raise EnvironmentError("Cannot determine workspace top level via 'git rev-parse'")
+        self.git_rootdir = result.stdout.strip()
         self.root_config_file = os.path.join(self.git_rootdir, Globals.get("CONFIG_FILE"))
         self.root_address_map_file = os.path.join(self.git_rootdir, Globals.get("ADDRESS_MAP_FILE"))
         self.parsed_configs = ["."]
@@ -158,6 +158,7 @@ class ElectionConfig:
                     if not isinstance(ggo_list, list):
                         raise TypeError(f"The GGO kind value is not a list ({ggo_kind})")
                     ggo_subdir_abspath = os.path.join(self.git_rootdir, subdir, ggo_kind)
+                    ggo_index = 0
                     for ggo in ggo_list:
                         ElectionConfig.is_valid_ggo_string(ggo)
                         ggo_file = os.path.join(ggo_subdir_abspath, ggo, Globals.get("CONFIG_FILE"))
@@ -168,23 +169,22 @@ class ElectionConfig:
                             bad_keys = [key for key in this_config
                                             if not key in ElectionConfig._root_config_keys]
                             if bad_keys:
-                                raise KeyError(f"The following config keys are not supported: \
-                                {bad_keys}")
+                                raise KeyError(("The following config keys are not supported: "
+                                                    f"{bad_keys}"))
 
                             # Do not hit a node twice - it is a config error if so
                             next_subdir = os.path.join(subdir, ggo_kind, ggo)
                             if next_subdir in self.parsed_configs:
-                                raise LookupError(f"Atttempting to load the config file located at \
-                                ({next_subdir}) a second time")
+                                raise LookupError(("Atttempting to load the config file located at "
+                                                       f"({next_subdir}) a second time"))
                             self.parsed_configs.append(next_subdir)
 
-                            # Add this dictionary and ggo relative subdir
-                            if "GGO-subtree" not in subtree:
-                                subtree["GGO-subtree"] = {}
-                            if ggo_kind not in subtree["GGO-subtree"]:
-                                subtree["GGO-subtree"][ggo_kind] = {}
-                            subtree["GGO-subtree"][ggo_kind][ggo] = this_config
-                            subtree["GGO-subdir"] = next_subdir
+                            # Replace the array value (a string) with
+                            # a dictionary of this current config at
+                            # the correct index
+                            new_node = {"ggo-name": ggo, "ggo-subdir": next_subdir,
+                                            "ggo-subtree": this_config}
+                            subtree["GGOs"][ggo_kind][ggo_index] = new_node
 
                             # Before recursing, read in address_map
                             address_map_file = os.path.join(ggo_subdir_abspath, ggo,
@@ -195,18 +195,20 @@ class ElectionConfig:
                                 bad_keys = [key for key in this_address_map
                                                 if not key in ElectionConfig._root_address_map_keys]
                                 if bad_keys:
-                                    raise KeyError(f"The following address_map keys are not \
-                                    supported: {bad_keys}")
+                                    raise KeyError(("The following address_map keys are not "
+                                                        f"supported: {bad_keys}"))
                                 # Add the incoming address_map dictionary to the dictionary
-                                if "GGO-address-map" not in subtree:
-                                    subtree["GGO-address-map"] = {}
-                                subtree["GGO-address-map"] = this_config
+                                new_address_map = {"address-map": this_address_map}
+                                subtree["GGOs"][ggo_kind][ggo_index].update(new_address_map)
 
                             # Recurse - depth first is ok
-                            recursively_parse_tree(subtree["GGO-subdir"],
+                            import pdb; pdb.set_trace()
+                            recursively_parse_tree(os.path.join(subtree["GGO-subdir"], "GGOs"),
                                                        subtree["GGO-subtree"][ggo_kind][ggo])
+                            # bump the index
+                            ggo_index += 1
 
         # Now recursively walk the tree (depth first)
-        recursively_parse_tree ("", self.config)
+        recursively_parse_tree ("GGOs", self.config)
 
 # EOF

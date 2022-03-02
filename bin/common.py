@@ -33,6 +33,7 @@ class Globals:
         "BALLOT_FILE": os.path.join("CVRs", "ballot.json"),
         # the location of the config file for this GGO
         "CONFIG_FILE": "config.yaml",
+        "ADDRESS_MAP_FILE": "address_map.yaml",
         # the location of the contest cvr file
         "CONTEST_FILE": os.path.join("CVRs", "contest.json"),
         # how long to wait for a git shell command to complete - maybe a bad idea
@@ -60,7 +61,7 @@ class Shellout:
     """A class to wrap the control & management of subprocesses"""
 
     @staticmethod
-    def run(argv, check=False, printonly=False):
+    def run(argv, printonly=False, **kwargs):
         """Run a shell command with logging and error handling.  Raises a
         CalledProcessError if the shell command fails - the caller needs to
         deal with that.  Can also raise a TimeoutExpired exception.
@@ -73,7 +74,7 @@ class Shellout:
         info(f"Running \"{' '.join(argv)}\"")
         if printonly:
             return subprocess.CompletedProcess(argv, 0, stdout="", stderr="")
-        return subprocess.run(argv, timeout=Globals.get('SHELL_TIMEOUT'), check=check)
+        return subprocess.run(argv, timeout=Globals.get('SHELL_TIMEOUT'), **kwargs)
 
 class Address:
     """A class to create an address object, which is just an address in

@@ -63,13 +63,13 @@ def parse_arguments():
     """Parse command line arguments"""
 
     parser = argparse.ArgumentParser(description=
-    """create_blank_ballot.py will parse all the config.yaml files in
-    the current VTP election git tree and create a blank ballot based
-    on the supplied address.
+    """create_blank_ballot.py will parse all the config and
+    address_map yaml files in the current VTP election git tree and
+    create a blank ballot based on the supplied address.
 
     ZZZ - in the future some other argument can be supported to print
     for example all possible unique blank ballots found in the current
-    VTP election tree.
+    VTP election tree, whatever.
     """)
 
     parser.add_argument('-a', "--address",
@@ -97,6 +97,7 @@ def main():
 
     # Create an VTP election config object
     the_election_config = ElectionConfig()
+#    import pdb; pdb.set_trace()
     the_election_config.parse_configs()
 
     # Parse the address nominally supplied via the args. ZZZ -

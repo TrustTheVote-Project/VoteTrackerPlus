@@ -9,3 +9,8 @@
 # pytest
 __pycache__
 .pytest_cache
+
+# ZZZ ignore manual mock testing files and directories for now
+config.yaml
+address_map.yaml
+GGOs
