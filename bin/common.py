@@ -74,6 +74,7 @@ class Shellout:
         info(f"Running \"{' '.join(argv)}\"")
         if printonly:
             return subprocess.CompletedProcess(argv, 0, stdout="", stderr="")
+        # pylint: disable=W1510 # the caller desides on whether check is set or not
         return subprocess.run(argv, timeout=Globals.get('SHELL_TIMEOUT'), **kwargs)
 
 class Address:

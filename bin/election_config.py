@@ -21,6 +21,7 @@
 import os
 import re
 import yaml
+import pprint
 
 # local imports
 from common import Globals, Shellout
@@ -89,7 +90,7 @@ class ElectionConfig:
         """Check to see if it is a string without illegal characters."""
         if not isinstance(arg, str):
             raise TypeError(f"The GGO value is not a string ({arg})")
-        if re.search(r'[^A-Za-z0-9_\-\.]', arg):
+        if re.search(r'[^A-Za-z0-9 _\-\.]', arg):
             raise ValueError(f"The GGO value contains unsupported characters ({arg})")
         # ZZZ need a bunch more QA checks here and one day deal with unicode
 
@@ -114,6 +115,22 @@ class ElectionConfig:
         self.root_config_file = os.path.join(self.git_rootdir, Globals.get("CONFIG_FILE"))
         self.root_address_map_file = os.path.join(self.git_rootdir, Globals.get("ADDRESS_MAP_FILE"))
         self.parsed_configs = ["."]
+
+    def get(self, name):
+        """A generic getter - will raise a NameError if name is not defined"""
+        if name in ElectionConfig._root_config_keys:
+            return getattr(self, "config")[name]
+        if name in ElectionConfig._root_address_map_keys:
+            return getattr(self, "config")[name]
+        raise NameError(f"Name {name} is not a supported root level key for the ElectionConfig dictionary")
+
+#    def __repr__(self):
+#        """Return this instance's ElectionConfig dictionary"""
+#        return self.config
+
+    def __str__(self):
+        """Return the serialization of this instance's ElectionConfig dictionary"""
+        return pprint.pformat(self.config, width=256)
 
     def get_root_key(self, name):
         """A generic top level key getter - will raise a NameError if name is not defined"""
@@ -148,6 +165,25 @@ class ElectionConfig:
                         ElectionConfig._root_address_map_keys]
         if bad_keys:
             raise KeyError(f"The following address_map keys are not supported: {bad_keys}")
+
+        def read_address_map(filename):
+            """
+            Read the address_map yaml file return the dictionary but
+            only if the file exists.  If the file does not exist, then
+            any address inside that specific GGO will be added to the
+            super GGO.
+            """
+            if os.path.isfile(filename):
+                with open(filename, 'r', encoding="utf8") as am_file:
+                    this_address_map = yaml.load(am_file, Loader=yaml.FullLoader)
+                    # sanity-check it
+                    bad_keys = [key for key in this_address_map
+                        if not key in ElectionConfig._root_address_map_keys]
+                    if bad_keys:
+                        raise KeyError(("The following address_map keys are not "
+                            f"supported: {bad_keys}"))
+                    return this_address_map
+            return {}
 
         def recursively_parse_tree(subdir, subtree):
             """Something to recursivelty parse the GGO tree"""
@@ -186,29 +222,21 @@ class ElectionConfig:
                                             "ggo-subtree": this_config}
                             subtree["GGOs"][ggo_kind][ggo_index] = new_node
 
-                            # Before recursing, read in address_map
-                            address_map_file = os.path.join(ggo_subdir_abspath, ggo,
-                                                            Globals.get("ADDRESS_MAP_FILE"))
-                            with open(address_map_file, 'r', encoding="utf8") as am_file:
-                                this_address_map = yaml.load(am_file, Loader=yaml.FullLoader)
-                                # sanity-check it
-                                bad_keys = [key for key in this_address_map
-                                                if not key in ElectionConfig._root_address_map_keys]
-                                if bad_keys:
-                                    raise KeyError(("The following address_map keys are not "
-                                                        f"supported: {bad_keys}"))
-                                # Add the incoming address_map dictionary to the dictionary
-                                new_address_map = {"address-map": this_address_map}
-                                subtree["GGOs"][ggo_kind][ggo_index].update(new_address_map)
+                            # Before recursing, read in address_map and add it to the node
+                            new_address_map = {"address-map":
+                                read_address_map(os.path.join(ggo_subdir_abspath, ggo,
+                                    Globals.get("ADDRESS_MAP_FILE")))}
+                            # Add the incoming address_map dictionary to the dictionary
+                            subtree["GGOs"][ggo_kind][ggo_index].update(new_address_map)
 
                             # Recurse - depth first is ok
-                            import pdb; pdb.set_trace()
-                            recursively_parse_tree(os.path.join(subtree["GGO-subdir"], "GGOs"),
-                                                       subtree["GGO-subtree"][ggo_kind][ggo])
+                            recursively_parse_tree(os.path.join(next_subdir, "GGOs"),
+                                subtree["GGOs"][ggo_kind][ggo_index]["ggo-subtree"])
                             # bump the index
                             ggo_index += 1
 
         # Now recursively walk the tree (depth first)
         recursively_parse_tree ("GGOs", self.config)
+#        import pdb; pdb.set_trace()
 
 # EOF

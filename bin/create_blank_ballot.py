@@ -97,8 +97,8 @@ def main():
 
     # Create an VTP election config object
     the_election_config = ElectionConfig()
-#    import pdb; pdb.set_trace()
     the_election_config.parse_configs()
+    import pdb; pdb.set_trace()
 
     # Parse the address nominally supplied via the args. ZZZ -
     # existing address parsing packages look out-of-date and US
