@@ -20,8 +20,8 @@
 # statndard imports
 import os
 import re
-import yaml
 import pprint
+import yaml
 
 # local imports
 from common import Globals, Shellout
@@ -122,7 +122,8 @@ class ElectionConfig:
             return getattr(self, "config")[name]
         if name in ElectionConfig._root_address_map_keys:
             return getattr(self, "config")[name]
-        raise NameError(f"Name {name} is not a supported root level key for the ElectionConfig dictionary")
+        raise NameError((f"Name {name} is not a supported root level key "
+                             "for the ElectionConfig dictionary"))
 
 #    def __repr__(self):
 #        """Return this instance's ElectionConfig dictionary"""
@@ -194,7 +195,6 @@ class ElectionConfig:
                     if not isinstance(ggo_list, list):
                         raise TypeError(f"The GGO kind value is not a list ({ggo_kind})")
                     ggo_subdir_abspath = os.path.join(self.git_rootdir, subdir, ggo_kind)
-                    ggo_index = 0
                     for ggo in ggo_list:
                         ElectionConfig.is_valid_ggo_string(ggo)
                         ggo_file = os.path.join(ggo_subdir_abspath, ggo, Globals.get("CONFIG_FILE"))
@@ -215,25 +215,32 @@ class ElectionConfig:
                                                        f"({next_subdir}) a second time"))
                             self.parsed_configs.append(next_subdir)
 
-                            # Replace the array value (a string) with
-                            # a dictionary of this current config at
-                            # the correct index
-                            new_node = {"ggo-name": ggo, "ggo-subdir": next_subdir,
-                                            "ggo-subtree": this_config}
-                            subtree["GGOs"][ggo_kind][ggo_index] = new_node
-
                             # Before recursing, read in address_map and add it to the node
                             new_address_map = {"address-map":
                                 read_address_map(os.path.join(ggo_subdir_abspath, ggo,
                                     Globals.get("ADDRESS_MAP_FILE")))}
-                            # Add the incoming address_map dictionary to the dictionary
-                            subtree["GGOs"][ggo_kind][ggo_index].update(new_address_map)
+
+                            # Stitch the incoming config tree togther
+                            # with the key "ggo-subtree".  Can use the
+                            # original list (GGOs) as a numerical/sort
+                            # index if needed.  Also add the
+                            # address_map.  Note - using a
+                            # collections.defaultdict is probably a
+                            # bad idea - grow the dictionary (subtree)
+                            # the hard way so to capture key errors.
+                            if "ggo-subtree" not in subtree:
+                                subtree["ggo-subtree"] = {}
+                            if ggo_kind not in subtree["ggo-subtree"]:
+                                subtree["ggo-subtree"][ggo_kind] = {}
+                            if ggo not in subtree["ggo-subtree"][ggo_kind]:
+                                subtree["ggo-subtree"][ggo_kind][ggo] = {}
+                            subtree["ggo-subtree"][ggo_kind][ggo]["ggo-subdir"] = next_subdir
+                            subtree["ggo-subtree"][ggo_kind][ggo]["ggo-subtree"] = this_config
+                            subtree["ggo-subtree"][ggo_kind][ggo]["address-map"] = new_address_map
 
                             # Recurse - depth first is ok
                             recursively_parse_tree(os.path.join(next_subdir, "GGOs"),
-                                subtree["GGOs"][ggo_kind][ggo_index]["ggo-subtree"])
-                            # bump the index
-                            ggo_index += 1
+                                subtree["ggo-subtree"][ggo_kind][ggo]["ggo-subtree"])
 
         # Now recursively walk the tree (depth first)
         recursively_parse_tree ("GGOs", self.config)

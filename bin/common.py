@@ -78,22 +78,38 @@ class Shellout:
         return subprocess.run(argv, timeout=Globals.get('SHELL_TIMEOUT'), **kwargs)
 
 class Address:
-    """A class to create an address object, which is just an address in
-    a conanical dictionary form.  With GGO maps, will eventually support
-    address validation et al.
+    """A class to create an address object, which is just an address
+    in a conanical dictionary form.  With GGO maps, will eventually
+    support address validation et al.
+
+    Implementation note - individual address fields are never set to
+    NoneType - if empty/blank, they are set to "".
     """
 
     # Legitimate keys
-    _keys = ['number', 'street', 'substreet', 'town', 'state', 'country', 'zipcode']
+    _keys = ['number', 'street', 'substreet', 'town', 'state',
+                 'country', 'zipcode']
 
     def __init__(self, **kwargs):
         """At the moment support only support a csv keyword and a
-        reasonable dictionary set of keywords.  Eventually
-        support more keywords.
+        reasonable dictionary set of keywords.
         """
 
-        if 'csv' in kwargs:
-            address_fields = [x.strip() for x in kwargs['cvs'].split(',')]
+        ok_keys = ['csv'] + Address._keys
+        bad_keys = [key for key in kwargs if not key in ok_keys]
+        if bad_keys:
+            raise KeyError(f"The following Address keys are not supported: {bad_keys}")
+
+        self.number = ""
+        self.street = ""
+        self.substreet = ""
+        self.town = ""
+        self.state = ""
+        self.country = ""
+        self.zipcode = ""
+
+        if kwargs['csv']:
+            address_fields = [x.strip() for x in kwargs['csv'].split(',')]
             self.number = address_fields[0]
             self.street = address_fields[1]
             if address_fields == 4:
@@ -102,17 +118,16 @@ class Address:
             else:
                 self.substreet = ""
                 self.town = address_fields[2]
-        elif set(kwargs).issubset(Address._keys):
-            self.number = kwargs['number']
-            self.street = kwargs['street']
-            self.substreet = "" if 'substreet' not in kwargs else kwargs['substreet']
-            self.town = "" if 'town' not in kwargs else kwargs['town']
-            self.state = "" if 'state' not in kwargs else kwargs['state']
-            self.country = "" if 'country' not in kwargs else kwargs['country']
-            self.zipcode = "" if 'zipcode' not in kwargs else kwargs['zipcode']
         else:
-            raise NameError(f"The only supported constructor keyword at this time is \
-            csv string or the following explicit list: {Address._keys}")
+            for key, value in kwargs.items():
+                if key == 'csv':
+                    continue
+                Address.set(self, key, value)
+
+    def __str__(self):
+        """Return a space separated string of teh address"""
+        return(' '.join([self.number, self.street, self.substreet, self.town,
+                   self.state, self.country, self.zipcode]))
 
     def get(self, name):
         """A generic getter - will raise a NameError if name is not defined"""
@@ -123,8 +138,15 @@ class Address:
     def set(self, name, value):
         """A generic setter - will raise a NameError if name is not defined """
         if name in Address._keys:
+            value = "" if value is None else value
             setattr(self, name, value)
         else:
-            raise NameError(f"Name {name} not accepted/defined for set()")
+            raise NameError(f"Name {name} not accepted/defined for Address.set()")
 
+    def dict(self):
+        """Return a dictionary of the address"""
+        address = {}
+        for key in Address._keys:
+            address[key] = getattr(self, key)
+        return address
 # EOF

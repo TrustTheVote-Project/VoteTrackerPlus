@@ -72,8 +72,21 @@ def parse_arguments():
     VTP election tree, whatever.
     """)
 
-    parser.add_argument('-a', "--address",
+#    _keys = ['number', 'street', 'substreet', 'town', 'state', 'country', 'zipcode']
+    parser.add_argument('-c', "--csv",
                             help="a comma separated address")
+    parser.add_argument('-a', "--address",
+                            help="the number and name of the street address (space separated)")
+    parser.add_argument('-r', "--street",
+                            help="the street/road field of an address")
+    parser.add_argument('-b', "--substreet",
+                            help="the substreet field of an address")
+    parser.add_argument('-t', "--town",
+                            help="the town field of an address")
+    parser.add_argument('-s', "--state",
+                            help="the state/province field of an address")
+    parser.add_argument('-z', "--zipcode",
+                            help="the zipcode field of an address")
     parser.add_argument("-v", "--verbosity", type=int, default=3,
                             help="0 critical, 1 error, 2 warning, 3 info, 4 debug (def=3)")
     parser.add_argument("-n", "--printonly", action="store_true",
@@ -98,7 +111,6 @@ def main():
     # Create an VTP election config object
     the_election_config = ElectionConfig()
     the_election_config.parse_configs()
-    import pdb; pdb.set_trace()
 
     # Parse the address nominally supplied via the args. ZZZ -
     # existing address parsing packages look out-of-date and US
@@ -109,7 +121,15 @@ def main():
     # imported somehow and that each GGO for the address will also be
     # imported somehow. And all that comes later - for now just map an
     # address to a town.
-    the_address = Address(csv=args.address)
+    my_args = dict(vars(args))
+    for key in ['verbosity', 'printonly']:
+        del my_args[key]
+    # if address was supplied, get rid of that too
+    if my_args['address']:
+        my_args['number'], my_args['street'] = my_args['address'].split("",2)
+    del my_args['address']
+    the_address = Address(**my_args)
+    import pdb; pdb.set_trace()
 
     # write it out
     create_a_blank_ballot(the_address, the_election_config)
