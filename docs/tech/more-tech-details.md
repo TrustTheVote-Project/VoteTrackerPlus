@@ -123,7 +123,15 @@ In the California case, each town will in fact get a copy of those counties to w
 
 In a similar fashion each GGO also has an __address_map.yaml__ file which lists the addresses valid for the GGO.  Thus both the __config.yaml__ and __address_map.yaml__ files are [RBAC](https://en.wikipedia.org/wiki/Role-based_access_control) controlled by the owning GGO.  Note the the __address_map.yaml__ supports references to child GGOs.  For example, the state of California can simply state that any legel address in the town of Alameda (as controlled by the town) will receive/contribute to the California GGO contests.
 
-Regardless of delegation of the definition, each town and county clone only the relevant upstream and sibling repos.  At some level in this hierarchical tree, a GGO will want to actually collect votes on election day.  Actual votes are collected in the CVRs folder but require the repo to be configured as such, again via data in the ./config section.
+Regardless of delegation of the definition, each town and county clone only the relevant upstream and sibling repos.  At some level in this hierarchical tree, a GGO will want to actually collect votes on election day.  Actual votes are collected in the CVRs folder but require the repo to be configured as such, again via data in the config and address_map files.
+
+In addition to the CVRs folder there is also a blank-ballots folder which contains all the possible valid blank ballots for the CVRs that will be processed at that location.  The number of different blank ballots is a function of the number of different intersections of all the GGOs for that location.
+
+Four implementation notes:
+1) <ggo-GUID> is just a uniquely serialized string of GGOs contained in the specific blank ballot.
+2) There is a blank-ballots folder for each CVR folder.
+3) Even though the blank ballots are generated uniquely for each VTP election config, they are still committed to the repository so to minimize data in motion post a 'git clone' operation.
+4) The blank ballots are generated in each language (UTF-8) that is desired by the election officials.
 
 As an example, the following section assumes the town of Cambridge Massachusetts.  When the city of Cambridge clones the VOTES repo for the 2018 election, assuming that all the parent GGO are indeed participating in a VOTES framework, the directory tree will look someting like:
 
@@ -141,6 +149,7 @@ US-2018-National-Election/.git
                                                             config.yaml
                                                             address_map.yaml
                                                             ballot.rst
+                                                            blank-ballots/<language>/<ggo-GUID>.pdf
                                                             CVRs (a batch scanner for the city of Cambridge)
                                                             ggos/5th Congressional District/.git
                                                                                             config.yaml

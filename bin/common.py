@@ -18,6 +18,8 @@
 """A kitchen sync for VTP classes for the moment"""
 
 import os
+import pprint
+import re
 import subprocess
 #  Other imports:  critical, error, warning, info, debug
 from logging import info
@@ -29,14 +31,16 @@ class Globals:
     """
     _config = {
         # The default location from the CWD of this program, which is different than
-        # the location of the incoming ballot.json file etc
+        # The location of the incoming ballot.json file etc
         "BALLOT_FILE": os.path.join("CVRs", "ballot.json"),
-        # the location of the config file for this GGO
+        # The blank ballot folder location
+        "BLANK_BALLOT_SUBDIR": "blank-ballots",
+        # The location of the config file for this GGO
         "CONFIG_FILE": "config.yaml",
         "ADDRESS_MAP_FILE": "address_map.yaml",
-        # the location of the contest cvr file
+        # The location of the contest cvr file
         "CONTEST_FILE": os.path.join("CVRs", "contest.json"),
-        # how long to wait for a git shell command to complete - maybe a bad idea
+        # How long to wait for a git shell command to complete - maybe a bad idea
         "SHELL_TIMEOUT": 15,
         }
 
@@ -58,7 +62,10 @@ class Globals:
 
 # pylint: disable=R0903   # ZZZ - remove this later
 class Shellout:
-    """A class to wrap the control & management of subprocesses"""
+    """
+    A class to wrap the control & management of shell subprocesses,
+    nominally git commands.
+    """
 
     @staticmethod
     def run(argv, printonly=False, **kwargs):
@@ -79,11 +86,13 @@ class Shellout:
 
 class Address:
     """A class to create an address object, which is just an address
-    in a conanical dictionary form.  With GGO maps, will eventually
-    support address validation et al.
+    in a conanical dictionary form.  This just holds the address and
+    will not validate it against a config and addpress_map data.  The
+    class supports return the Address as either a string or a
+    dictionary.
 
     Implementation note - individual address fields are never set to
-    NoneType - if empty/blank, they are set to "".
+    NoneType - if empty/blank, they are set to the empty string "".
     """
 
     # Legitimate keys
@@ -109,7 +118,7 @@ class Address:
         self.zipcode = ""
 
         if kwargs['csv']:
-            address_fields = [x.strip() for x in kwargs['csv'].split(',')]
+            address_fields = [x.strip() for x in re.split(r'\s*,\s*', kwargs['csv'])]
             self.number = address_fields[0]
             self.street = address_fields[1]
             if address_fields == 4:
@@ -149,4 +158,47 @@ class Address:
         for key in Address._keys:
             address[key] = getattr(self, key)
         return address
+
+class Ballot:
+    """A class to hold a ballot.  A ballot is always a function of an
+    address defined within the context of VTP election configuration
+    as defined by the aggregated data in the config and address_map
+    files.
+    """
+
+    def __init__(self):
+        """Constructor - just creates the dictionary and returns the
+        object
+        """
+        self.ballot = {}
+
+    def create_blank_ballot(self, address, config):
+        """Given an Address and a ElectionConfig, will generate
+        the appropriate blank ballot.  Implementation note - this
+        function needs to be smart in that it needs to deal with
+        various regex and other rules/conventions/specs of the
+        address_map files.  The development of the support of that is
+        an R&D iterative process.
+
+        Initially this only understands two address_map syntaxes:
+
+        state address_map: "{includes: [{GGOs: <ggo-kind>}]}"
+
+        town address_map: "{includes: [{addresses: town}]}"
+
+        Where <ggo-kind> is the name of the child GGO group (there can
+        be different 'kinds' of GGO children).
+
+        ZZZ
+        """
+
+    def __str__(self):
+        """Return the serialization of this instance's ElectionConfig dictionary"""
+        return pprint.pformat(self.ballot)
+
+    def export(self, file="", kind=""):
+        """Will export a pdf version of a blank ballot to a file"""
+        # See https://github.com/rst2pdf/rst2pdf
+        raise NotImplementedError(f"Apologies but this is not implemented yet ({file})")
+
 # EOF

@@ -83,7 +83,7 @@ class ElectionConfig:
 
     # Legitimate top-level keys
     _root_config_keys = ['GGOs', 'contests', 'submodules', 'vote centers']
-    _root_address_map_keys = ['includes']
+    _root_address_map_keys = ['blank-ballots', 'includes', 'redirect']
 
     @staticmethod
     def is_valid_ggo_string(arg):
@@ -186,11 +186,11 @@ class ElectionConfig:
                     return this_address_map
             return {}
 
-        def recursively_parse_tree(subdir, subtree):
+        def recursively_parse_tree(subdir, parent_node):
             """Something to recursivelty parse the GGO tree"""
             # If there are GGOs, parse each one
-            if "GGOs" in subtree:
-                for ggo_kind, ggo_list in subtree["GGOs"].items():
+            if "GGOs" in parent_node:
+                for ggo_kind, ggo_list in parent_node["GGOs"].items():
                     ElectionConfig.is_valid_ggo_string(ggo_kind)
                     if not isinstance(ggo_list, list):
                         raise TypeError(f"The GGO kind value is not a list ({ggo_kind})")
@@ -216,34 +216,34 @@ class ElectionConfig:
                             self.parsed_configs.append(next_subdir)
 
                             # Before recursing, read in address_map and add it to the node
-                            new_address_map = {"address-map":
-                                read_address_map(os.path.join(ggo_subdir_abspath, ggo,
-                                    Globals.get("ADDRESS_MAP_FILE")))}
+                            new_address_map = read_address_map(os.path.join(ggo_subdir_abspath, ggo,
+                                    Globals.get("ADDRESS_MAP_FILE")))
 
                             # Stitch the incoming config tree togther
-                            # with the key "ggo-subtree".  Can use the
+                            # with the key "GGO-subtree".  Can use the
                             # original list (GGOs) as a numerical/sort
                             # index if needed.  Also add the
                             # address_map.  Note - using a
                             # collections.defaultdict is probably a
                             # bad idea - grow the dictionary (subtree)
                             # the hard way so to capture key errors.
-                            if "ggo-subtree" not in subtree:
-                                subtree["ggo-subtree"] = {}
-                            if ggo_kind not in subtree["ggo-subtree"]:
-                                subtree["ggo-subtree"][ggo_kind] = {}
-                            if ggo not in subtree["ggo-subtree"][ggo_kind]:
-                                subtree["ggo-subtree"][ggo_kind][ggo] = {}
-                            subtree["ggo-subtree"][ggo_kind][ggo]["ggo-subdir"] = next_subdir
-                            subtree["ggo-subtree"][ggo_kind][ggo]["ggo-subtree"] = this_config
-                            subtree["ggo-subtree"][ggo_kind][ggo]["address-map"] = new_address_map
+
+                            if "GGO-subtree" not in parent_node:
+                                parent_node["GGO-subtree"] = {}
+                            if ggo_kind not in parent_node["GGO-subtree"]:
+                                parent_node["GGO-subtree"][ggo_kind] = {}
+                            if ggo not in parent_node["GGO-subtree"][ggo_kind]:
+                                parent_node["GGO-subtree"][ggo_kind][ggo] = {}
+                            parent_node["GGO-subtree"][ggo_kind][ggo] = this_config
+                            parent_node["GGO-subtree"][ggo_kind][ggo]["ggo-subdir"] = next_subdir
+                            parent_node["GGO-subtree"][ggo_kind][ggo]["address-map"] = \
+                              new_address_map
 
                             # Recurse - depth first is ok
                             recursively_parse_tree(os.path.join(next_subdir, "GGOs"),
-                                subtree["ggo-subtree"][ggo_kind][ggo]["ggo-subtree"])
+                                parent_node["GGO-subtree"][ggo_kind][ggo])
 
         # Now recursively walk the tree (depth first)
         recursively_parse_tree ("GGOs", self.config)
-#        import pdb; pdb.set_trace()
 
 # EOF

@@ -27,34 +27,30 @@ See ../docs/tech/executable-overview.md for the context in which this file was c
 
 # Standard imports
 # pylint: disable=C0413   # import statements not top of file
-import json
 import sys
 import argparse
 import logging
-from logging import info
+import re
 
 # Local imports
-from common import Globals, Address
+from common import Address, Ballot
 from election_config import ElectionConfig
 
 # Functions
-def create_a_blank_ballot(address, config):
+def create_a_blank_ballot(address, config, file="", kind='pdf'):
     """Will create a blank ballot.json file for a given address.
     """
 
-    # lookup up the address across all GGO's and create the ballot
-    # dictionary for it
-    info(f"Looking up address \"{' '.join(address)}\" in {config}")
-    blank_ballot = {}
+#    import pdb; pdb.set_trace()
+    # Construct a blank ballot
+    the_ballot = Ballot()
+    the_ballot.create_blank_ballot(address, config)
 
-    # OS and json syntax errors are just raised at this point
-    # ZZZ - need an gestalt error handling plan at some point
+    # Print it
     if args.printonly:
-        print(f"{json.dumps(blank_ballot)}")
-        return
-    with open(Globals.get('BLANK_BALLOT_FILE'), 'w', encoding="utf8") as outfile:
-        json.dump(blank_ballot, outfile)
-    return
+        print(the_ballot)
+    else:
+        the_ballot.export(file, kind)
 
 ################
 # arg parsing
@@ -111,6 +107,7 @@ def main():
     # Create an VTP election config object
     the_election_config = ElectionConfig()
     the_election_config.parse_configs()
+    print(the_election_config)
 
     # Parse the address nominally supplied via the args. ZZZ -
     # existing address parsing packages look out-of-date and US
@@ -126,14 +123,16 @@ def main():
         del my_args[key]
     # if address was supplied, get rid of that too
     if my_args['address']:
-        my_args['number'], my_args['street'] = my_args['address'].split("",2)
+        my_args['number'], my_args['street'] = re.split(r'\s+', my_args['address'], 1)
     del my_args['address']
     the_address = Address(**my_args)
-    import pdb; pdb.set_trace()
+    print(the_address)
 
     # write it out
-    create_a_blank_ballot(the_address, the_election_config)
+    create_a_blank_ballot(the_address, the_election_config, kind='JSON')
 
 if __name__ == '__main__':
     args = parse_arguments()
     main()
+
+# EOF
