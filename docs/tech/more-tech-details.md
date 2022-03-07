@@ -155,11 +155,15 @@ US-2018-National-Election/.git
                                                                                             config.yaml
                                                                                             address_map.yaml
                                                                                             ballot.rst
+                                                                                            blank-ballots/\
+                                                                                        <language>/<ggo-GUID>.pdf
                                                                                             CVRs
                                                                  7th Congressional District/.git
                                                                                             config.yaml
                                                                                             address_map.yaml
                                                                                             ballot.rst
+                                                                                            blank-ballots/\
+                                                                                        <language>/<ggo-GUID>.pdf
                                                                                             CVRs
                                                                  ward 1-1/{config,ballot}
                                                                  ward 1-2/{config,ballot}

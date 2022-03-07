@@ -17,6 +17,7 @@
 
 """A kitchen sync for VTP classes for the moment"""
 
+import json
 import os
 import pprint
 import re
@@ -173,32 +174,62 @@ class Ballot:
         self.ballot = {}
 
     def create_blank_ballot(self, address, config):
-        """Given an Address and a ElectionConfig, will generate
-        the appropriate blank ballot.  Implementation note - this
-        function needs to be smart in that it needs to deal with
-        various regex and other rules/conventions/specs of the
-        address_map files.  The development of the support of that is
-        an R&D iterative process.
+        """Given an Address and a ElectionConfig, will generate the
+        appropriate blank ballot.  Implementation note - this function
+        needs to be smart in that it needs to deal with various regex
+        and other rules/conventions/specs of the address_map files.
+        The development of the support of that is an R&D iterative
+        process.
 
-        Initially this only understands two address_map syntaxes:
+        Initially this class/functions only understand two address_map
+        syntaxes (defined in ElectionConfig which is what parses the
+        address_map files).
 
-        state address_map: "{includes: [{GGOs: <ggo-kind>}]}"
+        'address_map': {'ggos': {<ggo-kind>: ['.*']}
 
-        town address_map: "{includes: [{addresses: town}]}"
+        'address_map': {'addresses': ['.*']}
 
         Where <ggo-kind> is the name of the child GGO group (there can
-        be different 'kinds' of GGO children).
+        be different 'kinds' of GGO children).  The above syntax
+        follows what is known 'regex' expressions.
+
+        The first defines that the addresses for this GGO are handled
+        by the ggo-kind/ggo specified, which is in this case all ggos
+        of the specified kind.  In other words, the parent GGO accepts
+        all the addresses that specified child GGOs accept.
+
+        The second defines that all the addresses in this specific GGO
+        are valid for this GGO.
 
         ZZZ
         """
+        # For now, error if the address_map tree does not end with a
+        # valid address.  Return the blank ballot otherwise.
 
     def __str__(self):
         """Return the serialization of this instance's ElectionConfig dictionary"""
         return pprint.pformat(self.ballot)
 
-    def export(self, file="", kind=""):
-        """Will export a pdf version of a blank ballot to a file"""
-        # See https://github.com/rst2pdf/rst2pdf
-        raise NotImplementedError(f"Apologies but this is not implemented yet ({file})")
+    def dict(self):
+        """Return a dictionary of the ballot"""
+        return dict(self.ballot)
+
+    def export(self, file="", syntax=""):
+        """
+        Will export a blank ballot to a file in some format.  If file
+        is nil, will print to STDOUT.
+        """
+        if syntax == 'json':
+            if file == "":
+                print(json.dumps(self.ballot))
+            else:
+                with open(file, 'w', encoding="utf8") as outfile:
+                    json.dump(self.ballot, outfile)
+        elif syntax == 'pdf':
+            # See https://github.com/rst2pdf/rst2pdf
+            raise NotImplementedError(("Apologies but printing the pdf of a ballot "
+                                           "is not implemented yet"))
+        else:
+            raise NotImplementedError(f"Unsupported Ballot export type ({syntax})")
 
 # EOF

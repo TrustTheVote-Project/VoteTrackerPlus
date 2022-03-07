@@ -83,7 +83,7 @@ class ElectionConfig:
 
     # Legitimate top-level keys
     _root_config_keys = ['GGOs', 'contests', 'submodules', 'vote centers']
-    _root_address_map_keys = ['blank-ballots', 'includes', 'redirect']
+    _root_address_map_keys = ['ggos', 'addresses']
 
     @staticmethod
     def is_valid_ggo_string(arg):

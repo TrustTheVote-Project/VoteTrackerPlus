@@ -37,7 +37,7 @@ from common import Address, Ballot
 from election_config import ElectionConfig
 
 # Functions
-def create_a_blank_ballot(address, config, file="", kind='pdf'):
+def create_a_blank_ballot(address, config, file="", syntax='json'):
     """Will create a blank ballot.json file for a given address.
     """
 
@@ -50,7 +50,7 @@ def create_a_blank_ballot(address, config, file="", kind='pdf'):
     if args.printonly:
         print(the_ballot)
     else:
-        the_ballot.export(file, kind)
+        the_ballot.export(file, syntax)
 
 ################
 # arg parsing
@@ -129,7 +129,7 @@ def main():
     print(the_address)
 
     # write it out
-    create_a_blank_ballot(the_address, the_election_config, kind='JSON')
+    create_a_blank_ballot(the_address, the_election_config, syntax='json')
 
 if __name__ == '__main__':
     args = parse_arguments()
