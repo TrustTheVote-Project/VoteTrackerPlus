@@ -33,16 +33,20 @@ class Globals:
     _config = {
         # The default location from the CWD of this program, which is different than
         # The location of the incoming ballot.json file etc
-        "BALLOT_FILE": os.path.join("CVRs", "ballot.json"),
+        'BALLOT_FILE': os.path.join('CVRs', 'ballot.json'),
         # The blank ballot folder location
-        "BLANK_BALLOT_SUBDIR": "blank-ballots",
-        # The location of the config file for this GGO
-        "CONFIG_FILE": "config.yaml",
-        "ADDRESS_MAP_FILE": "address_map.yaml",
+        'BLANK_BALLOT_SUBDIR': 'blank-ballots',
+        # The location/name of the config and address map files for this GGO
+        'CONFIG_FILE': 'config.yaml',
+        'ADDRESS_MAP_FILE': 'address_map.yaml',
         # The location of the contest cvr file
-        "CONTEST_FILE": os.path.join("CVRs", "contest.json"),
+        'CONTEST_FILE': os.path.join('CVRs', 'contest.json'),
         # How long to wait for a git shell command to complete - maybe a bad idea
-        "SHELL_TIMEOUT": 15,
+        'SHELL_TIMEOUT': 15,
+        # The required address fields for an address. The key is the
+        # address field name and the value is the associated
+        # ElectionConfig ggo-king.
+        'REQUIRED_ADDRESS_FIELDS': ['state', 'town']
         }
 
     # Legitimate setters
@@ -96,7 +100,7 @@ class Address:
     NoneType - if empty/blank, they are set to the empty string "".
     """
 
-    # Legitimate keys
+    # Legitimate keys in the correct order
     _keys = ['number', 'street', 'substreet', 'town', 'state',
                  'country', 'zipcode']
 
@@ -110,46 +114,65 @@ class Address:
         if bad_keys:
             raise KeyError(f"The following Address keys are not supported: {bad_keys}")
 
-        self.number = ""
-        self.street = ""
-        self.substreet = ""
-        self.town = ""
-        self.state = ""
-        self.country = ""
-        self.zipcode = ""
+        self.address = {}
+        self.address['number'] = ""
+        self.address['street'] = ""
+        self.address['substreet'] = ""
+        self.address['town'] = ""
+        self.address['state'] = ""
+        self.address['country'] = ""
+        self.address['zipcode'] = ""
 
         if kwargs['csv']:
             address_fields = [x.strip() for x in re.split(r'\s*,\s*', kwargs['csv'])]
-            self.number = address_fields[0]
-            self.street = address_fields[1]
-            if address_fields == 4:
-                self.substreet = address_fields[2]
-                self.town = address_fields[3]
+            self.address['number'] = address_fields[0]
+            self.address['street'] = address_fields[1]
+            if address_fields == 5:
+                self.address['substreet'] = address_fields[2]
+                self.address['town'] = address_fields[3]
+                self.address['state'] = address_fields[4]
             else:
-                self.substreet = ""
-                self.town = address_fields[2]
+                self.address['substreet'] = ""
+                self.address['town'] = address_fields[2]
+                self.address['state'] = address_fields[3]
         else:
             for key, value in kwargs.items():
                 if key == 'csv':
                     continue
                 Address.set(self, key, value)
 
+        # Note - an address needs all 'required' address fields to be specified
+        missing_keys = [key for key in Globals.get('REQUIRED_ADDRESS_FIELDS')
+                            if not Address.get(self, key)]
+        if missing_keys:
+            raise NameError(("Addresses must include values for the following fields: "
+                                 f"{Globals.get('REQUIRED_ADDRESS_FIELDS')}"
+                                 "The following fields are undefined: "
+                                 f"{missing_keys}"))
+
+    def __iter__(self):
+        """Return an iterator for the address attribute"""
+        return iter(self.address)
+
     def __str__(self):
-        """Return a space separated string of teh address"""
-        return(' '.join([self.number, self.street, self.substreet, self.town,
-                   self.state, self.country, self.zipcode]))
+        """Return a space separated string of the address"""
+        nice_string = ""
+        for key in Address._keys:
+            if self.address[key]:
+                nice_string += " " + self.address[key]
+        return nice_string.strip()
 
     def get(self, name):
         """A generic getter - will raise a NameError if name is not defined"""
         if name in Address._keys:
-            return getattr(self, name)
+            return self.address[name]
         raise NameError(f"Name {name} not accepted/defined for set()")
 
     def set(self, name, value):
         """A generic setter - will raise a NameError if name is not defined """
         if name in Address._keys:
             value = "" if value is None else value
-            setattr(self, name, value)
+            self.address[name] = value
         else:
             raise NameError(f"Name {name} not accepted/defined for Address.set()")
 
@@ -157,7 +180,7 @@ class Address:
         """Return a dictionary of the address"""
         address = {}
         for key in Address._keys:
-            address[key] = getattr(self, key)
+            address[key] = self.address[key]
         return address
 
 class Ballot:
@@ -172,6 +195,15 @@ class Ballot:
         object
         """
         self.ballot = {}
+        self.active_ggos = []
+
+    def __str__(self):
+        """Return the serialization of this instance's ElectionConfig dictionary"""
+        return pprint.pformat(self.ballot)
+
+    def dict(self):
+        """Return a dictionary of the ballot"""
+        return dict(self.ballot)
 
     def create_blank_ballot(self, address, config):
         """Given an Address and a ElectionConfig, will generate the
@@ -203,16 +235,14 @@ class Ballot:
 
         ZZZ
         """
-        # For now, error if the address_map tree does not end with a
-        # valid address.  Return the blank ballot otherwise.
 
-    def __str__(self):
-        """Return the serialization of this instance's ElectionConfig dictionary"""
-        return pprint.pformat(self.ballot)
-
-    def dict(self):
-        """Return a dictionary of the ballot"""
-        return dict(self.ballot)
+        # Get the topo sort of the GGOs
+        topo_list = config.get('DAG-topo')
+        for ggo in topo_list:
+            # is this address in this ggo
+            if is_address_in_this_ggo(address, ggo, topo_list):
+                self.active_ggos.append(ggo)
+                # Add the ggo contests to this ballot
 
     def export(self, file="", syntax=""):
         """
@@ -221,10 +251,10 @@ class Ballot:
         """
         if syntax == 'json':
             if file == "":
-                print(json.dumps(self.ballot))
+                print(json.dumps(Ballot.dict(self)))
             else:
                 with open(file, 'w', encoding="utf8") as outfile:
-                    json.dump(self.ballot, outfile)
+                    json.dump(Ballot.dict(self), outfile)
         elif syntax == 'pdf':
             # See https://github.com/rst2pdf/rst2pdf
             raise NotImplementedError(("Apologies but printing the pdf of a ballot "

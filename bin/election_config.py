@@ -22,6 +22,7 @@ import os
 import re
 import pprint
 import yaml
+import networkx
 
 # local imports
 from common import Globals, Shellout
@@ -115,6 +116,7 @@ class ElectionConfig:
         self.root_config_file = os.path.join(self.git_rootdir, Globals.get("CONFIG_FILE"))
         self.root_address_map_file = os.path.join(self.git_rootdir, Globals.get("ADDRESS_MAP_FILE"))
         self.parsed_configs = ["."]
+        self.ggo_DAG = networkx.DiGraph()
 
     def get(self, name):
         """A generic getter - will raise a NameError if name is not defined"""
@@ -122,6 +124,12 @@ class ElectionConfig:
             return getattr(self, "config")[name]
         if name in ElectionConfig._root_address_map_keys:
             return getattr(self, "config")[name]
+        if name == 'DAG-nodes':
+            return list(self.ggo_DAG.nodes)
+        if name == 'DAG-edges':
+            return list(self.ggo_DAG.edges)
+        if name == 'DAG-topo':
+            return list(networkx.topological_sort(self.ggo_DAG))
         raise NameError((f"Name {name} is not a supported root level key "
                              "for the ElectionConfig dictionary"))
 
@@ -131,7 +139,7 @@ class ElectionConfig:
 
     def __str__(self):
         """Return the serialization of this instance's ElectionConfig dictionary"""
-        return pprint.pformat(self.config, width=256)
+        return pprint.pformat(self.config, width=128)
 
     def get_root_key(self, name):
         """A generic top level key getter - will raise a NameError if name is not defined"""
@@ -186,11 +194,11 @@ class ElectionConfig:
                     return this_address_map
             return {}
 
-        def recursively_parse_tree(subdir, parent_node):
+        def recursively_parse_tree(subdir, parent_config_node, parent_dag_name):
             """Something to recursivelty parse the GGO tree"""
             # If there are GGOs, parse each one
-            if "GGOs" in parent_node:
-                for ggo_kind, ggo_list in parent_node["GGOs"].items():
+            if "GGOs" in parent_config_node:
+                for ggo_kind, ggo_list in parent_config_node["GGOs"].items():
                     ElectionConfig.is_valid_ggo_string(ggo_kind)
                     if not isinstance(ggo_list, list):
                         raise TypeError(f"The GGO kind value is not a list ({ggo_kind})")
@@ -228,22 +236,30 @@ class ElectionConfig:
                             # bad idea - grow the dictionary (subtree)
                             # the hard way so to capture key errors.
 
-                            if "GGO-subtree" not in parent_node:
-                                parent_node["GGO-subtree"] = {}
-                            if ggo_kind not in parent_node["GGO-subtree"]:
-                                parent_node["GGO-subtree"][ggo_kind] = {}
-                            if ggo not in parent_node["GGO-subtree"][ggo_kind]:
-                                parent_node["GGO-subtree"][ggo_kind][ggo] = {}
-                            parent_node["GGO-subtree"][ggo_kind][ggo] = this_config
-                            parent_node["GGO-subtree"][ggo_kind][ggo]["ggo-subdir"] = next_subdir
-                            parent_node["GGO-subtree"][ggo_kind][ggo]["address-map"] = \
+                            if "GGO-subtree" not in parent_config_node:
+                                parent_config_node["GGO-subtree"] = {}
+                            if ggo_kind not in parent_config_node["GGO-subtree"]:
+                                parent_config_node["GGO-subtree"][ggo_kind] = {}
+                            if ggo not in parent_config_node["GGO-subtree"][ggo_kind]:
+                                parent_config_node["GGO-subtree"][ggo_kind][ggo] = {}
+                            parent_config_node["GGO-subtree"][ggo_kind][ggo] = this_config
+                            parent_config_node["GGO-subtree"][ggo_kind][ggo]["ggo-subdir"] = \
+                              next_subdir
+                            parent_config_node["GGO-subtree"][ggo_kind][ggo]["address-map"] = \
                               new_address_map
+
+                            # Now add this ggo_kind and ggo to the DAG
+                            this_dag_node = ggo_kind + "/" + ggo
+                            self.ggo_DAG.add_node(this_dag_node, kind=ggo_kind)
+                            self.ggo_DAG.add_edge(this_dag_node, parent_dag_name)
 
                             # Recurse - depth first is ok
                             recursively_parse_tree(os.path.join(next_subdir, "GGOs"),
-                                parent_node["GGO-subtree"][ggo_kind][ggo])
+                                parent_config_node["GGO-subtree"][ggo_kind][ggo],
+                                this_dag_node)
 
         # Now recursively walk the tree (depth first)
-        recursively_parse_tree ("GGOs", self.config)
+        self.ggo_DAG.add_node('root', kind='root')
+        recursively_parse_tree ("GGOs", self.config, 'root')
 
 # EOF

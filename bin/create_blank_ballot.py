@@ -41,7 +41,6 @@ def create_a_blank_ballot(address, config, file="", syntax='json'):
     """Will create a blank ballot.json file for a given address.
     """
 
-#    import pdb; pdb.set_trace()
     # Construct a blank ballot
     the_ballot = Ballot()
     the_ballot.create_blank_ballot(address, config)
@@ -50,6 +49,7 @@ def create_a_blank_ballot(address, config, file="", syntax='json'):
     if args.printonly:
         print(the_ballot)
     else:
+        import pdb; pdb.set_trace()
         the_ballot.export(file, syntax)
 
 ################
@@ -126,8 +126,8 @@ def main():
         my_args['number'], my_args['street'] = re.split(r'\s+', my_args['address'], 1)
     del my_args['address']
     the_address = Address(**my_args)
-    print(the_address)
-
+    print("And the address is: " + str(the_address))
+    print(f"And the DAG looks like: {the_election_config.get('DAG-topo')}")
     # write it out
     create_a_blank_ballot(the_address, the_election_config, syntax='json')
 
