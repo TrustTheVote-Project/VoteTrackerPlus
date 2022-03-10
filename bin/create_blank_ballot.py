@@ -31,6 +31,7 @@ import sys
 import argparse
 import logging
 import re
+import pprint
 
 # Local imports
 from common import Address, Ballot
@@ -49,7 +50,6 @@ def create_a_blank_ballot(address, config, file="", syntax='json'):
     if args.printonly:
         print(the_ballot)
     else:
-        import pdb; pdb.set_trace()
         the_ballot.export(file, syntax)
 
 ################
@@ -107,7 +107,6 @@ def main():
     # Create an VTP election config object
     the_election_config = ElectionConfig()
     the_election_config.parse_configs()
-    print(the_election_config)
 
     # Parse the address nominally supplied via the args. ZZZ -
     # existing address parsing packages look out-of-date and US
@@ -126,8 +125,12 @@ def main():
         my_args['number'], my_args['street'] = re.split(r'\s+', my_args['address'], 1)
     del my_args['address']
     the_address = Address(**my_args)
+    print(f"The election config is: {the_election_config}")
     print("And the address is: " + str(the_address))
-    print(f"And the DAG looks like: {the_election_config.get('DAG-topo')}")
+    print("And a node looks like:")
+    pprint.pprint(the_election_config.get_node('towns/Alameda', 'ALL'))
+    print("And the edges look like:")
+    pprint.pprint(the_election_config.get_dag('edges'))
     # write it out
     create_a_blank_ballot(the_address, the_election_config, syntax='json')
 

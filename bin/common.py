@@ -190,6 +190,9 @@ class Ballot:
     files.
     """
 
+    # Map the ElectionConfig 'kind' to the Address 'kind'
+    _kinds_map = {'states':'state', 'towns':'town'}
+
     def __init__(self):
         """Constructor - just creates the dictionary and returns the
         object
@@ -236,13 +239,17 @@ class Ballot:
         ZZZ
         """
 
-        # Get the topo sort of the GGOs
-        topo_list = config.get('DAG-topo')
-        for ggo in topo_list:
-            # is this address in this ggo
-            if is_address_in_this_ggo(address, ggo, topo_list):
-                self.active_ggos.append(ggo)
+        def address_in_node(address, node):
+            """Will smartly test to see if address is this node"""
+            # ZZZ
+            import pdb; pdb.set_trace()
+            return False
+
+        # walk the DAG
+        for node in config.get_dag('topo'):
+            if address_in_node(address, node):
                 # Add the ggo contests to this ballot
+                self.active_ggos.append(node)
 
     def export(self, file="", syntax=""):
         """

@@ -20,7 +20,6 @@
 # statndard imports
 import os
 import re
-import pprint
 import yaml
 import networkx
 
@@ -95,13 +94,31 @@ class ElectionConfig:
             raise ValueError(f"The GGO value contains unsupported characters ({arg})")
         # ZZZ need a bunch more QA checks here and one day deal with unicode
 
+    @staticmethod
+    def read_address_map(filename):
+        """
+        Read the address_map yaml file return the dictionary but
+        only if the file exists.  If the file does not exist, then
+        any address inside that specific GGO will be added to the
+        super GGO.
+        """
+        if os.path.isfile(filename):
+            with open(filename, 'r', encoding="utf8") as am_file:
+                this_address_map = yaml.load(am_file, Loader=yaml.FullLoader)
+                # sanity-check it
+                bad_keys = [key for key in this_address_map
+                    if not key in ElectionConfig._root_address_map_keys]
+                if bad_keys:
+                    raise KeyError(("The following address_map keys are not "
+                        f"supported: {bad_keys}"))
+                return this_address_map
+        return {}
+
     def __init__(self):
         """Stubbed out for now - returns an object reading to be
         populated with _this_ election config data.
         """
-        # The VTP ElectionConfig dictionary of all the parsed config.yaml files
-        self.config = {}
-        self.address_map = {}
+
         # Determine the directory of the root config.yaml file
         result = Shellout.run(["git", "rev-parse", "--show-superproject-working-tree"],
                                       check=False, capture_output=True, text=True)
@@ -116,7 +133,7 @@ class ElectionConfig:
         self.root_config_file = os.path.join(self.git_rootdir, Globals.get("CONFIG_FILE"))
         self.root_address_map_file = os.path.join(self.git_rootdir, Globals.get("ADDRESS_MAP_FILE"))
         self.parsed_configs = ["."]
-        self.ggo_DAG = networkx.DiGraph()
+        self.digraph = networkx.DiGraph()
 
     def get(self, name):
         """A generic getter - will raise a NameError if name is not defined"""
@@ -124,28 +141,59 @@ class ElectionConfig:
             return getattr(self, "config")[name]
         if name in ElectionConfig._root_address_map_keys:
             return getattr(self, "config")[name]
-        if name == 'DAG-nodes':
-            return list(self.ggo_DAG.nodes)
-        if name == 'DAG-edges':
-            return list(self.ggo_DAG.edges)
-        if name == 'DAG-topo':
-            return list(networkx.topological_sort(self.ggo_DAG))
         raise NameError((f"Name {name} is not a supported root level key "
                              "for the ElectionConfig dictionary"))
 
-#    def __repr__(self):
-#        """Return this instance's ElectionConfig dictionary"""
-#        return self.config
+    def get_dag(self, what):
+        """An ElectionConfig get interface to the underlying DiGraph class."""
+        if what == 'nodes':
+            return self.digraph.nodes()
+        if what == 'edges':
+            return self.digraph.edges()
+        if what == 'topo':
+            return list(networkx.topological_sort(self.digraph))
+        raise NameError(f"Method {what} is not a supported networkx method")
+
+    def get_node(self, node, what):
+        """An ElectionConfig get interface to the underlying election configuration data."""
+        if what == 'ALL':
+            return {'address_map': self.digraph.nodes[node]['address_map'],
+                    'config': self.digraph.nodes[node]['config'],
+                    'kind': self.digraph.nodes[node]['kind'],
+                    'subdir': self.digraph.nodes[node]['subdir']}
+        return self.digraph.nodes[node][what]
 
     def __str__(self):
         """Return the serialization of this instance's ElectionConfig dictionary"""
-        return pprint.pformat(self.config, width=128)
+        return str(list(reversed(self.get_dag('topo'))))
 
-    def get_root_key(self, name):
-        """A generic top level key getter - will raise a NameError if name is not defined"""
-        if name in ElectionConfig._root_config_keys:
-            return getattr(self, name)
-        raise NameError(f"Name {name} not accepted/defined for set()")
+    def add_additional_edges(self):
+        """Will add implicit address includes from one
+        parent/sibling to another sibling/child
+        """
+        # pylint: disable=R1702
+        for node in networkx.topological_sort(self.digraph):
+            if 'ggos' in self.digraph.nodes[node]['address_map']:
+                for kind in self.digraph.nodes[node]['address_map']['ggos']:
+                    if len(self.digraph.nodes[node]['address_map']['ggos'][kind]) > 0:
+                        for kind_value in self.digraph.nodes[node]['address_map']['ggos'][kind]:
+                            if kind_value == '.*':
+                                # includes all kind_instance of this.
+                                # Assumes each value is a valid node
+                                # reference
+                                for other in self.digraph.nodes:
+                                    try:
+                                        if self.digraph.nodes[other]['kind'] == kind:
+                                            self.digraph.add_edge(other, node)
+                                    except KeyError:
+#                                        import pdb; pdb.set_trace()
+                                        print("hello")
+                            else:
+                                # assume this is a valid node name
+                                # when appended with kind instance
+                                # name
+                                self.digraph.add_edge(kind + '/' + kind_value, node)
+        # pylint: enable=R1702
 
     def parse_configs(self):
         """Will inspect the data in the root config and load the
@@ -160,45 +208,28 @@ class ElectionConfig:
         """
 
         # read the root config and address_map files
+
         with open(self.root_config_file, 'r', encoding="utf8") as file:
-            self.config = yaml.load(file, Loader=yaml.FullLoader)
+            config = yaml.load(file, Loader=yaml.FullLoader)
         # sanity-check it
-        bad_keys = [key for key in self.config if not key in ElectionConfig._root_config_keys]
+        bad_keys = [key for key in config if not key in ElectionConfig._root_config_keys]
         if bad_keys:
             raise KeyError(f"The following config keys are not supported: {bad_keys}")
 
         # read the root address_map and sanity check that
         with open(self.root_address_map_file, 'r', encoding="utf8") as file:
-            self.address_map = yaml.load(file, Loader=yaml.FullLoader)
-        bad_keys = [key for key in self.address_map if not key in
+            address_map = yaml.load(file, Loader=yaml.FullLoader)
+        bad_keys = [key for key in address_map if not key in
                         ElectionConfig._root_address_map_keys]
         if bad_keys:
             raise KeyError(f"The following address_map keys are not supported: {bad_keys}")
 
-        def read_address_map(filename):
-            """
-            Read the address_map yaml file return the dictionary but
-            only if the file exists.  If the file does not exist, then
-            any address inside that specific GGO will be added to the
-            super GGO.
-            """
-            if os.path.isfile(filename):
-                with open(filename, 'r', encoding="utf8") as am_file:
-                    this_address_map = yaml.load(am_file, Loader=yaml.FullLoader)
-                    # sanity-check it
-                    bad_keys = [key for key in this_address_map
-                        if not key in ElectionConfig._root_address_map_keys]
-                    if bad_keys:
-                        raise KeyError(("The following address_map keys are not "
-                            f"supported: {bad_keys}"))
-                    return this_address_map
-            return {}
-
-        def recursively_parse_tree(subdir, parent_config_node, parent_dag_name):
+        def recursively_parse_tree(subdir, parent_dag_name):
             """Something to recursivelty parse the GGO tree"""
             # If there are GGOs, parse each one
-            if "GGOs" in parent_config_node:
-                for ggo_kind, ggo_list in parent_config_node["GGOs"].items():
+            if "GGOs" in self.digraph.nodes[parent_dag_name]['config']:
+                for ggo_kind, ggo_list in \
+                  self.digraph.nodes[parent_dag_name]['config']["GGOs"].items():
                     ElectionConfig.is_valid_ggo_string(ggo_kind)
                     if not isinstance(ggo_list, list):
                         raise TypeError(f"The GGO kind value is not a list ({ggo_kind})")
@@ -224,42 +255,32 @@ class ElectionConfig:
                             self.parsed_configs.append(next_subdir)
 
                             # Before recursing, read in address_map and add it to the node
-                            new_address_map = read_address_map(os.path.join(ggo_subdir_abspath, ggo,
-                                    Globals.get("ADDRESS_MAP_FILE")))
+                            this_address_map = ElectionConfig.read_address_map(os.path.join(
+                                ggo_subdir_abspath, ggo, Globals.get("ADDRESS_MAP_FILE")))
 
-                            # Stitch the incoming config tree togther
-                            # with the key "GGO-subtree".  Can use the
-                            # original list (GGOs) as a numerical/sort
-                            # index if needed.  Also add the
-                            # address_map.  Note - using a
-                            # collections.defaultdict is probably a
-                            # bad idea - grow the dictionary (subtree)
-                            # the hard way so to capture key errors.
-
-                            if "GGO-subtree" not in parent_config_node:
-                                parent_config_node["GGO-subtree"] = {}
-                            if ggo_kind not in parent_config_node["GGO-subtree"]:
-                                parent_config_node["GGO-subtree"][ggo_kind] = {}
-                            if ggo not in parent_config_node["GGO-subtree"][ggo_kind]:
-                                parent_config_node["GGO-subtree"][ggo_kind][ggo] = {}
-                            parent_config_node["GGO-subtree"][ggo_kind][ggo] = this_config
-                            parent_config_node["GGO-subtree"][ggo_kind][ggo]["ggo-subdir"] = \
-                              next_subdir
-                            parent_config_node["GGO-subtree"][ggo_kind][ggo]["address-map"] = \
-                              new_address_map
-
-                            # Now add this ggo_kind and ggo to the DAG
-                            this_dag_node = ggo_kind + "/" + ggo
-                            self.ggo_DAG.add_node(this_dag_node, kind=ggo_kind)
-                            self.ggo_DAG.add_edge(this_dag_node, parent_dag_name)
+                            # Now add this ggo_kind and ggo to the DAG.  Always use '/'
+                            this_dag_node = ggo_kind + '/' + ggo
+                            if this_dag_node in self.digraph.nodes:
+                                raise LookupError(("Atttempting to re-add the same node "
+                                                       f"into the DAG ({this_dag_node}) "
+                                                       f"from file {next_subdir}"))
+                            self.digraph.add_node(this_dag_node, kind=ggo_kind, config=this_config,
+                                address_map=this_address_map,
+                                subdir=os.path.join(subdir, ggo_kind, ggo))
+                            self.digraph.add_edge(this_dag_node, parent_dag_name)
 
                             # Recurse - depth first is ok
                             recursively_parse_tree(os.path.join(next_subdir, "GGOs"),
-                                parent_config_node["GGO-subtree"][ggo_kind][ggo],
                                 this_dag_node)
 
-        # Now recursively walk the tree (depth first)
-        self.ggo_DAG.add_node('root', kind='root')
-        recursively_parse_tree ("GGOs", self.config, 'root')
+        # Now recursively walk the directory structure of config and
+        # address_map files (depth first)
+        self.digraph.add_node('root', kind='root', config=config, address_map=address_map,
+                                  subdir="")
+        recursively_parse_tree ("GGOs", 'root')
 
+        # Now add in edges curtesy of any implicit address_map
+        # references.  Note - all the nodes have been added at this
+        # point - only the implicit address_map edges are missing.
+        ElectionConfig.add_additional_edges(self)
 # EOF
