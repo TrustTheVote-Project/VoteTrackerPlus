@@ -19,6 +19,7 @@
 
 import json
 import os
+import networkx
 import pprint
 import re
 import subprocess
@@ -42,7 +43,7 @@ class Globals:
         # The location of the contest cvr file
         'CONTEST_FILE': os.path.join('CVRs', 'contest.json'),
         # The required address fields for an address
-        'REQUIRED_ADDRESS_FIELDS': ['state', 'town'],
+        'REQUIRED_ADDRESS_FIELDS': ['state', 'town', 'street', 'number'],
         # Root Election Data subdir
         'ROOT_ELECTION_DATA_SUBDIR': 'ElectionData',
         # How long to wait for a git shell command to complete - maybe a bad idea
@@ -98,6 +99,7 @@ class Address:
 
     Implementation note - individual address fields are never set to
     NoneType - if empty/blank, they are set to the empty string "".
+    And all fields are strings, not numbers.
     """
 
     # Legitimate keys in the correct order
@@ -166,6 +168,10 @@ class Address:
         """A generic getter - will raise a NameError if name is not defined"""
         if name in Address._keys:
             return self.address[name]
+        if name == 'str_address':
+            # return the number and street - ZZZ ignore substreet for now
+            nice_string = self.address['number'] + ' ' + self.address['street']
+            return nice_string.strip()
         raise NameError(f"Name {name} not accepted/defined for set()")
 
     def set(self, name, value):
@@ -191,7 +197,10 @@ class Ballot:
     """
 
     # Map the ElectionConfig 'kind' to the Address 'kind'
-    _kinds_map = {'states':'state', 'towns':'town'}
+    _kinds_map = {'states':'state', 'towns':'town', 'counties':'county',
+                      'SchoolDistricts':'SchoolDistrict',
+                      'CouncilDistricts':'CouncilDistrict',
+                      'Precincts':'Precinct'}
 
     def __init__(self):
         """Constructor - just creates the dictionary and returns the
@@ -235,21 +244,77 @@ class Ballot:
 
         The second defines that all the addresses in this specific GGO
         are valid for this GGO.
- 
-        ZZZ
+
+        Note the value of the REQUIRED_ADDRESS_FIELDS in the Globals
+        class - the implicit algorithm used to map an address to the
+        active GGOs is dependent on the defined fields.
         """
 
-        def address_in_node(address, node):
-            """Will smartly test to see if address is this node"""
-            # ZZZ
-            import pdb; pdb.set_trace()
+        def is_this_node_in_matching_parent_ggos(address, node):
+            """Will see if town and state of this address matches in the
+            set of parent nodes (predecessors)
+            """
+            # get a dictionary of the parents and see if any match the
+            # town and state
+            parents = config.dfs_predecessors(config, node)
+            town_node = "towns/" + address['town']
+            state_node = "states/" + address['state']
+            if town_node in parents and state_node in parents:
+                return True
             return False
 
-        # walk the DAG
-        for node in config.get_dag('topo'):
-            if address_in_node(address, node):
-                # Add the ggo contests to this ballot
+        def _check_address(kind, node):
+            """Internal support function for walking the DAG"""
+            if address[kind] == config[node]['ggo_name']:
+                # this ggo_name matches the equivilent field in the address
                 self.active_ggos.append(node)
+                return
+            # if there is not a goo_name match, see if we need to
+            # check other towns
+            if 'ggos' in config[node]['address_map']:
+                if 'towns' in config[node]['address_map']['ggos']:
+                    # loop over towns to see if there is a match
+                    for town in config[node]['address_map']['ggos']['towns']:
+                        if town == address['town']:
+                            # this ggo indirectly matches the address town
+                            self.active_ggos.append(node)
+                            return
+                    # no towns match - just continue
+                    return
+                raise KeyError(("Unsupported ggo indirect - only 'towns' are supported, "
+                    f"not {config[node]['address_map']['ggos']} "
+                    f"in file {config[node]['subdir']}/{Globals.get('ADDRESS_MAP_FILE')}"))
+            # if this is an address, see if the address matches
+            if 'addresses' in config[node]['address_map']:
+                # safely apply regex
+                for regex in config[node]['address_map']['addresses']:
+                    if re.search(r'[^(){}[]]', regex):
+                        raise ValueError(("Unsupported address regex "
+                            f"{config[node]['address_map']['addresses']} "
+                            f"in file {config[node]['subdir']}/{Globals.get('ADDRESS_MAP_FILE')}"))
+                    if re.search(regex, address.get('str-address')):
+                        # street address matches. If town and
+                        # state also match, add ggo. If not,
+                        # silently skip
+                        if is_this_node_in_matching_parent_ggos(address, node):
+                            self.active_ggos.append(node)
+                            return
+                    return
+            raise KeyError(("Unsupported address_map key "
+                f"{config[node]['address_map']} "
+                f"in file {config[node]['subdir']}/{Globals.get('ADDRESS_MAP_FILE')}"))
+
+        # walk the DAG
+        import pdb; pdb.set_trace()
+        for node in networkx.dfs_edges(config.get_dag('graph'), 'root'):
+            if node == 'root':
+                # the root GGO always contributes
+                self.active_ggos.append(node)
+                continue
+            kind = config[node]['kind']
+            kind = Ballot._kinds_map[node['kind']] if kind in Ballot._kinds_map else kind
+            if kind in address:
+                _check_address(kind, node)
 
     def export(self, file="", syntax=""):
         """
