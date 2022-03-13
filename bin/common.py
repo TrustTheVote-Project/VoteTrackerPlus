@@ -41,12 +41,12 @@ class Globals:
         'ADDRESS_MAP_FILE': 'address_map.yaml',
         # The location of the contest cvr file
         'CONTEST_FILE': os.path.join('CVRs', 'contest.json'),
+        # The required address fields for an address
+        'REQUIRED_ADDRESS_FIELDS': ['state', 'town'],
+        # Root Election Data subdir
+        'ROOT_ELECTION_DATA_SUBDIR': 'ElectionData',
         # How long to wait for a git shell command to complete - maybe a bad idea
         'SHELL_TIMEOUT': 15,
-        # The required address fields for an address. The key is the
-        # address field name and the value is the associated
-        # ElectionConfig ggo-king.
-        'REQUIRED_ADDRESS_FIELDS': ['state', 'town']
         }
 
     # Legitimate setters
@@ -235,7 +235,7 @@ class Ballot:
 
         The second defines that all the addresses in this specific GGO
         are valid for this GGO.
-
+ 
         ZZZ
         """
 

@@ -130,8 +130,12 @@ class ElectionConfig:
         if result.stdout == "":
             raise EnvironmentError("Cannot determine workspace top level via 'git rev-parse'")
         self.git_rootdir = result.stdout.strip()
-        self.root_config_file = os.path.join(self.git_rootdir, Globals.get("CONFIG_FILE"))
-        self.root_address_map_file = os.path.join(self.git_rootdir, Globals.get("ADDRESS_MAP_FILE"))
+        self.root_config_file = os.path.join(self.git_rootdir,
+                                                 Globals.get('ROOT_ELECTION_DATA_SUBDIR'),
+                                                 Globals.get("CONFIG_FILE"))
+        self.root_address_map_file = os.path.join(self.git_rootdir,
+                                                      Globals.get('ROOT_ELECTION_DATA_SUBDIR'),
+                                                      Globals.get("ADDRESS_MAP_FILE"))
         self.parsed_configs = ["."]
         self.digraph = networkx.DiGraph()
 
@@ -152,6 +156,9 @@ class ElectionConfig:
             return self.digraph.edges()
         if what == 'topo':
             return list(networkx.topological_sort(self.digraph))
+        if what == 'graph':
+            # Danger - exposes implementation
+            return self.digraph
         raise NameError(f"Method {what} is not a supported networkx method")
 
     def get_node(self, node, what):
@@ -159,6 +166,7 @@ class ElectionConfig:
         if what == 'ALL':
             return {'address_map': self.digraph.nodes[node]['address_map'],
                     'config': self.digraph.nodes[node]['config'],
+                    'ggo_name': self.digraph.nodes[node]['ggo_name'],
                     'kind': self.digraph.nodes[node]['kind'],
                     'subdir': self.digraph.nodes[node]['subdir']}
         return self.digraph.nodes[node][what]
@@ -233,7 +241,9 @@ class ElectionConfig:
                     ElectionConfig.is_valid_ggo_string(ggo_kind)
                     if not isinstance(ggo_list, list):
                         raise TypeError(f"The GGO kind value is not a list ({ggo_kind})")
-                    ggo_subdir_abspath = os.path.join(self.git_rootdir, subdir, ggo_kind)
+                    ggo_subdir_abspath = os.path.join(self.git_rootdir,
+                                                          Globals.get('ROOT_ELECTION_DATA_SUBDIR'),
+                                                          subdir, ggo_kind)
                     for ggo in ggo_list:
                         ElectionConfig.is_valid_ggo_string(ggo)
                         ggo_file = os.path.join(ggo_subdir_abspath, ggo, Globals.get("CONFIG_FILE"))
@@ -265,6 +275,7 @@ class ElectionConfig:
                                                        f"into the DAG ({this_dag_node}) "
                                                        f"from file {next_subdir}"))
                             self.digraph.add_node(this_dag_node, kind=ggo_kind, config=this_config,
+                                ggo_name=ggo,
                                 address_map=this_address_map,
                                 subdir=os.path.join(subdir, ggo_kind, ggo))
                             self.digraph.add_edge(this_dag_node, parent_dag_name)
@@ -276,6 +287,7 @@ class ElectionConfig:
         # Now recursively walk the directory structure of config and
         # address_map files (depth first)
         self.digraph.add_node('root', kind='root', config=config, address_map=address_map,
+                                  ggo_name='root',
                                   subdir="")
         recursively_parse_tree ("GGOs", 'root')
 
