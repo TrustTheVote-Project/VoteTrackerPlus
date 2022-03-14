@@ -146,7 +146,7 @@ class Address:
 
         # Note - an address needs all 'required' address fields to be specified
         required_fields = Globals.get('REQUIRED_GGO_ADDRESS_FIELDS') + \
-          Globals.get('REQUIRED_NG_ADDRESS_FIELDS')
+                          Globals.get('REQUIRED_NG_ADDRESS_FIELDS')
         missing_keys = [key for key in required_fields
                             if not Address.get(self, key)]
         if missing_keys:
@@ -191,6 +191,15 @@ class Address:
         for key in Address._keys:
             address[key] = self.address[key]
         return address
+
+    def match(self, regex):
+        """Will regex the supplied regex against the address"""
+        # For now if regex is a string, it is a number and street
+        # address only
+        if isinstance(regex, str):
+            return re.match(regex, self.address['number'] + ' ' + self.address['street'])
+        raise ValueError((f"Unsupoorted Address match regex ({regex}) - ",
+                        "supply more quality pizza"))
 
 class Ballot:
     """A class to hold a ballot.  A ballot is always a function of an
@@ -263,6 +272,12 @@ class Ballot:
                 if parent in footsteps:
                     continue
                 if parent not in self.active_ggos:
+                    # Note - for indirect GGOs where the boundery does
+                    # not match the boundary(s) of the leaf node of the
+                    # REQUIRED_GGO_ADDRESS_FIELDS chain (default is
+                    # towns), there needs to be an address test here to
+                    # test against the address (that defines the non
+                    # matching boundary).
                     self.active_ggos.append(parent)
                 footsteps.add(parent)
                 find_ancestors(parent)
@@ -273,7 +288,14 @@ class Ballot:
                 if child in footsteps:
                     continue
                 if child not in self.active_ggos:
-                    self.active_ggos.append(child)
+                    # Need to test agains the address_map field
+                    if ('address_map' in config.node(child) and
+                        'addresses' in config.node(child)['address_map']):
+                        # loop over each address and see if there is match.
+                        for addr in config.node(child)['address_map']['addresses']:
+                            if address.match(addr):
+                                self.active_ggos.append(child)
+                                break
                 footsteps.add(child)
                 find_descendants(child)
 

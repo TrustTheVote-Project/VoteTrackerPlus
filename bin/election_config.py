@@ -161,6 +161,10 @@ class ElectionConfig:
             return self.digraph
         raise NameError(f"Method {what} is not a supported networkx method")
 
+    def node(self, node):
+        """Return the networkx node"""
+        return self.digraph.nodes[node]
+
     def get_node(self, node, what):
         """An ElectionConfig get interface to the underlying election configuration data."""
         if what == 'ALL':
