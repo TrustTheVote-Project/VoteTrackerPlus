@@ -30,6 +30,7 @@ See ../docs/tech/executable-overview.md for the context in which this file was c
 import sys
 import argparse
 import logging
+from logging import info, debug
 import re
 import pprint
 
@@ -71,7 +72,7 @@ def parse_arguments():
                             help="the zipcode field of an address")
     parser.add_argument('-f', "--file",
                             help="override the default blank ballot location")
-    parser.add_argument('-l', "--language", default="",
+    parser.add_argument('-l', "--language", default='json',
                             help="will print the ballot in the specified language")
     parser.add_argument("-v", "--verbosity", type=int, default=3,
                             help="0 critical, 1 error, 2 warning, 3 info, 4 debug (def=3)")
@@ -117,23 +118,23 @@ def main():
     the_address = Address(**my_args)
 
     # print some debugging info
-    print(f"The election config is: {the_election_config}")
-    print("And the address is: " + str(the_address))
+    debug(f"The election config is: {the_election_config}")
+    debug("And the address is: " + str(the_address))
     node = 'towns/Oakland'
-    print(f"And node ({node}) looks like:")
-    pprint.pprint(the_election_config.get_node(node, 'ALL'))
-    print("And the edges look like:")
-    pprint.pprint(the_election_config.get_dag('edges'))
+    debug(f"And node ({node}) looks like:" +
+        pprint.pformat(the_election_config.get_node(node, 'ALL')))
+    debug("And the edges look like:" +
+        pprint.pformat(the_election_config.get_dag('edges')))
 
     # Construct a blank ballot
     the_ballot = Ballot()
     the_ballot.create_blank_ballot(the_address, the_election_config)
-    import pdb; pdb.set_trace()
 
     # Print it
     if args.printonly:
-        print(the_ballot)
+        info(pprint.pformat(the_ballot.get('ballot')))
     else:
+#        import pdb; pdb.set_trace()
         the_ballot.export(args.file, args.language)
 
 

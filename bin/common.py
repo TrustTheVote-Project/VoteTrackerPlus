@@ -19,6 +19,7 @@
 
 import json
 import os
+import pprint
 import re
 import subprocess
 #  Other imports:  critical, error, warning, info, debug
@@ -219,10 +220,6 @@ class Ballot:
             return self.ballot
         raise NameError(f"Name {name} not accepted/defined for set()")
 
-    def __str__(self):
-        """Return the serialization of this instance's ElectionConfig dictionary"""
-        return str(self.ballot)
-
     def dict(self):
         """Return a dictionary of the ballot"""
         return dict(self.ballot)
@@ -297,25 +294,29 @@ class Ballot:
         # without knowing more at this time, only support ancestors
         # from this node and not from descendants of this node.
         the_address_node = self.active_ggos[-1]
+#        import pdb; pdb.set_trace()
         find_ancestors(the_address_node)
 
         # Now find any descendantss
         find_descendants(the_address_node)
 
         # With the list of active GGOs, add in the contests for each one
-        # ZZZ
+        for node in self.active_ggos:
+            cfg = config.get_node(node, 'config')
+            if 'contests' in cfg:
+                self.ballot[node] = cfg['contests']
 
-    def export(self, file="", syntax=""):
+    def export(self, file, syntax):
         """
         Will export a blank ballot to a file in some format.  If file
         is nil, will print to STDOUT.
         """
-        if syntax in ('json', ''):
-            if file == "":
-                print(json.dumps(Ballot.dict(self)))
-            else:
+        if syntax == 'json':
+            if file:
                 with open(file, 'w', encoding="utf8") as outfile:
                     json.dump(Ballot.dict(self), outfile)
+            else:
+                pprint.pprint(self.ballot)
         elif syntax == 'pdf':
             # See https://github.com/rst2pdf/rst2pdf
             raise NotImplementedError(("Apologies but printing the pdf of a ballot "
