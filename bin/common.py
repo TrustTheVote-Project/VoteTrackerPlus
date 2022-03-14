@@ -19,8 +19,6 @@
 
 import json
 import os
-import networkx
-import pprint
 import re
 import subprocess
 #  Other imports:  critical, error, warning, info, debug
@@ -42,8 +40,10 @@ class Globals:
         'ADDRESS_MAP_FILE': 'address_map.yaml',
         # The location of the contest cvr file
         'CONTEST_FILE': os.path.join('CVRs', 'contest.json'),
-        # The required address fields for an address
-        'REQUIRED_ADDRESS_FIELDS': ['state', 'town', 'street', 'number'],
+        # The required address fields for an address. There are two
+        # types - GGO and non GGO.
+        'REQUIRED_GGO_ADDRESS_FIELDS': ['state', 'town'],
+        'REQUIRED_NG_ADDRESS_FIELDS': ['street', 'number'],
         # Root Election Data subdir
         'ROOT_ELECTION_DATA_SUBDIR': 'ElectionData',
         # How long to wait for a git shell command to complete - maybe a bad idea
@@ -144,11 +144,13 @@ class Address:
                 Address.set(self, key, value)
 
         # Note - an address needs all 'required' address fields to be specified
-        missing_keys = [key for key in Globals.get('REQUIRED_ADDRESS_FIELDS')
+        required_fields = Globals.get('REQUIRED_GGO_ADDRESS_FIELDS') + \
+          Globals.get('REQUIRED_NG_ADDRESS_FIELDS')
+        missing_keys = [key for key in required_fields
                             if not Address.get(self, key)]
         if missing_keys:
             raise NameError(("Addresses must include values for the following fields: "
-                                 f"{Globals.get('REQUIRED_ADDRESS_FIELDS')}"
+                                 f"{required_fields}"
                                  "The following fields are undefined: "
                                  f"{missing_keys}"))
 
@@ -197,10 +199,10 @@ class Ballot:
     """
 
     # Map the ElectionConfig 'kind' to the Address 'kind'
-    _kinds_map = {'states':'state', 'towns':'town', 'counties':'county',
-                      'SchoolDistricts':'SchoolDistrict',
-                      'CouncilDistricts':'CouncilDistrict',
-                      'Precincts':'Precinct'}
+    _kinds_map = {'state':'states', 'town':'towns', 'county':'counties',
+                      'SchoolDistrict':'SchoolDistricts',
+                      'CouncilDistrict':'CouncilDistricts',
+                      'Precinct':'Precincts'}
 
     def __init__(self):
         """Constructor - just creates the dictionary and returns the
@@ -209,9 +211,17 @@ class Ballot:
         self.ballot = {}
         self.active_ggos = []
 
+    def get(self, name):
+        """A generic getter - will raise a NameError if name is invalid"""
+        if name == 'ggos':
+            return self.active_ggos
+        if name == 'ballot':
+            return self.ballot
+        raise NameError(f"Name {name} not accepted/defined for set()")
+
     def __str__(self):
         """Return the serialization of this instance's ElectionConfig dictionary"""
-        return pprint.pformat(self.ballot)
+        return str(self.ballot)
 
     def dict(self):
         """Return a dictionary of the ballot"""
@@ -221,9 +231,8 @@ class Ballot:
         """Given an Address and a ElectionConfig, will generate the
         appropriate blank ballot.  Implementation note - this function
         needs to be smart in that it needs to deal with various regex
-        and other rules/conventions/specs of the address_map files.
-        The development of the support of that is an R&D iterative
-        process.
+        and other rules/conventions/specs of the address_map files.  The
+        development of the support of that is an R&D iterative process.
 
         Initially this class/functions only understand two address_map
         syntaxes (defined in ElectionConfig which is what parses the
@@ -234,94 +243,74 @@ class Ballot:
         'address_map': {'addresses': ['.*']}
 
         Where <ggo-kind> is the name of the child GGO group (there can
-        be different 'kinds' of GGO children).  The above syntax
-        follows what is known 'regex' expressions.
+        be different 'kinds' of GGO children).  The above syntax follows
+        what is known 'regex' expressions.
 
-        The first defines that the addresses for this GGO are handled
-        by the ggo-kind/ggo specified, which is in this case all ggos
-        of the specified kind.  In other words, the parent GGO accepts
-        all the addresses that specified child GGOs accept.
+        The first defines that the addresses for this GGO are handled by
+        the ggo-kind/ggo specified, which is in this case all ggos of
+        the specified kind.  In other words, the parent GGO accepts all
+        the addresses that specified child GGOs accept.
 
         The second defines that all the addresses in this specific GGO
         are valid for this GGO.
 
-        Note the value of the REQUIRED_ADDRESS_FIELDS in the Globals
+        Note the value of the required address fields in the Globals
         class - the implicit algorithm used to map an address to the
         active GGOs is dependent on the defined fields.
         """
 
-        def is_this_node_in_matching_parent_ggos(address, node):
-            """Will see if town and state of this address matches in the
-            set of parent nodes (predecessors)
-            """
-            # get a dictionary of the parents and see if any match the
-            # town and state
-            parents = config.dfs_predecessors(config, node)
-            town_node = "towns/" + address['town']
-            state_node = "states/" + address['state']
-            if town_node in parents and state_node in parents:
-                return True
-            return False
+        footsteps = set()
+        def find_ancestors(node_of_interest):
+            """Will find all the ancestor of this node"""
+            for parent in config.ancestors(node_of_interest):
+                if parent in footsteps:
+                    continue
+                if parent not in self.active_ggos:
+                    self.active_ggos.append(parent)
+                footsteps.add(parent)
+                find_ancestors(parent)
 
-        def _check_address(kind, node):
-            """Internal support function for walking the DAG"""
-            if address[kind] == config[node]['ggo_name']:
-                # this ggo_name matches the equivilent field in the address
-                self.active_ggos.append(node)
-                return
-            # if there is not a goo_name match, see if we need to
-            # check other towns
-            if 'ggos' in config[node]['address_map']:
-                if 'towns' in config[node]['address_map']['ggos']:
-                    # loop over towns to see if there is a match
-                    for town in config[node]['address_map']['ggos']['towns']:
-                        if town == address['town']:
-                            # this ggo indirectly matches the address town
-                            self.active_ggos.append(node)
-                            return
-                    # no towns match - just continue
-                    return
-                raise KeyError(("Unsupported ggo indirect - only 'towns' are supported, "
-                    f"not {config[node]['address_map']['ggos']} "
-                    f"in file {config[node]['subdir']}/{Globals.get('ADDRESS_MAP_FILE')}"))
-            # if this is an address, see if the address matches
-            if 'addresses' in config[node]['address_map']:
-                # safely apply regex
-                for regex in config[node]['address_map']['addresses']:
-                    if re.search(r'[^(){}[]]', regex):
-                        raise ValueError(("Unsupported address regex "
-                            f"{config[node]['address_map']['addresses']} "
-                            f"in file {config[node]['subdir']}/{Globals.get('ADDRESS_MAP_FILE')}"))
-                    if re.search(regex, address.get('str-address')):
-                        # street address matches. If town and
-                        # state also match, add ggo. If not,
-                        # silently skip
-                        if is_this_node_in_matching_parent_ggos(address, node):
-                            self.active_ggos.append(node)
-                            return
-                    return
-            raise KeyError(("Unsupported address_map key "
-                f"{config[node]['address_map']} "
-                f"in file {config[node]['subdir']}/{Globals.get('ADDRESS_MAP_FILE')}"))
+        def find_descendants(node_of_interest):
+            """Will find all descendantss of this node"""
+            for child in config.descendants(node_of_interest):
+                if child in footsteps:
+                    continue
+                if child not in self.active_ggos:
+                    self.active_ggos.append(child)
+                footsteps.add(child)
+                find_descendants(child)
 
-        # walk the DAG
-        import pdb; pdb.set_trace()
-        for node in networkx.dfs_edges(config.get_dag('graph'), 'root'):
-            if node == 'root':
-                # the root GGO always contributes
-                self.active_ggos.append(node)
-                continue
-            kind = config[node]['kind']
-            kind = Ballot._kinds_map[node['kind']] if kind in Ballot._kinds_map else kind
-            if kind in address:
-                _check_address(kind, node)
+        # Note - the root GGO always contributes
+        self.active_ggos.append('root')
+        # Walk the address in DAG order from root to a leaf.
+        for field in Globals.get('REQUIRED_GGO_ADDRESS_FIELDS'):
+            # For this field in the address, get the correct ggo kind and instance
+            node = Ballot._kinds_map[field] + '/' + address.get(field)
+            # Better to sanity check now later
+            if not config.is_node(node):
+                raise ValueError(f"Bad ElectionConfig node name ({node})")
+            self.active_ggos.append(node)
+
+        # Note that the first node in active_ggos is the root and the
+        # last is the leaf most implicit node. However, there can be
+        # descendant nodes (within this leaf node). For simplicity and
+        # without knowing more at this time, only support ancestors
+        # from this node and not from descendants of this node.
+        the_address_node = self.active_ggos[-1]
+        find_ancestors(the_address_node)
+
+        # Now find any descendantss
+        find_descendants(the_address_node)
+
+        # With the list of active GGOs, add in the contests for each one
+        # ZZZ
 
     def export(self, file="", syntax=""):
         """
         Will export a blank ballot to a file in some format.  If file
         is nil, will print to STDOUT.
         """
-        if syntax == 'json':
+        if syntax in ('json', ''):
             if file == "":
                 print(json.dumps(Ballot.dict(self)))
             else:

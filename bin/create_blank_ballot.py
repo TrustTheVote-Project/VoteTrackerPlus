@@ -37,20 +37,6 @@ import pprint
 from common import Address, Ballot
 from election_config import ElectionConfig
 
-# Functions
-def create_a_blank_ballot(address, config, file="", syntax='json'):
-    """Will create a blank ballot.json file for a given address.
-    """
-
-    # Construct a blank ballot
-    the_ballot = Ballot()
-    the_ballot.create_blank_ballot(address, config)
-
-    # Print it
-    if args.printonly:
-        print(the_ballot)
-    else:
-        the_ballot.export(file, syntax)
 
 ################
 # arg parsing
@@ -83,6 +69,10 @@ def parse_arguments():
                             help="the state/province field of an address")
     parser.add_argument('-z', "--zipcode",
                             help="the zipcode field of an address")
+    parser.add_argument('-f', "--file",
+                            help="override the default blank ballot location")
+    parser.add_argument('-l', "--language", default="",
+                            help="will print the ballot in the specified language")
     parser.add_argument("-v", "--verbosity", type=int, default=3,
                             help="0 critical, 1 error, 2 warning, 3 info, 4 debug (def=3)")
     parser.add_argument("-n", "--printonly", action="store_true",
@@ -118,21 +108,34 @@ def main():
     # imported somehow. And all that comes later - for now just map an
     # address to a town.
     my_args = dict(vars(args))
-    for key in ['verbosity', 'printonly']:
+    for key in ['verbosity', 'printonly', 'language', 'file']:
         del my_args[key]
     # if address was supplied, get rid of that too
     if my_args['address']:
         my_args['number'], my_args['street'] = re.split(r'\s+', my_args['address'], 1)
     del my_args['address']
     the_address = Address(**my_args)
+
+    # print some debugging info
     print(f"The election config is: {the_election_config}")
     print("And the address is: " + str(the_address))
-    print("And a node looks like:")
-    pprint.pprint(the_election_config.get_node('towns/Alameda', 'ALL'))
+    node = 'towns/Oakland'
+    print(f"And node ({node}) looks like:")
+    pprint.pprint(the_election_config.get_node(node, 'ALL'))
     print("And the edges look like:")
     pprint.pprint(the_election_config.get_dag('edges'))
-    # write it out
-    create_a_blank_ballot(the_address, the_election_config, syntax='json')
+
+    # Construct a blank ballot
+    the_ballot = Ballot()
+    the_ballot.create_blank_ballot(the_address, the_election_config)
+    import pdb; pdb.set_trace()
+
+    # Print it
+    if args.printonly:
+        print(the_ballot)
+    else:
+        the_ballot.export(args.file, args.language)
+
 
 if __name__ == '__main__':
     args = parse_arguments()

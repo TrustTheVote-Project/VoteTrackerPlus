@@ -171,9 +171,23 @@ class ElectionConfig:
                     'subdir': self.digraph.nodes[node]['subdir']}
         return self.digraph.nodes[node][what]
 
+    def is_node(self, node_name):
+        """Returns True/False if node_name exists"""
+        if node_name in self.digraph:
+            return True
+        return False
+
+    def ancestors(self, node):
+        """Wrapper"""
+        return networkx.ancestors(self.digraph, node)
+
+    def descendants(self, node):
+        """Wrapper"""
+        return networkx.descendants(self.digraph, node)
+
     def __str__(self):
         """Return the serialization of this instance's ElectionConfig dictionary"""
-        return str(list(reversed(self.get_dag('topo'))))
+        return str(list(self.get_dag('topo')))
 
     def add_additional_edges(self):
         """Will add implicit address includes from one
@@ -192,7 +206,7 @@ class ElectionConfig:
                                 for other in self.digraph.nodes:
                                     try:
                                         if self.digraph.nodes[other]['kind'] == kind:
-                                            self.digraph.add_edge(other, node)
+                                            self.digraph.add_edge(node, other)
                                     except KeyError:
 #                                        import pdb; pdb.set_trace()
                                         print("hello")
@@ -200,7 +214,7 @@ class ElectionConfig:
                                 # assume this is a valid node name
                                 # when appended with kind instance
                                 # name
-                                self.digraph.add_edge(kind + '/' + kind_value, node)
+                                self.digraph.add_edge(node, kind + '/' + kind_value)
         # pylint: enable=R1702
 
     def parse_configs(self):
@@ -278,7 +292,7 @@ class ElectionConfig:
                                 ggo_name=ggo,
                                 address_map=this_address_map,
                                 subdir=os.path.join(subdir, ggo_kind, ggo))
-                            self.digraph.add_edge(this_dag_node, parent_dag_name)
+                            self.digraph.add_edge(parent_dag_name, this_dag_node)
 
                             # Recurse - depth first is ok
                             recursively_parse_tree(os.path.join(next_subdir, "GGOs"),
