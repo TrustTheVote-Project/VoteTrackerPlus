@@ -1,68 +1,19 @@
-# This file may be used to create an environment using:
-# $ conda create --name <env> --file <this file>
-# platform: osx-64
-alabaster=0.7.12=pyhd3eb1b0_0
-astroid=2.9.0=py39hecd8cb5_0
-attrs=21.4.0=pyhd3eb1b0_0
-babel=2.9.1=pyhd3eb1b0_0
-brotlipy=0.7.0=py39h9ed2024_1003
-ca-certificates=2021.10.26=hecd8cb5_2
-certifi=2021.10.8=py39hecd8cb5_2
-cffi=1.15.0=py39hc55c11b_1
-charset-normalizer=2.0.4=pyhd3eb1b0_0
-colorama=0.4.4=pyhd3eb1b0_0
-cryptography=36.0.0=py39hf6deb26_0
-docutils=0.17.1=py39hecd8cb5_1
-idna=3.3=pyhd3eb1b0_0
-imagesize=1.3.0=pyhd3eb1b0_0
-importlib-metadata=4.8.2=py39hecd8cb5_0
-iniconfig=1.1.1=pyhd3eb1b0_0
-isort=5.9.3=pyhd3eb1b0_0
-jinja2=3.0.2=pyhd3eb1b0_0
-lazy-object-proxy=1.6.0=py39h9ed2024_0
-libcxx=12.0.0=h2f01273_0
-libffi=3.3=hb1e8313_2
-markupsafe=2.0.1=py39h9ed2024_0
-mccabe=0.6.1=py39hecd8cb5_1
-ncurses=6.3=hca72f7f_2
-openssl=1.1.1m=hca72f7f_0
-packaging=21.3=pyhd3eb1b0_0
-pip=21.2.4=py39hecd8cb5_0
-platformdirs=2.4.0=pyhd3eb1b0_0
-pluggy=1.0.0=py39hecd8cb5_0
-py=1.11.0=pyhd3eb1b0_0
-pycparser=2.21=pyhd3eb1b0_0
-pygments=2.10.0=pyhd3eb1b0_0
-pylint=2.12.2=py39hecd8cb5_0
-pyopenssl=21.0.0=pyhd3eb1b0_1
-pyparsing=3.0.4=pyhd3eb1b0_0
-pysocks=1.7.1=py39hecd8cb5_0
-pytest=6.2.5=py39hecd8cb5_2
-python=3.9.7=h88f2d9e_1
-pytz=2021.3=pyhd3eb1b0_0
-pyyaml=6.0=py39hca72f7f_1
-readline=8.1.2=hca72f7f_1
-requests=2.27.1=pyhd3eb1b0_0
-setuptools=58.0.4=py39hecd8cb5_0
-six=1.16.0=pyhd3eb1b0_0
-snowballstemmer=2.2.0=pyhd3eb1b0_0
-sphinx=4.4.0=pyhd3eb1b0_0
-sphinxcontrib-applehelp=1.0.2=pyhd3eb1b0_0
-sphinxcontrib-devhelp=1.0.2=pyhd3eb1b0_0
-sphinxcontrib-htmlhelp=2.0.0=pyhd3eb1b0_0
-sphinxcontrib-jsmath=1.0.1=pyhd3eb1b0_0
-sphinxcontrib-qthelp=1.0.3=pyhd3eb1b0_0
-sphinxcontrib-serializinghtml=1.1.5=pyhd3eb1b0_0
-sqlite=3.37.0=h707629a_0
-tk=8.6.11=h7bc2e8c_0
-toml=0.10.2=pyhd3eb1b0_0
-typing-extensions=3.10.0.2=hd3eb1b0_0
-typing_extensions=3.10.0.2=pyh06a4308_0
-tzdata=2021e=hda174b7_0
-urllib3=1.26.8=pyhd3eb1b0_0
-wheel=0.37.1=pyhd3eb1b0_0
-wrapt=1.13.3=py39hca72f7f_2
-xz=5.2.5=h1de35cc_0
-yaml=0.2.5=haf1e3a3_0
-zipp=3.7.0=pyhd3eb1b0_0
-zlib=1.2.11=h4dc903c_4
+astroid @ file:///opt/concourse/worker/volumes/live/0a6e6368-0831-4a84-577d-f57d6f278a8b/volume/astroid_1639044240452/work
+attrs @ file:///opt/conda/conda-bld/attrs_1642510447205/work
+certifi==2021.10.8
+iniconfig @ file:///home/linux1/recipes/ci/iniconfig_1610983019677/work
+isort @ file:///tmp/build/80754af9/isort_1628603791788/work
+lazy-object-proxy @ file:///opt/concourse/worker/volumes/live/a169db40-97bf-4f51-6893-dc751f705b7b/volume/lazy-object-proxy_1616529067444/work
+mccabe==0.6.1
+networkx @ file:///tmp/build/80754af9/networkx_1633639043937/work
+packaging @ file:///tmp/build/80754af9/packaging_1637314298585/work
+platformdirs @ file:///tmp/build/80754af9/platformdirs_1638968569495/work
+pluggy @ file:///opt/concourse/worker/volumes/live/b59eda93-c2e0-4d8d-58d7-54246c8e1958/volume/pluggy_1633715226795/work
+py @ file:///opt/conda/conda-bld/py_1644396412707/work
+pylint @ file:///opt/concourse/worker/volumes/live/35d144dd-2adb-4d31-6003-ffc112ccf38a/volume/pylint_1639650625922/work
+pyparsing @ file:///tmp/build/80754af9/pyparsing_1635766073266/work
+pytest==6.2.5
+PyYAML==6.0
+toml @ file:///tmp/build/80754af9/toml_1616166611790/work
+typing-extensions @ file:///tmp/build/80754af9/typing_extensions_1631814937681/work
+wrapt @ file:///opt/concourse/worker/volumes/live/99094902-9e15-4318-5ab0-ee253b90775d/volume/wrapt_1638433872602/work
