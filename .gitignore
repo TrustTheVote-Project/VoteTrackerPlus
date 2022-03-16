@@ -5,3 +5,11 @@
 
 # Mac
 .DS_Store
+
+# pytest
+__pycache__
+.pytest_cache
+
+# ZZZ ignore manual mock election data until it becomes a real submodule
+ElectionData
+

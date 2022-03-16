@@ -115,35 +115,55 @@ It is possible to have multiple and different classes of sub GGOs. For a state w
 
 The above may be how California decides to handle its counties and towns.
 
-The sibling and multiple inheritance of teh GGO's is flexible and configurable.  That is, it it possible for a state to have some towns in counties and some town not in any county.  And some towns may share school boards in the case of regional school systems.
+The sibling and multiple inheritance of the GGO's is flexible and configurable.  That is, it it possible for a state to have some towns in counties and some town not in any county.  And some towns may share school boards in the case of regional school systems.
 
-Regardless of the number of different sub GGO class names, the __config__ section will determine how the sub GGO's are handled.  In addition, though a state, county, or town repo can be cloned in isolation, doing so will not result in a valid VOTES clone.  A valid VOTES clone of the election will include the repo hierarchy from the root repo, including all sibling GGO's in the hierarchy that take part in any of the sub GGOs.  Again this is configured in the config folder.  In this manner a California precinct/VC repo will also contain the town and county submodule/subtree repo trees and information.  One of several reasons for this is so that the correct blank ballots can be generated and marked by voters.
+Regardless of the number of different sub GGO class names, the __config.yaml__ file will determine how the sub GGO's are handled.  In addition, though a state, county, or town repo can be cloned in isolation, doing so will not result in a valid VOTES clone.  A valid VOTES clone of the election will include the repo hierarchy from the root repo, including all sibling GGO's in the hierarchy that take part in any of the sub GGOs.  Again this is configured in the config.yaml file.  In this manner a California precinct/VC repo will also contain the town and county submodule/subtree repo trees and information.  One of several reasons for this is so that the correct blank ballots can be generated and marked by voters.
 
-In the California case, each town will in fact get a copy of those counties to which it has an overlay with.  A specific town may reside within multiple counties and a county will usually contain multiple towns.  It is configurable via the __config__ folder whether in this case California defines how the two GGO's overlay (which towns are in which county and vice versa) or if the counties or towns decide that.  Technical note - California actually owns the authority to decide but can pass the authority to either the county or town to define that information.
+In the California case, each town will in fact get a copy of those counties to which it has an overlay with.  A specific town may reside within multiple counties and a county will usually contain multiple towns.  It is configurable via the __config.yaml__ file whether in this case California defines how the two GGO's overlay (which towns are in which county and vice versa) or if the counties or towns decide that.  Technical note - California actually owns the authority to decide but can pass the authority to either the county or town to define that information.
 
-Regardless of delegation of the definition, each town and county clone only the relevant upstream and sibling repos.  At some level in this hierarchical tree, a GGO will want to actually collect votes on election day.  Actual votes are collected in the CVRs folder but require the repo to be configured as such, again via data in the ./config section.
+In a similar fashion each GGO also has an __address_map.yaml__ file which lists the addresses valid for the GGO.  Thus both the __config.yaml__ and __address_map.yaml__ files are [RBAC](https://en.wikipedia.org/wiki/Role-based_access_control) controlled by the owning GGO.  Note the the __address_map.yaml__ supports references to child GGOs.  For example, the state of California can simply state that any legel address in the town of Alameda (as controlled by the town) will receive/contribute to the California GGO contests.
+
+Regardless of delegation of the definition, each town and county clone only the relevant upstream and sibling repos.  At some level in this hierarchical tree, a GGO will want to actually collect votes on election day.  Actual votes are collected in the CVRs folder but require the repo to be configured as such, again via data in the config and address_map files.
+
+In addition to the CVRs folder there is also a blank-ballots folder which contains all the possible valid blank ballots for the CVRs that will be processed at that location.  The number of different blank ballots is a function of the number of different intersections of all the GGOs for that location.
+
+Four implementation notes:
+1) <ggo-GUID> is just a uniquely serialized string of GGOs contained in the specific blank ballot.
+2) There is a blank-ballots folder for each CVR folder.
+3) Even though the blank ballots are generated uniquely for each VTP election config, they are still committed to the repository so to minimize data in motion post a 'git clone' operation.
+4) The blank ballots are generated in each language (UTF-8) that is desired by the election officials.
 
 As an example, the following section assumes the town of Cambridge Massachusetts.  When the city of Cambridge clones the VOTES repo for the 2018 election, assuming that all the parent GGO are indeed participating in a VOTES framework, the directory tree will look someting like:
 
 ```
 US-2018-National-Election/.git
                           config.yaml
+                          address_map.yaml
                           ballot.rst
                           bin
                           ggos/Massachusetts/.git
                                              config.yaml
+                                             address_map.yaml
                                              ballot.rst
                                              ggos/Cambridge/.git
                                                             config.yaml
+                                                            address_map.yaml
                                                             ballot.rst
+                                                            blank-ballots/<language>/<ggo-GUID>.pdf
                                                             CVRs (a batch scanner for the city of Cambridge)
                                                             ggos/5th Congressional District/.git
                                                                                             config.yaml
+                                                                                            address_map.yaml
                                                                                             ballot.rst
+                                                                                            blank-ballots/\
+                                                                                        <language>/<ggo-GUID>.pdf
                                                                                             CVRs
                                                                  7th Congressional District/.git
                                                                                             config.yaml
+                                                                                            address_map.yaml
                                                                                             ballot.rst
+                                                                                            blank-ballots/\
+                                                                                        <language>/<ggo-GUID>.pdf
                                                                                             CVRs
                                                                  ward 1-1/{config,ballot}
                                                                  ward 1-2/{config,ballot}
