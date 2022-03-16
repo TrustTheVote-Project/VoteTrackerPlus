@@ -145,6 +145,8 @@ class ElectionConfig:
             return getattr(self, "config")[name]
         if name in ElectionConfig._root_address_map_keys:
             return getattr(self, "config")[name]
+        if name == "git_rootdir":
+            return self.git_rootdir
         raise NameError((f"Name {name} is not a supported root level key "
                              "for the ElectionConfig dictionary"))
 

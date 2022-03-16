@@ -17,10 +17,9 @@
 
 """A kitchen sync for VTP classes for the moment"""
 
-import json
 import os
-import pprint
 import re
+import pprint
 import subprocess
 #  Other imports:  critical, error, warning, info, debug
 from logging import info
@@ -33,7 +32,7 @@ class Globals:
     _config = {
         # The default location from the CWD of this program, which is different than
         # The location of the incoming ballot.json file etc
-        'BALLOT_FILE': os.path.join('CVRs', 'ballot.json'),
+        'BALLOT_FILE': 'ballot.json',
         # The blank ballot folder location
         'BLANK_BALLOT_SUBDIR': 'blank-ballots',
         # The location/name of the config and address map files for this GGO
@@ -220,6 +219,7 @@ class Ballot:
         """
         self.ballot = {}
         self.active_ggos = []
+        self.blank_ballot_subdir = ""
 
     def get(self, name):
         """A generic getter - will raise a NameError if name is invalid"""
@@ -328,22 +328,37 @@ class Ballot:
             if 'contests' in cfg:
                 self.ballot[node] = cfg['contests']
 
-    def export(self, file, syntax):
+        # To determine the location of the blank ballot, the real
+        # solution is probably something like determining the
+        # addresses for each unique blank ballot and generate a unique
+        # filename or directory based on that and put them in the
+        # 'proper' leaf node off 'the_address_node'.  However, there
+        # no budget for that now and it would probably be better to
+        # see what real life constraints and requirements exist.  So
+        # punt that for now - just place this ballot in the porper
+        # leaf node (assuming overlapping boundaries).
+        self.blank_ballot_subdir = config.get_node(self.active_ggos[-1], 'subdir')
+
+    def export(self, file, language, config):
         """
         Will export a blank ballot to a file in some format.  If file
         is nil, will print to STDOUT.
         """
-        if syntax == 'json':
-            if file:
-                with open(file, 'w', encoding="utf8") as outfile:
-                    json.dump(Ballot.dict(self), outfile)
-            else:
-                pprint.pprint(self.ballot)
-        elif syntax == 'pdf':
+        if not file:
+            file = os.path.join(config.get('git_rootdir'),
+                                self.blank_ballot_subdir,
+                                Globals.get('BLANK_BALLOT_SUBDIR'),
+                                language)
+            os.makedirs(file, exist_ok=True)
+            file = os.path.join(file, Globals.get('BALLOT_FILE'))
+        if language == 'json':
+            with open(file, 'w', encoding="utf8") as outfile:
+                outfile.write(pprint.pformat(self.ballot))
+        elif language == 'pdf':
             # See https://github.com/rst2pdf/rst2pdf
             raise NotImplementedError(("Apologies but printing the pdf of a ballot "
                                            "is not implemented yet"))
         else:
-            raise NotImplementedError(f"Unsupported Ballot export type ({syntax})")
+            raise NotImplementedError(f"Unsupported Ballot export type ({language})")
 
 # EOF

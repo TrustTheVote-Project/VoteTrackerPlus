@@ -135,7 +135,7 @@ def main():
         info(pprint.pformat(the_ballot.get('ballot')))
     else:
 #        import pdb; pdb.set_trace()
-        the_ballot.export(args.file, args.language)
+        the_ballot.export(args.file, args.language, the_election_config)
 
 
 if __name__ == '__main__':
