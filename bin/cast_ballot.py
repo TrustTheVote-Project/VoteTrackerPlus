@@ -26,37 +26,15 @@ See ../docs/tech/executable-overview.md for the context in which this file was c
 """
 
 # pylint: disable=C0413   # import statements not top of file
-import json
+import re
 import sys
 import argparse
 import logging
 
-# Local import
-from common import Globals
-
-# Functions
-# ZZZ this probably wants to shift to a class at some point
-def slurp_a_ballot(ballot_file):
-    """Will return the dictionary of a json ballot file"""
-
-    # OS and json syntax errors are just raised at this point
-    # ZZZ - need an gestalt error handling plan at some point
-    with open(ballot_file, 'r', encoding="utf8") as file:
-        json_doc = json.load(file)
-    return json_doc
-
-def create_a_mock_ballot(ballot):
-    """Will create a (mock) ballot.json file."""
-
-    json_file = Globals.get('BALLOT_FILE')
-    # OS and json syntax errors are just raised at this point
-    # ZZZ - need an gestalt error handling plan at some point
-    if args.printonly:
-        print(f"{json.dumps(ballot)}")
-        return
-    with open(json_file, 'w', encoding="utf8") as outfile:
-        json.dump(ballot, outfile)
-    return
+# Local imports
+from address import Address
+from ballot import Ballot
+from election_config import ElectionConfig
 
 ################
 # arg parsing
@@ -96,16 +74,38 @@ def main():
     model has been chosen.
     """
 
-    # create a dictionary of the ballot of interest
-    a_ballot = slurp_a_ballot(Globals.get('BLANK_BALLOT_FILE'))
+    # Create an VTP election config object
+    the_election_config = ElectionConfig()
+    the_election_config.parse_configs()
+
+    # process the provided address
+    my_args = dict(vars(args))
+    for key in ['verbosity', 'printonly']:
+        del my_args[key]
+    # if address was supplied, get rid of that too
+    if my_args['address']:
+        my_args['number'], my_args['street'] = re.split(r'\s+', my_args['address'], 1)
+    del my_args['address']
+    the_address = Address(**my_args)
+    the_address.map_ggos(the_election_config)
+
+    # get the ballot for the specified address
+    a_ballot = Ballot()
+    a_ballot.read_a_ballot(the_address, the_election_config)
 
     # loop over contests
     for contest in a_ballot.contests:
+        # get the possible choices
+        choices = a_ballot.get_contest_choices(contest)
         # choose something
-        a_ballot.vote_a_contest(contest, choose=1)
+        a_ballot.vote_a_contest(contest, random_choice(choices))
 
     # write it out
-    create_a_mock_ballot(a_ballot)
+    # pylint: disable=W0104  # ZZZ
+    if args.printonly:
+        a_ballot.pprint
+    else:
+        a_ballot.write_a_cast_ballot(the_election_config)
 
 if __name__ == '__main__':
     args = parse_arguments()

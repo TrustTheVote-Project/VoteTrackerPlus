@@ -35,7 +35,8 @@ import re
 import pprint
 
 # Local imports
-from common import Address, Ballot
+from address import Address
+from ballot import Ballot
 from election_config import ElectionConfig
 
 
@@ -72,7 +73,7 @@ def parse_arguments():
                             help="the zipcode field of an address")
     parser.add_argument('-f', "--file",
                             help="override the default blank ballot location")
-    parser.add_argument('-l', "--language", default='json',
+    parser.add_argument('-l', "--language", default='en',
                             help="will print the ballot in the specified language")
     parser.add_argument("-v", "--verbosity", type=int, default=3,
                             help="0 critical, 1 error, 2 warning, 3 info, 4 debug (def=3)")
@@ -136,7 +137,7 @@ def main():
         info(pprint.pformat(the_ballot.get('ballot')))
     else:
 #        import pdb; pdb.set_trace()
-        ballot_file = the_ballot.export(args.file, args.language, the_election_config)
+        ballot_file = the_ballot.write_blank_ballot(the_election_config, args.file)
         info(f"Blank ballot file: {ballot_file}")
 
 if __name__ == '__main__':
