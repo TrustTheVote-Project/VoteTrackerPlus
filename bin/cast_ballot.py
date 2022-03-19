@@ -66,7 +66,7 @@ def parse_arguments():
     """
 
     parser = argparse.ArgumentParser(description=\
-    """ accept_ballot.py will run the git based workflow on a VTP
+    """accept_ballot.py will run the git based workflow on a VTP
     scanner node to accept the json rendering of the cast vote record
     of a voter's ballot. The json file is read, the contests are
     extraced and submitted to separate git branches, one per contest,

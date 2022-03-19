@@ -40,8 +40,15 @@ class Globals:
         'ADDRESS_MAP_FILE': 'address_map.yaml',
         # The location of the contest cvr file
         'CONTEST_FILE': os.path.join('CVRs', 'contest.json'),
-        # The required address fields for an address. There are two
-        # types - GGO and non GGO.
+        # The required address fields for an address. To get around
+        # the difficulty of creating a completely generic
+        # address-to-ballot function at this time, these fields are
+        # broken into two types.  The first ordered set goes from the
+        # root ElectionData node to the lowest leaf level node where
+        # the GGO boundaries are required to coherent (perfectly the
+        # same).  The second set optionally continues until there are
+        # no more leaf nodes.  This is arbitrary but the current
+        # address-to-ballot implemention below is based on this.  ZZZ
         'REQUIRED_GGO_ADDRESS_FIELDS': ['state', 'town'],
         'REQUIRED_NG_ADDRESS_FIELDS': ['street', 'number'],
         # Root Election Data subdir
@@ -105,6 +112,11 @@ class Address:
     # Legitimate keys in the correct order
     _keys = ['number', 'street', 'substreet', 'town', 'state',
                  'country', 'zipcode']
+    # Map the ElectionConfig 'kind' to the Address 'kind'
+    _kinds_map = {'state':'states', 'town':'towns', 'county':'counties',
+                      'SchoolDistrict':'SchoolDistricts',
+                      'CouncilDistrict':'CouncilDistricts',
+                      'Precinct':'Precincts'}
 
     def __init__(self, **kwargs):
         """At the moment support only support a csv keyword and a
@@ -124,6 +136,13 @@ class Address:
         self.address['state'] = ""
         self.address['country'] = ""
         self.address['zipcode'] = ""
+        # the ordered list of active GGOs for this address
+        self.active_ggos = []
+        # the location of the address's blank ballot and CVRs folder.
+        # Note - this currently is the last active_ggos entry but that
+        # is due to the implemention, which probably needs to change
+        # at some point.
+        self.ballot_node = ""
 
         if kwargs['csv']:
             address_fields = [x.strip() for x in re.split(r'\s*,\s*', kwargs['csv'])]
@@ -154,6 +173,67 @@ class Address:
                                  "The following fields are undefined: "
                                  f"{missing_keys}"))
 
+    def map_ggos(self, config):
+        """Will map an address onto the ElectionConfig data
+        """
+        footsteps = set()
+        def find_ancestors(node_of_interest):
+            """Will find all the ancestor of this node"""
+            for parent in config.ancestors(node_of_interest):
+                if parent in footsteps:
+                    continue
+                if parent not in self.active_ggos:
+                    # Note - for indirect GGOs where the boundery does
+                    # not match the boundary(s) of the leaf node of the
+                    # REQUIRED_GGO_ADDRESS_FIELDS chain (default is
+                    # towns), there needs to be an address test here to
+                    # test against the address (that defines the non
+                    # matching boundary).
+                    self.active_ggos.append(parent)
+                footsteps.add(parent)
+                find_ancestors(parent)
+
+        def find_descendants(node_of_interest):
+            """Will find all descendantss of this node"""
+            for child in config.descendants(node_of_interest):
+                if child in footsteps:
+                    continue
+                if child not in self.active_ggos:
+                    # Need to test agains the address_map field
+                    if ('address_map' in config.node(child) and
+                        'addresses' in config.node(child)['address_map']):
+                        # loop over each address and see if there is match.
+                        for addr in config.node(child)['address_map']['addresses']:
+                            if self.match(addr):
+                                self.active_ggos.append(child)
+                                break
+                footsteps.add(child)
+                find_descendants(child)
+
+        # Note - the root GGO always contributes
+        self.active_ggos.append('root')
+        # Walk the address in DAG order from root to a leaf.
+        for field in Globals.get('REQUIRED_GGO_ADDRESS_FIELDS'):
+            # For this field in the address, get the correct ggo kind and instance
+            node = Address._kinds_map[field] + '/' + self.get(field)
+            # Better to sanity check now later
+            if not config.is_node(node):
+                raise ValueError(f"Bad ElectionConfig node name ({node})")
+            self.active_ggos.append(node)
+
+        # Note that the first node in active_ggos is the root and the
+        # last is the leaf most implicit node. However, there can be
+        # descendant nodes (within this leaf node). For simplicity and
+        # without knowing more at this time, only support ancestors
+        # from this node and not from descendants of this node.
+        the_address_node = self.active_ggos[-1]
+#        import pdb; pdb.set_trace()
+        find_ancestors(the_address_node)
+        # Now find any descendantss
+        find_descendants(the_address_node)
+        # set the ballot node
+        self.ballot_node = config.get_node(self.active_ggos[-1], 'subdir')
+
     def __iter__(self):
         """Return an iterator for the address attribute"""
         return iter(self.address)
@@ -174,6 +254,10 @@ class Address:
             # return the number and street - ZZZ ignore substreet for now
             nice_string = self.address['number'] + ' ' + self.address['street']
             return nice_string.strip()
+        if name == 'active_ggos':
+            return self.active_ggos
+        if name == 'ballot_node':
+            return self.ballot_node
         raise NameError(f"Name {name} not accepted/defined for set()")
 
     def set(self, name, value):
@@ -206,12 +290,6 @@ class Ballot:
     as defined by the aggregated data in the config and address_map
     files.
     """
-
-    # Map the ElectionConfig 'kind' to the Address 'kind'
-    _kinds_map = {'state':'states', 'town':'towns', 'county':'counties',
-                      'SchoolDistrict':'SchoolDistricts',
-                      'CouncilDistrict':'CouncilDistricts',
-                      'Precinct':'Precincts'}
 
     def __init__(self):
         """Constructor - just creates the dictionary and returns the
@@ -265,65 +343,8 @@ class Ballot:
         active GGOs is dependent on the defined fields.
         """
 
-        footsteps = set()
-        def find_ancestors(node_of_interest):
-            """Will find all the ancestor of this node"""
-            for parent in config.ancestors(node_of_interest):
-                if parent in footsteps:
-                    continue
-                if parent not in self.active_ggos:
-                    # Note - for indirect GGOs where the boundery does
-                    # not match the boundary(s) of the leaf node of the
-                    # REQUIRED_GGO_ADDRESS_FIELDS chain (default is
-                    # towns), there needs to be an address test here to
-                    # test against the address (that defines the non
-                    # matching boundary).
-                    self.active_ggos.append(parent)
-                footsteps.add(parent)
-                find_ancestors(parent)
-
-        def find_descendants(node_of_interest):
-            """Will find all descendantss of this node"""
-            for child in config.descendants(node_of_interest):
-                if child in footsteps:
-                    continue
-                if child not in self.active_ggos:
-                    # Need to test agains the address_map field
-                    if ('address_map' in config.node(child) and
-                        'addresses' in config.node(child)['address_map']):
-                        # loop over each address and see if there is match.
-                        for addr in config.node(child)['address_map']['addresses']:
-                            if address.match(addr):
-                                self.active_ggos.append(child)
-                                break
-                footsteps.add(child)
-                find_descendants(child)
-
-        # Note - the root GGO always contributes
-        self.active_ggos.append('root')
-        # Walk the address in DAG order from root to a leaf.
-        for field in Globals.get('REQUIRED_GGO_ADDRESS_FIELDS'):
-            # For this field in the address, get the correct ggo kind and instance
-            node = Ballot._kinds_map[field] + '/' + address.get(field)
-            # Better to sanity check now later
-            if not config.is_node(node):
-                raise ValueError(f"Bad ElectionConfig node name ({node})")
-            self.active_ggos.append(node)
-
-        # Note that the first node in active_ggos is the root and the
-        # last is the leaf most implicit node. However, there can be
-        # descendant nodes (within this leaf node). For simplicity and
-        # without knowing more at this time, only support ancestors
-        # from this node and not from descendants of this node.
-        the_address_node = self.active_ggos[-1]
-#        import pdb; pdb.set_trace()
-        find_ancestors(the_address_node)
-
-        # Now find any descendantss
-        find_descendants(the_address_node)
-
         # With the list of active GGOs, add in the contests for each one
-        for node in self.active_ggos:
+        for node in address.get('active_ggos'):
             cfg = config.get_node(node, 'config')
             if 'contests' in cfg:
                 self.ballot[node] = cfg['contests']
@@ -337,22 +358,22 @@ class Ballot:
         # see what real life constraints and requirements exist.  So
         # punt that for now - just place this ballot in the porper
         # leaf node (assuming overlapping boundaries).
-        self.blank_ballot_subdir = config.get_node(self.active_ggos[-1], 'subdir')
+        self.blank_ballot_subdir = address.get('ballot_node')
 
-    def export(self, file, language, config):
+    def export(self, ballot_file, language, config):
         """
         Will export a blank ballot to a file in some format.  If file
         is nil, will print to STDOUT.
         """
-        if not file:
-            file = os.path.join(config.get('git_rootdir'),
-                                self.blank_ballot_subdir,
-                                Globals.get('BLANK_BALLOT_SUBDIR'),
-                                language)
-            os.makedirs(file, exist_ok=True)
-            file = os.path.join(file, Globals.get('BALLOT_FILE'))
+        if not ballot_file:
+            ballot_file = os.path.join(config.get('git_rootdir'),
+                                    self.blank_ballot_subdir,
+                                    Globals.get('BLANK_BALLOT_SUBDIR'),
+                                    language)
+            os.makedirs(ballot_file, exist_ok=True)
+            ballot_file = os.path.join(ballot_file, Globals.get('BALLOT_FILE'))
         if language == 'json':
-            with open(file, 'w', encoding="utf8") as outfile:
+            with open(ballot_file, 'w', encoding="utf8") as outfile:
                 outfile.write(pprint.pformat(self.ballot))
         elif language == 'pdf':
             # See https://github.com/rst2pdf/rst2pdf
@@ -360,5 +381,6 @@ class Ballot:
                                            "is not implemented yet"))
         else:
             raise NotImplementedError(f"Unsupported Ballot export type ({language})")
+        return ballot_file
 
 # EOF

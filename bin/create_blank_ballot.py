@@ -116,6 +116,7 @@ def main():
         my_args['number'], my_args['street'] = re.split(r'\s+', my_args['address'], 1)
     del my_args['address']
     the_address = Address(**my_args)
+    the_address.map_ggos(the_election_config)
 
     # print some debugging info
     debug(f"The election config is: {the_election_config}")
@@ -135,8 +136,8 @@ def main():
         info(pprint.pformat(the_ballot.get('ballot')))
     else:
 #        import pdb; pdb.set_trace()
-        the_ballot.export(args.file, args.language, the_election_config)
-
+        ballot_file = the_ballot.export(args.file, args.language, the_election_config)
+        info(f"Blank ballot file: {ballot_file}")
 
 if __name__ == '__main__':
     args = parse_arguments()
