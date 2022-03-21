@@ -31,7 +31,6 @@ import sys
 import argparse
 import logging
 from logging import info, debug
-import re
 import pprint
 
 # Local imports
@@ -114,7 +113,8 @@ def main():
         del my_args[key]
     # if address was supplied, get rid of that too
     if my_args['address']:
-        my_args['number'], my_args['street'] = re.split(r'\s+', my_args['address'], 1)
+        my_args['number'], my_args['street'] = \
+        Address.convert_address_to_num_street(my_args['address'])
     del my_args['address']
     the_address = Address(**my_args)
     the_address.map_ggos(the_election_config)

@@ -26,10 +26,10 @@ See ../docs/tech/executable-overview.md for the context in which this file was c
 """
 
 # pylint: disable=C0413   # import statements not top of file
-import re
 import sys
 import argparse
 import logging
+import random
 
 # Local imports
 from address import Address
@@ -84,7 +84,8 @@ def main():
         del my_args[key]
     # if address was supplied, get rid of that too
     if my_args['address']:
-        my_args['number'], my_args['street'] = re.split(r'\s+', my_args['address'], 1)
+        my_args['number'], my_args['street'] = \
+        Address.convert_address_to_num_street(my_args['address'])
     del my_args['address']
     the_address = Address(**my_args)
     the_address.map_ggos(the_election_config)
@@ -94,13 +95,24 @@ def main():
     a_ballot.read_a_ballot(the_address, the_election_config)
 
     # loop over contests
-    for contest in a_ballot.contests:
+    for contest in a_ballot:
         # get the possible choices
-        choices = a_ballot.get_contest_choices(contest)
-        # choose something
-        a_ballot.vote_a_contest(contest, random_choice(choices))
+        choices = contest.get('choices')
+        tally = contest.get('tally')
+        # choose something randomly
+        picks = list(range(len(choices)))
+        random.shuffle(picks)
+        if 'plurality' == tally:
+            loop = contest.get('max')
+        elif 'rcv' == tally:
+            loop = len(choices)
+        else:
+            raise KeyError(f"Unspoorted tally ({tally})")
+        while loop > 0:
+            contest.select(picks.pop(0))
+            loop -= 1
 
-    # write it out
+    # write the voted ballot out
     # pylint: disable=W0104  # ZZZ
     if args.printonly:
         a_ballot.pprint

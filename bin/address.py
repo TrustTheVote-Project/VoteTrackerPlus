@@ -32,6 +32,11 @@ class Address:
     And all fields are strings, not numbers.
     """
 
+    @staticmethod
+    def convert_address_to_num_street(address):
+        """Convert a street address string to number and street"""
+        return re.split(r'\s+', address, 1)
+
     # Legitimate keys in the correct order
     _keys = ['number', 'street', 'substreet', 'town', 'state',
                  'country', 'zipcode']
