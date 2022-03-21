@@ -289,7 +289,7 @@ class ElectionConfig:
                             # Do not hit a node twice - it is a config error if so
                             next_subdir = os.path.join(subdir, ggo_kind, ggo)
                             if next_subdir in self.parsed_configs:
-                                raise LookupError(("Atttempting to load the config file located at "
+                                raise LookupError(("Attempting to load the config file located at "
                                                        f"({next_subdir}) a second time"))
                             self.parsed_configs.append(next_subdir)
 
@@ -300,7 +300,7 @@ class ElectionConfig:
                             # Now add this ggo_kind and ggo to the DAG.  Always use '/'
                             this_dag_node = ggo_kind + '/' + ggo
                             if this_dag_node in self.digraph.nodes:
-                                raise LookupError(("Atttempting to re-add the same node "
+                                raise LookupError(("Attempting to re-add the same node "
                                                        f"into the DAG ({this_dag_node}) "
                                                        f"from file {next_subdir}"))
                             self.digraph.add_node(this_dag_node, kind=ggo_kind, config=this_config,

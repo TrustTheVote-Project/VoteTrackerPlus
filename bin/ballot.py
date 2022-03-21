@@ -15,14 +15,81 @@
 #   with this program; if not, write to the Free Software Foundation, Inc.,
 #   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
-"""A kitchen sync for VTP classes for the moment"""
+"""How to manage a VTP Ballot"""
 
 import os
 import json
-import pprint
 # Local imports
-from contest import Contest
 from common import Globals
+from contest import Contest
+
+class Contests:
+    """An iteratable object for the contests in a ballot"""
+
+    def __init__(self, a_ballot):
+        """
+        Need to cache enough data here so to be able to iterate AND
+        create valid Contest objects
+        """
+        self.ballot_ref = a_ballot
+        # Need the list of ggos supplying contests
+        self.ggos = [*a_ballot.get('contests')]
+        self.ggo_max = len(self.ggos)
+        self.ggo_index = 0
+        self.contest_index = 0
+        self.contest_max = len(a_ballot.get('contests')[self.ggos[0]])
+#        import pdb; pdb.set_trace()
+#        inner_blob = next(iter((a_ballot.get('contests')[self.ggos[0]][0].values())))
+#        self.contest_max = len(inner_blob['max']) if 'max' in inner_blob else 1
+
+    def __iter__(self):
+        """boilerplate"""
+        return self
+
+    def __next__(self):
+        """
+        Because of the blobiness nature of the data model of a contest
+        within a ballot dictionary, this is ugly.  Need to iterate over
+        the correct ordered set of ggos (self.ggos) and within each of
+        those iterations, iterate over the contests which is a list of
+        single entry dictionaries.
+
+        Note - the code below post increments which is not the common
+        pattern ?
+        """
+        if self.ggo_max == 0:
+            # just in case
+            raise StopIteration
+        # cache this ggo
+        ggo = self.ggos[self.ggo_index]
+        # if there is a contest here, return it
+        if self.contest_index < self.contest_max:
+#            contest_content = \
+#              next(iter((self.ballot_ref.get('contests')[ggo][self.contest_index].values())))
+            # return the next contest in this ggo group
+            this_contest = Contest(self.ballot_ref.get('contests')[ggo][self.contest_index],
+                                       ggo, self.contest_index)
+            self.contest_index += 1
+            return this_contest
+
+        # If here, bump the ggo_index and reset the contest index and max and try again
+        self.ggo_index += 1
+        self.contest_index = 0
+
+        # Now test to see if there is a next ggo group and if so, return
+        # its first contest
+        if self.ggo_index < self.ggo_max:
+            ggo = self.ggos[self.ggo_index]
+            self.contest_max = len(self.ballot_ref.get('contests')[ggo])
+#            inner_blob = next(iter((a_ballot.get('contests')[ggo][0].values())))
+#            self.contest_max = len(inner_blob['max']) if 'max' in inner_blob else 1
+            if self.contest_index < self.contest_max:
+                this_contest = \
+                  Contest(self.ballot_ref.get('contests')[ggo][self.contest_index], ggo, 0)
+                self.contest_index += 1
+                return this_contest
+        # done
+        raise StopIteration
 
 class Ballot:
     """A class to hold a ballot.  A ballot is always a function of an
@@ -39,17 +106,6 @@ class Ballot:
         self.active_ggos = []
         self.ballot_subdir = ""
 
-    def __iter__(self):
-        """boilerplate"""
-        return self
-
-    def __next__(self):
-        """boilerplate"""
-        for ggo in self.active_ggos:
-            if ggo in self.contests:
-                for contest in self.contests[ggo]:
-                    yield Contest(self.contests[ggo][contest], ggo)
-
     def get(self, name):
         """A generic getter - will raise a NameError if name is invalid"""
         if name == 'ggos':
@@ -59,14 +115,44 @@ class Ballot:
         raise NameError(f"Name {name} not accepted/defined for set()")
 
     def dict(self):
-        """Return a dictionary of the ballot"""
-        return dict(self.contests)
+        """Return a dictionary of the ballot by making a copy"""
+        return dict({'contests': self.contests,
+                    'active_ggos': self.active_ggos,
+                    'ballot_subdir': self.ballot_subdir})
 
-    def pprint(self):
-        """Will pretty print to STDOUT a ballot in JSON"""
-        pprint.pprint({'contests': self.contests,
-                           'active_ggos': self.active_ggos,
-                           'ballot_subdir': self.ballot_subdir})
+    def __str__(self):
+        """Boilerplate"""
+        ballot = {'contests': self.contests,
+                      'active_ggos': self.active_ggos,
+                      'ballot_subdir': self.ballot_subdir}
+        return json.dumps(ballot, sort_keys=True, indent=4, ensure_ascii=False)
+
+    def add_selection(self, contest, selection_offset):
+        """
+        Will add the specified contest choice (offset into the ordered
+        candidates/question array) to the specified contest.  This is an
+        'add' since in plurality one may be voting for more than one
+        candidate, or in RCV one needs to rank the choices.  In both the
+        order is the rank but in plurality rank does not matter.
+        """
+        # Some minimal sanity checking
+        if selection_offset > len(contest.get('choices')):
+            raise ValueError(f"The choice offset ({selection_offset}) is greater "
+                             f"than the number of choices ({len(contest.get('choices'))})")
+        if selection_offset < 0:
+            raise ValueError(f"Only positive offsets are supported ({selection_offset})")
+        contest_index = contest.get('index')
+        contest_ggo = contest.get('ggo')
+        contest_name = contest.get('name')
+        if 'selection' not in self.contests[contest_ggo][contest_index][contest_name].keys():
+            self.contests[contest_ggo][contest_index][contest_name]['selection'] = []
+        # pylint: disable=C0301
+        elif selection_offset in self.contests[contest_ggo][contest_index][contest_name]['selection']:
+            raise ValueError((f"The selection ({selection_offset}) has already been "
+                                  f"selected for contest ({contest_name}) "
+                                  f"for GGO ({contest_ggo})"))
+        # pylint: disable=C0301
+        self.contests[contest_ggo][contest_index][contest_name]['selection'].append(selection_offset)
 
     def create_blank_ballot(self, address, config):
         """Given an Address and a ElectionConfig, will generate the
@@ -135,7 +221,7 @@ class Ballot:
                              'active_ggos': self.active_ggos,
                              'ballot_subdir': self.ballot_subdir}
             with open(ballot_file, 'w', encoding="utf8") as outfile:
-                outfile.write(pprint.pformat(the_aggregate))
+                json.dump(the_aggregate, outfile, sort_keys=True, indent=4, ensure_ascii=False)
         elif style == 'pdf':
             # See https://github.com/rst2pdf/rst2pdf
             raise NotImplementedError(("Apologies but printing the pdf of a ballot "
@@ -155,7 +241,7 @@ class Ballot:
         if style == 'json':
             with open(ballot_file, 'r', encoding="utf8") as file:
                 json_doc = json.load(file)
-                self.contests = json_doc['contest']
+                self.contests = json_doc['contests']
                 self.active_ggos = json_doc['active_ggos']
                 self.ballot_subdir = json_doc['ballot_subdir']
         else:
@@ -176,7 +262,7 @@ class Ballot:
                          'active_ggos': self.active_ggos,
                          'ballot_subdir': self.ballot_subdir}
         with open(ballot_file, 'w', encoding="utf8") as outfile:
-            outfile.write(pprint.pformat(the_aggregate))
+            json.dump(the_aggregate, outfile, sort_keys=True, indent=4, ensure_ascii=False)
         return ballot_file
 
 # EOF

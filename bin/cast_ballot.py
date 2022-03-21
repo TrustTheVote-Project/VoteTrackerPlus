@@ -29,11 +29,13 @@ See ../docs/tech/executable-overview.md for the context in which this file was c
 import sys
 import argparse
 import logging
+from logging import debug
 import random
+import pprint
 
 # Local imports
 from address import Address
-from ballot import Ballot
+from ballot import Ballot, Contests
 from election_config import ElectionConfig
 
 ################
@@ -106,16 +108,20 @@ def main():
 
     # get the ballot for the specified address
     a_ballot = Ballot()
-    import pdb; pdb.set_trace()
     a_ballot.read_a_ballot(the_address, the_election_config)
 
     # loop over contests
-    for contest in a_ballot:
+    contests = Contests(a_ballot)
+    for contest in contests:
         # get the possible choices
         choices = contest.get('choices')
         tally = contest.get('tally')
         # choose something randomly
         picks = list(range(len(choices)))
+        # For plurality and max=1, the first choice is the only
+        # choice.  For plurality and max>1, the order does not matter
+        # - a selection is a selection.  For RCV, the order does
+        # matter as that is the ranking.
         random.shuffle(picks)
         if 'plurality' == tally:
             loop = contest.get('max')
@@ -124,13 +130,14 @@ def main():
         else:
             raise KeyError(f"Unspoorted tally ({tally})")
         while loop > 0:
-            contest.select(picks.pop(0))
+            a_ballot.add_selection(contest, picks.pop(0))
             loop -= 1
+    debug("And the ballot looks like:\n" + pprint.pformat(a_ballot.dict()))
 
     # write the voted ballot out
     # pylint: disable=W0104  # ZZZ
     if args.printonly:
-        a_ballot.pprint
+        pprint.pprint(a_ballot.dict)
     else:
         a_ballot.write_a_cast_ballot(the_election_config)
 
