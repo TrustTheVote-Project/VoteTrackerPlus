@@ -53,6 +53,8 @@ def parse_arguments():
     ZZZ - in the future some other argument can be supported to print
     for example all possible unique blank ballots found in the current
     VTP election tree, whatever.
+
+    The switches are basically the same as cast_ballot.py
     """)
 
 #    _keys = ['number', 'street', 'substreet', 'town', 'state', 'country', 'zipcode']

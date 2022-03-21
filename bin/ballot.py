@@ -21,51 +21,8 @@ import os
 import json
 import pprint
 # Local imports
+from contest import Contest
 from common import Globals
-
-class Contest:
-    """A wrapper around the rules of engagement regarding a specific contest"""
-
-    # Legitimate Contest keys
-    _keys = ['candidates', 'question', 'tally', 'win-by', 'max',
-                 'selection']
-
-    def __init__(self, a_contest_blob, ggo):
-        """Boilerplate"""
-        self.name = next(iter(a_contest_blob))
-        self.contest = a_contest_blob[self.name]
-        self.ggo = ggo
-        self.selection = []
-        # set defaults
-        if 'max' not in self.contest:
-            self.contest['max'] = 1
-        # Some constructor time sanity checks
-        if self.contest['max'] < 1:
-            raise ValueError(f"Illegal value for max ({self.contest['max']}) "
-                                 "- must be greater than 0")
-        for name in self.contest:
-            if name not in Contest._keys:
-                raise NameError(f"Name {name} not accepted/defined for Address.set()")
-
-    def get(self, name):
-        """Generic getter - can raise KeyError"""
-        if name == 'choices':
-            if 'candidates' in self.contest:
-                return self.contest['candidates'].keys()
-            if 'question' in self.contest:
-                return self.contest['question'].keys()
-        return self.contest[name]
-
-    def select(self, offset):
-        """Will select (add) a contest choice"""
-        if offset > len(self.contest):
-            raise ValueError(f"The choice offset ({offset}) is greater "
-                             f"than the number of choices ({len(self.contest)})")
-        if offset in self.selection:
-            raise ValueError(f"The selction ({offset}) is beeing selected again")
-        if offset < 0:
-            raise ValueError(f"Only positive offsets are supported ({offset})")
-        self.selection.append(offset)
 
 class Ballot:
     """A class to hold a ballot.  A ballot is always a function of an
@@ -191,7 +148,7 @@ class Ballot:
         """Will return the dictionary of a json ballot file"""
         if not ballot_file:
             ballot_file = os.path.join(config.get('git_rootdir'),
-                                    address.get('ballot_node'),
+                                    address.get('ballot_subdir'),
                                     Globals.get('BLANK_BALLOT_SUBDIR'),
                                     style,
                                     Globals.get('BALLOT_FILE'))

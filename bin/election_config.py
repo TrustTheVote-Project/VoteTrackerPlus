@@ -24,6 +24,7 @@ import yaml
 import networkx
 
 # local imports
+from contest import Contest
 from common import Globals, Shellout
 
 class ElectionConfig:
@@ -236,13 +237,16 @@ class ElectionConfig:
         """
 
         # read the root config and address_map files
-
         with open(self.root_config_file, 'r', encoding="utf8") as file:
             config = yaml.load(file, Loader=yaml.FullLoader)
         # sanity-check it
         bad_keys = [key for key in config if not key in ElectionConfig._root_config_keys]
         if bad_keys:
             raise KeyError(f"The following config keys are not supported: {bad_keys}")
+        # should really sanity check the contests too
+        if 'contests' in config:
+            for contest in config['contests']:
+                Contest.check_syntax(contest)
 
         # read the root address_map and sanity check that
         with open(self.root_address_map_file, 'r', encoding="utf8") as file:
@@ -270,12 +274,17 @@ class ElectionConfig:
                         # read the child config
                         with open(ggo_file, 'r', encoding="utf8") as file:
                             this_config = yaml.load(file, Loader=yaml.FullLoader)
+
                             # sanity-check it
                             bad_keys = [key for key in this_config
                                             if not key in ElectionConfig._root_config_keys]
                             if bad_keys:
                                 raise KeyError(("The following config keys are not supported: "
                                                     f"{bad_keys}"))
+                            # should really sanity check the contests too again
+                            if 'contests' in config:
+                                for contest in config['contests']:
+                                    Contest.check_syntax(contest)
 
                             # Do not hit a node twice - it is a config error if so
                             next_subdir = os.path.join(subdir, ggo_kind, ggo)

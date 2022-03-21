@@ -44,16 +44,29 @@ def parse_arguments():
     """
 
     parser = argparse.ArgumentParser(description=\
-    """accept_ballot.py will run the git based workflow on a VTP
-    scanner node to accept the json rendering of the cast vote record
-    of a voter's ballot. The json file is read, the contests are
-    extraced and submitted to separate git branches, one per contest,
-    and pushed back to the Voter Center's VTP remote.
+    """cast_ballot.py will read the blank ballot for a given address
+    and by default randomly make a selection for each
+    contest/question.  It will then cast the ballot in the
+    corresponding CVRs directory.
 
-    In addition a voter's ballot receipt and offset are optionally
-    printed.
+    The switches are basically the same as create_blank_ballot.py
     """)
 
+#    _keys = ['number', 'street', 'substreet', 'town', 'state', 'country', 'zipcode']
+    parser.add_argument('-c', "--csv",
+                            help="a comma separated address")
+    parser.add_argument('-a', "--address",
+                            help="the number and name of the street address (space separated)")
+    parser.add_argument('-r', "--street",
+                            help="the street/road field of an address")
+    parser.add_argument('-b', "--substreet",
+                            help="the substreet field of an address")
+    parser.add_argument('-t', "--town",
+                            help="the town field of an address")
+    parser.add_argument('-s', "--state",
+                            help="the state/province field of an address")
+    parser.add_argument('-z', "--zipcode",
+                            help="the zipcode field of an address")
     parser.add_argument("-v", "--verbosity", type=int, default=3,
                             help="0 critical, 1 error, 2 warning, 3 info, 4 debug (def=3)")
     parser.add_argument("-n", "--printonly", action="store_true",
@@ -62,7 +75,8 @@ def parse_arguments():
     parsed_args = parser.parse_args()
     verbose = {0: logging.CRITICAL, 1: logging.ERROR, 2: logging.WARNING,
                    3: logging.INFO, 4: logging.DEBUG}
-    logging.basicConfig(format="%(message)s", level=verbose[parsed_args.v], stream=sys.stdout)
+    logging.basicConfig(format='%(message)s',
+                            level=verbose[parsed_args.verbosity], stream=sys.stdout)
     return parsed_args
 
 ################
@@ -92,6 +106,7 @@ def main():
 
     # get the ballot for the specified address
     a_ballot = Ballot()
+    import pdb; pdb.set_trace()
     a_ballot.read_a_ballot(the_address, the_election_config)
 
     # loop over contests
