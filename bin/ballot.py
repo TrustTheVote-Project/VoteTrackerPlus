@@ -220,17 +220,44 @@ class Ballot:
         # cache the active ggos as well
         self.active_ggos = address.get('active_ggos')
 
+    def gen_unique_ballot_name(self, filename):
+        """
+        ZZZ - this will need to be re-written at some point - tries to
+        generate a unique ballot name per unique address across the set
+        of active GGOs
+        """
+        # Attempt to make the blank ballot unique across the set of active
+        # ggos
+        ggo_unique_name = []
+        extras = []
+        for ggo in self.active_ggos:
+            parts = ggo.split('/')
+            if ggo == '.':
+                continue
+            if len(parts) > 2 and parts[-2] in ['states', 'towns']:
+                ggo_unique_name.append(parts[-1])
+            elif len(parts) > 5 and parts[-5] == 'towns':
+                extras.append(parts[-1])
+            else:
+                extras.append(parts[-2] + '-' + parts[-1])
+            # for now, no error checking ...
+        ggo_unique_name = ggo_unique_name + sorted(extras)
+        ggo_unique_name.append(filename)
+        return ','.join(ggo_unique_name)
+
     def write_blank_ballot(self, config, ballot_file='', style='json'):
         """
-        Will write out a blank ballot to a file in some format.
+        will write out a blank ballot to a file in some format.
         """
         if not ballot_file:
             ballot_file = os.path.join(config.get('git_rootdir'),
+                                    Globals.get('ROOT_ELECTION_DATA_SUBDIR'),
                                     self.ballot_subdir,
                                     Globals.get('BLANK_BALLOT_SUBDIR'),
                                     style)
             os.makedirs(ballot_file, exist_ok=True)
-            ballot_file = os.path.join(ballot_file, Globals.get('BALLOT_FILE'))
+            ballot_file = os.path.join(ballot_file,
+                                self.gen_unique_ballot_name(Globals.get('BALLOT_FILE')))
         if style == 'json':
             # When the style is json, print all three dictionaries as one
             the_aggregate = {'contests': self.contests,
@@ -250,11 +277,17 @@ class Ballot:
     def read_a_ballot(self, address, config, ballot_file="", style='json'):
         """Will return the dictionary of a json ballot file"""
         if not ballot_file:
+            # hackito ergo sum - since the ballot has not yet been read,
+            # the ballot does not yet know the active GGOs.  But the
+            # address does...  It will be re-written later anyway with
+            # the same value ...
+            self.active_ggos = address.get('active_ggos')
             ballot_file = os.path.join(config.get('git_rootdir'),
+                                    Globals.get('ROOT_ELECTION_DATA_SUBDIR'),
                                     address.get('ballot_subdir'),
                                     Globals.get('BLANK_BALLOT_SUBDIR'),
                                     style,
-                                    Globals.get('BALLOT_FILE'))
+                                    self.gen_unique_ballot_name(Globals.get('BALLOT_FILE')))
         if style == 'json':
             with open(ballot_file, 'r', encoding="utf8") as file:
                 json_doc = json.load(file)
@@ -271,10 +304,12 @@ class Ballot:
         """
         if not ballot_file:
             ballot_file = os.path.join(config.get('git_rootdir'),
+                                    Globals.get('ROOT_ELECTION_DATA_SUBDIR'),
                                     self.ballot_subdir,
                                     Globals.get('CONTEST_FILE_SUBDIR'))
             os.makedirs(ballot_file, exist_ok=True)
-            ballot_file = os.path.join(ballot_file, Globals.get('CONTEST_FILE'))
+            ballot_file = os.path.join(ballot_file,
+                                self.gen_unique_ballot_name(Globals.get('CONTEST_FILE')))
         # might was well write out everything, yes?
         the_aggregate = {'contests': self.contests,
                          'active_ggos': self.active_ggos,
