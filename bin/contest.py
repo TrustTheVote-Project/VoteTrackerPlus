@@ -24,7 +24,7 @@ class Contest:
 
     # Legitimate Contest keys.  Note 'selection' is not a legitimate
     # key for blank ballots
-    _keys = ['candidates', 'question', 'tally', 'win-by', 'max',
+    _keys = ['candidates', 'question', 'tally', 'win-by', 'max', 'write-in',
                  'selection']
 
     @staticmethod

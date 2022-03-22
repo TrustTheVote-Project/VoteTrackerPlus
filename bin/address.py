@@ -18,6 +18,7 @@
 """An Address class for VoteTracker+"""
 
 import re
+import posixpath
 from common import Globals
 
 class Address:
@@ -108,6 +109,7 @@ class Address:
         footsteps = set()
         def find_ancestors(node_of_interest):
             """Will find all the ancestor of this node"""
+#            import pdb; pdb.set_trace()
             for parent in config.ancestors(node_of_interest):
                 if parent in footsteps:
                     continue
@@ -140,15 +142,18 @@ class Address:
                 find_descendants(child)
 
         # Note - the root GGO always contributes
-        self.active_ggos.append('root')
+        self.active_ggos.append('.')
+        breadcrumbtrail = ''
         # Walk the address in DAG order from root to a leaf.
         for field in Globals.get('REQUIRED_GGO_ADDRESS_FIELDS'):
             # For this field in the address, get the correct ggo kind and instance
-            node = Address._kinds_map[field] + '/' + self.get(field)
+            node = posixpath.join(breadcrumbtrail, 'GGOs',
+                                      Address._kinds_map[field], self.get(field))
             # Better to sanity check now later
             if not config.is_node(node):
                 raise ValueError(f"Bad ElectionConfig node name ({node})")
             self.active_ggos.append(node)
+            breadcrumbtrail = node
 
         # Note that the first node in active_ggos is the root and the
         # last is the leaf most implicit node. However, there can be
@@ -156,13 +161,14 @@ class Address:
         # without knowing more at this time, only support ancestors
         # from this node and not from descendants of this node.
         the_address_node = self.active_ggos[-1]
+        # cache the ballot node and subdir - this could be bad TBD
+        self.ballot_node = the_address_node
+        # Note - the subdir should already have the correct os.path.sep
+        self.ballot_subdir = config.get_node(the_address_node, 'subdir')
 #        import pdb; pdb.set_trace()
         find_ancestors(the_address_node)
         # Now find any descendantss
         find_descendants(the_address_node)
-        # cache the ballot node and subdir - this could be bad TBD
-        self.ballot_node = self.active_ggos[-1]
-        self.ballot_subdir = config.get_node(self.ballot_node, 'subdir')
 
     def __iter__(self):
         """Return an iterator for the address attribute"""

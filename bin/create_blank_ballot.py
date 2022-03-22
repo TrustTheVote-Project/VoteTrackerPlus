@@ -124,7 +124,7 @@ def main():
     # print some debugging info
     debug(f"The election config ggos are: {the_election_config}")
     debug("And the address is: " + str(the_address))
-    node = 'towns/Oakland'
+    node = 'GGOs/states/California/GGOs/towns/Oakland'
     debug(f"And a/the node ({node}) looks like:\n" +
         pprint.pformat(the_election_config.get_node(node, 'ALL')))
     debug("And the edges are: " +
@@ -134,12 +134,13 @@ def main():
     the_ballot = Ballot()
     the_ballot.create_blank_ballot(the_address, the_election_config)
 #    import pdb; pdb.set_trace()
+    info(f"Active GGOs: {the_ballot.get('active_ggos')}")
     debug("And the blank ballot looks like:\n" + pprint.pformat(the_ballot.dict()))
 
     # Write it out
     if not args.printonly:
         ballot_file = the_ballot.write_blank_ballot(the_election_config, args.file)
-    info(f"Blank ballot file: {ballot_file}")
+        info(f"Blank ballot file: {ballot_file}")
 
 if __name__ == '__main__':
     args = parse_arguments()

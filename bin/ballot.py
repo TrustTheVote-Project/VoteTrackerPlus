@@ -116,7 +116,7 @@ class Ballot:
 
     def get(self, name):
         """A generic getter - will raise a NameError if name is invalid"""
-        if name == 'ggos':
+        if name in ['ggos', 'active_ggos']:
             return self.active_ggos
         if name == 'contests':
             return self.contests

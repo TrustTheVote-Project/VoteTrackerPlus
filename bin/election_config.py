@@ -19,6 +19,7 @@
 
 # statndard imports
 import os
+import posixpath
 import re
 import yaml
 import networkx
@@ -207,21 +208,34 @@ class ElectionConfig:
                     if len(self.digraph.nodes[node]['address_map']['ggos'][kind]) > 0:
                         for kind_value in self.digraph.nodes[node]['address_map']['ggos'][kind]:
                             if kind_value == '.*':
-                                # includes all kind_instance of this.
+                                # Includes all kind_instance of this.
                                 # Assumes each value is a valid node
-                                # reference
+                                # reference - which as of 2022/03/22
+                                # is now the full posix relative
+                                # subdir path
                                 for other in self.digraph.nodes:
-                                    try:
-                                        if self.digraph.nodes[other]['kind'] == kind:
-                                            self.digraph.add_edge(node, other)
-                                    except KeyError:
-#                                        import pdb; pdb.set_trace()
-                                        print("hello")
-                            else:
-                                # assume this is a valid node name
+                                    if self.digraph.nodes[other]['kind'] == kind:
+                                        self.digraph.add_edge(node, other)
+                            elif '../' not in kind:
+                                # Assume this is a valid node name
                                 # when appended with kind instance
-                                # name
-                                self.digraph.add_edge(node, kind + '/' + kind_value)
+                                # name AND that it is relative to (the
+                                # current) node! Later other syntax's
+                                # can be be supported as desired
+                                self.digraph.add_edge(node, posixpath.normpath(
+                                    posixpath.join(node, '../..', kind, kind_value)))
+                                # Note - the '../..' wipes out the
+                                # current nodes kind and kind_value
+                            else:
+#                                import pdb; pdb.set_trace()
+                                # Need to handle relative GGO pathing
+                                parts = re.split('/', kind)
+                                # Each '../' is a GGO level, which is
+                                # 3 subdirectories.
+                                self.digraph.add_edge(node, posixpath.normpath(
+                                    posixpath.join(node,
+                                                '../' * ((len(parts) - 1) * 3),
+                                                'GGOs', parts[-1], kind_value)))
         # pylint: enable=R1702
 
     def parse_configs(self):
@@ -256,12 +270,12 @@ class ElectionConfig:
         if bad_keys:
             raise KeyError(f"The following address_map keys are not supported: {bad_keys}")
 
-        def recursively_parse_tree(subdir, parent_dag_name):
+        def recursively_parse_tree(subdir, parent_node_name):
             """Something to recursivelty parse the GGO tree"""
             # If there are GGOs, parse each one
-            if "GGOs" in self.digraph.nodes[parent_dag_name]['config']:
+            if "GGOs" in self.digraph.nodes[parent_node_name]['config']:
                 for ggo_kind, ggo_list in \
-                  self.digraph.nodes[parent_dag_name]['config']["GGOs"].items():
+                  self.digraph.nodes[parent_node_name]['config']["GGOs"].items():
                     ElectionConfig.is_valid_ggo_string(ggo_kind)
                     if not isinstance(ggo_list, list):
                         raise TypeError(f"The GGO kind value is not a list ({ggo_kind})")
@@ -298,7 +312,8 @@ class ElectionConfig:
                                 ggo_subdir_abspath, ggo, Globals.get("ADDRESS_MAP_FILE")))
 
                             # Now add this ggo_kind and ggo to the DAG.  Always use '/'
-                            this_dag_node = ggo_kind + '/' + ggo
+                            this_dag_node = posixpath.join(subdir.replace('\\','/'),
+                                                               ggo_kind, ggo)
                             if this_dag_node in self.digraph.nodes:
                                 raise LookupError(("Attempting to re-add the same node "
                                                        f"into the DAG ({this_dag_node}) "
@@ -307,7 +322,7 @@ class ElectionConfig:
                                 ggo_name=ggo,
                                 address_map=this_address_map,
                                 subdir=os.path.join(subdir, ggo_kind, ggo))
-                            self.digraph.add_edge(parent_dag_name, this_dag_node)
+                            self.digraph.add_edge(parent_node_name, this_dag_node)
 
                             # Recurse - depth first is ok
                             recursively_parse_tree(os.path.join(next_subdir, "GGOs"),
@@ -315,10 +330,10 @@ class ElectionConfig:
 
         # Now recursively walk the directory structure of config and
         # address_map files (depth first)
-        self.digraph.add_node('root', kind='root', config=config, address_map=address_map,
+        self.digraph.add_node('.', kind='root', config=config, address_map=address_map,
                                   ggo_name='root',
-                                  subdir="")
-        recursively_parse_tree ("GGOs", 'root')
+                                  subdir=".")
+        recursively_parse_tree ("GGOs", '.')
 
         # Now add in edges curtesy of any implicit address_map
         # references.  Note - all the nodes have been added at this
