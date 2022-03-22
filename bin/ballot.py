@@ -32,7 +32,7 @@ class Contests:
         create valid Contest objects
         """
         self.ballot_ref = a_ballot
-        # Need the list of ggos supplying contests
+        # Need the (ordered) list of ggos supplying contests
         self.ggos = [*a_ballot.get('contests')]
         self.ggo_max = len(self.ggos)
         self.ggo_index = 0
@@ -50,12 +50,12 @@ class Contests:
         """
         Because of the blobiness nature of the data model of a contest
         within a ballot dictionary, this is ugly.  Need to iterate over
-        the correct ordered set of ggos (self.ggos) and within each of
-        those iterations, iterate over the contests which is a list of
-        single entry dictionaries.
+        the correct ordered list of ggos (self.ggos) and within each of
+        those iterations, iterate over the contests which is an ordered
+        list of single entry dictionaries.
 
-        Note - the code below post increments which is not the common
-        pattern ?
+        Note - the code below post increments the index alues which is
+        not the common pattern ?
         """
         if self.ggo_max == 0:
             # just in case
@@ -72,7 +72,7 @@ class Contests:
             self.contest_index += 1
             return this_contest
 
-        # If here, bump the ggo_index and reset the contest index and max and try again
+        # If here, bump the ggo_index and reset the contest index and try again
         self.ggo_index += 1
         self.contest_index = 0
 
@@ -88,8 +88,15 @@ class Contests:
                   Contest(self.ballot_ref.get('contests')[ggo][self.contest_index], ggo, 0)
                 self.contest_index += 1
                 return this_contest
-        # done
+        # done - be kind and reset things
+        self.ggo_index = 0
+        self.contest_index = 0
+        self.contest_max = len(self.ballot_ref.get('contests')[self.ggos[0]])
         raise StopIteration
+
+    def len(self):
+        """Not my language, but still very cool"""
+        return sum(1 for _ in self)
 
 class Ballot:
     """A class to hold a ballot.  A ballot is always a function of an
@@ -105,6 +112,7 @@ class Ballot:
         self.contests = {}
         self.active_ggos = []
         self.ballot_subdir = ""
+        self.ballot_node = ""
 
     def get(self, name):
         """A generic getter - will raise a NameError if name is invalid"""
@@ -112,18 +120,24 @@ class Ballot:
             return self.active_ggos
         if name == 'contests':
             return self.contests
-        raise NameError(f"Name {name} not accepted/defined for set()")
+        if name == 'ballot_subdir':
+            return self.ballot_subdir
+        if name == 'ballot_node':
+            return self.ballot_node
+        raise NameError(f"Name {name} not accepted/defined for Ballot.get()")
 
     def dict(self):
         """Return a dictionary of the ballot by making a copy"""
         return dict({'contests': self.contests,
                     'active_ggos': self.active_ggos,
+                    'ballot_node': self.ballot_node,
                     'ballot_subdir': self.ballot_subdir})
 
     def __str__(self):
         """Boilerplate"""
         ballot = {'contests': self.contests,
                       'active_ggos': self.active_ggos,
+                      'ballot_node': self.ballot_node,
                       'ballot_subdir': self.ballot_subdir}
         return json.dumps(ballot, sort_keys=True, indent=4, ensure_ascii=False)
 
@@ -200,8 +214,10 @@ class Ballot:
         # no budget for that now and it would probably be better to
         # see what real life constraints and requirements exist.  So
         # punt that for now - just place this ballot in the porper
-        # leaf node (assuming overlapping boundaries).
+        # leaf node (assuming 100% overlapping/coherent boundaries).
         self.ballot_subdir = address.get('ballot_subdir')
+        self.ballot_node = address.get('ballot_node')
+        # cache the active ggos as well
         self.active_ggos = address.get('active_ggos')
 
     def write_blank_ballot(self, config, ballot_file='', style='json'):
@@ -218,8 +234,9 @@ class Ballot:
         if style == 'json':
             # When the style is json, print all three dictionaries as one
             the_aggregate = {'contests': self.contests,
-                             'active_ggos': self.active_ggos,
-                             'ballot_subdir': self.ballot_subdir}
+                                 'active_ggos': self.active_ggos,
+                                 'ballot_subdir': self.ballot_subdir,
+                                 'ballot_node': self.ballot_node}
             with open(ballot_file, 'w', encoding="utf8") as outfile:
                 json.dump(the_aggregate, outfile, sort_keys=True, indent=4, ensure_ascii=False)
         elif style == 'pdf':
@@ -244,6 +261,7 @@ class Ballot:
                 self.contests = json_doc['contests']
                 self.active_ggos = json_doc['active_ggos']
                 self.ballot_subdir = json_doc['ballot_subdir']
+                self.ballot_node = json_doc['ballot_node']
         else:
             raise NotImplementedError(f"Unsupported Ballot type ({style}) for reading")
 
@@ -260,7 +278,8 @@ class Ballot:
         # might was well write out everything, yes?
         the_aggregate = {'contests': self.contests,
                          'active_ggos': self.active_ggos,
-                         'ballot_subdir': self.ballot_subdir}
+                         'ballot_subdir': self.ballot_subdir,
+                         'ballot_node': self.ballot_node}
         with open(ballot_file, 'w', encoding="utf8") as outfile:
             json.dump(the_aggregate, outfile, sort_keys=True, indent=4, ensure_ascii=False)
         return ballot_file

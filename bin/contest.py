@@ -23,8 +23,9 @@ class Contest:
     """A wrapper around the rules of engagement regarding a specific contest"""
 
     # Legitimate Contest keys.  Note 'selection' is not a legitimate
-    # key here
-    _keys = ['candidates', 'question', 'tally', 'win-by', 'max']
+    # key for blank ballots
+    _keys = ['candidates', 'question', 'tally', 'win-by', 'max',
+                 'selection']
 
     @staticmethod
     def check_syntax(a_contest_blob):

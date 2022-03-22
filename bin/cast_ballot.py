@@ -29,7 +29,7 @@ See ../docs/tech/executable-overview.md for the context in which this file was c
 import sys
 import argparse
 import logging
-from logging import debug
+from logging import info, debug
 import random
 import pprint
 
@@ -136,10 +136,18 @@ def main():
 
     # write the voted ballot out
     # pylint: disable=W0104  # ZZZ
+#    import pdb; pdb.set_trace()
     if args.printonly:
-        pprint.pprint(a_ballot.dict)
+        pprint.pprint(a_ballot.dict())
     else:
-        a_ballot.write_a_cast_ballot(the_election_config)
+        ballot_file = a_ballot.write_a_cast_ballot(the_election_config)
+        info(f"Cast ballot file: {ballot_file}")
+    # example of digging deeply into ElectionConfig data ...
+    voting_centers = iter(the_election_config.get_node(a_ballot.get('ballot_node'),
+                                                           'config')['vote centers'].items())
+    info(f"Casting a {contests.len()} contest ballot at "
+             f"{next(voting_centers)}")
+
 
 if __name__ == '__main__':
     args = parse_arguments()
