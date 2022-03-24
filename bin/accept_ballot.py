@@ -27,39 +27,54 @@ See ../docs/tech/executable-overview.md for the context in which this file was c
 
 # Standard imports
 # pylint: disable=wrong-import-position   # import statements not top of file
-import json
+import os
 import sys
 import argparse
 import logging
+from logging import debug
+import random
 import secrets
+#import uuid
 
 # Local import
 from common import Globals, Shellout
-# Local imports
 from address import Address
 from ballot import Ballot, Contests
 from election_config import ElectionConfig
 
 # Functions
-def checkout_new_contest_branch(contest, branchpoint):
+def get_random_branchpoint(branch):
+    """Return a random branchpoint on the supplied branch"""
+    result = Shellout.run(["git", "log", branch, "--pretty=format:'%h'"],
+                check=True, capture_output=True, text=True)
+    commits = [commit for commit in (line.strip() for line in result.stdout.splitlines()) if commit]
+    # the first record is never a real CVR
+    del commits[-1]
+    # ZZZ - need to deal with a rolling 100 window
+    return random.choice(commits)
+
+def checkout_new_contest_branch(contest, ref_branch):
     """Will checkout a new branch for a specific contest.  Since there
     is no code yet to coordinate the potentially multiple scanners
     pushing to the same VC VTP git remote, use a highly unlikely GUID
     and try up to 3 times to get a unique branch.
     """
 
-    # first attempt at a new unique branch
-    branch = contest + "/" + secrets.token_hex(5)
-    current_branch = Shellout.run(["git", "rev-parse", "--abbrev-ref", "HEAD"], check=True).stdout
+    # select a branchpoint
+    branchpoint = get_random_branchpoint(ref_branch)
+    # and attempt at a new unique branch
+    branch = contest.get('name') + "/" + secrets.token_hex(5)
+#    branch = contest.get('name') + "/" + str(uuid.uuid1().hex)[0:10]
+    current_branch = Shellout.run(["git", "rev-parse", "--abbrev-ref", "HEAD"],
+                        check=True, capture_output=True, text=True).stdout.strip()
     # if after 3 tries it still does not work, raise an error
-    max_tries = 3
-    count = 1
-    while count < max_tries:
-        count += 1
-        cmd1 = Shellout.run(["git", "checkout", "-b", branch, branchpoint])
+    for _ in [0, 1, 2]:
+        cmd1 = Shellout.run(["git", "checkout", "-b", branch, branchpoint],
+                                      printonly=args.printonly)
         if cmd1.returncode == 0:
             # Created the local branch - see if it is push-able
-            cmd2 = Shellout.run(["git", "push", "-u", "origin", branch])
+            cmd2 = Shellout.run(["git", "push", "-u", "origin", branch],
+                                      printonly=args.printonly)
             if cmd2.returncode == 0:
                 # success
                 return branch
@@ -67,32 +82,34 @@ def checkout_new_contest_branch(contest, branchpoint):
             # local branch and try again
             Shellout.run(["git", "checkout", current_branch], check=True)
             Shellout.run(["git", "branch", "-D", branch], check=True)
-        # At this point the local did not get created - try again
-        branch = contest + "/" + secrets.token_hex(9)
+            # At this point the local did not get created - try again
+            branch = contest.get('name') + "/" + secrets.token_hex(5)
+#            branch = contest.get('name') + "/" + str(uuid.uuid1().hex)[0:10]
 
     # At this point the remote branch was never created and in theory the local
-    # tries are also deleted
+    # tries have also deleted(?)
     raise Exception(f"could not create git branch {branch} on the third attempt")
 
-def add_commit_push_contest(branch):
+def get_n_other_contests(contest):
+    """Will get N already cast CVRs for the specified contest"""
+    something = contest
+    return something
+
+def contest_add_commit_push(branch):
     """Will git add and commit the new contest content
     """
-    # If this fails,
-    Shellout.run(["git", "add", Globals.get('CONTEST_FILE')])
-    Shellout.run(["git", "commit", "-F", Globals.get('CONTEST_FILE')])
-    # Note - if there is a collision, pick another random number and try again
-    Shellout.run(["git", "push", "origin", branch])
-    return 0
-
-# ZZZ this probably wants to shift to a class at some point
-def slurp_a_ballot(ballot_file):
-    """Will slurp the json version of a blank ballot and return it"""
-
-    # OS and json syntax errors are just raised at this point
-    # ZZZ - need an gestalt error handling plan at some point
-    with open(ballot_file, 'r', encoding="utf8") as file:
-        json_doc = json.load(file)
-    return json_doc
+    # If this fails an shell error will be raised
+    Shellout.run(["git", "add", Globals.get('CONTEST_FILE')],
+                     printonly=args.printonly)
+    Shellout.run(["git", "commit", "-F", Globals.get('CONTEST_FILE')],
+                     printonly=args.printonly)
+    # Capture the digest
+    digest = Shellout.run(["git", "log", branch, "-1", "--pretty=format:'%H'"],
+                     printonly=args.printonly,
+                     check=True, capture_output=True, text=True).stdout.strip()
+    Shellout.run(["git", "push", "origin", branch],
+                     printonly=args.printonly)
+    return digest
 
 
 ################
@@ -127,7 +144,8 @@ def parse_arguments():
     parsed_args = parser.parse_args()
     verbose = {0: logging.CRITICAL, 1: logging.ERROR, 2: logging.WARNING,
                    3: logging.INFO, 4: logging.DEBUG}
-    logging.basicConfig(format="%(message)s", level=verbose[parsed_args.v], stream=sys.stdout)
+    logging.basicConfig(format="%(message)s", level=verbose[parsed_args.verbosity],
+                            stream=sys.stdout)
 
     # Validate required args
     if not (parsed_args.file or (parsed_args.address and parsed_args.town
@@ -150,29 +168,41 @@ def main():
     # is only necessary of the
     the_address = Address.create_address_from_args(args,
                     ['file', 'verbosity', 'printonly'])
+    the_address.map_ggos(the_election_config)
 
     # get the ballot for the specified address
     a_ballot = Ballot()
     a_ballot.read_a_cast_ballot(the_address, the_election_config, args.file)
 
-    # the voter's row of digests
-    contest_receipts = []
-    import pdb; pdb.set_trace()
+    # the voter's row of digests (indexed by contest name)
+    ballot_receipts = {}
+    # a cloaked receipt
+#    cloak_receipts = {}
+    # 100 additional contest receipts
+    other_receipts = {}
+
+    # Set the three EV's
+    os.environ['GIT_AUTHOR_DATE'] = '2022-01-01T12:00:00'
+    os.environ['GIT_COMMITTER_DATE'] = '2022-01-01T12:00:00'
+    os.environ['GIT_EDITOR'] = 'true'
 
     # loop over contests
     contests = Contests(a_ballot)
     for contest in contests:
-        # select a branchpoint
-        branchpoint = "bar"
+        # get N other contests
+        name = contest.get('name')
+        other_receipts[name] = get_n_other_contests(contest)
         # atomically create the branch locally and remotely
-        branch = checkout_new_contest_branch(contest, branchpoint)
+        branch = checkout_new_contest_branch(contest, 'master')
         # commit the voter's choice and push it
-        digest = add_commit_push_contest(branch)
-        contest_receipts.append(digest)
+        digest = contest_add_commit_push(branch)
+        ballot_receipts[name] = digest
 
-    # if possible print the ballot receipt
+    import pdb; pdb.set_trace()
+    debug(f"Ballot's digests:\n{ballot_receipts}")
+    # ZZZ for now print entire ballot receipt
 
-    # if possible, print the voter's offset
+    # for now print the voter's offset
 
 if __name__ == '__main__':
     args = parse_arguments()

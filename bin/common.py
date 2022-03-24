@@ -53,6 +53,8 @@ class Globals:
         'ROOT_ELECTION_DATA_SUBDIR': 'ElectionData',
         # How long to wait for a git shell command to complete - maybe a bad idea
         'SHELL_TIMEOUT': 15,
+        # Number of ballots on a ballot receipt
+        'BALLOT_RECEIPT_ROWS': 100,
         }
 
     # Legitimate setters

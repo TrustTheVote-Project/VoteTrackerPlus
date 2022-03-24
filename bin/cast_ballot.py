@@ -53,6 +53,13 @@ def parse_arguments():
     """)
 
     Address.add_address_args(parser)
+    # ZZZ - cloaked contests are enabled at cast_ballot time
+#    parser.add_argument('-k', "--cloak", action="store_true",
+#                            help="if possible provide a cloaked ballot offset")
+    parser.add_argument('-i', "--infile",
+                            help="override the default blank ballot location")
+    parser.add_argument('-o', "--outfile",
+                            help="override the default cast ballot location")
     parser.add_argument("-v", "--verbosity", type=int, default=3,
                             help="0 critical, 1 error, 2 warning, 3 info, 4 debug (def=3)")
     parser.add_argument("-n", "--printonly", action="store_true",
@@ -76,12 +83,13 @@ def main():
     the_election_config.parse_configs()
 
     # process the provided address
-    the_address = Address.create_address_from_args(args, ['verbosity', 'printonly'])
+    the_address = Address.create_address_from_args(args,
+                    ['verbosity', 'printonly', 'infile', 'outfile'])
     the_address.map_ggos(the_election_config)
 
     # get the ballot for the specified address
     a_ballot = Ballot()
-    a_ballot.read_a_blank_ballot(the_address, the_election_config)
+    a_ballot.read_a_blank_ballot(the_address, the_election_config, args.infile)
 
     # loop over contests
     contests = Contests(a_ballot)
@@ -112,7 +120,7 @@ def main():
     if args.printonly:
         pprint.pprint(a_ballot.dict())
     else:
-        ballot_file = a_ballot.write_a_cast_ballot(the_election_config)
+        ballot_file = a_ballot.write_a_cast_ballot(the_election_config, args.outfile)
         info(f"Cast ballot file: {ballot_file}")
     # example of digging deeply into ElectionConfig data ...
     voting_centers = iter(the_election_config.get_node(a_ballot.get('ballot_node'),
