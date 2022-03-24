@@ -26,7 +26,7 @@ See ../docs/tech/executable-overview.md for the context in which this file was c
 """
 
 # Standard imports
-# pylint: disable=C0413   # import statements not top of file
+# pylint: disable=wrong-import-position
 import sys
 import argparse
 import logging
@@ -53,25 +53,9 @@ def parse_arguments():
     ZZZ - in the future some other argument can be supported to print
     for example all possible unique blank ballots found in the current
     VTP election tree, whatever.
-
-    The switches are basically the same as cast_ballot.py
     """)
 
-#    _keys = ['number', 'street', 'substreet', 'town', 'state', 'country', 'zipcode']
-    parser.add_argument('-c', "--csv",
-                            help="a comma separated address")
-    parser.add_argument('-a', "--address",
-                            help="the number and name of the street address (space separated)")
-    parser.add_argument('-r', "--street",
-                            help="the street/road field of an address")
-    parser.add_argument('-b', "--substreet",
-                            help="the substreet field of an address")
-    parser.add_argument('-t', "--town",
-                            help="the town field of an address")
-    parser.add_argument('-s', "--state",
-                            help="the state/province field of an address")
-    parser.add_argument('-z', "--zipcode",
-                            help="the zipcode field of an address")
+    Address.add_address_args(parser)
     parser.add_argument('-f', "--file",
                             help="override the default blank ballot location")
     parser.add_argument('-l', "--language", default='en',
@@ -92,10 +76,7 @@ def parse_arguments():
 # main
 ################
 def main():
-    """Main function - see -h for more info.  At the moment no error
-    handling, but in theory something might go here once a UX error
-    model has been chosen.
-    """
+    """Main function - see -h for more info"""
 
     # Create an VTP election config object
     the_election_config = ElectionConfig()
@@ -110,15 +91,8 @@ def main():
     # imported somehow and that each GGO for the address will also be
     # imported somehow. And all that comes later - for now just map an
     # address to a town.
-    my_args = dict(vars(args))
-    for key in ['verbosity', 'printonly', 'language', 'file']:
-        del my_args[key]
-    # if address was supplied, get rid of that too
-    if my_args['address']:
-        my_args['number'], my_args['street'] = \
-        Address.convert_address_to_num_street(my_args['address'])
-    del my_args['address']
-    the_address = Address(**my_args)
+    the_address = Address.create_address_from_args(args,
+                    ['verbosity', 'printonly', 'language', 'file'])
     the_address.map_ggos(the_election_config)
 
     # print some debugging info

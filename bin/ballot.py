@@ -160,12 +160,12 @@ class Ballot:
         contest_name = contest.get('name')
         if 'selection' not in self.contests[contest_ggo][contest_index][contest_name].keys():
             self.contests[contest_ggo][contest_index][contest_name]['selection'] = []
-        # pylint: disable=C0301
+        # pylint: disable=line-too-long
         elif selection_offset in self.contests[contest_ggo][contest_index][contest_name]['selection']:
             raise ValueError((f"The selection ({selection_offset}) has already been "
                                   f"selected for contest ({contest_name}) "
                                   f"for GGO ({contest_ggo})"))
-        # pylint: disable=C0301
+        # pylint: disable=line-too-long
         self.contests[contest_ggo][contest_index][contest_name]['selection'].append(selection_offset)
 
     def create_blank_ballot(self, address, config):
@@ -274,8 +274,8 @@ class Ballot:
             raise NotImplementedError(f"Unsupported Ballot type ({style}) for writing")
         return ballot_file
 
-    def read_a_ballot(self, address, config, ballot_file="", style='json'):
-        """Will return the dictionary of a json ballot file"""
+    def read_a_blank_ballot(self, address, config, ballot_file="", style='json'):
+        """Will return the dictionary of a blank ballot"""
         if not ballot_file:
             # hackito ergo sum - since the ballot has not yet been read,
             # the ballot does not yet know the active GGOs.  But the
@@ -298,6 +298,21 @@ class Ballot:
         else:
             raise NotImplementedError(f"Unsupported Ballot type ({style}) for reading")
 
+    def read_a_cast_ballot(self, address, config, ballot_file):
+        """Will return the dictionary of a cast ballot"""
+        if not ballot_file:
+            ballot_file = os.path.join(config.get('git_rootdir'),
+                                    Globals.get('ROOT_ELECTION_DATA_SUBDIR'),
+                                    address.get('ballot_subdir'),
+                                    Globals.get('CONTEST_FILE_SUBDIR'),
+                                    Globals.get('BALLOT_FILE'))
+        with open(ballot_file, 'r', encoding="utf8") as file:
+            json_doc = json.load(file)
+            self.contests = json_doc['contests']
+            self.active_ggos = json_doc['active_ggos']
+            self.ballot_subdir = json_doc['ballot_subdir']
+            self.ballot_node = json_doc['ballot_node']
+
     def write_a_cast_ballot(self, config, ballot_file=''):
         """
         Will write out a cast ballot in json
@@ -309,7 +324,7 @@ class Ballot:
                                     Globals.get('CONTEST_FILE_SUBDIR'))
             os.makedirs(ballot_file, exist_ok=True)
             ballot_file = os.path.join(ballot_file,
-                                self.gen_unique_ballot_name(Globals.get('CONTEST_FILE')))
+                                Globals.get('BALLOT_FILE'))
         # might was well write out everything, yes?
         the_aggregate = {'contests': self.contests,
                          'active_ggos': self.active_ggos,

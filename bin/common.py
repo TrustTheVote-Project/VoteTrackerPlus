@@ -71,7 +71,7 @@ class Globals:
         else:
             raise NameError("Name not accepted in set() method")
 
-# pylint: disable=R0903   # ZZZ - remove this later
+# pylint: disable=too-few-public-methods   # ZZZ - remove this later
 class Shellout:
     """
     A class to wrap the control & management of shell subprocesses,
@@ -92,7 +92,8 @@ class Shellout:
         info(f"Running \"{' '.join(argv)}\"")
         if printonly:
             return subprocess.CompletedProcess(argv, 0, stdout="", stderr="")
-        # pylint: disable=W1510 # the caller desides on whether check is set or not
+        # the caller desides on whether check is set or not
+        # pylint: disable=subprocess-run-check
         return subprocess.run(argv, timeout=Globals.get('SHELL_TIMEOUT'), **kwargs)
 
 # EOF

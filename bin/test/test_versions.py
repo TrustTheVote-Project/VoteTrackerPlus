@@ -21,7 +21,7 @@
 
 """
 
-# pylint: disable=C0413   # import statements not top of file
+# pylint: disable=wrong-import-position
 import sys
 
 # save the user from themselves

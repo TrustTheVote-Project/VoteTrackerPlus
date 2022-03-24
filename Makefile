@@ -18,9 +18,16 @@ export:
 # Run pylint
 .PHONY: pylint
 pylint:
-	pylint bin/*.py
+# As there are multiple commands with the same boilerplate scaffolding, when
+# pylinting from the top ignore R0801
+	pylint -d duplicate-code bin
 
 # Run tests
 .PHONY: pytest
 pytest:
 	pytest
+
+# emacs tags
+ETAG_SRCS := $(shell find bin -type file -name '*.py')
+TAGS: ${ETAG_SRCS}
+	etags ${ETAG_SRCS}

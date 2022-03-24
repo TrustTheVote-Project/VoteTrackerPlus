@@ -25,7 +25,7 @@ See ../docs/tech/executable-overview.md for the context in which this file was c
 
 """
 
-# pylint: disable=C0413   # import statements not top of file
+# pylint: disable=wrong-import-position
 import sys
 import argparse
 import logging
@@ -50,25 +50,9 @@ def parse_arguments():
     and by default randomly make a selection for each
     contest/question.  It will then cast the ballot in the
     corresponding CVRs directory.
-
-    The switches are basically the same as create_blank_ballot.py
     """)
 
-#    _keys = ['number', 'street', 'substreet', 'town', 'state', 'country', 'zipcode']
-    parser.add_argument('-c', "--csv",
-                            help="a comma separated address")
-    parser.add_argument('-a', "--address",
-                            help="the number and name of the street address (space separated)")
-    parser.add_argument('-r', "--street",
-                            help="the street/road field of an address")
-    parser.add_argument('-b', "--substreet",
-                            help="the substreet field of an address")
-    parser.add_argument('-t', "--town",
-                            help="the town field of an address")
-    parser.add_argument('-s', "--state",
-                            help="the state/province field of an address")
-    parser.add_argument('-z', "--zipcode",
-                            help="the zipcode field of an address")
+    Address.add_address_args(parser)
     parser.add_argument("-v", "--verbosity", type=int, default=3,
                             help="0 critical, 1 error, 2 warning, 3 info, 4 debug (def=3)")
     parser.add_argument("-n", "--printonly", action="store_true",
@@ -85,30 +69,19 @@ def parse_arguments():
 # main
 ################
 def main():
-    """Main function - see -h for more info.  At the moment no error
-    handling, but in theory something might go here once a UX error
-    model has been chosen.
-    """
+    """Main function - see -h for more info"""
 
     # Create an VTP election config object
     the_election_config = ElectionConfig()
     the_election_config.parse_configs()
 
     # process the provided address
-    my_args = dict(vars(args))
-    for key in ['verbosity', 'printonly']:
-        del my_args[key]
-    # if address was supplied, get rid of that too
-    if my_args['address']:
-        my_args['number'], my_args['street'] = \
-        Address.convert_address_to_num_street(my_args['address'])
-    del my_args['address']
-    the_address = Address(**my_args)
+    the_address = Address.create_address_from_args(args, ['verbosity', 'printonly'])
     the_address.map_ggos(the_election_config)
 
     # get the ballot for the specified address
     a_ballot = Ballot()
-    a_ballot.read_a_ballot(the_address, the_election_config)
+    a_ballot.read_a_blank_ballot(the_address, the_election_config)
 
     # loop over contests
     contests = Contests(a_ballot)
@@ -135,7 +108,6 @@ def main():
     debug("And the ballot looks like:\n" + pprint.pformat(a_ballot.dict()))
 
     # write the voted ballot out
-    # pylint: disable=W0104  # ZZZ
 #    import pdb; pdb.set_trace()
     if args.printonly:
         pprint.pprint(a_ballot.dict())

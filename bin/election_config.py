@@ -201,7 +201,7 @@ class ElectionConfig:
         """Will add implicit address includes from one
         parent/sibling to another sibling/child
         """
-        # pylint: disable=R1702
+        # pylint: disable=too-many-nested-blocks
         for node in networkx.topological_sort(self.digraph):
             if 'ggos' in self.digraph.nodes[node]['address_map']:
                 for kind in self.digraph.nodes[node]['address_map']['ggos']:
@@ -236,7 +236,6 @@ class ElectionConfig:
                                     posixpath.join(node,
                                                 '../' * ((len(parts) - 1) * 3),
                                                 'GGOs', parts[-1], kind_value)))
-        # pylint: enable=R1702
 
     def parse_configs(self):
         """Will inspect the data in the root config and load the

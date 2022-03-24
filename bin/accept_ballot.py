@@ -26,7 +26,7 @@ See ../docs/tech/executable-overview.md for the context in which this file was c
 """
 
 # Standard imports
-# pylint: disable=C0413   # import statements not top of file
+# pylint: disable=wrong-import-position   # import statements not top of file
 import json
 import sys
 import argparse
@@ -35,6 +35,10 @@ import secrets
 
 # Local import
 from common import Globals, Shellout
+# Local imports
+from address import Address
+from ballot import Ballot, Contests
+from election_config import ElectionConfig
 
 # Functions
 def checkout_new_contest_branch(contest, branchpoint):
@@ -95,19 +99,26 @@ def slurp_a_ballot(ballot_file):
 # arg parsing
 ################
 def parse_arguments():
-    """Parse arguments from a command line
-    """
+    """Parse arguments from a command line"""
 
-    parser = argparse.ArgumentParser(description='''\
-    accept_ballot.py will run the git based workflow on a VTP scanner node to
-    accept the json rendering of the cast vote record of a voter's ballot.  The
-    json file is read, the contests are extraced and submitted to separate git
-    branches, one per contest, and pushed back to the Voter Center's VTP
-    remote.
+    parser = argparse.ArgumentParser(description=
+    """accept_ballot.py will run the git based workflow on a VTP
+    scanner node to accept the json rendering of the cast vote record
+    of a voter's ballot.  The json file is read, the contests are
+    extraced and submitted to separate git branches, one per contest,
+    and pushed back to the Voter Center's VTP remote.
 
-    In addition a voter's ballot receipt and offset are optionally printed.''',
+    In addition a voter's ballot receipt and offset are optionally
+    printed.
+
+    Either the location of the ballot_file or the associated address
+    is required.
+    """,
         formatter_class=argparse.RawDescriptionHelpFormatter)
 
+    Address.add_address_args(parser)
+    parser.add_argument('-f', "--file",
+                            help="override the default location of the cast ballot file")
     parser.add_argument("-v", "--verbosity", type=int, default=3,
                             help="0 critical, 1 error, 2 warning, 3 info, 4 debug (def=3)")
     parser.add_argument("-n", "--printonly", action="store_true",
@@ -117,32 +128,47 @@ def parse_arguments():
     verbose = {0: logging.CRITICAL, 1: logging.ERROR, 2: logging.WARNING,
                    3: logging.INFO, 4: logging.DEBUG}
     logging.basicConfig(format="%(message)s", level=verbose[parsed_args.v], stream=sys.stdout)
+
+    # Validate required args
+    if not (parsed_args.file or (parsed_args.address and parsed_args.town
+                                    and parsed_args.state)):
+        parser.error("Either a ballot file (-f <filename>) or an address "
+                     "(-a <number street> -t <town> -s <state>) is required")
     return parsed_args
 
 ################
 # main
 ################
 def main():
-    """Main function - see -h for more info.  At the moment no error
-    handling, but in theory something might go here once a UX error
-    model has been chosen.
-    """
+    """Main function - see -h for more info"""
 
-    # read in ballot.json
-    the_ballot = slurp_a_ballot(Globals.get('BALLOT_FILE'))
+    # Create an VTP election config object
+    the_election_config = ElectionConfig()
+    the_election_config.parse_configs()
+
+    # Process the address so to know where the ballot is.  The address
+    # is only necessary of the
+    the_address = Address.create_address_from_args(args,
+                    ['file', 'verbosity', 'printonly'])
+
+    # get the ballot for the specified address
+    a_ballot = Ballot()
+    a_ballot.read_a_cast_ballot(the_address, the_election_config, args.file)
 
     # the voter's row of digests
     contest_receipts = []
+    import pdb; pdb.set_trace()
 
     # loop over contests
-    for contest in the_ballot.contests:
+    contests = Contests(a_ballot)
+    for contest in contests:
         # select a branchpoint
         branchpoint = "bar"
         # atomically create the branch locally and remotely
         branch = checkout_new_contest_branch(contest, branchpoint)
         # commit the voter's choice and push it
         digest = add_commit_push_contest(branch)
-    contest_receipts.append(digest)
+        contest_receipts.append(digest)
 
     # if possible print the ballot receipt
 

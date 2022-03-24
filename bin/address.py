@@ -33,11 +33,6 @@ class Address:
     And all fields are strings, not numbers.
     """
 
-    @staticmethod
-    def convert_address_to_num_street(address):
-        """Convert a street address string to number and street"""
-        return re.split(r'\s+', address, 1)
-
     # Legitimate keys in the correct order
     _keys = ['number', 'street', 'substreet', 'town', 'state',
                  'country', 'zipcode']
@@ -46,6 +41,45 @@ class Address:
                       'SchoolDistrict':'SchoolDistricts',
                       'CouncilDistrict':'CouncilDistricts',
                       'Precinct':'Precincts'}
+
+    @staticmethod
+    def convert_address_to_num_street(address):
+        """Convert a street address string to number and street"""
+        return re.split(r'\s+', address, 1)
+
+    @staticmethod
+    def create_address_from_args(args, args_to_strip):
+        """Helper function to strip just the address specific switches
+        from the program args and return the new address.
+        """
+        my_args = dict(vars(args))
+        for key in args_to_strip:
+            del my_args[key]
+        # if address was supplied, get rid of that too
+        if my_args['address']:
+            my_args['number'], my_args['street'] = \
+            Address.convert_address_to_num_street(my_args['address'])
+        del my_args['address']
+        return Address(**my_args)
+
+    @staticmethod
+    def add_address_args(parser):
+        """Helper function to add standard address program switches to argparse"""
+#        parser.add_argument('-c', "--csv",
+#                                help="a comma separated address")
+        parser.add_argument('-a', "--address",
+                                help="the number and name of the street address (space separated)")
+#        parser.add_argument('-r', "--street",
+#                                help="the street/road field of an address, \
+#                                in which case the address is the number")
+        parser.add_argument('-b', "--substreet",
+                                help="the substreet field of an address")
+        parser.add_argument('-t', "--town",
+                                help="the town field of an address")
+        parser.add_argument('-s', "--state",
+                                help="the state/province field of an address")
+        parser.add_argument('-z', "--zipcode",
+                                help="the zipcode field of an address")
 
     def __init__(self, **kwargs):
         """At the moment support only support a csv keyword and a
@@ -74,7 +108,7 @@ class Address:
         self.ballot_node = ""
         self.ballot_subdir = ""
 
-        if kwargs['csv']:
+        if 'csv' in kwargs.keys(): # pylint: disable=consider-iterating-dictionary
             address_fields = [x.strip() for x in re.split(r'\s*,\s*', kwargs['csv'])]
             self.address['number'] = address_fields[0]
             self.address['street'] = address_fields[1]
@@ -102,6 +136,58 @@ class Address:
                                  f"{required_fields}"
                                  "The following fields are undefined: "
                                  f"{missing_keys}"))
+
+    def __iter__(self):
+        """Return an iterator for the address attribute"""
+        return iter(self.address)
+
+    def __str__(self):
+        """Return a space separated string of the address"""
+        nice_string = ""
+        for key in Address._keys:
+            if self.address[key]:
+                nice_string += " " + self.address[key]
+        return nice_string.strip()
+
+    def get(self, name):
+        """A generic getter - will raise a NameError if name is not defined"""
+        if name in Address._keys:
+            return self.address[name]
+        if name == 'str_address':
+            # return the number and street - ZZZ ignore substreet for now
+            nice_string = self.address['number'] + ' ' + self.address['street']
+            return nice_string.strip()
+        if name == 'active_ggos':
+            return self.active_ggos
+        if name == 'ballot_node':
+            return self.ballot_node
+        if name == 'ballot_subdir':
+            return self.ballot_subdir
+        raise NameError(f"Name {name} not accepted/defined for set()")
+
+    def set(self, name, value):
+        """A generic setter - will raise a NameError if name is not defined """
+        if name in Address._keys:
+            value = "" if value is None else value
+            self.address[name] = value
+        else:
+            raise NameError(f"Name {name} not accepted/defined for Address.set()")
+
+    def dict(self):
+        """Return a dictionary of the address"""
+        address = {}
+        for key in Address._keys:
+            address[key] = self.address[key]
+        return address
+
+    def match(self, regex):
+        """Will regex the supplied regex against the address"""
+        # For now if regex is a string, it is a number and street
+        # address only
+        if isinstance(regex, str):
+            return re.match(regex, self.address['number'] + ' ' + self.address['street'])
+        raise ValueError((f"Unsupoorted Address match regex ({regex}) - ",
+                        "supply more quality pizza"))
 
     def map_ggos(self, config):
         """Will map an address onto the ElectionConfig data
@@ -169,57 +255,5 @@ class Address:
         find_ancestors(the_address_node)
         # Now find any descendantss
         find_descendants(the_address_node)
-
-    def __iter__(self):
-        """Return an iterator for the address attribute"""
-        return iter(self.address)
-
-    def __str__(self):
-        """Return a space separated string of the address"""
-        nice_string = ""
-        for key in Address._keys:
-            if self.address[key]:
-                nice_string += " " + self.address[key]
-        return nice_string.strip()
-
-    def get(self, name):
-        """A generic getter - will raise a NameError if name is not defined"""
-        if name in Address._keys:
-            return self.address[name]
-        if name == 'str_address':
-            # return the number and street - ZZZ ignore substreet for now
-            nice_string = self.address['number'] + ' ' + self.address['street']
-            return nice_string.strip()
-        if name == 'active_ggos':
-            return self.active_ggos
-        if name == 'ballot_node':
-            return self.ballot_node
-        if name == 'ballot_subdir':
-            return self.ballot_subdir
-        raise NameError(f"Name {name} not accepted/defined for set()")
-
-    def set(self, name, value):
-        """A generic setter - will raise a NameError if name is not defined """
-        if name in Address._keys:
-            value = "" if value is None else value
-            self.address[name] = value
-        else:
-            raise NameError(f"Name {name} not accepted/defined for Address.set()")
-
-    def dict(self):
-        """Return a dictionary of the address"""
-        address = {}
-        for key in Address._keys:
-            address[key] = self.address[key]
-        return address
-
-    def match(self, regex):
-        """Will regex the supplied regex against the address"""
-        # For now if regex is a string, it is a number and street
-        # address only
-        if isinstance(regex, str):
-            return re.match(regex, self.address['number'] + ' ' + self.address['street'])
-        raise ValueError((f"Unsupoorted Address match regex ({regex}) - ",
-                        "supply more quality pizza"))
 
 # EOF
