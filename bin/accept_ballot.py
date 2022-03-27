@@ -63,8 +63,8 @@ def checkout_new_contest_branch(contest, ref_branch):
     # select a branchpoint
     branchpoint = get_random_branchpoint(ref_branch)
     # and attempt at a new unique branch
-    branch = contest.get('name') + "/" + secrets.token_hex(5)
-#    branch = contest.get('name') + "/" + str(uuid.uuid1().hex)[0:10]
+    branch = contest.get('uid') + "/" + secrets.token_hex(5)
+#    branch = contest.get('uid') + "/" + str(uuid.uuid1().hex)[0:10]
     current_branch = Shellout.run(["git", "rev-parse", "--abbrev-ref", "HEAD"],
                         check=True, capture_output=True, text=True).stdout.strip()
     # if after 3 tries it still does not work, raise an error
@@ -83,8 +83,8 @@ def checkout_new_contest_branch(contest, ref_branch):
             Shellout.run(["git", "checkout", current_branch], check=True)
             Shellout.run(["git", "branch", "-D", branch], check=True)
             # At this point the local did not get created - try again
-            branch = contest.get('name') + "/" + secrets.token_hex(5)
-#            branch = contest.get('name') + "/" + str(uuid.uuid1().hex)[0:10]
+            branch = contest.get('uid') + "/" + secrets.token_hex(5)
+#            branch = contest.get('uid') + "/" + str(uuid.uuid1().hex)[0:10]
 
     # At this point the remote branch was never created and in theory the local
     # tries have also deleted(?)
@@ -188,15 +188,16 @@ def main():
 
     # loop over contests
     contests = Contests(a_ballot)
-    for contest in contests:
-        # get N other contests
-        name = contest.get('name')
-        other_receipts[name] = get_n_other_contests(contest)
-        # atomically create the branch locally and remotely
-        branch = checkout_new_contest_branch(contest, 'master')
-        # commit the voter's choice and push it
-        digest = contest_add_commit_push(branch)
-        ballot_receipts[name] = digest
+    with Shellout.changed_cwd(a_ballot.get_cvr_parent_dir(the_election_config)):
+        for contest in contests:
+            # get N other contests
+            name = contest.get('name')
+            other_receipts[name] = get_n_other_contests(contest)
+            # atomically create the branch locally and remotely
+            branch = checkout_new_contest_branch(contest, 'master')
+            # commit the voter's choice and push it
+            digest = contest_add_commit_push(branch)
+            ballot_receipts[name] = digest
 
     import pdb; pdb.set_trace()
     debug(f"Ballot's digests:\n{ballot_receipts}")

@@ -17,7 +17,9 @@
 
 """A kitchen sync for VTP classes for the moment"""
 
+import os
 import subprocess
+from contextlib import contextmanager
 #  Other imports:  critical, error, warning, info, debug
 from logging import info
 
@@ -97,5 +99,16 @@ class Shellout:
         # the caller desides on whether check is set or not
         # pylint: disable=subprocess-run-check
         return subprocess.run(argv, timeout=Globals.get('SHELL_TIMEOUT'), **kwargs)
+
+    @staticmethod
+    @contextmanager
+    def changed_cwd(path):
+        """Context manager for temporarily changing the CWD"""
+        oldpwd=os.getcwd()
+        os.chdir(path)
+        try:
+            yield
+        finally:
+            os.chdir(oldpwd)
 
 # EOF

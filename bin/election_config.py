@@ -87,6 +87,22 @@ class ElectionConfig:
     _root_config_keys = ['GGOs', 'contests', 'submodules', 'vote centers']
     _root_address_map_keys = ['ggos', 'addresses']
 
+    # A simple numerical n digit GGO uid
+    _uids = {}
+    _nextuid = 0
+
+    @staticmethod
+    def get_next_uid(ggo):
+        """Will return the next GGO uid (only good within the context of
+        this specific election)
+        """
+        this_uid = str(ElectionConfig._nextuid).rjust(3, '0')
+        if this_uid in ElectionConfig._uids:
+            raise KeyError(f"A GGO uid cannot be reused (ggo={ggo}, uid={this_uid})")
+        ElectionConfig._nextuid += 1
+        ElectionConfig._uids[this_uid] = ggo
+        return this_uid
+
     @staticmethod
     def is_valid_ggo_string(arg):
         """Check to see if it is a string without illegal characters."""
@@ -140,6 +156,7 @@ class ElectionConfig:
                                                       Globals.get("ADDRESS_MAP_FILE"))
         self.parsed_configs = ["."]
         self.digraph = networkx.DiGraph()
+        self.uid = None
 
     def get(self, name):
         """A generic getter - will raise a NameError if name is not defined"""
@@ -176,7 +193,8 @@ class ElectionConfig:
                     'config': self.digraph.nodes[node]['config'],
                     'ggo_name': self.digraph.nodes[node]['ggo_name'],
                     'kind': self.digraph.nodes[node]['kind'],
-                    'subdir': self.digraph.nodes[node]['subdir']}
+                    'subdir': self.digraph.nodes[node]['subdir'],
+                    'uid': self.digraph.nodes[node]['uid']}
         return self.digraph.nodes[node][what]
 
     def is_node(self, node_name):
@@ -260,6 +278,7 @@ class ElectionConfig:
         if 'contests' in config:
             for contest in config['contests']:
                 Contest.check_syntax(contest)
+                Contest.set_uid(contest, '.')
 
         # read the root address_map and sanity check that
         with open(self.root_address_map_file, 'r', encoding="utf8") as file:
@@ -295,9 +314,11 @@ class ElectionConfig:
                                 raise KeyError(("The following config keys are not supported: "
                                                     f"{bad_keys}"))
                             # should really sanity check the contests too again
-                            if 'contests' in config:
-                                for contest in config['contests']:
+#                            import pdb; pdb.set_trace()
+                            if 'contests' in this_config:
+                                for contest in this_config['contests']:
                                     Contest.check_syntax(contest)
+                                    Contest.set_uid(contest, ggo)
 
                             # Do not hit a node twice - it is a config error if so
                             next_subdir = os.path.join(subdir, ggo_kind, ggo)
@@ -319,6 +340,7 @@ class ElectionConfig:
                                                        f"from file {next_subdir}"))
                             self.digraph.add_node(this_dag_node, kind=ggo_kind, config=this_config,
                                 ggo_name=ggo,
+                                uid=ElectionConfig.get_next_uid(ggo),
                                 address_map=this_address_map,
                                 subdir=os.path.join(subdir, ggo_kind, ggo))
                             self.digraph.add_edge(parent_node_name, this_dag_node)
@@ -331,6 +353,7 @@ class ElectionConfig:
         # address_map files (depth first)
         self.digraph.add_node('.', kind='root', config=config, address_map=address_map,
                                   ggo_name='root',
+                                  uid=ElectionConfig.get_next_uid('.'),
                                   subdir=".")
         recursively_parse_tree ("GGOs", '.')
 

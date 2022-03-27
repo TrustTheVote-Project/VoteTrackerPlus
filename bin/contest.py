@@ -22,10 +22,30 @@ import json
 class Contest:
     """A wrapper around the rules of engagement regarding a specific contest"""
 
-    # Legitimate Contest keys.  Note 'selection' is not a legitimate
-    # key for blank ballots
+    # Legitimate Contest keys.  Note 'selection' and 'uid' are not
+    # legitimate keys for blank ballots
     _keys = ['candidates', 'question', 'tally', 'win-by', 'max', 'write-in',
-                 'selection']
+                 'selection', 'uid']
+
+    # A simple numerical n digit uid
+    _uids = {}
+    _nextuid = 0
+
+    @staticmethod
+    def set_uid(a_contest_blob, ggo):
+        """Will add a contest uid (only good within the context of this
+        specific election)
+        """
+#        import pdb; pdb.set_trace()
+        name = next(iter(a_contest_blob))
+        if 'uid' in a_contest_blob[name]:
+            raise IndexError(f"The uid of contest {name} is already set")
+        a_contest_blob[name]['uid'] = str(Contest._nextuid).rjust(4, '0')
+        if Contest._nextuid not in Contest._uids:
+            Contest._uids[Contest._nextuid] = {}
+        Contest._uids[Contest._nextuid]['name'] = name
+        Contest._uids[Contest._nextuid]['ggo'] = ggo
+        Contest._nextuid += 1
 
     @staticmethod
     def check_syntax(a_contest_blob):
