@@ -45,10 +45,13 @@ class Globals:
         # address-to-ballot function at this time, these fields are
         # broken into two types.  The first ordered set goes from the
         # root ElectionData node to the lowest leaf level node where
-        # the GGO boundaries are required to coherent (perfectly the
-        # same).  The second set optionally continues until there are
-        # no more leaf nodes.  This is arbitrary but the current
-        # address-to-ballot implemention below is based on this.  ZZZ
+        # the GGO boundaries are required to be coherent (perfectly
+        # the same).  The second set optionally continues until there
+        # are no more leaf nodes.  This is arbitrary but the current
+        # address-to-ballot implemention below is based on this.  In
+        # addtion this decision also is reflected in several other
+        # spots as well :-( - sorry.  Basically, the REQUIRED_GGO list
+        # is where the CVR and blank ballots are placed.
         'REQUIRED_GGO_ADDRESS_FIELDS': ['state', 'town'],
         'REQUIRED_NG_ADDRESS_FIELDS': ['street', 'number'],
         # Root Election Data subdir
@@ -71,7 +74,7 @@ class Globals:
     def set(name, value):
         """A generic setter"""
         if name in Globals._setters:
-            Globals._config[name] = value
+            raise NameError("Globals are read-only")
         else:
             raise NameError("Name not accepted in set() method")
 

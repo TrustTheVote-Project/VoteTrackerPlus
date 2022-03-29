@@ -133,7 +133,7 @@ def parse_arguments():
     """,
         formatter_class=argparse.RawDescriptionHelpFormatter)
 
-    Address.add_address_args(parser)
+    Address.add_address_args(parser, False)
     parser.add_argument('-f', "--file",
                             help="override the default location of the cast ballot file")
     parser.add_argument("-v", "--verbosity", type=int, default=3,
@@ -148,8 +148,7 @@ def parse_arguments():
                             stream=sys.stdout)
 
     # Validate required args
-    if not (parsed_args.file or (parsed_args.address and parsed_args.town
-                                    and parsed_args.state)):
+    if not (parsed_args.file or (parsed_args.town and parsed_args.state)):
         parser.error("Either a ballot file (-f <filename>) or an address "
                      "(-a <number street> -t <town> -s <state>) is required")
     return parsed_args
@@ -166,13 +165,14 @@ def main():
 
     # Process the address so to know where the ballot is.  The address
     # is only necessary of the
-    the_address = Address.create_address_from_args(args,
-                    ['file', 'verbosity', 'printonly'])
-    the_address.map_ggos(the_election_config)
+    voting_center_address = Address(state=args.state,
+                                    town=args.town,
+                                    voting_center=True)
+    voting_center_address.map_ggos(the_election_config)
 
     # get the ballot for the specified address
     a_ballot = Ballot()
-    a_ballot.read_a_cast_ballot(the_address, the_election_config, args.file)
+    a_ballot.read_a_cast_ballot(voting_center_address, the_election_config, args.file)
 
     # the voter's row of digests (indexed by contest name)
     ballot_receipts = {}
@@ -199,9 +199,9 @@ def main():
             digest = contest_add_commit_push(branch)
             ballot_receipts[name] = digest
 
-    import pdb; pdb.set_trace()
     debug(f"Ballot's digests:\n{ballot_receipts}")
     # ZZZ for now print entire ballot receipt
+    import pdb; pdb.set_trace()
 
     # for now print the voter's offset
 

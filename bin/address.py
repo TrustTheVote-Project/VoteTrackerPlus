@@ -63,42 +63,41 @@ class Address:
         return Address(**my_args)
 
     @staticmethod
-    def add_address_args(parser):
+    def add_address_args(parser, blank=True):
         """Helper function to add standard address program switches to argparse"""
 #        parser.add_argument('-c', "--csv",
 #                                help="a comma separated address")
-        parser.add_argument('-a', "--address",
-                                help="the number and name of the street address (space separated)")
 #        parser.add_argument('-r', "--street",
 #                                help="the street/road field of an address, \
 #                                in which case the address is the number")
-        parser.add_argument('-b', "--substreet",
-                                help="the substreet field of an address")
+#        parser.add_argument('-z', "--zipcode",
+#                                help="the zipcode field of an address")
+        if blank:
+            parser.add_argument('-a', "--address",
+                                    help="the number and name of the \
+                                    street address (space separated)")
+            parser.add_argument('-b', "--substreet",
+                                    help="the substreet field of an address")
         parser.add_argument('-t', "--town",
                                 help="the town field of an address")
         parser.add_argument('-s', "--state",
                                 help="the state/province field of an address")
-        parser.add_argument('-z', "--zipcode",
-                                help="the zipcode field of an address")
 
-    def __init__(self, **kwargs):
+    # pylint: disable=too-many-arguments
+    def __init__(self, number="", street="", substreet="", town="",
+                     state="", country="", zipcode="", csv="",
+                     voting_center=False):
         """At the moment support only support a csv keyword and a
         reasonable dictionary set of keywords.
         """
-
-        ok_keys = ['csv'] + Address._keys
-        bad_keys = [key for key in kwargs if not key in ok_keys]
-        if bad_keys:
-            raise KeyError(f"The following Address keys are not supported: {bad_keys}")
-
         self.address = {}
-        self.address['number'] = ""
-        self.address['street'] = ""
-        self.address['substreet'] = ""
-        self.address['town'] = ""
-        self.address['state'] = ""
-        self.address['country'] = ""
-        self.address['zipcode'] = ""
+        self.address['number'] = number
+        self.address['street'] = street
+        self.address['substreet'] = substreet
+        self.address['town'] = town
+        self.address['state'] = state
+        self.address['country'] = country
+        self.address['zipcode'] = zipcode
         # the ordered list of active GGOs for this address
         self.active_ggos = []
         # the location of the address's blank ballot and CVRs folder.
@@ -108,8 +107,8 @@ class Address:
         self.ballot_node = ""
         self.ballot_subdir = ""
 
-        if 'csv' in kwargs.keys(): # pylint: disable=consider-iterating-dictionary
-            address_fields = [x.strip() for x in re.split(r'\s*,\s*', kwargs['csv'])]
+        if csv: # pylint: disable=consider-iterating-dictionary
+            address_fields = [x.strip() for x in re.split(r'\s*,\s*', csv)]
             self.address['number'] = address_fields[0]
             self.address['street'] = address_fields[1]
             if address_fields == 5:
@@ -120,15 +119,12 @@ class Address:
                 self.address['substreet'] = ""
                 self.address['town'] = address_fields[2]
                 self.address['state'] = address_fields[3]
-        else:
-            for key, value in kwargs.items():
-                if key == 'csv':
-                    continue
-                Address.set(self, key, value)
 
         # Note - an address needs all 'required' address fields to be specified
-        required_fields = Globals.get('REQUIRED_GGO_ADDRESS_FIELDS') + \
-                          Globals.get('REQUIRED_NG_ADDRESS_FIELDS')
+        required_fields = Globals.get('REQUIRED_GGO_ADDRESS_FIELDS').copy()
+        if not voting_center:
+#            import pdb; pdb.set_trace()
+            required_fields += Globals.get('REQUIRED_NG_ADDRESS_FIELDS')
         missing_keys = [key for key in required_fields
                             if not Address.get(self, key)]
         if missing_keys:
@@ -195,7 +191,6 @@ class Address:
         footsteps = set()
         def find_ancestors(node_of_interest):
             """Will find all the ancestor of this node"""
-#            import pdb; pdb.set_trace()
             for parent in config.ancestors(node_of_interest):
                 if parent in footsteps:
                     continue
@@ -251,7 +246,6 @@ class Address:
         self.ballot_node = the_address_node
         # Note - the subdir should already have the correct os.path.sep
         self.ballot_subdir = config.get_node(the_address_node, 'subdir')
-#        import pdb; pdb.set_trace()
         find_ancestors(the_address_node)
         # Now find any descendantss
         find_descendants(the_address_node)

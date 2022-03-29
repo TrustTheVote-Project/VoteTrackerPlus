@@ -107,7 +107,6 @@ def main():
     # Construct a blank ballot
     the_ballot = Ballot()
     the_ballot.create_blank_ballot(the_address, the_election_config)
-#    import pdb; pdb.set_trace()
     info(f"Active GGOs: {the_ballot.get('active_ggos')}")
     debug("And the blank ballot looks like:\n" + pprint.pformat(the_ballot.dict()))
 
