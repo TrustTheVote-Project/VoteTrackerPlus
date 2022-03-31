@@ -47,7 +47,8 @@ def get_random_branchpoint(branch):
     """Return a random branchpoint on the supplied branch"""
     result = Shellout.run(["git", "log", branch, "--pretty=format:'%h'"],
                 check=True, capture_output=True, text=True)
-    commits = [commit for commit in (line.strip() for line in result.stdout.splitlines()) if commit]
+    commits = [commit for commit in (line.strip() for line in
+                                         result.stdout.splitlines()) if commit]
     # the first record is never a real CVR
     del commits[-1]
     # ZZZ - need to deal with a rolling 100 window
@@ -90,25 +91,40 @@ def checkout_new_contest_branch(contest, ref_branch):
     # tries have also deleted(?)
     raise Exception(f"could not create git branch {branch} on the third attempt")
 
-def get_n_other_contests(contest):
-    """Will get N already cast CVRs for the specified contest"""
-    something = contest
-    return something
+def get_n_other_contests(contest, branch):
+    """Return a list of N already cast CVRs for the specified contest.
+    """
+    this_uid = contest.get('uid')
+    return Shellout.run(['git', 'log', branch, '--oneline', '--grep=^{"CVR"}'
+                               '--all-match', f'--grep="uid": "{this_uid}"'],
+                     check=True, capture_output=True, text=True).stdout.strip()
 
-def contest_add_commit_push(branch):
+def get_cloaked_contests(contest, branch):
+    """Return a list of N cloaked cast CVRs for the specified contest.
+    ZZZ - cloaking actually is a difficult problem because a cloaked
+    value should only ever be given out once and regardless whatever
+    value is given out can be cross checked with other ballot receipts.
+    So a cloaked value is only good if the digest is never checked.
+    """
+    this_uid = contest.get('uid')
+    cloak_target = contest.get('cloak')
+    return Shellout.run(['git', 'log', branch, '--oneline', '--grep=^{"CVR"}'
+                               '--all-match', f'--grep="uid": "{this_uid}"',
+                               f'--grep="cloak": "{cloak_target}"'],
+                     check=True, capture_output=True, text=True).stdout.strip()
+
+def contest_add_and_commit(branch):
     """Will git add and commit the new contest content
     """
     # If this fails an shell error will be raised
-    Shellout.run(["git", "add", Globals.get('CONTEST_FILE')],
+    Shellout.run(['git', 'add', Globals.get('CONTEST_FILE')],
                      printonly=args.printonly)
-    Shellout.run(["git", "commit", "-F", Globals.get('CONTEST_FILE')],
+    Shellout.run(['git', 'commit', '-F', Globals.get('CONTEST_FILE')],
                      printonly=args.printonly)
     # Capture the digest
-    digest = Shellout.run(["git", "log", branch, "-1", "--pretty=format:'%H'"],
+    digest = Shellout.run(['git', 'log', branch, '-1', '--pretty=format:"%H"'],
                      printonly=args.printonly,
                      check=True, capture_output=True, text=True).stdout.strip()
-    Shellout.run(["git", "push", "origin", branch],
-                     printonly=args.printonly)
     return digest
 
 
@@ -174,10 +190,10 @@ def main():
     a_ballot = Ballot()
     a_ballot.read_a_cast_ballot(voting_center_address, the_election_config, args.file)
 
-    # the voter's row of digests (indexed by contest name)
+    # the voter's row of digests (indexed by contest uid)
     ballot_receipts = {}
     # a cloaked receipt
-#    cloak_receipts = {}
+    cloak_receipts = {}
     # 100 additional contest receipts
     other_receipts = {}
 
@@ -187,17 +203,26 @@ def main():
     os.environ['GIT_EDITOR'] = 'true'
 
     # loop over contests
+    branches = []
     contests = Contests(a_ballot)
     with Shellout.changed_cwd(a_ballot.get_cvr_parent_dir(the_election_config)):
         for contest in contests:
-            # get N other contests
-            name = contest.get('name')
-            other_receipts[name] = get_n_other_contests(contest)
+            # get N other values for each contest for this ballot
+            uid = contest.get('uid')
+            other_receipts[uid] = get_n_other_contests(contest, 'master')
             # atomically create the branch locally and remotely
-            branch = checkout_new_contest_branch(contest, 'master')
-            # commit the voter's choice and push it
-            digest = contest_add_commit_push(branch)
-            ballot_receipts[name] = digest
+            branches.append(checkout_new_contest_branch(contest, 'master'))
+            # commit the voter's choice
+            ballot_receipts[uid] = contest_add_and_commit(branches[-1])
+            # if cloaking, get those as well
+            if 'cloak' in contest.get('contest'):
+                cloak_receipts[uid] = get_cloaked_contests(contest, 'master')
+        # After all the contests digests have been generated and the
+        # others and cloaks are in as much as possible, then push as
+        # atomically as possible all the contests.
+        for branch in branches:
+            Shellout.run(['git', 'push', 'origin', branch],
+                             printonly=args.printonly)
 
     debug(f"Ballot's digests:\n{ballot_receipts}")
     # ZZZ for now print entire ballot receipt

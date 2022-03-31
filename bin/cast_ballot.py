@@ -64,7 +64,6 @@ def parse_arguments():
                             help="0 critical, 1 error, 2 warning, 3 info, 4 debug (def=3)")
     parser.add_argument("-n", "--printonly", action="store_true",
                             help="will printonly and not write to disk (def=True)")
-
     parsed_args = parser.parse_args()
     verbose = {0: logging.CRITICAL, 1: logging.ERROR, 2: logging.WARNING,
                    3: logging.INFO, 4: logging.DEBUG}
@@ -117,17 +116,14 @@ def main():
 
     # write the voted ballot out
 #    import pdb; pdb.set_trace()
-    if args.printonly:
-        pprint.pprint(a_ballot.dict())
-    else:
+    if not args.printonly:
         ballot_file = a_ballot.write_a_cast_ballot(the_election_config, args.outfile)
-        info(f"Cast ballot file: {ballot_file}")
     # example of digging deeply into ElectionConfig data ...
     voting_centers = iter(the_election_config.get_node(a_ballot.get('ballot_node'),
                                                            'config')['vote centers'].items())
-    info(f"Casting a {contests.len()} contest ballot at "
+    info(f"Casting a {contests.len()} contest ballot at VC "
              f"{next(voting_centers)}")
-
+    info(f"Cast ballot file: {a_ballot.gen_cast_ballot_location(the_election_config)}")
 
 if __name__ == '__main__':
     args = parse_arguments()

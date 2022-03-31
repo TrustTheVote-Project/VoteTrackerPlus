@@ -27,10 +27,12 @@ Where <scanner id> is the alphanumeric VTP identification of the physical scanne
  "contest": "states.US_senate",
  "election id digest": "b5dfbc103a8d28d9ae6609b42da822dc7f89ea09441537972299cf695fc408ec",
  "size": "290",
- "values": [
-   "Five Six"
-   ]
- }
+ "values": [{'Yellow Green': {'party': 'PartyA'}},
+            {'Blue Red': {'party': 'PartyB'}},
+            {'Gold Silver': {'party': 'PartyB'}}],
+ "selection": [0, 2, 1],
+ "tally': 'rcv',
+ "uid": '0001'}
 }
 ```
 ```

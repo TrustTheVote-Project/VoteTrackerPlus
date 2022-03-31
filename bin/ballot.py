@@ -226,14 +226,12 @@ class Ballot:
         # cache the active ggos as well
         self.active_ggos = address.get('active_ggos')
 
-    def gen_unique_ballot_name(self, config, filename):
+    def gen_unique_blank_ballot_name(self, config, filename):
         """
         ZZZ - this will need to be re-written at some point - tries to
         generate a unique ballot name per unique address across the set
         of active GGOs
         """
-        # Attempt to make the blank ballot unique across the set of active
-        # ggos
         ggo_unique_name = [config.get_node(ggo, 'uid') for ggo in self.active_ggos]
         # alphanumerically sort the string
         ggo_unique_name.sort(key=int)
@@ -241,19 +239,30 @@ class Ballot:
         ggo_unique_name.append(filename)
         return ','.join(ggo_unique_name)
 
+    def gen_blank_ballot_location(self, config, style):
+        """Return the file location of a blank ballot"""
+        return os.path.join(config.get('git_rootdir'),
+                    Globals.get('ROOT_ELECTION_DATA_SUBDIR'),
+                    self.ballot_subdir,
+                    Globals.get('BLANK_BALLOT_SUBDIR'),
+                    style,
+                    self.gen_unique_blank_ballot_name(config, Globals.get('BALLOT_FILE')))
+
+    def gen_cast_ballot_location(self, config):
+        """Return the file location of a cast ballot"""
+        return os.path.join(config.get('git_rootdir'),
+                    Globals.get('ROOT_ELECTION_DATA_SUBDIR'),
+                    self.ballot_subdir,
+                    Globals.get('CONTEST_FILE_SUBDIR'),
+                    Globals.get('BALLOT_FILE'))
+
     def write_blank_ballot(self, config, ballot_file='', style='json'):
         """
         will write out a blank ballot to a file in some format.
         """
         if not ballot_file:
-            ballot_file = os.path.join(config.get('git_rootdir'),
-                                    Globals.get('ROOT_ELECTION_DATA_SUBDIR'),
-                                    self.ballot_subdir,
-                                    Globals.get('BLANK_BALLOT_SUBDIR'),
-                                    style)
-            os.makedirs(ballot_file, exist_ok=True)
-            ballot_file = os.path.join(ballot_file,
-                                self.gen_unique_ballot_name(config, Globals.get('BALLOT_FILE')))
+            ballot_file = self.gen_blank_ballot_location(config, style)
+            os.makedirs(os.path.dirname(ballot_file), exist_ok=True)
         if style == 'json':
             # When the style is json, print all three dictionaries as one
             the_aggregate = {'contests': self.contests,
@@ -271,19 +280,20 @@ class Ballot:
         return ballot_file
 
     def read_a_blank_ballot(self, address, config, ballot_file="", style='json'):
-        """Will return the dictionary of a blank ballot"""
+        """
+        Will return the dictionary of a blank ballot (given an address
+        so to be able to find the correct blank ballot)
+        """
         if not ballot_file:
-            # hackito ergo sum - since the ballot has not yet been read,
-            # the ballot does not yet know the active GGOs.  But the
-            # address does...  It will be re-written later anyway with
-            # the same value ...
+            # hackito ergo sum - since the ballot has not yet been
+            # read, the ballot attributes are not yet known.  But the
+            # ones that overlap with address attributes are the same
+            # as those.  They will be re-written later anyway with the
+            # same value when the ballot is read...
             self.active_ggos = address.get('active_ggos')
-            ballot_file = os.path.join(config.get('git_rootdir'),
-                                    Globals.get('ROOT_ELECTION_DATA_SUBDIR'),
-                                    address.get('ballot_subdir'),
-                                    Globals.get('BLANK_BALLOT_SUBDIR'),
-                                    style,
-                                    self.gen_unique_ballot_name(config, Globals.get('BALLOT_FILE')))
+            self.ballot_subdir = address.get('ballot_subdir')
+            self.ballot_node = address.get('ballot_node')
+            ballot_file = self.gen_blank_ballot_location(config, style)
         if style == 'json':
             with open(ballot_file, 'r', encoding="utf8") as file:
                 json_doc = json.load(file)
@@ -295,13 +305,15 @@ class Ballot:
             raise NotImplementedError(f"Unsupported Ballot type ({style}) for reading")
 
     def read_a_cast_ballot(self, address, config, ballot_file):
-        """Will return the dictionary of a cast ballot"""
+        """
+        Will return the dictionary of a cast ballot
+        """
         if not ballot_file:
-            ballot_file = os.path.join(config.get('git_rootdir'),
-                                    Globals.get('ROOT_ELECTION_DATA_SUBDIR'),
-                                    address.get('ballot_subdir'),
-                                    Globals.get('CONTEST_FILE_SUBDIR'),
-                                    Globals.get('BALLOT_FILE'))
+            # hackito ergo sum - see above explanation
+            self.active_ggos = address.get('active_ggos')
+            self.ballot_subdir = address.get('ballot_subdir')
+            self.ballot_node = address.get('ballot_node')
+            ballot_file = self.gen_cast_ballot_location(config)
         with open(ballot_file, 'r', encoding="utf8") as file:
             json_doc = json.load(file)
             self.contests = json_doc['contests']
@@ -314,13 +326,8 @@ class Ballot:
         Will write out a cast ballot in json
         """
         if not ballot_file:
-            ballot_file = os.path.join(config.get('git_rootdir'),
-                                    Globals.get('ROOT_ELECTION_DATA_SUBDIR'),
-                                    self.ballot_subdir,
-                                    Globals.get('CONTEST_FILE_SUBDIR'))
-            os.makedirs(ballot_file, exist_ok=True)
-            ballot_file = os.path.join(ballot_file,
-                                Globals.get('BALLOT_FILE'))
+            ballot_file = self.gen_cast_ballot_location(config)
+            os.makedirs(os.path.dirname(ballot_file), exist_ok=True)
         # might was well write out everything, yes?
         the_aggregate = {'contests': self.contests,
                          'active_ggos': self.active_ggos,

@@ -22,10 +22,10 @@ import json
 class Contest:
     """A wrapper around the rules of engagement regarding a specific contest"""
 
-    # Legitimate Contest keys.  Note 'selection' and 'uid' are not
-    # legitimate keys for blank ballots
+    # Legitimate Contest keys.  Note 'selection', 'uid', and 'cloak'
+    # are not legitimate keys for blank ballots
     _keys = ['candidates', 'question', 'tally', 'win-by', 'max', 'write-in',
-                 'selection', 'uid']
+                 'selection', 'uid', 'cloak']
 
     # A simple numerical n digit uid
     _uids = {}
@@ -34,7 +34,7 @@ class Contest:
     @staticmethod
     def set_uid(a_contest_blob, ggo):
         """Will add a contest uid (only good within the context of this
-        specific election)
+        specific election) to the supplied contest.
         """
 #        import pdb; pdb.set_trace()
         name = next(iter(a_contest_blob))
@@ -51,7 +51,7 @@ class Contest:
     def check_syntax(a_contest_blob):
         """
         Will check the synatx of a contest somewhat and conveniently
-        return the name
+        return the contest name
         """
         name = next(iter(a_contest_blob))
         ### ZZZ - sanity check the name
@@ -61,7 +61,9 @@ class Contest:
         return name
 
     def __init__(self, a_contest_blob, ggo, contests_index):
-        """Boilerplate"""
+        """Construct the object placing the contest info in an attribute
+        while recording the meta data
+        """
         self.name = Contest.check_syntax(a_contest_blob)
         self.contest = a_contest_blob[self.name]
         self.ggo = ggo
@@ -76,10 +78,9 @@ class Contest:
                                  "- must be greater than 0")
 
     def __str__(self):
-        """Boilerplate"""
-        uber_contest = {'contest': self.contest, 'ggo': self.ggo, 'index': self.index,
-                            'name': self.name}
-        return json.dumps(uber_contest, sort_keys=True, indent=4, ensure_ascii=False)
+        """Return the contest contents as a print-able json string - careful ..."""
+        contest_dict = { key: self.contest[key] for key in [Contest._keys] if key in self.contest }
+        return json.dumps(contest_dict, sort_keys=True, indent=4, ensure_ascii=False)
 
     def get(self, name):
         """Generic getter - can raise KeyError"""
@@ -90,12 +91,8 @@ class Contest:
             if 'question' in self.contest:
                 return self.contest['question']
         # Return contest 'meta' data
-        if name == 'name':
-            return self.name
-        if name == 'ggo':
-            return self.ggo
-        if name == 'index':
-            return self.index
+        if name in ['name', 'ggo', 'index', 'contest']:
+            return getattr(self, name)
         # Else return contest data
         return getattr(self, 'contest')[name]
 

@@ -23,11 +23,14 @@ from contextlib import contextmanager
 #  Other imports:  critical, error, warning, info, debug
 from logging import info
 
+# pylint: disable=too-few-public-methods
 class Globals:
     """
     A placeholder for python code constants, not to be confused with VTP
     election tree constants which are located in the config.yaml files.
     """
+    # ZZZ - apparently the pythonic way to make these read only is to
+    # change them to properties.  For now have no setters.
     _config = {
         # The default location from the CWD of this program, which is different than
         # The location of the incoming ballot.json file etc
@@ -70,13 +73,12 @@ class Globals:
         """A generic getter"""
         return Globals._config[name]
 
-    @staticmethod
-    def set(name, value):
-        """A generic setter"""
-        if name in Globals._setters:
-            raise NameError("Globals are read-only")
-        else:
-            raise NameError("Name not accepted in set() method")
+    # @staticmethod
+    # def set(name, value):
+    #     """A generic setter"""
+    #     if name in Globals._setters:
+    #         raise NameError("Globals are read-only")
+    #     raise NameError(f"The supplied name ({name}) is not a valid Global constant")
 
 # pylint: disable=too-few-public-methods   # ZZZ - remove this later
 class Shellout:
