@@ -47,7 +47,7 @@ def get_random_branchpoint(branch):
     """Return a random branchpoint on the supplied branch"""
     result = Shellout.run(["git", "log", branch, "--pretty=format:'%h'"],
                 check=True, capture_output=True, text=True)
-    commits = [commit for commit in (line.strip() for line in
+    commits = [commit for commit in (line.strip("' ") for line in
                                          result.stdout.splitlines()) if commit]
     # the first record is never a real CVR
     del commits[-1]
@@ -83,9 +83,8 @@ def checkout_new_contest_branch(contest, ref_branch):
             # local branch and try again
             Shellout.run(["git", "checkout", current_branch], check=True)
             Shellout.run(["git", "branch", "-D", branch], check=True)
-            # At this point the local did not get created - try again
-            branch = contest.get('uid') + "/" + secrets.token_hex(5)
-#            branch = contest.get('uid') + "/" + str(uuid.uuid1().hex)[0:10]
+        # At this point the local did not get created - try again
+        branch = contest.get('uid') + "/" + secrets.token_hex(5)
 
     # At this point the remote branch was never created and in theory the local
     # tries have also deleted(?)
@@ -95,8 +94,9 @@ def get_n_other_contests(contest, branch):
     """Return a list of N already cast CVRs for the specified contest.
     """
     this_uid = contest.get('uid')
-    return Shellout.run(['git', 'log', branch, '--oneline', '--grep=^{"CVR"}'
-                               '--all-match', f'--grep="uid": "{this_uid}"'],
+    return Shellout.run(['git', 'log', branch, '--oneline', '--all-match',
+                             '--grep={"CVR"}',
+                             f'--grep="uid": "{this_uid}"'],
                      check=True, capture_output=True, text=True).stdout.strip()
 
 def get_cloaked_contests(contest, branch):
@@ -104,13 +104,14 @@ def get_cloaked_contests(contest, branch):
     ZZZ - cloaking actually is a difficult problem because a cloaked
     value should only ever be given out once and regardless whatever
     value is given out can be cross checked with other ballot receipts.
-    So a cloaked value is only good if the digest is never checked.
+    So a cloaked value is really only good if the digest is never
+    really checked.
     """
     this_uid = contest.get('uid')
     cloak_target = contest.get('cloak')
-    return Shellout.run(['git', 'log', branch, '--oneline', '--grep=^{"CVR"}'
-                               '--all-match', f'--grep="uid": "{this_uid}"',
-                               f'--grep="cloak": "{cloak_target}"'],
+    return Shellout.run(['git', 'log', branch, '--oneline', '--all-match',
+                             '--grep={"CVR"}', f'--grep="uid": "{this_uid}"',
+                             f'--grep="cloak": "{cloak_target}"'],
                      check=True, capture_output=True, text=True).stdout.strip()
 
 def contest_add_and_commit(branch):
@@ -207,26 +208,30 @@ def main():
     contests = Contests(a_ballot)
     with Shellout.changed_cwd(a_ballot.get_cvr_parent_dir(the_election_config)):
         for contest in contests:
-            # get N other values for each contest for this ballot
-            uid = contest.get('uid')
-            other_receipts[uid] = get_n_other_contests(contest, 'master')
-            # atomically create the branch locally and remotely
-            branches.append(checkout_new_contest_branch(contest, 'master'))
-            # commit the voter's choice
-            ballot_receipts[uid] = contest_add_and_commit(branches[-1])
-            # if cloaking, get those as well
-            if 'cloak' in contest.get('contest'):
-                cloak_receipts[uid] = get_cloaked_contests(contest, 'master')
+            import pdb; pdb.set_trace()
+            with Shellout.changed_branch('master'):
+                # get N other values for each contest for this ballot
+                uid = contest.get('uid')
+                other_receipts[uid] = get_n_other_contests(contest, 'master')
+                # atomically create the branch locally and remotely
+                branches.append(checkout_new_contest_branch(contest, 'master'))
+                # write out the voter's contest to CVRs/contest.json
+                a_ballot.write_contest(contest, the_election_config)
+                # commit the voter's contest
+                ballot_receipts[uid] = contest_add_and_commit(branches[-1])
+                # if cloaking, get those as well
+                if 'cloak' in contest.get('contest'):
+                    cloak_receipts[uid] = get_cloaked_contests(contest, 'master')
         # After all the contests digests have been generated and the
         # others and cloaks are in as much as possible, then push as
         # atomically as possible all the contests.
+        import pdb; pdb.set_trace()
         for branch in branches:
             Shellout.run(['git', 'push', 'origin', branch],
-                             printonly=args.printonly)
+                         printonly=args.printonly)
 
     debug(f"Ballot's digests:\n{ballot_receipts}")
     # ZZZ for now print entire ballot receipt
-    import pdb; pdb.set_trace()
 
     # for now print the voter's offset
 

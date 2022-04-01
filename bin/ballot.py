@@ -256,6 +256,14 @@ class Ballot:
                     Globals.get('CONTEST_FILE_SUBDIR'),
                     Globals.get('BALLOT_FILE'))
 
+    def gen_contest_location(self, config):
+        """Return the contest.json file location"""
+        return os.path.join(config.get('git_rootdir'),
+                    Globals.get('ROOT_ELECTION_DATA_SUBDIR'),
+                    self.ballot_subdir,
+                    Globals.get('CONTEST_FILE_SUBDIR'),
+                    Globals.get('CONTEST_FILE'))
+
     def write_blank_ballot(self, config, ballot_file='', style='json'):
         """
         will write out a blank ballot to a file in some format.
@@ -336,5 +344,15 @@ class Ballot:
         with open(ballot_file, 'w', encoding="utf8") as outfile:
             json.dump(the_aggregate, outfile, sort_keys=True, indent=4, ensure_ascii=False)
         return ballot_file
+
+    def write_contest(self, contest, config, contest_file=''):
+        """Write out the voter's contest"""
+        if not contest_file:
+            contest_file = self.gen_contest_location(config)
+            # The parent directory better exist or something is wrong
+        with open(contest_file, 'w', encoding="utf8") as outfile:
+            # The stringification of a contest is json
+            outfile.write(str(contest))
+        return contest_file
 
 # EOF

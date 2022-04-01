@@ -79,7 +79,8 @@ class Contest:
 
     def __str__(self):
         """Return the contest contents as a print-able json string - careful ..."""
-        contest_dict = { key: self.contest[key] for key in [Contest._keys] if key in self.contest }
+        contest_dict = { key: self.contest[key] for key in Contest._keys if key in self.contest }
+        contest_dict.update({'name': self.name, 'ggo': self.ggo})
         return json.dumps(contest_dict, sort_keys=True, indent=4, ensure_ascii=False)
 
     def get(self, name):

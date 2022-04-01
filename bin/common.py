@@ -116,4 +116,19 @@ class Shellout:
         finally:
             os.chdir(oldpwd)
 
+    @staticmethod
+    @contextmanager
+    def changed_branch(branch):
+        """
+        Context manager for temporarily encapsulating a potential git
+        branch change.  Will explicitly switch to the specified branch
+        before yielding.
+        """
+        Shellout.run(["git", "checkout", branch], check=True)
+        try:
+            yield
+        finally:
+            # switch the branch back
+            Shellout.run(["git", "checkout", branch], check=True)
+
 # EOF
