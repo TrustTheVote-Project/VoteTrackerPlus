@@ -44,7 +44,10 @@ from election_config import ElectionConfig
 
 # Functions
 def get_random_branchpoint(branch):
-    """Return a random branchpoint on the supplied branch"""
+    """Return a random branchpoint on the supplied branch
+
+    Requires the CWD to be the parent of the CVRs directory.
+    """
     result = Shellout.run(["git", "log", branch, "--pretty=format:'%h'"],
                 check=True, capture_output=True, text=True)
     commits = [commit for commit in (line.strip("' ") for line in
@@ -59,6 +62,8 @@ def checkout_new_contest_branch(contest, ref_branch):
     is no code yet to coordinate the potentially multiple scanners
     pushing to the same VC VTP git remote, use a highly unlikely GUID
     and try up to 3 times to get a unique branch.
+
+    Requires the CWD to be the parent of the CVRs directory.
     """
 
     # select a branchpoint
@@ -92,6 +97,8 @@ def checkout_new_contest_branch(contest, ref_branch):
 
 def get_n_other_contests(contest, branch):
     """Return a list of N already cast CVRs for the specified contest.
+
+    Requires the CWD to be the parent of the CVRs directory.
     """
     this_uid = contest.get('uid')
     return Shellout.run(['git', 'log', branch, '--oneline', '--all-match',
@@ -106,6 +113,8 @@ def get_cloaked_contests(contest, branch):
     value is given out can be cross checked with other ballot receipts.
     So a cloaked value is really only good if the digest is never
     really checked.
+
+    Requires the CWD to be the parent of the CVRs directory.
     """
     this_uid = contest.get('uid')
     cloak_target = contest.get('cloak')
@@ -115,12 +124,16 @@ def get_cloaked_contests(contest, branch):
                      check=True, capture_output=True, text=True).stdout.strip()
 
 def contest_add_and_commit(branch):
-    """Will git add and commit the new contest content
+    """Will git add and commit the new contest content.
+
+    Requires the CWD to be the parent of the CVRs directory.
     """
     # If this fails an shell error will be raised
-    Shellout.run(['git', 'add', Globals.get('CONTEST_FILE')],
+    contest_file = os.path.join(
+        Globals.get('CONTEST_FILE_SUBDIR'), Globals.get('CONTEST_FILE'))
+    Shellout.run(['git', 'add', contest_file],
                      printonly=args.printonly)
-    Shellout.run(['git', 'commit', '-F', Globals.get('CONTEST_FILE')],
+    Shellout.run(['git', 'commit', '-F', contest_file],
                      printonly=args.printonly)
     # Capture the digest
     digest = Shellout.run(['git', 'log', branch, '-1', '--pretty=format:"%H"'],
@@ -207,8 +220,8 @@ def main():
     branches = []
     contests = Contests(a_ballot)
     with Shellout.changed_cwd(a_ballot.get_cvr_parent_dir(the_election_config)):
+        # So, the CWD in this block is the state/town subfolder
         for contest in contests:
-            import pdb; pdb.set_trace()
             with Shellout.changed_branch('master'):
                 # get N other values for each contest for this ballot
                 uid = contest.get('uid')
@@ -225,7 +238,7 @@ def main():
         # After all the contests digests have been generated and the
         # others and cloaks are in as much as possible, then push as
         # atomically as possible all the contests.
-        import pdb; pdb.set_trace()
+#        import pdb; pdb.set_trace()
         for branch in branches:
             Shellout.run(['git', 'push', 'origin', branch],
                          printonly=args.printonly)
