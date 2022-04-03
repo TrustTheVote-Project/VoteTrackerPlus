@@ -56,8 +56,6 @@ def parse_arguments():
     """)
 
     Address.add_address_args(parser)
-    parser.add_argument('-f', "--file",
-                            help="override the default blank ballot location")
     parser.add_argument('-l', "--language", default='en',
                             help="will print the ballot in the specified language")
     parser.add_argument("-v", "--verbosity", type=int, default=3,
@@ -92,7 +90,7 @@ def main():
     # imported somehow. And all that comes later - for now just map an
     # address to a town.
     the_address = Address.create_address_from_args(args,
-                    ['verbosity', 'printonly', 'language', 'file'])
+                    ['verbosity', 'printonly', 'language'])
     the_address.map_ggos(the_election_config)
 
     # print some debugging info
@@ -112,7 +110,7 @@ def main():
 
     # Write it out
     if not args.printonly:
-        ballot_file = the_ballot.write_blank_ballot(the_election_config, args.file)
+        ballot_file = the_ballot.write_blank_ballot(the_election_config)
         info(f"Blank ballot file: {ballot_file}")
 
 if __name__ == '__main__':

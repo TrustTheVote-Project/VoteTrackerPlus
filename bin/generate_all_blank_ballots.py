@@ -78,17 +78,15 @@ def main():
     the_election_config = ElectionConfig()
     the_election_config.parse_configs()
 
-    # Loop over all towns, and for each town, loop over each sub GGO
-    # (via the DAG) looking for unique-ballot entries.  For each entry
-    # (there can be multiple defined per GGO), create the uid list
-    # unique blank ballot.
+    # Loop over all towns and for each town:
+    # - find all the unique-ballot entries and create a blank ballot
+    # - do the same for all descendents
 
-    # This may want to be either an Address or ElectionConfig method ZZZ
+    # It is not an error if there are multiple hits
 
-    debug(f"Ballot's digests:\n{ballot_receipts}")
+    # This method may want to be in either Address or ElectionConfig TBD
+
     # ZZZ for now print entire ballot receipt
-
-    # for now print the voter's offset
 
 if __name__ == '__main__':
     args = parse_arguments()

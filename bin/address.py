@@ -63,7 +63,7 @@ class Address:
         return Address(**my_args)
 
     @staticmethod
-    def add_address_args(parser, blank=True):
+    def add_address_args(parser, generic_address=False):
         """Helper function to add standard address program switches to argparse"""
 #        parser.add_argument('-c', "--csv",
 #                                help="a comma separated address")
@@ -72,12 +72,14 @@ class Address:
 #                                in which case the address is the number")
 #        parser.add_argument('-z', "--zipcode",
 #                                help="the zipcode field of an address")
-        if blank:
+        if not generic_address:
             parser.add_argument('-a', "--address",
                                     help="the number and name of the \
                                     street address (space separated)")
             parser.add_argument('-b', "--substreet",
                                     help="the substreet field of an address")
+        parser.add_argument('-g', "--generic_address",
+                                help="a comma separated blank ballot file basename")
         parser.add_argument('-t', "--town",
                                 help="the town field of an address")
         parser.add_argument('-s', "--state",
@@ -86,7 +88,7 @@ class Address:
     # pylint: disable=too-many-arguments
     def __init__(self, number="", street="", substreet="", town="",
                      state="", country="", zipcode="", csv="",
-                     voting_center=False):
+                     generic_address=False):
         """At the moment support only support a csv keyword and a
         reasonable dictionary set of keywords.
         """
@@ -122,7 +124,7 @@ class Address:
 
         # Note - an address needs all 'required' address fields to be specified
         required_fields = Globals.get('REQUIRED_GGO_ADDRESS_FIELDS').copy()
-        if not voting_center:
+        if not generic_address:
 #            import pdb; pdb.set_trace()
             required_fields += Globals.get('REQUIRED_NG_ADDRESS_FIELDS')
         missing_keys = [key for key in required_fields

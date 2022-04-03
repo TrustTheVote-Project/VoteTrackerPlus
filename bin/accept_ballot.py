@@ -163,9 +163,7 @@ def parse_arguments():
     """,
         formatter_class=argparse.RawDescriptionHelpFormatter)
 
-    Address.add_address_args(parser, False)
-    parser.add_argument('-f', "--file",
-                            help="override the default location of the cast ballot file")
+    Address.add_address_args(parser)
     parser.add_argument("-v", "--verbosity", type=int, default=3,
                             help="0 critical, 1 error, 2 warning, 3 info, 4 debug (def=3)")
     parser.add_argument("-n", "--printonly", action="store_true",
@@ -178,9 +176,6 @@ def parse_arguments():
                             stream=sys.stdout)
 
     # Validate required args
-    if not (parsed_args.file or (parsed_args.town and parsed_args.state)):
-        parser.error("Either a ballot file (-f <filename>) or an address "
-                     "(-a <number street> -t <town> -s <state>) is required")
     return parsed_args
 
 ################
@@ -193,16 +188,13 @@ def main():
     the_election_config = ElectionConfig()
     the_election_config.parse_configs()
 
-    # Process the address so to know where the ballot is.  The address
-    # is only necessary of the
-    voting_center_address = Address(state=args.state,
-                                    town=args.town,
-                                    voting_center=True)
-    voting_center_address.map_ggos(the_election_config)
+    the_address = Address.create_address_from_args(args,
+                    ['verbosity', 'printonly'])
+    the_address.map_ggos(the_election_config)
 
     # get the ballot for the specified address
     a_ballot = Ballot()
-    a_ballot.read_a_cast_ballot(voting_center_address, the_election_config, args.file)
+    a_ballot.read_a_cast_ballot(the_address, the_election_config)
 
     # the voter's row of digests (indexed by contest uid)
     ballot_receipts = {}

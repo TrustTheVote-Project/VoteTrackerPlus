@@ -312,7 +312,7 @@ class Ballot:
         else:
             raise NotImplementedError(f"Unsupported Ballot type ({style}) for reading")
 
-    def read_a_cast_ballot(self, address, config, ballot_file):
+    def read_a_cast_ballot(self, address, config, ballot_file=''):
         """
         Will return the dictionary of a cast ballot
         """
