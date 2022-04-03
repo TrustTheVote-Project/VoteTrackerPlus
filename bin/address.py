@@ -240,9 +240,14 @@ class Address:
             raise ValueError(f"The supplied address ({self}) "
                                  "matches multiple address_map files: "
                                  f"{addr_hits}")
-        # Note - the subdir should already have the correct os.path.sep
-        self.ballot_subdir = config.get_node(addr_hits[0], 'subdir')
-        # set the blank-ballot / CVRs node
-        self.ballot_node = addr_hits[0]
+        # Note1: the subdir should already have the correct
+        # os.path.sep.  Note2: The ballot_subdir could in theory be
+        # the GGO that defines the matching address regex OR simply be
+        # the_leaf_node.  For now just use the the_leaf_node
+        self.ballot_subdir = config.get_node(the_leaf_node, 'subdir')
+#        self.ballot_subdir = config.get_node(addr_hits[0], 'subdir')
+        # Ditto for ballot_node - set the blank-ballot / CVRs node
+        self.ballot_node = the_leaf_node
+#        self.ballot_node = addr_hits[0]
 
 # EOF

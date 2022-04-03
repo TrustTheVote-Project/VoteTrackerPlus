@@ -57,15 +57,17 @@ class Contest:
         ### ZZZ - sanity check the name
         for key in a_contest_blob[name]:
             if key not in Contest._keys:
-                raise KeyError(f"File ({filename}): "
-                               f"the specified key ({key}) is not a valid Contest key")
+                if filename:
+                    raise KeyError(f"File ({filename}): "
+                                   f"the specified key ({key}) is not a valid Contest key")
+                raise KeyError(f"The specified key ({key}) is not a valid Contest key")
         return name
 
     def __init__(self, a_contest_blob, ggo, contests_index):
         """Construct the object placing the contest info in an attribute
         while recording the meta data
         """
-        self.name = Contest.check_syntax(a_contest_blob)
+        self.name = Contest.check_syntax(a_contest_blob, '')
         self.contest = a_contest_blob[self.name]
         self.ggo = ggo
         self.index = contests_index
