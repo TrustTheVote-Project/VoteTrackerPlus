@@ -48,7 +48,7 @@ class Contest:
         Contest._nextuid += 1
 
     @staticmethod
-    def check_syntax(a_contest_blob):
+    def check_syntax(a_contest_blob, filename):
         """
         Will check the synatx of a contest somewhat and conveniently
         return the contest name
@@ -57,7 +57,8 @@ class Contest:
         ### ZZZ - sanity check the name
         for key in a_contest_blob[name]:
             if key not in Contest._keys:
-                raise KeyError(f"The specified key ({key}) is not a valid Contest key")
+                raise KeyError(f"File ({filename}): "
+                               f"the specified key ({key}) is not a valid Contest key")
         return name
 
     def __init__(self, a_contest_blob, ggo, contests_index):

@@ -71,6 +71,11 @@ class ElectionConfig:
     legitimate options for a specific GGO are as they are listed in
     the GGO's contest dictionary.
 
+    Regarding the address_map.yaml file, wherever there is one defined
+    (via 'unique-ballots'), the address blocks defined thus will
+    specify where the matching addresses will drop the blank ballots
+    and where the associated CVRs subfolder will also be placed.
+
     CURRENT RUNTIME RESTRICTIONS:
 
     The CWD must either be the root of workspace for the VTP election
@@ -84,8 +89,9 @@ class ElectionConfig:
     """
 
     # Legitimate top-level keys
-    _root_config_keys = ['GGOs', 'contests', 'submodules', 'vote centers']
-    _root_address_map_keys = ['ggos', 'addresses']
+    _config_keys = ['GGOs', 'contests', 'submodules', 'vote centers']
+    _address_map_keys = ['unique-ballots']
+    _address_map_subkeys = ['addresses', 'ggos']
 
     # A simple numerical n digit GGO uid
     _uids = {}
@@ -113,24 +119,61 @@ class ElectionConfig:
         # ZZZ need a bunch more QA checks here and one day deal with unicode
 
     @staticmethod
+    def check_config_syntax(config, filename):
+        """Validate the config.yaml syntax"""
+        bad_keys = [key for key in config if not key in ElectionConfig._config_keys]
+        if bad_keys:
+            raise KeyError(f"File ({filename}): "
+                           f"the following config keys are not supported: {bad_keys}")
+
+    @staticmethod
+    def check_address_map_syntax(address_map, filename):
+        """Validate the address_map.yaml syntax"""
+        bad_keys = [key for key in address_map if not key in
+                        ElectionConfig._address_map_keys]
+        if bad_keys:
+            import pdb; pdb.set_trace()
+            raise KeyError(f"File ({filename}): "
+                           f"the following address_map keys are not supported: {bad_keys}")
+        # also check subkeys
+        if 'unique-ballots' in address_map:
+            for entry in address_map['unique-ballots']:
+                bad_keys = [key for key in entry if not key in
+                                ElectionConfig._address_map_subkeys]
+                if bad_keys:
+                    raise KeyError(f"File ({filename}): "
+                                   "the following address_map subkeys are not "
+                                   f"supported: {bad_keys}")
+
+    @staticmethod
     def read_address_map(filename):
         """
         Read the address_map yaml file return the dictionary but
-        only if the file exists.  If the file does not exist, then
-        any address inside that specific GGO will be added to the
-        super GGO.
+        only if the file exists.  Check the syntax.
         """
         if os.path.isfile(filename):
-            with open(filename, 'r', encoding="utf8") as am_file:
-                this_address_map = yaml.load(am_file, Loader=yaml.FullLoader)
-                # sanity-check it
-                bad_keys = [key for key in this_address_map
-                    if not key in ElectionConfig._root_address_map_keys]
-                if bad_keys:
-                    raise KeyError(("The following address_map keys are not "
-                        f"supported: {bad_keys}"))
-                return this_address_map
+            with open(filename, 'r', encoding="utf8") as map_file:
+                this_address_map = yaml.load(map_file, Loader=yaml.FullLoader)
+            # sanity-check it
+            ElectionConfig.check_address_map_syntax(this_address_map, filename)
+            return this_address_map
         return {}
+
+    @staticmethod
+    def read_config_file(filename):
+        """
+        Read the confgi yaml file return the dictionary and check the syntax.
+        """
+        with open(filename, 'r', encoding="utf8") as config_file:
+            config = yaml.load(config_file, Loader=yaml.FullLoader)
+        # sanity-check it
+        ElectionConfig.check_config_syntax(config, filename)
+        # should really sanity check the contests too
+        if 'contests' in config:
+            for contest in config['contests']:
+                Contest.check_syntax(contest, filename)
+                Contest.set_uid(contest, '.')
+        return config
 
     def __init__(self):
         """Stubbed out for now - returns an object reading to be
@@ -160,9 +203,9 @@ class ElectionConfig:
 
     def get(self, name):
         """A generic getter - will raise a NameError if name is not defined"""
-        if name in ElectionConfig._root_config_keys:
+        if name in ElectionConfig._config_keys:
             return getattr(self, "config")[name]
-        if name in ElectionConfig._root_address_map_keys:
+        if name in ElectionConfig._address_map_keys:
             return getattr(self, "config")[name]
         if name == "git_rootdir":
             return self.git_rootdir
@@ -215,45 +258,26 @@ class ElectionConfig:
         """Return the serialization of this instance's ElectionConfig dictionary"""
         return str(list(self.get_dag('topo')))
 
+    # This defunct with the address_map design change - there are no
+    # lnnger any such thing as an implicit address include - all
+    # address_map includes are now explicit in the address_map.yaml
+    # files themselves. The digraph DAG is just the explicit GGO DAG
+    # and not that plus an implicit address_map include.
     def add_additional_edges(self):
         """Will add implicit address includes from one
         parent/sibling to another sibling/child
         """
-        # pylint: disable=too-many-nested-blocks
         for node in networkx.topological_sort(self.digraph):
-            if 'ggos' in self.digraph.nodes[node]['address_map']:
-                for kind in self.digraph.nodes[node]['address_map']['ggos']:
-                    if len(self.digraph.nodes[node]['address_map']['ggos'][kind]) > 0:
-                        for kind_value in self.digraph.nodes[node]['address_map']['ggos'][kind]:
-                            if kind_value == '.*':
-                                # Includes all kind_instance of this.
-                                # Assumes each value is a valid node
-                                # reference - which as of 2022/03/22
-                                # is now the full posix relative
-                                # subdir path
-                                for other in self.digraph.nodes:
-                                    if self.digraph.nodes[other]['kind'] == kind:
-                                        self.digraph.add_edge(node, other)
-                            elif '../' not in kind:
-                                # Assume this is a valid node name
-                                # when appended with kind instance
-                                # name AND that it is relative to (the
-                                # current) node! Later other syntax's
-                                # can be be supported as desired
-                                self.digraph.add_edge(node, posixpath.normpath(
-                                    posixpath.join(node, '../..', kind, kind_value)))
-                                # Note - the '../..' wipes out the
-                                # current nodes kind and kind_value
-                            else:
-#                                import pdb; pdb.set_trace()
-                                # Need to handle relative GGO pathing
-                                parts = re.split('/', kind)
-                                # Each '../' is a GGO level, which is
-                                # 3 subdirectories.
-                                self.digraph.add_edge(node, posixpath.normpath(
-                                    posixpath.join(node,
-                                                '../' * ((len(parts) - 1) * 3),
-                                                'GGOs', parts[-1], kind_value)))
+            if 'unique-ballots' in self.digraph.nodes[node]['address_map']:
+                for entry in self.digraph.nodes[node]['address_map']['unique-ballots']:
+                    # Each unique-ballot is a unique sorted list of
+                    # GGOs. And it is a syntax error if there is not a
+                    # ggos subkey.
+                    import pdb; pdb.set_trace()
+                    for ggo in entry['ggos']:
+                        # if this edge does not exist, add it
+                        if not self.digraph.has_edge(node, ggo):
+                            self.digraph.add_edge(node, ggo)
 
     def parse_configs(self):
         """Will inspect the data in the root config and load the
@@ -268,25 +292,10 @@ class ElectionConfig:
         """
 
         # read the root config and address_map files
-        with open(self.root_config_file, 'r', encoding="utf8") as file:
-            config = yaml.load(file, Loader=yaml.FullLoader)
-        # sanity-check it
-        bad_keys = [key for key in config if not key in ElectionConfig._root_config_keys]
-        if bad_keys:
-            raise KeyError(f"The following config keys are not supported: {bad_keys}")
-        # should really sanity check the contests too
-        if 'contests' in config:
-            for contest in config['contests']:
-                Contest.check_syntax(contest)
-                Contest.set_uid(contest, '.')
+        config = ElectionConfig.read_config_file(self.root_config_file)
 
         # read the root address_map and sanity check that
-        with open(self.root_address_map_file, 'r', encoding="utf8") as file:
-            address_map = yaml.load(file, Loader=yaml.FullLoader)
-        bad_keys = [key for key in address_map if not key in
-                        ElectionConfig._root_address_map_keys]
-        if bad_keys:
-            raise KeyError(f"The following address_map keys are not supported: {bad_keys}")
+        address_map = ElectionConfig.read_address_map(self.root_address_map_file)
 
         def recursively_parse_tree(subdir, parent_node_name):
             """Something to recursivelty parse the GGO tree"""
@@ -304,50 +313,37 @@ class ElectionConfig:
                         ElectionConfig.is_valid_ggo_string(ggo)
                         ggo_file = os.path.join(ggo_subdir_abspath, ggo, Globals.get("CONFIG_FILE"))
                         # read the child config
-                        with open(ggo_file, 'r', encoding="utf8") as file:
-                            this_config = yaml.load(file, Loader=yaml.FullLoader)
+                        this_config = ElectionConfig.read_config_file(ggo_file)
 
-                            # sanity-check it
-                            bad_keys = [key for key in this_config
-                                            if not key in ElectionConfig._root_config_keys]
-                            if bad_keys:
-                                raise KeyError(("The following config keys are not supported: "
-                                                    f"{bad_keys}"))
-                            # should really sanity check the contests too again
-#                            import pdb; pdb.set_trace()
-                            if 'contests' in this_config:
-                                for contest in this_config['contests']:
-                                    Contest.check_syntax(contest)
-                                    Contest.set_uid(contest, ggo)
+                        # Do not hit a node twice - it is a config error if so
+                        next_subdir = os.path.join(subdir, ggo_kind, ggo)
+                        if next_subdir in self.parsed_configs:
+                            raise LookupError(("Attempting to load the config file located at "
+                                                   f"({next_subdir}) a second time"))
+                        self.parsed_configs.append(next_subdir)
 
-                            # Do not hit a node twice - it is a config error if so
-                            next_subdir = os.path.join(subdir, ggo_kind, ggo)
-                            if next_subdir in self.parsed_configs:
-                                raise LookupError(("Attempting to load the config file located at "
-                                                       f"({next_subdir}) a second time"))
-                            self.parsed_configs.append(next_subdir)
+                        # Before recursing, read in address_map and add it to the node
+                        # Note - reading will check syntax
+                        this_address_map = ElectionConfig.read_address_map(os.path.join(
+                            ggo_subdir_abspath, ggo, Globals.get("ADDRESS_MAP_FILE")))
 
-                            # Before recursing, read in address_map and add it to the node
-                            this_address_map = ElectionConfig.read_address_map(os.path.join(
-                                ggo_subdir_abspath, ggo, Globals.get("ADDRESS_MAP_FILE")))
+                        # Now add this ggo_kind and ggo to the DAG.  Always use '/'
+                        this_dag_node = posixpath.join(subdir.replace('\\','/'),
+                                                           ggo_kind, ggo)
+                        if this_dag_node in self.digraph.nodes:
+                            raise LookupError(("Attempting to re-add the same node "
+                                                   f"into the DAG ({this_dag_node}) "
+                                                   f"from file {next_subdir}"))
+                        self.digraph.add_node(this_dag_node, kind=ggo_kind, config=this_config,
+                            ggo_name=ggo,
+                            uid=ElectionConfig.get_next_uid(ggo),
+                            address_map=this_address_map,
+                            subdir=os.path.join(subdir, ggo_kind, ggo))
+                        self.digraph.add_edge(parent_node_name, this_dag_node)
 
-                            # Now add this ggo_kind and ggo to the DAG.  Always use '/'
-                            this_dag_node = posixpath.join(subdir.replace('\\','/'),
-                                                               ggo_kind, ggo)
-                            if this_dag_node in self.digraph.nodes:
-                                raise LookupError(("Attempting to re-add the same node "
-                                                       f"into the DAG ({this_dag_node}) "
-                                                       f"from file {next_subdir}"))
-                            self.digraph.add_node(this_dag_node, kind=ggo_kind, config=this_config,
-                                ggo_name=ggo,
-                                uid=ElectionConfig.get_next_uid(ggo),
-                                address_map=this_address_map,
-                                subdir=os.path.join(subdir, ggo_kind, ggo))
-                            self.digraph.add_edge(parent_node_name, this_dag_node)
-
-                            # Recurse - depth first is ok
-                            recursively_parse_tree(os.path.join(next_subdir, "GGOs"),
-                                this_dag_node)
+                        # Recurse - depth first is ok
+                        recursively_parse_tree(os.path.join(next_subdir, "GGOs"),
+                            this_dag_node)
 
         # Now recursively walk the directory structure of config and
         # address_map files (depth first)
@@ -357,8 +353,4 @@ class ElectionConfig:
                                   subdir=".")
         recursively_parse_tree ("GGOs", '.')
 
-        # Now add in edges curtesy of any implicit address_map
-        # references.  Note - all the nodes have been added at this
-        # point - only the implicit address_map edges are missing.
-        ElectionConfig.add_additional_edges(self)
 # EOF

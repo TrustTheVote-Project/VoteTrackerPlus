@@ -189,43 +189,31 @@ class Address:
         """Will map an address onto the ElectionConfig data
         """
         footsteps = set()
-        def find_ancestors(node_of_interest):
-            """Will find all the ancestor of this node"""
-            for parent in config.ancestors(node_of_interest):
-                if parent in footsteps:
-                    continue
-                if parent not in self.active_ggos:
-                    # Note - for indirect GGOs where the boundery does
-                    # not match the boundary(s) of the leaf node of the
-                    # REQUIRED_GGO_ADDRESS_FIELDS chain (default is
-                    # towns), there needs to be an address test here to
-                    # test against the address (that defines the non
-                    # matching boundary).
-                    self.active_ggos.append(parent)
-                footsteps.add(parent)
-                find_ancestors(parent)
+        addr_hits = []
 
-        def find_descendants(node_of_interest):
+        def walk_descendants(node_of_interest):
             """Will find all descendantss of this node"""
+            # pylint: disable=too-many-nested-blocks
+            if 'unique-ballots' in config.node(node_of_interest)['address_map']:
+                for entry in config.node(node_of_interest)['address_map']['unique-ballots']:
+                    for addr in entry['addresses']:
+#                        import pdb; pdb.set_trace()
+                        if self.match(addr):
+                            # add the ggos in order if not already present
+                            for ggo in entry['ggos']:
+                                if ggo not in self.active_ggos:
+                                    self.active_ggos.append(ggo)
+                            addr_hits.append(node_of_interest)
+            footsteps.add(node_of_interest)
             for child in config.descendants(node_of_interest):
                 if child in footsteps:
                     continue
-                if child not in self.active_ggos:
-                    # Need to test agains the address_map field
-                    if ('address_map' in config.node(child) and
-                        'addresses' in config.node(child)['address_map']):
-                        # loop over each address and see if there is match.
-                        for addr in config.node(child)['address_map']['addresses']:
-                            if self.match(addr):
-                                self.active_ggos.append(child)
-                                break
-                footsteps.add(child)
-                find_descendants(child)
+                walk_descendants(child)
 
         # Note - the root GGO always contributes
         self.active_ggos.append('.')
         breadcrumbtrail = ''
-        # Walk the address in DAG order from root to a leaf.
+        # Walk the address in DAG order from root to the prescribed leafs
         for field in Globals.get('REQUIRED_GGO_ADDRESS_FIELDS'):
             # For this field in the address, get the correct ggo kind and instance
             node = posixpath.join(breadcrumbtrail, 'GGOs',
@@ -236,18 +224,25 @@ class Address:
             self.active_ggos.append(node)
             breadcrumbtrail = node
 
-        # Note that the first node in active_ggos is the root and the
-        # last is the leaf most implicit node. However, there can be
-        # descendant nodes (within this leaf node). For simplicity and
-        # without knowing more at this time, only support ancestors
-        # from this node and not from descendants of this node.
-        the_address_node = self.active_ggos[-1]
-        # cache the ballot node and subdir - this could be bad TBD
-        self.ballot_node = the_address_node
+        # The above for loop will append in order the explicit
+        # REQUIRED_GGO_ADDRESS_FIELDS ggo ordering.  Once in the leaf
+        # node, just match against the N possible unique-ballots
+        # entries.  Walk all entries regardless of the number of hits
+        # and raise an error if multiple or no hits.
+        the_leaf_node = self.active_ggos[-1]
+        # Look for address hits
+        walk_descendants(the_leaf_node)
+        # test to see how many address hits were found
+        if len(addr_hits) == 0:
+            raise ValueError(f"The supplied address ({self}) "
+                                 "does not match any address_map")
+        if len(addr_hits) > 1:
+            raise ValueError(f"The supplied address ({self}) "
+                                 "matches multiple address_map files: "
+                                 f"{addr_hits}")
         # Note - the subdir should already have the correct os.path.sep
-        self.ballot_subdir = config.get_node(the_address_node, 'subdir')
-        find_ancestors(the_address_node)
-        # Now find any descendantss
-        find_descendants(the_address_node)
+        self.ballot_subdir = config.get_node(addr_hits[0], 'subdir')
+        # set the blank-ballot / CVRs node
+        self.ballot_node = addr_hits[0]
 
 # EOF
