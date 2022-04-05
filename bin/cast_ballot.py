@@ -110,18 +110,19 @@ def main():
             loop -= 1
     debug("And the ballot looks like:\n" + pprint.pformat(a_ballot.dict()))
 
-#    import pdb; pdb.set_trace()
-    # write the voted ballot out
     if args.printonly:
-        ballot_file = a_ballot.gen_cast_ballot_location(the_election_config)
+        ballot_file = Ballot.gen_cast_ballot_location(the_election_config,
+                                                          a_ballot.get('ballot_subdir'))
     else:
         ballot_file = a_ballot.write_a_cast_ballot(the_election_config)
     # example of digging deeply into ElectionConfig data ...
-    voting_centers = iter(the_election_config.get_node(a_ballot.get('ballot_node'),
-                            'config')['vote centers'].items())
-    info(f"Casting a {contests.len()} contest ballot at VC "
-             f"{next(voting_centers)}")
-    info(f"Cast ballot file: {ballot_file}")
+    voting_centers = the_election_config.get_node(a_ballot.get('ballot_node'),
+                            'config')['voting centers']
+    # write the voted ballot out
+#    import pdb; pdb.set_trace()
+    for vc in voting_centers:
+        info(f"Casting a {contests.len()} contest ballot at VC {vc}")
+        info(f"Cast ballot file: {ballot_file}")
 
 if __name__ == '__main__':
     args = parse_arguments()

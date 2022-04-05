@@ -30,12 +30,12 @@ See ../docs/tech/executable-overview.md for the context in which this file was c
 import sys
 import argparse
 import logging
-from logging import debug
+from logging import info, debug
+import pprint
 
 # Local import
-from common import Globals, Shellout
 from address import Address
-from ballot import Ballot, Contests
+from ballot import Ballot
 from election_config import ElectionConfig
 
 # Functions
@@ -78,15 +78,31 @@ def main():
     the_election_config = ElectionConfig()
     the_election_config.parse_configs()
 
-    # Loop over all towns and for each town:
-    # - find all the unique-ballot entries and create a blank ballot
-    # - do the same for all descendents
-
-    # It is not an error if there are multiple hits
-
-    # This method may want to be in either Address or ElectionConfig TBD
-
-    # ZZZ for now print entire ballot receipt
+    # Walk a topo sort of the DAG and for any node with
+    # 'unique-ballots', add them all.  If the subdir does not match
+    # REQUIRED_GGO_ADDRESS_FIELDS, place the blank ballot
+    for node in the_election_config.get_dag('topo'):
+        import pdb; pdb.set_trace()
+        address_map = the_election_config.get_node(node, 'address_map')
+        if 'unique-ballots' in address_map:
+            for _ in address_map['unique-ballots']:
+                subdir = the_election_config.get_node(node, 'subdir')
+                # if the subdir is not a state/town, shorten it to that
+                subdir = '/'.join(subdir.split('/')[0:6])
+                # Now create a generic address on the list of ggos, an
+                # associated generic blank ballot, and store it out
+                generic_address = Address.create_generic_address(
+                    the_election_config, subdir)
+                generic_ballot = Ballot()
+                generic_ballot.create_blank_ballot(
+                    generic_address, the_election_config)
+                info(f"Active GGOs: {generic_ballot.get('active_ggos')}")
+                debug("And the blank ballot looks like:\n" +
+                          pprint.pformat(generic_ballot.dict()))
+                # Write it out
+                if not args.printonly:
+                    ballot_file = generic_ballot.write_blank_ballot(the_election_config)
+                    info(f"Blank ballot file: {ballot_file}")
 
 if __name__ == '__main__':
     args = parse_arguments()

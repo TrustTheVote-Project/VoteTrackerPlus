@@ -63,6 +63,11 @@ class Globals:
         'SHELL_TIMEOUT': 15,
         # Number of ballots on a ballot receipt
         'BALLOT_RECEIPT_ROWS': 100,
+        # Map the ElectionConfig 'kind' to the Address 'kind'
+        'kinds_map': {'state':'states', 'town':'towns', 'county':'counties',
+                      'SchoolDistrict':'SchoolDistricts',
+                      'CouncilDistrict':'CouncilDistricts',
+                      'Precinct':'Precincts'}
         }
 
     # Legitimate setters

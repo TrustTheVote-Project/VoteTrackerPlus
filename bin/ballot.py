@@ -105,6 +105,24 @@ class Ballot:
     files.
     """
 
+    @staticmethod
+    def gen_cast_ballot_location(config, subdir):
+        """Return the file location of a cast ballot"""
+        return os.path.join(config.get('git_rootdir'),
+                    Globals.get('ROOT_ELECTION_DATA_SUBDIR'),
+                    subdir,
+                    Globals.get('CONTEST_FILE_SUBDIR'),
+                    Globals.get('BALLOT_FILE'))
+
+    @staticmethod
+    def gen_contest_location(config, subdir):
+        """Return the contest.json file location"""
+        return os.path.join(config.get('git_rootdir'),
+                    Globals.get('ROOT_ELECTION_DATA_SUBDIR'),
+                    subdir,
+                    Globals.get('CONTEST_FILE_SUBDIR'),
+                    Globals.get('CONTEST_FILE'))
+
     def __init__(self):
         """Constructor - just creates the dictionary and returns the
         object
@@ -248,22 +266,6 @@ class Ballot:
                     style,
                     self.gen_unique_blank_ballot_name(config, Globals.get('BALLOT_FILE')))
 
-    def gen_cast_ballot_location(self, config):
-        """Return the file location of a cast ballot"""
-        return os.path.join(config.get('git_rootdir'),
-                    Globals.get('ROOT_ELECTION_DATA_SUBDIR'),
-                    self.ballot_subdir,
-                    Globals.get('CONTEST_FILE_SUBDIR'),
-                    Globals.get('BALLOT_FILE'))
-
-    def gen_contest_location(self, config):
-        """Return the contest.json file location"""
-        return os.path.join(config.get('git_rootdir'),
-                    Globals.get('ROOT_ELECTION_DATA_SUBDIR'),
-                    self.ballot_subdir,
-                    Globals.get('CONTEST_FILE_SUBDIR'),
-                    Globals.get('CONTEST_FILE'))
-
     def write_blank_ballot(self, config, ballot_file='', style='json'):
         """
         will write out a blank ballot to a file in some format.
@@ -312,16 +314,13 @@ class Ballot:
         else:
             raise NotImplementedError(f"Unsupported Ballot type ({style}) for reading")
 
-    def read_a_cast_ballot(self, address, config, ballot_file=''):
+    def read_a_cast_ballot(self, address, config):
         """
-        Will return the dictionary of a cast ballot
+        Will return the dictionary of a cast ballot.  Needs an address
+        so to get the correct ballot_subdir to read the caste ballot
+        from.
         """
-        if not ballot_file:
-            # hackito ergo sum - see above explanation
-            self.active_ggos = address.get('active_ggos')
-            self.ballot_subdir = address.get('ballot_subdir')
-            self.ballot_node = address.get('ballot_node')
-            ballot_file = self.gen_cast_ballot_location(config)
+        ballot_file = Ballot.gen_cast_ballot_location(config, address.get('ballot_subdir'))
         with open(ballot_file, 'r', encoding="utf8") as file:
             json_doc = json.load(file)
             self.contests = json_doc['contests']
@@ -329,13 +328,12 @@ class Ballot:
             self.ballot_subdir = json_doc['ballot_subdir']
             self.ballot_node = json_doc['ballot_node']
 
-    def write_a_cast_ballot(self, config, ballot_file=''):
+    def write_a_cast_ballot(self, config):
         """
         Will write out a cast ballot in json
         """
-        if not ballot_file:
-            ballot_file = self.gen_cast_ballot_location(config)
-            os.makedirs(os.path.dirname(ballot_file), exist_ok=True)
+        ballot_file = Ballot.gen_cast_ballot_location(config, self.ballot_subdir)
+        os.makedirs(os.path.dirname(ballot_file), exist_ok=True)
         # might was well write out everything, yes?
         the_aggregate = {'contests': self.contests,
                          'active_ggos': self.active_ggos,
@@ -345,11 +343,10 @@ class Ballot:
             json.dump(the_aggregate, outfile, sort_keys=True, indent=4, ensure_ascii=False)
         return ballot_file
 
-    def write_contest(self, contest, config, contest_file=''):
+    def write_contest(self, contest, config):
         """Write out the voter's contest"""
-        if not contest_file:
-            contest_file = self.gen_contest_location(config)
-            # The parent directory better exist or something is wrong
+        contest_file = Ballot.gen_contest_location(config, self.ballot_subdir)
+        # The parent directory better exist or something is wrong
         with open(contest_file, 'w', encoding="utf8") as outfile:
             # The stringification of a contest is json
             outfile.write(str(contest))

@@ -17,6 +17,7 @@
 
 """An Address class for VoteTracker+"""
 
+import os
 import re
 import posixpath
 from common import Globals
@@ -36,11 +37,6 @@ class Address:
     # Legitimate keys in the correct order
     _keys = ['number', 'street', 'substreet', 'town', 'state',
                  'country', 'zipcode']
-    # Map the ElectionConfig 'kind' to the Address 'kind'
-    _kinds_map = {'state':'states', 'town':'towns', 'county':'counties',
-                      'SchoolDistrict':'SchoolDistricts',
-                      'CouncilDistrict':'CouncilDistricts',
-                      'Precinct':'Precincts'}
 
     @staticmethod
     def convert_address_to_num_street(address):
@@ -48,7 +44,7 @@ class Address:
         return re.split(r'\s+', address, 1)
 
     @staticmethod
-    def create_address_from_args(args, args_to_strip):
+    def create_address_from_args(args, args_to_strip, generic_address=False):
         """Helper function to strip just the address specific switches
         from the program args and return the new address.
         """
@@ -56,10 +52,13 @@ class Address:
         for key in args_to_strip:
             del my_args[key]
         # if address was supplied, get rid of that too
-        if my_args['address']:
-            my_args['number'], my_args['street'] = \
-            Address.convert_address_to_num_street(my_args['address'])
-        del my_args['address']
+        if not generic_address:
+            if my_args['address']:
+                my_args['number'], my_args['street'] = \
+                Address.convert_address_to_num_street(my_args['address'])
+            del my_args['address']
+        if generic_address:
+            my_args['generic_address'] = True
         return Address(**my_args)
 
     @staticmethod
@@ -78,12 +77,26 @@ class Address:
                                     street address (space separated)")
             parser.add_argument('-b', "--substreet",
                                     help="the substreet field of an address")
-        parser.add_argument('-g', "--generic_address",
-                                help="a comma separated blank ballot file basename")
         parser.add_argument('-t', "--town",
                                 help="the town field of an address")
         parser.add_argument('-s', "--state",
                                 help="the state/province field of an address")
+
+    @staticmethod
+    def create_generic_address(config, subdir):
+        """Will create/return a generic address nominally from the list
+        of ggos
+        """
+        # Walk the address in DAG order from root to the prescribed leafs
+        nodes = []
+        count = 0
+        for _ in Globals.get('REQUIRED_GGO_ADDRESS_FIELDS'):
+            # Get the basename of the node via its subdir
+            name = subdir.split(os.path.sep)[(count+1)*2]
+            nodes[count] = name
+            count += 1
+        address = Address(state=nodes[0], town=nodes[1], generic_address=True)
+        return address.map_ggos(config, allow_generic_address=True)
 
     # pylint: disable=too-many-arguments
     def __init__(self, number="", street="", substreet="", town="",
@@ -182,12 +195,14 @@ class Address:
         """Will regex the supplied regex against the address"""
         # For now if regex is a string, it is a number and street
         # address only
+        if self.address['number'] == '' and self.address['street'] == '':
+            return False
         if isinstance(regex, str):
             return re.match(regex, self.address['number'] + ' ' + self.address['street'])
         raise ValueError((f"Unsupoorted Address match regex ({regex}) - ",
                         "supply more quality pizza"))
 
-    def map_ggos(self, config):
+    def map_ggos(self, config, allow_generic_address=False):
         """Will map an address onto the ElectionConfig data
         """
         footsteps = set()
@@ -214,28 +229,31 @@ class Address:
 
         # Note - the root GGO always contributes
         self.active_ggos.append('.')
+        # 2022/04/04: mmm, thinking that this is too complicated to
+        # explain to people who may be modifying address_map.yaml
+        # files.  So no longer assume that the state and town are
+        # automatically included in the active GGOs of an address and
+        # hence a ballot.  The ggo list within the unique-ballots will
+        # be the complete list.  However, will still determine the
+        # leaf node from REQUIRED_GGO_ADDRESS_FIELDS.  And the order
+        # will be determined by the unique-ballots list as well.
         breadcrumbtrail = ''
+        the_leaf_node = ''
         # Walk the address in DAG order from root to the prescribed leafs
         for field in Globals.get('REQUIRED_GGO_ADDRESS_FIELDS'):
             # For this field in the address, get the correct ggo kind and instance
             node = posixpath.join(breadcrumbtrail, 'GGOs',
-                                      Address._kinds_map[field], self.get(field))
+                                      Globals.get('kinds_map')[field], self.get(field))
             # Better to sanity check now later
             if not config.is_node(node):
                 raise ValueError(f"Bad ElectionConfig node name ({node})")
-            self.active_ggos.append(node)
+            the_leaf_node = node
             breadcrumbtrail = node
-
-        # The above for loop will append in order the explicit
-        # REQUIRED_GGO_ADDRESS_FIELDS ggo ordering.  Once in the leaf
-        # node, just match against the N possible unique-ballots
-        # entries.  Walk all entries regardless of the number of hits
-        # and raise an error if multiple or no hits.
-        the_leaf_node = self.active_ggos[-1]
-        # Look for address hits
+        # Now look for address_map hits and load the explicit active
+        # goos explicitly from there
         walk_descendants(the_leaf_node)
         # test to see how many address hits were found
-        if len(addr_hits) == 0:
+        if not allow_generic_address and len(addr_hits) == 0:
             raise ValueError(f"The supplied address ({self}) "
                                  "does not match any address_map")
         if len(addr_hits) > 1:
@@ -247,9 +265,7 @@ class Address:
         # the GGO that defines the matching address regex OR simply be
         # the_leaf_node.  For now just use the the_leaf_node
         self.ballot_subdir = config.get_node(the_leaf_node, 'subdir')
-#        self.ballot_subdir = config.get_node(addr_hits[0], 'subdir')
         # Ditto for ballot_node - set the blank-ballot / CVRs node
         self.ballot_node = the_leaf_node
-#        self.ballot_node = addr_hits[0]
 
 # EOF

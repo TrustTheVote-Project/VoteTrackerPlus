@@ -89,7 +89,7 @@ class ElectionConfig:
     """
 
     # Legitimate top-level keys
-    _config_keys = ['GGOs', 'contests', 'submodules', 'vote centers']
+    _config_keys = ['GGOs', 'contests', 'submodules', 'voting centers']
     _address_map_keys = ['unique-ballots']
     _address_map_subkeys = ['addresses', 'ggos']
 
@@ -132,7 +132,7 @@ class ElectionConfig:
         bad_keys = [key for key in address_map if not key in
                         ElectionConfig._address_map_keys]
         if bad_keys:
-            import pdb; pdb.set_trace()
+#            import pdb; pdb.set_trace()
             raise KeyError(f"File ({filename}): "
                            f"the following address_map keys are not supported: {bad_keys}")
         # also check subkeys
@@ -273,7 +273,7 @@ class ElectionConfig:
                     # Each unique-ballot is a unique sorted list of
                     # GGOs. And it is a syntax error if there is not a
                     # ggos subkey.
-                    import pdb; pdb.set_trace()
+#                    import pdb; pdb.set_trace()
                     for ggo in entry['ggos']:
                         # if this edge does not exist, add it
                         if not self.digraph.has_edge(node, ggo):
@@ -327,7 +327,9 @@ class ElectionConfig:
                         this_address_map = ElectionConfig.read_address_map(os.path.join(
                             ggo_subdir_abspath, ggo, Globals.get("ADDRESS_MAP_FILE")))
 
-                        # Now add this ggo_kind and ggo to the DAG.  Always use '/'
+                        # Now add this ggo_kind and ggo to the DAG.
+                        # Always use '/' - nodes in the digraph always
+                        # use forward slash, but subdir are os.path.sep
                         this_dag_node = posixpath.join(subdir.replace('\\','/'),
                                                            ggo_kind, ggo)
                         if this_dag_node in self.digraph.nodes:

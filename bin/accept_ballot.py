@@ -163,7 +163,7 @@ def parse_arguments():
     """,
         formatter_class=argparse.RawDescriptionHelpFormatter)
 
-    Address.add_address_args(parser)
+    Address.add_address_args(parser, True)
     parser.add_argument("-v", "--verbosity", type=int, default=3,
                             help="0 critical, 1 error, 2 warning, 3 info, 4 debug (def=3)")
     parser.add_argument("-n", "--printonly", action="store_true",
@@ -189,8 +189,8 @@ def main():
     the_election_config.parse_configs()
 
     the_address = Address.create_address_from_args(args,
-                    ['verbosity', 'printonly'])
-    the_address.map_ggos(the_election_config)
+                    ['verbosity', 'printonly'], generic_address=True)
+    the_address.map_ggos(the_election_config, allow_generic_address=True)
 
     # get the ballot for the specified address
     a_ballot = Ballot()
