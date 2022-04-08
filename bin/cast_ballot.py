@@ -120,8 +120,8 @@ def main():
                             'config')['voting centers']
     # write the voted ballot out
 #    import pdb; pdb.set_trace()
-    for vc in voting_centers:
-        info(f"Casting a {contests.len()} contest ballot at VC {vc}")
+    for vote_center in voting_centers:
+        info(f"Casting a {contests.len()} contest ballot at VC {vote_center}")
         info(f"Cast ballot file: {ballot_file}")
 
 if __name__ == '__main__':

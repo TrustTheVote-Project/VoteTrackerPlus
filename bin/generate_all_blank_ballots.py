@@ -27,6 +27,7 @@ See ../docs/tech/executable-overview.md for the context in which this file was c
 
 # Standard imports
 # pylint: disable=wrong-import-position   # import statements not top of file
+import os
 import sys
 import argparse
 import logging
@@ -82,27 +83,32 @@ def main():
     # 'unique-ballots', add them all.  If the subdir does not match
     # REQUIRED_GGO_ADDRESS_FIELDS, place the blank ballot
     for node in the_election_config.get_dag('topo'):
-        import pdb; pdb.set_trace()
         address_map = the_election_config.get_node(node, 'address_map')
         if 'unique-ballots' in address_map:
-            for _ in address_map['unique-ballots']:
+            for unique_ballot in address_map['unique-ballots']:
                 subdir = the_election_config.get_node(node, 'subdir')
+                ggos = unique_ballot.get('ggos')
                 # if the subdir is not a state/town, shorten it to that
-                subdir = '/'.join(subdir.split('/')[0:6])
+                subdir = os.path.sep.join(subdir.split(os.path.sep)[0:6])
                 # Now create a generic address on the list of ggos, an
                 # associated generic blank ballot, and store it out
                 generic_address = Address.create_generic_address(
-                    the_election_config, subdir)
+                    the_election_config, subdir, ggos)
                 generic_ballot = Ballot()
                 generic_ballot.create_blank_ballot(
                     generic_address, the_election_config)
-                info(f"Active GGOs: {generic_ballot.get('active_ggos')}")
+                info(f"Active GGOs for blank ballot ({generic_address}): "
+                         "{generic_ballot.get('active_ggos')}")
                 debug("And the blank ballot looks like:\n" +
                           pprint.pformat(generic_ballot.dict()))
                 # Write it out
-                if not args.printonly:
+                if args.printonly:
+                    ballot_file = generic_ballot.gen_blank_ballot_location(
+                        the_election_config, 'json')
+                else:
                     ballot_file = generic_ballot.write_blank_ballot(the_election_config)
-                    info(f"Blank ballot file: {ballot_file}")
+                info(f"Blank ballot file: {ballot_file}")
+#                import pdb; pdb.set_trace()
 
 if __name__ == '__main__':
     args = parse_arguments()

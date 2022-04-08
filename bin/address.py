@@ -83,7 +83,7 @@ class Address:
                                 help="the state/province field of an address")
 
     @staticmethod
-    def create_generic_address(config, subdir):
+    def create_generic_address(config, subdir, ggos):
         """Will create/return a generic address nominally from the list
         of ggos
         """
@@ -92,11 +92,13 @@ class Address:
         count = 0
         for _ in Globals.get('REQUIRED_GGO_ADDRESS_FIELDS'):
             # Get the basename of the node via its subdir
-            name = subdir.split(os.path.sep)[(count+1)*2]
-            nodes[count] = name
+            name = subdir.split(os.path.sep)[((count+1)*3)-1]
+            nodes.append(name)
             count += 1
         address = Address(state=nodes[0], town=nodes[1], generic_address=True)
-        return address.map_ggos(config, allow_generic_address=True)
+#        import pdb; pdb.set_trace()
+        address.map_ggos(config, ggos=ggos)
+        return address
 
     # pylint: disable=too-many-arguments
     def __init__(self, number="", street="", substreet="", town="",
@@ -138,7 +140,6 @@ class Address:
         # Note - an address needs all 'required' address fields to be specified
         required_fields = Globals.get('REQUIRED_GGO_ADDRESS_FIELDS').copy()
         if not generic_address:
-#            import pdb; pdb.set_trace()
             required_fields += Globals.get('REQUIRED_NG_ADDRESS_FIELDS')
         missing_keys = [key for key in required_fields
                             if not Address.get(self, key)]
@@ -202,8 +203,12 @@ class Address:
         raise ValueError((f"Unsupoorted Address match regex ({regex}) - ",
                         "supply more quality pizza"))
 
-    def map_ggos(self, config, allow_generic_address=False):
-        """Will map an address onto the ElectionConfig data
+    def map_ggos(self, config, skip_ggos=False, ggos=None):
+        """Will map an address onto the ElectionConfig data.  If
+        skip_ggos is True, will completely skip setting the
+        active_ggos field.  If an explicit list of GGOs is provided,
+        will assume that the list is correct and will set the
+        active_ggos field to that.
         """
         footsteps = set()
         addr_hits = []
@@ -214,7 +219,6 @@ class Address:
             if 'unique-ballots' in config.node(node_of_interest)['address_map']:
                 for entry in config.node(node_of_interest)['address_map']['unique-ballots']:
                     for addr in entry['addresses']:
-#                        import pdb; pdb.set_trace()
                         if self.match(addr):
                             # add the ggos in order if not already present
                             for ggo in entry['ggos']:
@@ -229,14 +233,17 @@ class Address:
 
         # Note - the root GGO always contributes
         self.active_ggos.append('.')
+
+#        import pdb; pdb.set_trace()
         # 2022/04/04: mmm, thinking that this is too complicated to
         # explain to people who may be modifying address_map.yaml
         # files.  So no longer assume that the state and town are
         # automatically included in the active GGOs of an address and
         # hence a ballot.  The ggo list within the unique-ballots will
         # be the complete list.  However, will still determine the
-        # leaf node from REQUIRED_GGO_ADDRESS_FIELDS.  And the order
-        # will be determined by the unique-ballots list as well.
+        # leaf node from REQUIRED_GGO_ADDRESS_FIELDS.  However, the
+        # order will still be determined by the unique-ballots
+        # explicit list.
         breadcrumbtrail = ''
         the_leaf_node = ''
         # Walk the address in DAG order from root to the prescribed leafs
@@ -249,17 +256,24 @@ class Address:
                 raise ValueError(f"Bad ElectionConfig node name ({node})")
             the_leaf_node = node
             breadcrumbtrail = node
+
         # Now look for address_map hits and load the explicit active
-        # goos explicitly from there
-        walk_descendants(the_leaf_node)
-        # test to see how many address hits were found
-        if not allow_generic_address and len(addr_hits) == 0:
-            raise ValueError(f"The supplied address ({self}) "
-                                 "does not match any address_map")
-        if len(addr_hits) > 1:
-            raise ValueError(f"The supplied address ({self}) "
-                                 "matches multiple address_map files: "
-                                 f"{addr_hits}")
+        # ggos explicitly from there.  However, if the list of ggos is
+        # provided, use that
+        if not skip_ggos:
+            if ggos:
+                self.active_ggos += ggos
+            else:
+                walk_descendants(the_leaf_node)
+                # test to see how many address hits were found - only
+                # pertinent when walking
+                if len(addr_hits) == 0:
+                    raise ValueError(f"The supplied address ({self}) "
+                                        "does not match any address_map")
+                if len(addr_hits) > 1:
+                    raise ValueError(f"The supplied address ({self}) "
+                                        "matches multiple address_map files: "
+                                        f"{addr_hits}")
         # Note1: the subdir should already have the correct
         # os.path.sep.  Note2: The ballot_subdir could in theory be
         # the GGO that defines the matching address regex OR simply be

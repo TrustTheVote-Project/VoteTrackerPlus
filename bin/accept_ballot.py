@@ -188,11 +188,18 @@ def main():
     the_election_config = ElectionConfig()
     the_election_config.parse_configs()
 
+    # Note - accept_ballot.py currently only deals with generic
+    # addresses since all cast ballots, regardless of active ggos, end
+    # up in the same spot, nominally in the town subfolder.
     the_address = Address.create_address_from_args(args,
                     ['verbosity', 'printonly'], generic_address=True)
-    the_address.map_ggos(the_election_config, allow_generic_address=True)
+    the_address.map_ggos(the_election_config, skip_ggos=True)
 
-    # get the ballot for the specified address
+    # Get the ballot for the specified address.  Note that reading the
+    # cast ballot will define the active ggos etc for the ballot even
+    # though those fields are not defined for the address.  However,
+    # reading a ballot still needs the ballot_subdir field of the
+    # address.
     a_ballot = Ballot()
     a_ballot.read_a_cast_ballot(the_address, the_election_config)
 
