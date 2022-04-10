@@ -71,19 +71,20 @@ class Contest:
         self.contest = a_contest_blob[self.name]
         self.ggo = ggo
         self.index = contests_index
+        self.cast_branch = ""
         # set defaults
         if 'max' not in self.contest:
             if self.contest['tally'] == 'plurality':
                 self.contest['max'] = 1
         # Some constructor time sanity checks
         if 'max' in self.contest and self.contest['max'] < 1:
-            raise ValueError(f"Illegal value for max ({self.contest['max']}) "
+            raise ValueError(f"Illegal value for Contest max ({self.contest['max']}) "
                                  "- must be greater than 0")
 
     def __str__(self):
         """Return the contest contents as a print-able json string - careful ..."""
         contest_dict = { key: self.contest[key] for key in Contest._keys if key in self.contest }
-        contest_dict.update({'name': self.name, 'ggo': self.ggo})
+        contest_dict.update({'name': self.name, 'ggo': self.ggo, 'cast_branch': self.cast_branch})
         return json.dumps(contest_dict, sort_keys=True, indent=4, ensure_ascii=False)
 
     def get(self, name):
@@ -99,5 +100,12 @@ class Contest:
             return getattr(self, name)
         # Else return contest data
         return getattr(self, 'contest')[name]
+
+    def set(self, name, value):
+        """Generic setter - need to be able to set the cast_branch when committing the contest"""
+        if name in ['name', 'ggo', 'index', 'contest', 'cast_branch']:
+            setattr(self, name, value)
+            return
+        raise ValueError(f"Illegal value for Contest attribute ({name})")
 
 # EOF

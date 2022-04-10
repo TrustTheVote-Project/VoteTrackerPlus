@@ -17,7 +17,7 @@
 #   with this program; if not, write to the Free Software Foundation, Inc.,
 #   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
-"""accept_ballot-py - command line level script to accept a ballot.
+"""accept_ballot.py - command line level script to accept a ballot.
 
 See './accept_ballot.py -h' for usage information.
 
@@ -69,7 +69,8 @@ def checkout_new_contest_branch(contest, ref_branch):
     # select a branchpoint
     branchpoint = get_random_branchpoint(ref_branch)
     # and attempt at a new unique branch
-    branch = contest.get('uid') + "/" + secrets.token_hex(5)
+    branch = Globals.get('CONTEST_FILE_SUBDIR') + '/' + contest.get('uid') + \
+      "/" + secrets.token_hex(5)
 #    branch = contest.get('uid') + "/" + str(uuid.uuid1().hex)[0:10]
     current_branch = Shellout.run(["git", "rev-parse", "--abbrev-ref", "HEAD"],
                         check=True, capture_output=True, text=True).stdout.strip()
@@ -227,6 +228,14 @@ def main():
                 other_receipts[uid] = get_n_other_contests(contest, 'master')
                 # atomically create the branch locally and remotely
                 branches.append(checkout_new_contest_branch(contest, 'master'))
+                # Add the cast_branch to the contest json payload
+                contest.set('cast_branch', branches[-1])
+                # ZZZ - need to add a ballot_runtime_key digest key
+                # value pair which is a cryptographic value derived
+                # from the run-time election private key.  This value
+                # is also read via read_contest and can be validated
+                # against the election public key if available.
+
                 # write out the voter's contest to CVRs/contest.json
                 a_ballot.write_contest(contest, the_election_config)
                 # commit the voter's contest
@@ -243,9 +252,10 @@ def main():
                          printonly=args.printonly)
 
     debug(f"Ballot's digests:\n{ballot_receipts}")
+    # ZZZ print the voter's offset
+
     # ZZZ for now print entire ballot receipt
 
-    # for now print the voter's offset
 
 if __name__ == '__main__':
     args = parse_arguments()
