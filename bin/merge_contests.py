@@ -29,6 +29,10 @@ file was created.
 
 # Standard imports
 # pylint: disable=wrong-import-position   # import statements not top of file
+import sys
+import os
+import re
+import random
 import argparse
 import logging
 from logging import debug
@@ -40,7 +44,49 @@ from ballot import Ballot, Contests
 from election_config import ElectionConfig
 
 # Functions
+def randomly_merge_contests(uid, batch):
+    """
+    Will randomingly select (len(batch) - BALLOT_RECEIPT_ROWS) contest
+    branches from the supplied list of branch and merge them to the
+    master branch.
 
+    This is the git merge-to-master sequence.
+    """
+    rows = Globals.get('BALLOT_RECEIPT_ROWS')
+    contest_file = os.path.join(
+        Globals.get('CONTEST_FILE_SUBDIR'), Globals.get('CONTEST_FILE'))
+    if len(batch) <= rows:
+        debug(f"Contest {uid} not merged - only {len(batch)} available")
+        return 0
+    count = len(batch) - rows
+    while len(batch) - rows:
+        pick = random.randrange(len(batch))
+        Shellout.run(
+            ['git', 'merge', '--no-ff', '--no-commit', batch[pick]],
+            args.printonly)
+        # ZZZ - replace this with an run-time cryptographic value
+        # derived from the run-time election private key (diffent from
+        # the git commit run-time value).  This will basically slam
+        # the contents of the contest file to a second runtime digest
+        # (the first one being contained in the commit itself).
+        result = Shellout.run(
+            ['openssl',  'rand', '-base64',  '48'], capture_output=True, text=True)
+        if result.stdout == '':
+            raise ValueError("'openssl rand' should never return an empty string")
+        if not args.printonly:
+            # ZZZ need to convert the digest to json format ...
+            with open(contest_file, 'w', encoding="utf8") as outfile:
+                # Write a runtime digest as the actual contents of the
+                # merge
+                outfile.write(str(result.stdout))
+        # Use the default merge message as is
+        Shellout.run(['git', 'commit', '-a'], args.printonly)
+        Shellout.run(['git', 'push', 'origin', 'master'], args.printonly)
+        Shellout.run(['git', 'branch', '-d', batch[pick]], args.printonly)
+        Shellout.run(['git', 'push', 'origin', ':' + batch[pick]], args.printonly)
+        del batch[pick]
+    debug(f"Merged {count} {uid} contests")
+    return count
 
 ################
 # arg parsing
@@ -55,7 +101,8 @@ def parse_arguments():
 
     If there are less then the prerequisite number of already cast
     contests, a warning will be printed/logged but no error will be
-    raised.
+    raised.  Supplying -f will flush all remaining contests to the
+    master branch.
     """,
         formatter_class=argparse.RawDescriptionHelpFormatter)
 
@@ -90,23 +137,39 @@ def main():
     os.environ['GIT_COMMITTER_DATE'] = '2022-01-01T12:00:00'
     os.environ['GIT_EDITOR'] = 'true'
 
-    """
-$ git pull
-$ git merge --no-ff --no-commit <contest>/<short GUID>
-$ openssl rand -base64 48 > CVRs/contest.cvr
-$ GIT_EDITOR=true git commit
-$ git branch -d <contest>/<short GUID>
-$ git push origin master
-$ git push origin :<contest>/<short GUID>
-    """
+    # For best results (so to use the 'correct' git submodule or
+    # tranverse the correct symlinks or not), use the CWD as when
+    # accepting the contest.
+    the_address = Address.create_address_from_args(
+        args, ['verbosity', 'printonly'], generic_address=True)
+    the_address.map_ggos(the_election_config, skip_ggos=True)
 
-    # loop over contests
-    branches = []
-    with Shellout.changed_cwd(a_ballot.get_cvr_parent_dir(the_election_config)):
+    with Shellout.changed_cwd(Globals.get('ROOT_ELECTION_DATA_SUBDIR')):
         # So, the CWD in this block is the state/town subfolder
-        for contest in contests:
-
-    debug(f"Ballot's digests:\n{ballot_receipts}")
+        # Pull the remote
+        Shellout.run(["git", "pull"], check=True)
+        # Get the pending CVR branches
+        cvr_branches = [branch for branch in Shellout.run(
+            ['git', 'branch'],
+            check=True, capture_output=True,
+            text=True).stdout.strip() if re.search('^CVR/', branch)]
+        # Note - sorted alphanumerically on contest UID. Loop over
+        # contests and randomly merge extras
+        batch = []
+        current_uid = None
+        for branch in cvr_branches:
+            uid = re.search(f"^{Globals.get('CONTEST_FILE_SUBDIR')}/([^/]+?)/",
+                                branch).group(1)
+            if current_uid == uid:
+                batch.append(branch)
+                continue
+            if current_uid:
+                # see if previous batch can be merged
+                if len(batch) >= Globals.get('BALLOT_RECEIPT_ROWS'):
+                    randomly_merge_contests(uid, batch)
+            # Start a new next batch
+            current_uid = uid
+            batch = [branch]
 
 if __name__ == '__main__':
     args = parse_arguments()

@@ -129,7 +129,7 @@ def contest_add_and_commit(branch):
 
     Requires the CWD to be the parent of the CVRs directory.
     """
-    # If this fails an shell error will be raised
+    # If this fails a shell error will be raised
     contest_file = os.path.join(
         Globals.get('CONTEST_FILE_SUBDIR'), Globals.get('CONTEST_FILE'))
     Shellout.run(['git', 'add', contest_file],
@@ -230,13 +230,22 @@ def main():
                 branches.append(checkout_new_contest_branch(contest, 'master'))
                 # Add the cast_branch to the contest json payload
                 contest.set('cast_branch', branches[-1])
-                # ZZZ - need to add a ballot_runtime_key digest key
-                # value pair which is a cryptographic value derived
-                # from the run-time election private key.  This value
-                # is also read via read_contest and can be validated
-                # against the election public key if available.
 
-                # write out the voter's contest to CVRs/contest.json
+                # They is an interest to add a contest runtime digest
+                # key value pair which is a cryptographic value
+                # derived from the run-time election private key. This
+                # value could also read via read_contest and can be
+                # validated against the election public key if
+                # available. However, the 'lack of appearance of
+                # trustworthiness' in that a 'cryptic' number is being
+                # written/associated with the contest cvr that by
+                # definition would contain something obaque is not an
+                # effective improvement. So, do not so this. Leave the
+                # insertion of a runtime digest at merge time, which
+                # occurs later and independent of contest commit time
+                # and any potential voter information.
+
+                # Write out the voter's contest to CVRs/contest.json
                 a_ballot.write_contest(contest, the_election_config)
                 # commit the voter's contest
                 ballot_receipts[uid] = contest_add_and_commit(branches[-1])

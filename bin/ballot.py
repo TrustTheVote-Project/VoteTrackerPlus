@@ -346,10 +346,11 @@ class Ballot:
     def write_contest(self, contest, config):
         """Write out the voter's contest"""
         contest_file = Ballot.gen_contest_location(config, self.ballot_subdir)
+        # Prepend the dictionary with a CVR key
+        the_aggregate = {'CVR': contest.get('dict')}
         # The parent directory better exist or something is wrong
         with open(contest_file, 'w', encoding="utf8") as outfile:
-            # The stringification of a contest is json
-            outfile.write(str(contest))
+            json.dump(the_aggregate, outfile, sort_keys=True, indent=4, ensure_ascii=False)
         return contest_file
 
 # EOF

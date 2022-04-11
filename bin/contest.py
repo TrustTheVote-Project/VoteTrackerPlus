@@ -25,7 +25,7 @@ class Contest:
     # Legitimate Contest keys.  Note 'selection', 'uid', and 'cloak'
     # are not legitimate keys for blank ballots
     _keys = ['candidates', 'question', 'tally', 'win-by', 'max', 'write-in',
-                 'selection', 'uid', 'cloak']
+                 'selection', 'uid']
 
     # A simple numerical n digit uid
     _uids = {}
@@ -72,6 +72,7 @@ class Contest:
         self.ggo = ggo
         self.index = contests_index
         self.cast_branch = ""
+        self.cloak = False
         # set defaults
         if 'max' not in self.contest:
             if self.contest['tally'] == 'plurality':
@@ -83,6 +84,7 @@ class Contest:
 
     def __str__(self):
         """Return the contest contents as a print-able json string - careful ..."""
+        # Note - keep cloak out of it until proven safe to include
         contest_dict = { key: self.contest[key] for key in Contest._keys if key in self.contest }
         contest_dict.update({'name': self.name, 'ggo': self.ggo, 'cast_branch': self.cast_branch})
         return json.dumps(contest_dict, sort_keys=True, indent=4, ensure_ascii=False)
@@ -90,20 +92,29 @@ class Contest:
     def get(self, name):
         """Generic getter - can raise KeyError"""
         # Return the choices
+        if name == 'dict':
+            # return the combined psuedo dictionary similar to __str__ above
+            contest_dict = \
+                { key: self.contest[key] for key in Contest._keys if key in self.contest }
+            contest_dict.update(
+                {'name': self.name, 'ggo': self.ggo, 'cast_branch': self.cast_branch})
+            return contest_dict
         if name == 'choices':
             if 'candidates' in self.contest:
                 return self.contest['candidates']
             if 'question' in self.contest:
                 return self.contest['question']
+            raise RuntimeError("Internal error - the supplied contest does "
+                                   "not contain either a 'candidates' or 'question' field")
         # Return contest 'meta' data
         if name in ['name', 'ggo', 'index', 'contest']:
             return getattr(self, name)
-        # Else return contest data
+        # Else return contest data indexed by name
         return getattr(self, 'contest')[name]
 
     def set(self, name, value):
         """Generic setter - need to be able to set the cast_branch when committing the contest"""
-        if name in ['name', 'ggo', 'index', 'contest', 'cast_branch']:
+        if name in ['name', 'ggo', 'index', 'contest', 'cast_branch', 'cloak']:
             setattr(self, name, value)
             return
         raise ValueError(f"Illegal value for Contest attribute ({name})")

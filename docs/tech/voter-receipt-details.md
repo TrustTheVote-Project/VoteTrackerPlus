@@ -6,7 +6,7 @@ This document describes the git commands necessary execute the scan of the voter
 
 Per the overview of the VTP git directory and submodule layout as described in ../tech-overview.md, any phyiscal location that will be scanning and entering ballots will have a local git repo.  It is possible for two distinct physical locations to share one git repo, but it is is up to the election officials to trade off the risks, costs, and benefits of sharing one a repo in physically separate locations.  (Note - VTP may not want to support this.)
 
-Per the git submodule layout, the git repo ultimately  associated with CVRs will have a CVRs subdirectory.  In the CVRs directory there is a single file called 'contest.cvr'.  The contest.cvr file will contain a JSON rendering of a specific contest on the voter's ballot.  Each contest will be checked into a separate git branch albeit the same file.  The git branching naming convention is something like the following:
+Per the git submodule layout, the git repo ultimately  associated with CVRs will have a CVRs subdirectory.  In the CVRs directory there is a single file called 'contest.json'.  The contest.json file will contain a JSON rendering of a specific contest on the voter's ballot.  Each contest will be checked into a separate git branch albeit the same file.  The git branching naming convention is something like the following:
 
 ```bash
 $ git checkout -b <contest>/<short GUID> <random master branch commit>
@@ -25,7 +25,6 @@ Where <scanner id> is the alphanumeric VTP identification of the physical scanne
  "tree": "GGOs/states/California/GGOs/towns/Alameda/CVRs",
  "vote center": "Emeryville Senior Center",
  "contest": "states.US_senate",
- "election id digest": "b5dfbc103a8d28d9ae6609b42da822dc7f89ea09441537972299cf695fc408ec",
  "size": "290",
  "values": [{'Yellow Green': {'party': 'PartyA'}},
             {'Blue Red': {'party': 'PartyB'}},
@@ -71,7 +70,7 @@ Note - this does not describe the pre-election configuration of a specific elect
 
 TBD - at the moment there is nothing that needs to be initialized on the server.  A boot from the distributed firmware and software brings up the VTP Voting Center git server into a ready-to-use mode.  At the moment the following step is seen as part of the configuration prior to deployment:
 
-Initialize the contest.cvr file with the following contents and commit message on the master branch (with the git DATE's similarly set):
+Initialize the contest.json file with the following contents on the master branch (with the git DATE's similarly set):
 
 ```json
 {"CVR": {
@@ -99,11 +98,11 @@ Once the voter blesses their interpretation of their ballot into CVRs, the follo
 
 
 ```bash
-# pre-condition: scanner places JSON payload in CVRs/ballot.cvr post voter's approval step
-# VTP python code validates ballot.cvr, initiates ballot casting, and loops over each contest:
+# pre-condition: scanner places JSON payload in CVRs/ballot.json post voter's approval step
+# VTP python code validates ballot.json, initiates ballot casting, and loops over each contest:
 $ git checkout -b <contest>/<short branch GUID> <random master branch commit>
-$ git add CVRs/contest.cvr
-$ git commit -F CVRs/contest.cvr
+$ git add CVRs/contest.json
+$ git commit -F CVRs/contest.json
 $ git push origin <contest>/<short branch GUID>
 $ # Note - if there is a collision, pick another random number and try again
 # VTP python code completes ballot casting by marking paper and digital image with an <election ballot GUID>
@@ -135,7 +134,7 @@ This is always on the master branch.
 ```bash
 $ git pull
 $ git merge --no-ff --no-commit <contest>/<short GUID>
-$ openssl rand -base64 48 > CVRs/contest.cvr
+$ openssl rand -base64 48 > CVRs/contest.json
 $ GIT_EDITOR=true git commit
 $ git branch -d <contest>/<short GUID>
 $ git push origin master
@@ -146,5 +145,5 @@ $ git push origin :<contest>/<short GUID>
 
 ```bash
 $ git pull origin master
-$ git log --topo-order --no-merges contest.cvr
+$ git log --topo-order --no-merges contest.json
 ```
