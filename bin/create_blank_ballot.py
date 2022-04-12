@@ -42,6 +42,7 @@ from election_config import ElectionConfig
 ################
 # arg parsing
 ################
+# pylint: disable=duplicate-code
 def parse_arguments():
     """Parse command line arguments"""
 
@@ -73,6 +74,7 @@ def parse_arguments():
 ################
 # main
 ################
+# pylint: disable=duplicate-code
 def main():
     """Main function - see -h for more info"""
 

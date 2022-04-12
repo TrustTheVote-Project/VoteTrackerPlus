@@ -104,6 +104,7 @@ def randomly_merge_contests(uid, batch):
 ################
 # arg parsing
 ################
+# pylint: disable=duplicate-code
 def parse_arguments():
     """Parse arguments from a command line"""
 
@@ -138,6 +139,7 @@ def parse_arguments():
 ################
 # main
 ################
+# pylint: disable=duplicate-code
 def main():
     """Main function - see -h for more info"""
 
