@@ -53,7 +53,8 @@ def get_random_branchpoint(branch):
     commits = [commit for commit in (line.strip("' ") for line in
                                          result.stdout.splitlines()) if commit]
     # the first record is never a real CVR
-    del commits[-1]
+    # ZZZ why is the first record never a real CVR?
+#    del commits[-1]
     # ZZZ - need to deal with a rolling 100 window
     return random.choice(commits)
 

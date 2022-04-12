@@ -35,7 +35,7 @@ import re
 import random
 import argparse
 import logging
-from logging import debug
+from logging import debug, info
 
 # Local import
 from common import Globals, Shellout
@@ -155,6 +155,7 @@ def main():
     # For best results (so to use the 'correct' git submodule or
     # tranverse the correct symlink or not), use the CWD as when
     # accepting the ballot (accept_ballot.py).
+    merged = 0
     with Shellout.changed_cwd(os.path.join(
         the_election_config.get('git_rootdir'),
         Globals.get('ROOT_ELECTION_DATA_SUBDIR'))):
@@ -169,22 +170,30 @@ def main():
                 f"^{Globals.get('CONTEST_FILE_SUBDIR')}/", branch.strip())]
         # Note - sorted alphanumerically on contest UID. Loop over
         # contests and randomly merge extras
-        batch = []
+        batch = []   # if ordered_set was native would probably use that
         current_uid = None
         for branch in cvr_branches:
-#            import pdb; pdb.set_trace()
             uid = re.search(f"^{Globals.get('CONTEST_FILE_SUBDIR')}/([^/]+?)/",
                                 branch).group(1)
             if current_uid == uid:
                 batch.append(branch)
                 continue
+            # Since cvr_branches is ordered, when there is a new uid
+            # that does not match the current_uid then try to merge
+            # that contest uid set of branched.  Also try to merge the
+            # batch if this is the final iteration of the loop.
+#            import pdb; pdb.set_trace()
             if current_uid:
                 # see if previous batch can be merged
-                if args.flush or len(batch) >= Globals.get('BALLOT_RECEIPT_ROWS'):
-                    randomly_merge_contests(uid, batch)
+                merged += randomly_merge_contests(uid, batch)
             # Start a new next batch
             current_uid = uid
             batch = [branch]
+        else:
+            if len(batch):
+                # Always try to merge the remaining batch
+                merged += randomly_merge_contests(uid, batch)
+    info(f"Merged {merged} contest branches")
 
 if __name__ == '__main__':
     args = parse_arguments()
