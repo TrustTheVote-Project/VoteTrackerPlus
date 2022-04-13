@@ -112,6 +112,10 @@ def main():
             loop -= 1
     debug("And the ballot looks like:\n" + pprint.pformat(a_ballot.dict()))
 
+    # ZZZ - for this program there is no call to verify_cast_ballot to
+    # verify that the ballot has been filled out correctly and offer
+    # to the voter a chance to redo it.
+
     if args.printonly:
         ballot_file = Ballot.gen_cast_ballot_location(the_election_config,
                                                           a_ballot.get('ballot_subdir'))

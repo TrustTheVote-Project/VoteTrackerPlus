@@ -186,6 +186,14 @@ class Ballot:
         # pylint: disable=line-too-long
         self.contests[contest_ggo][contest_index][contest_name]['selection'].append(selection_offset)
 
+    def verify_cast_ballot(self):
+        """Will validate the ballot contest choices are legitimate.
+        Will raise an error with the list of invalid contests and
+        returns the number of contests with either blank of less than
+        legal selections.
+        """
+        raise NotImplementedError("verify_cast_ballot is not yet implemented")
+
     def get_cvr_parent_dir(self, config):
         """Return the directory that contains the CVR directory for this ballot"""
         return os.path.join(config.get('git_rootdir'),

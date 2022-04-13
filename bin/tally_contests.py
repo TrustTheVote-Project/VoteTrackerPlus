@@ -28,17 +28,18 @@ file was created.
 """
 
 # Standard imports
+import sys
+import re
+import subprocess
+import json
 # pylint: disable=wrong-import-position   # import statements not top of file
 import argparse
 import logging
-from logging import debug
+from logging import info
 
 # Local import
-from common import Globals, Shellout
-from address import Address
-from ballot import Ballot, Contests
 from election_config import ElectionConfig
-
+from contest import Tally
 # Functions
 
 
@@ -51,10 +52,23 @@ def parse_arguments():
 
     parser = argparse.ArgumentParser(description=
     """tally_contests.py will tally all the contests so far merged to
-    the master branch.
+    the master branch and report the results.  The results are
+    computed on a voting center basis (git submodule) basis.
+
+    Note - the current implementation relies on git submodules
+    (individual git repos) to break up the tally data of an election.
+    If there is only one git repository and the election is large,
+    then a potentiallu large amount of memory will be used in
+    executing the tallies.  One short term fix for this is to limit
+    the number of contests being tallied.
+
+    Also note that the current implementation does not yet support
+    tallying across git submodules/repos.
     """,
         formatter_class=argparse.RawDescriptionHelpFormatter)
 
+    parser.add_argument("-c", "--contest",
+                            help="limit the tally to a specific contest")
     parser.add_argument("-v", "--verbosity", type=int, default=3,
                             help="0 critical, 1 error, 2 warning, 3 info, 4 debug (def=3)")
     parser.add_argument("-n", "--printonly", action="store_true",
@@ -82,6 +96,43 @@ def main():
 
     # Will process all the CVR commits on the master branch and tally
     # all the contests found.
+    contests = {}
+    with subprocess.Popen(
+        ['git', 'log', '--topo-order', '--no-merges', '--pretty=format:"%H%B"'],
+        stdout=subprocess.PIPE,
+        encoding="utf8") as process:
+        # read lines until there is a complete json object, then
+        # add the object for that contest.
+        block = ''
+        digest = ''
+        recording = False
+        for line in process.stdout.readline():
+            if match := re.match('^([a-f0-9]{40}){', line):
+                digest = match.group(1)
+                recording = True
+                block += line
+                continue
+            if recording:
+                block += line
+                if line == '}':
+                    # this loads the contest under the CVR key
+                    cast_contest = json.loads(block)
+                    cast_contest['digest'] = digest
+                    contests[cast_contest['CVR']['uid']].append(cast_contest)
+                    block = ''
+                    digest = ''
+                    recording = False
+    # Note - though plurality voting can be counted within the above
+    # loop, tallies such as rcv cannot.  So far now, just count
+    # everything in a separate loop.
+    for uid in sorted(contests):
+        info(f"Scanned {len(contests[uid])} contests for contest {uid} ({uid['CVR']['name']})")
+        # Create a Tally object for this specific contest
+        the_tally = Tally(uid, contests[uid])
+        # Tally all the contests for this contest
+        the_tally.tallyho(contests)
+        # Print stuff
+        the_tally.print_results()
 
 if __name__ == '__main__':
     args = parse_arguments()
