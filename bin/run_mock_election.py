@@ -29,6 +29,8 @@ file was created.
 
 # Standard imports
 # pylint: disable=wrong-import-position   # import statements not top of file
+import os
+import sys
 import argparse
 import logging
 from logging import debug
@@ -36,7 +38,6 @@ from logging import debug
 # Local import
 from common import Globals, Shellout
 from address import Address
-from ballot import Ballot, Contests
 from election_config import ElectionConfig
 
 # Functions
@@ -57,15 +58,20 @@ def parse_arguments():
 
         - will tally each of race and report the winner
 
-    Currently only a serial mock election is supported (need more
-    quality pizza to support parallel and multi process/threaded
-    elections).
+    One basic idea is to run this in different windows, one per VTP
+    scanner.  The scanner is nominally associated with a town (as
+    configured).
     """,
         formatter_class=argparse.RawDescriptionHelpFormatter)
 
     Address.add_address_args(parser, True)
-    parser.add_argument("-b", "--ballots", type=int, default=3,
+    parser.add_argument("-i", "--iterations", type=int, default=10,
                             help="the number of unique blank ballots to cast")
+    parser.add_argument("-t", "--towns",
+        default="Alameda, 'Alum Rock', Berkeley, Evergreen, Milpitas, Oakland",
+        help="the comma separated list of towns to cast ballots from")
+    parser.add_argument("-s", "--state", default="California",
+                            help="the state associated with the supplied towns (def=California)")
     parser.add_argument("-v", "--verbosity", type=int, default=3,
                             help="0 critical, 1 error, 2 warning, 3 info, 4 debug (def=3)")
     parser.add_argument("-n", "--printonly", action="store_true",
@@ -91,11 +97,6 @@ def main():
     the_election_config = ElectionConfig()
     the_election_config.parse_configs()
 
-    # Set the three EV's
-    os.environ['GIT_AUTHOR_DATE'] = '2022-01-01T12:00:00'
-    os.environ['GIT_COMMITTER_DATE'] = '2022-01-01T12:00:00'
-    os.environ['GIT_EDITOR'] = 'true'
-
     # Note - this is a serial synchronous mock election loop.  A
     # parallel loop would have one VTP server git workspace somewhere
     # and N VTP scanner workspaces someplace else.  Depending on the
@@ -107,17 +108,35 @@ def main():
     # another VTP scanner workspace to personally cast/insert
     # individual ballots for interactive purposes.
 
+    # Assumes that each supplied town already has the blank ballots
+    # generated and/or already committed.
+
     # Get list of available blank ballots
-
+    blank_ballots = []
+    with Shellout.changed_cwd(os.path.join(
+        the_election_config.get('git_rootdir'), Globals.get('ROOT_ELECTION_DATA_SUBDIR'))):
+        for dirpath, _, files in os.walk("."):
+            for filename in [f for f in files if f.endswith(",ballot.json") \
+                    and dirpath.endswith("blank-ballots/json") ]:
+                blank_ballots.append(os.path.join(dirpath, filename))
     # Loop over the list N times
-
-    # - cast a ballot
-    # - accept the ballot
-    # - merge the ballot (first 100 will be a noop)
-
+    for count in range(args.iterations):
+        for blank_ballot in blank_ballots:
+            debug(f"Iteration {count}, processing {blank_ballot}")
+            # - cast a ballot
+            Shellout.run(
+                ['./cast_ballot.py', 'blank_ballot=' + blank_ballot],
+                args.printonly)
+            # - accept the ballot
+            Shellout.run(
+                ['./accept_ballot.py', 'ballot_ballot=' + blank_ballot],
+                args.printonly)
+            # - merge the ballot (first 100 will be a noop)
+            Shellout.run(['./merge_ballot.py'], args.printonly)
     # merge the remaining contests
-
+    Shellout.run(['./merge_ballot.py', '-f'], args.printonly)
     # tally the contests
+    Shellout.run(['./tally_ballot.py'], args.printonly)
 
 if __name__ == '__main__':
     args = parse_arguments()

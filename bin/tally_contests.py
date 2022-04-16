@@ -110,7 +110,7 @@ def main():
             if match := re.match('^([a-f0-9]{40}){', line):
                 digest = match.group(1)
                 recording = True
-                block += line
+                block = '{'
                 continue
             if recording:
                 block += line

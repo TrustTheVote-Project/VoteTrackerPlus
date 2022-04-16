@@ -162,9 +162,9 @@ class Ballot:
     def add_selection(self, contest, selection_offset):
         """
         Will add the specified contest choice (offset into the ordered
-        candidates/question array) to the specified contest.  This is an
+        choices array) to the specified contest.  This is an
         'add' since in plurality one may be voting for more than one
-        candidate, or in RCV one needs to rank the choices.  In both the
+        choice, or in RCV one needs to rank the choices.  In both the
         order is the rank but in plurality rank does not matter.
         """
         # Some minimal sanity checking

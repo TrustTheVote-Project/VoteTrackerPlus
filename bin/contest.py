@@ -24,7 +24,7 @@ class Contest:
 
     # Legitimate Contest keys.  Note 'selection', 'uid', 'cloak', and
     # 'name' are not legitimate keys for blank ballots
-    _keys = ['candidates', 'question', 'tally', 'win-by', 'max', 'write-in',
+    _keys = ['choices', 'tally', 'win-by', 'max', 'write-in',
                  'selection', 'uid', 'name']
 
     # A simple numerical n digit uid
@@ -103,12 +103,7 @@ class Contest:
                 {'name': self.name, 'ggo': self.ggo, 'cast_branch': self.cast_branch})
             return contest_dict
         if name == 'choices':
-            if 'candidates' in self.contest:
-                return self.contest['candidates']
-            if 'question' in self.contest:
-                return self.contest['question']
-            raise RuntimeError("Internal error - the supplied contest does "
-                                   "not contain either a 'candidates' or 'question' field")
+            return self.contest['choices']
         # Return contest 'meta' data
         if name in ['name', 'ggo', 'index', 'contest']:
             return getattr(self, name)
@@ -137,29 +132,21 @@ class Tally:
         self.digest = cast_contest['digest']
         self.contest = cast_contest['CVR']
         self.name = Contest.check_syntax(self.contest, digest=self.digest)
+        # Something to hold the actual tallies
+        self.selection_counts = {choice: 0 for choice in range(len(self.contest('choices')))}
         # At this point any contest tallied against this contest must
-        # match all the fields with the exception of selection.
+        # match all the fields with the exception of selection.  But
+        # that check is donw in tallyho below.
 
     def tallyho(self, contests):
         """Will verify and add all the supplied contests."""
-        selections = []
         for uid in contests:
             contest = uid['CVR']
             digest = uid['digest']
             Contest.check_syntax(contest, digest=digest)
             # Validate values
             errors = {}
-            if 'candidate' in self.contest:
-                if self.contest['candidate'] != contest['candidate']:
-                    errors[digest].append(
-                        "candidate field does not match: "
-                        f"{self.contest['candidate']} != {contest['candidate']}")
-            else:
-                if self.contest['question'] != contest['question']:
-                    errors[digest].append(
-                        "question field does not match: "
-                        f"{self.contest['question']} != {contest['question']}")
-            for field in ['tally', 'win-by', 'max', 'write-in', 'uid', 'name']:
+            for field in ['choices', 'tally', 'win-by', 'max', 'write-in', 'uid', 'name']:
                 if field in self.contest:
                     if self.contest[field] != contest[field]:
                         errors[digest].append(
@@ -169,8 +156,13 @@ class Tally:
                     errors[digest].append(
                         f"{field} field is not present in Tally object but "
                         "is present in digest")
-            # Aggregate the contest
-            selections.append('ZZZ')
+            # Aggregate the contest - this is just the first pass of a
+            # tally.  It so happens that with pluraity tallies with a
+            # single selection there is only one pass.  But for
+            # pluraity tallies with multiple choices or more
+            # complicated tallies, the additional passes are done
+            # outside this for loop.
+            self.selection_counts[self.contest['selection'][0]] += 1
 
     def print_results(self, syntax=None):
         """Will print the results of the tally"""

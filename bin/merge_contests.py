@@ -189,10 +189,9 @@ def main():
             # Start a new next batch
             current_uid = uid
             batch = [branch]
-        else:
-            if len(batch):
-                # Always try to merge the remaining batch
-                merged += randomly_merge_contests(uid, batch)
+        if batch:
+            # Always try to merge the remaining batch
+            merged += randomly_merge_contests(uid, batch)
     info(f"Merged {merged} contest branches")
 
 if __name__ == '__main__':

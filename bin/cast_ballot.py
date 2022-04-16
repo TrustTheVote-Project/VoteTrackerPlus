@@ -48,9 +48,8 @@ def parse_arguments():
 
     parser = argparse.ArgumentParser(description=\
     """cast_ballot.py will read the blank ballot for a given address
-    and by default randomly make a selection for each
-    contest/question.  It will then cast the ballot in the
-    corresponding CVRs directory.
+    and by default randomly make a selection for each choice.  It will
+    then cast the ballot in the corresponding CVRs directory.
     """)
 
     Address.add_address_args(parser)
