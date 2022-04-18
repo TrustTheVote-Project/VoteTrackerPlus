@@ -96,7 +96,7 @@ def main():
 
     # Will process all the CVR commits on the master branch and tally
     # all the contests found.
-    contests = {}
+    git_cvrs = {}
     with subprocess.Popen(
         ['git', 'log', '--topo-order', '--no-merges', '--pretty=format:"%H%B"'],
         stdout=subprocess.PIPE,
@@ -116,21 +116,23 @@ def main():
                 block += line
                 if line == '}':
                     # this loads the contest under the CVR key
-                    cast_contest = json.loads(block)
-                    cast_contest['digest'] = digest
-                    contests[cast_contest['CVR']['uid']].append(cast_contest)
+                    cvr = json.loads(block)
+                    cvr['digest'] = digest
+                    git_cvrs[cvr['CVR']['uid']].append(cvr)
                     block = ''
                     digest = ''
                     recording = False
     # Note - though plurality voting can be counted within the above
     # loop, tallies such as rcv cannot.  So far now, just count
     # everything in a separate loop.
-    for uid in sorted(contests):
-        info(f"Scanned {len(contests[uid])} contests for contest {uid} ({uid['CVR']['name']})")
+    for git_cvr in sorted(git_cvrs):
+        info(
+            f"Scanned {len(git_cvrs[git_cvr])} contests for contest "
+            f"({git_cvr['CVR']['name']}) (uid={git_cvr['CVR']['uid']})")
         # Create a Tally object for this specific contest
-        the_tally = Tally(uid, contests[uid])
+        the_tally = Tally(git_cvr[0])
         # Tally all the contests for this contest
-        the_tally.tallyho(contests)
+        the_tally.tallyho(git_cvr)
         # Print stuff
         the_tally.print_results()
 

@@ -18,6 +18,7 @@
 """How to manage a VTP specific contest"""
 
 import json
+from logging import debug
 
 class Contest:
     """A wrapper around the rules of engagement regarding a specific contest"""
@@ -117,52 +118,229 @@ class Contest:
             return
         raise ValueError(f"Illegal value for Contest attribute ({name})")
 
+class TallyException(Exception):
+    """Custom tally exception.  TBD."""
+
 class Tally:
     """
-    A class to tally ballot contests.  The three primary function of
-    the class is the contructor, a tally function, and a
+    A class to tally ballot contests a.k.a. CVRs.  The three primary
+    functions of the class are the contructor, a tally function, and a
     print-the-tally function.
     """
 
-    def __init__(self, uid, cast_contest):
-        """Given a contest uid and json payload, will construct a Tally.
-        A tally object can validate and add additional contests.
+    def __init__(self, a_git_cvr):
+        """Given a contest as parsed from the git log, a.k.a the
+        contest digest and CVR json payload, will construct a Tally.
+        A tally object can validate and tally a contest.
+
+        Note - the constructor is per specific contest and tally
+        results of the contest are stored in an attribute of the
+        object.
         """
-        self.uid = uid
-        self.digest = cast_contest['digest']
-        self.contest = cast_contest['CVR']
+        self.digest = a_git_cvr['digest']
+        self.contest = a_git_cvr['CVR']
         self.name = Contest.check_syntax(self.contest, digest=self.digest)
         # Something to hold the actual tallies
-        self.selection_counts = {choice: 0 for choice in range(len(self.contest('choices')))}
+        self.selection_counts = {choice: 0 for choice in self.contest('choices')}
+        # Total vote count for this contest
+        self.vote_count = 0
+        # Ordered list of winners
+        self.winner_order = []
+        # Used in both plurality and rcv, but only round 0 is used in plurality
+        self.rcv_round = []
         # At this point any contest tallied against this contest must
-        # match all the fields with the exception of selection.  But
-        # that check is donw in tallyho below.
+        # match all the fields with the exception of selection, but
+        # that check is done in tallyho below.
+        if not (self.contest['tally'] == 'plurality' or self.contest['tally'] == 'rcv'):
+            raise NotImplementedError(
+                f"the specified tally ({self.contest['tally']}) is not yet implemented")
 
-    def tallyho(self, contests):
-        """Will verify and add all the supplied contests."""
-        for uid in contests:
-            contest = uid['CVR']
-            digest = uid['digest']
-            Contest.check_syntax(contest, digest=digest)
-            # Validate values
+    def tallyho(self, git_cvr):
+        """
+        Will verify and tally the suppllied unique contest across all
+        the CVRs.
+        """
+        def tally_a_plurality_contest(contest):
+            """plurality tally"""
+            for count in range(contest['max']):
+                if 0 <= count < len(contest['selection']):
+                    # yes this can be one line, but the reader may
+                    # be interested in verifying the explicit
+                    # values
+                    selection = contest['selection'][count]
+                    choice = contest['choices'][selection]
+                    self.selection_counts[choice] += 1
+                    self.vote_count += 1
+                    debug(
+                        f"Vote (plurality): contest={contest['name']} "
+                        f"choice={choice} selection={selection}")
+                else:
+                    debug(f"Vote (plurality): contest={contest['name']} BLANK")
+
+        def tally_a_rcv_contest(contest):
+            """RCV tally"""
+            if len(contest['selection']):
+                # the voter can still leave a RCV contest blank
+                selection = contest['selection'][0]
+                choice = contest['choices'][selection]
+                self.selection_counts[choice] += 1
+                self.vote_count += 1
+                debug(
+                    f"Vote (RCV): contest={contest['name']} "
+                    f"choice={choice} selection={selection}")
+            else:
+                debug(f"Vote (RCV): contest={contest['name']} BLANK")
+
+        def handle_another_rcv_round(rcv_round, last_place):
+            """For the lowest vote getter, for those CVR's that have
+            that as their current first/active-round choice, will
+            slice off that choice off and re-count the now first
+            selection choice (if there is one)
+            """
+            # Safety check
+            if rcv_round > 64:
+                raise TallyException("RCV rounds exceeded safety limit of 64 rounds")
+            # Execute a RCV round
+            for uid in git_cvr:
+                contest = uid['CVR']
+                digest = uid['digest']
+                if contest['selection'][0] == last_place:
+                    del contest['selection'][0]
+                    if len(contest['selection']):
+                        debug(
+                            f"RCV: {digest} last-place pop and count "
+                            f"({last_place} -> contest['selection'][0])")
+                        # the voter can still leave a RCV contest blank
+                        selection = contest['selection'][0]
+                        choice = contest['choices'][selection]
+                        self.selection_counts[choice] += 1
+                        self.vote_count += 1
+                        debug(f"Vote (RCV): contest={contest['name']} choice={choice} "
+                                  f"selection={selection}")
+                    else:
+                        debug(f"RCV: {digest} last-place pop and count ({last_place} -> BLANK")
+            # With the new rcv counts, see if there are enough RCV
+            # winners and if so, return
+            self.rcv_round[rcv_round] = sorted(
+                self.selection_counts, key=self.selection_counts.get, reverse=True)
+            for choice in self.rcv_round[rcv_round]:
+                # Note the test is '>' and NOT '>='
+                if float(self.selection_counts[choice]) / float(self.vote_count) > win_by:
+                    # A winner.  Depending on the win_by (which is a
+                    # function of max), there could be multiple
+                    # winners in this round.
+                    self.winner_order.append({choice: self.selection_counts[choice]})
+            # If there are anough winners, stop and return
+            if self.winner_order >= self.contest['max']:
+                return
+            # If not, safely determine the next last_place and execute a RCV round
+            if self.rcv_round[rcv_round][-1] == self.rcv_round[rcv_round][-2]:
+                # There are two last_place choices - will need more
+                # code to handle this situation post MVP development
+                raise TallyException(
+                    f"There are two last place choices in contest ({contest}), "
+                    f"round ({rcv_round}).  The code for this is not yet implemented.")
+            handle_another_rcv_round(rcv_round + 1, self.rcv_round[rcv_round][-1])
+            return
+
+        def parse_all_contests():
+            """Will parse all the contests validating each"""
             errors = {}
-            for field in ['choices', 'tally', 'win-by', 'max', 'write-in', 'uid', 'name']:
-                if field in self.contest:
-                    if self.contest[field] != contest[field]:
+            for a_git_cvr in git_cvr:
+                contest = a_git_cvr['CVR']
+                digest = a_git_cvr['digest']
+                Contest.check_syntax(contest, digest=digest)
+                # Validate values
+                for field in ['choices', 'tally', 'win-by', 'max', 'write-in', 'uid', 'name']:
+                    if field in self.contest:
+                        if self.contest[field] != contest[field]:
+                            errors[digest].append(
+                                f"{field} field does not match: "
+                                f"{self.contest[field]} != {contest[field]}")
+                    elif field in contest:
                         errors[digest].append(
-                            f"{field} field does not match: "
-                            f"{self.contest[field]} != {contest[field]}")
-                elif field in contest:
-                    errors[digest].append(
-                        f"{field} field is not present in Tally object but "
-                        "is present in digest")
-            # Aggregate the contest - this is just the first pass of a
-            # tally.  It so happens that with pluraity tallies with a
-            # single selection there is only one pass.  But for
-            # pluraity tallies with multiple choices or more
-            # complicated tallies, the additional passes are done
-            # outside this for loop.
-            self.selection_counts[self.contest['selection'][0]] += 1
+                            f"{field} field is not present in Tally object but "
+                            "is present in digest")
+                # Tally the contest - this is just the first pass of a
+                # tally.  It just so happens that with pluraity tallies
+                # the tally can be completed with s single pass over over
+                # the CVRs.  And that can be done here.  But with more
+                # complicated tallies such as RCV, the additional passes
+                # are done outside of this for loop.
+                if contest['tally'] == 'plurality':
+                    tally_a_plurality_contest(contest)
+                elif contest['tally'] == 'rcv':
+                    # Since this is the first round on a rcv tally, just
+                    # grap the first selection
+                    tally_a_rcv_contest(contest)
+                else:
+                    # This code block should never be executed as the
+                    # constructor or the Validate values clause above will
+                    # catch this type of error.  It is here only as a
+                    # safety check during development time when adding
+                    # support for more tallies.
+                    raise NotImplementedError(
+                        f"the specified tally ({contest['tally']}) is not yet implemented")
+
+            # Will the potential CVR errors found, report them all
+            if errors:
+                raise TallyException(
+                    "The following CVRs have structural errors:"
+                    f"{errors}")
+
+        # Read all the contests, validate, and count votes
+        parse_all_contests()
+
+        # For all tallies order what has been counted so far
+        self.rcv_round[0] = sorted(
+            self.selection_counts, key=self.selection_counts.get, reverse=True)
+
+        # If plurality, the tally is done
+        if self.contest['tally'] == 'plurality':
+            # record the winner order
+            for choice in self.rcv_round[0]:
+                self.winner_order.append({choice: self.selection_counts[choice]})
+            return
+
+        # The rest of this block handles RCV
+
+        # When max=1 there is only one RCV winner.  However, not only
+        # can max>1 but win_by might be 2/3 and not just a simple
+        # majority.
+
+        # So, determine the win_by if is not specified by the ElectionConfig
+        win_by = (1.0 / float(1 + self.contest['max'])) \
+                    if not self.contest['win-by'] else float(self.contest['win-by'])
+
+        # See if done by first determining if there are enough winning
+        # selection counts
+        for choice in self.rcv_round[0]:
+            # Note the test is '>' and NOT '>='
+            if float(self.selection_counts[choice]) / float(self.vote_count) > win_by:
+                # A winner.  Depending on the win_by (which is a
+                # function of max), there could be multiple
+                # winners in this round.
+                self.winner_order.append({choice: self.selection_counts[choice]})
+
+        # If there are anough winners, stop and return.  Otherwise,
+        # start RCV rounds.
+        if self.winner_order >= self.contest['max']:
+            return
+
+        # The first or more RCV winners need to be determined.  Loop
+        # until we have enough RCV winners regardless of win-by as it
+        # may work out the last round only includes enough winners of
+        # which one or more may may not 1/max votes ...
+
+        # Safely determine the next last_place and execute a RCV round
+        if self.rcv_round[0][-1] == self.rcv_round[0][-2]:
+            # There are two last_place choices - will need more
+            # code to handle this situation post the MVP demo
+            raise TallyException(
+                f"There are two last place choices in contest ({self.contest['name']}) "
+                f"(uid={self.contest['uid']}) in the first round.  "
+                "The code for this is not yet implemented.")
+        handle_another_rcv_round(1, self.rcv_round[0][-1])
 
     def print_results(self, syntax=None):
         """Will print the results of the tally"""
