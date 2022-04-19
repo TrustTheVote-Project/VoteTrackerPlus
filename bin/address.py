@@ -175,7 +175,7 @@ class Address:
             return self.ballot_node
         if name == 'ballot_subdir':
             return self.ballot_subdir
-        raise NameError(f"Name {name} not accepted/defined for set()")
+        raise NameError(f"Name {name} not accepted/defined for get()")
 
     def set(self, name, value):
         """A generic setter - will raise a NameError if name is not defined """

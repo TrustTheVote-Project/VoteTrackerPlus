@@ -36,12 +36,13 @@ import json
 # pylint: disable=wrong-import-position   # import statements not top of file
 import argparse
 import logging
-from logging import info
+from logging import info, error
 
 # Local import
 from election_config import ElectionConfig
 from common import Globals, Shellout
 from contest import Tally
+from exceptions import TallyException
 # Functions
 
 
@@ -141,17 +142,25 @@ def main():
     # loop, tallies such as rcv cannot.  So far now, just count
     # everything in a separate loop.
     for contest_batch in sorted(contest_batches):
+        # Create a Tally object for this specific contest
+        the_tally = Tally(contest_batches[contest_batch][0])
         info(
             f"Scanned {len(contest_batches[contest_batch])} contests for contest "
             f"({contest_batches[contest_batch][0]['CVR']['name']}) "
-            f"(uid={contest_batches[contest_batch][0]['CVR']['uid']})")
-        # Create a Tally object for this specific contest
-        the_tally = Tally(contest_batches[contest_batch][0])
+            f"uid={contest_batches[contest_batch][0]['CVR']['uid']}, "
+            f"tally={contest_batches[contest_batch][0]['CVR']['tally']}, "
+            f"max={the_tally.get('max')}, "
+            f"win-by>{the_tally.get('win-by')}"
+            )
         # Tally all the contests for this contest
-        import pdb; pdb.set_trace()
-        the_tally.tallyho(contest_batches[contest_batch])
-        # Print stuff
-        the_tally.print_results()
+#        import pdb; pdb.set_trace()
+        try:
+            the_tally.tallyho(contest_batches[contest_batch])
+            # Print stuff
+            the_tally.print_results()
+        except TallyException as tally_error:
+            error(f"[ERROR]: {tally_error}  "
+                  "Continuing with other contests ...")
 
 if __name__ == '__main__':
     args = parse_arguments()

@@ -20,6 +20,9 @@
 import json
 import operator
 from logging import debug
+from fractions import Fraction
+# local
+from exceptions import TallyException
 
 class Contest:
     """A wrapper around the rules of engagement regarding a specific contest"""
@@ -98,7 +101,7 @@ class Contest:
                            f"{','.join(bad_keys)}")
 
     @staticmethod
-    def get_choices(choices):
+    def get_choices_from_contest(choices):
         """Will smartly return just the pure list of choices sans all
         values and sub dictionaries
         """
@@ -107,6 +110,9 @@ class Contest:
             return choices
         if isinstance(choices[0], dict):
             return [next(iter(key.keys())) for key in choices]
+        if isinstance(choices[0], bool):
+            return ['true', 'false'] if choices[0] else ['false', 'true']
+#        import pdb; pdb.set_trace()
         raise ValueError(f"unknown/unsupported contest choices data structure ({choices})")
 
     def __init__(self, a_contest_blob, ggo, contests_index):
@@ -147,7 +153,7 @@ class Contest:
                 {'name': self.name, 'ggo': self.ggo, 'cast_branch': self.cast_branch})
             return contest_dict
         if name == 'choices':
-            return Contest.get_choices(self.contest['choices'])
+            return Contest.get_choices_from_contest(self.contest['choices'])
         # Return contest 'meta' data
         if name in ['name', 'ggo', 'index', 'contest']:
             return getattr(self, name)
@@ -161,15 +167,21 @@ class Contest:
             return
         raise ValueError(f"Illegal value for Contest attribute ({name})")
 
-class TallyException(Exception):
-    """Custom tally exception.  TBD."""
-
 class Tally:
     """
     A class to tally ballot contests a.k.a. CVRs.  The three primary
     functions of the class are the contructor, a tally function, and a
     print-the-tally function.
     """
+
+    @staticmethod
+    def get_choices_from_round(choices, what=''):
+        """Will smartly return just the pure list of choices sans all
+        values and sub dictionaries from a round
+        """
+        if what == 'count':
+            return [choice[1] for choice in choices]
+        return [choice[0] for choice in choices]
 
     def __init__(self, a_git_cvr):
         """Given a contest as parsed from the git log, a.k.a the
@@ -185,20 +197,40 @@ class Tally:
         Contest.check_cvr_blob_syntax(self.contest, digest=self.digest)
         # Something to hold the actual tallies
         self.selection_counts = \
-            {choice: 0 for choice in Contest.get_choices(self.contest['choices'])}
+            {choice: 0 for choice in Contest.get_choices_from_contest(self.contest['choices'])}
         # Total vote count for this contest
         self.vote_count = 0
         # Ordered list of winners
         self.winner_order = []
-        # Used in both plurality and rcv, but only round 0 is used in plurality
+        # Used in both plurality and rcv, but only round 0 is used in
+        # plurality.  Note - rcv_round's are an ordered list of tuples,
+        # not an ordered list of lists or dictionaries.
         self.rcv_round = []
         self.rcv_round.append([])
+
+        # win-by and max are optional but have known defaults.
+        # Determine the win-by if is not specified by the
+        # ElectionConfig.
+        self.defaults = {}
+        self.defaults['max'] = 1 if 'max' not in self.contest else self.contest['max']
+        self.defaults['win-by'] = (1.0 / float(1 + self.defaults['max'])) \
+            if 'win-by' not in self.contest else Fraction(self.contest['win-by'])
+
         # At this point any contest tallied against this contest must
-        # match all the fields with the exception of selection, but
-        # that check is done in tallyho below.
+        # match all the fields with the exception of selection and
+        # write-in, but that check is done in tallyho below.
         if not (self.contest['tally'] == 'plurality' or self.contest['tally'] == 'rcv'):
             raise NotImplementedError(
                 f"the specified tally ({self.contest['tally']}) is not yet implemented")
+
+    def get(self, name):
+        """Simple limited functionality getter"""
+        if name in ['max', 'win-by']:
+            return self.defaults[name]
+        if name in ['digest', 'contest', 'selection_counts',
+                    'vote_count', 'winner_order', 'rcv_round']:
+            return getattr(self, name)
+        raise NameError(f"Name {name} not accepted/defined for Tally.get()")
 
     def __str__(self):
         """Return the Tally in a partially print-able json string - careful ..."""
@@ -217,13 +249,13 @@ class Tally:
         """
         def tally_a_plurality_contest(contest):
             """plurality tally"""
-            for count in range(contest['max']):
+            for count in range(self.defaults['max']):
                 if 0 <= count < len(contest['selection']):
                     # yes this can be one line, but the reader may
                     # be interested in verifying the explicit
                     # values
                     selection = contest['selection'][count]
-                    choice = Contest.get_choices(contest['choices'])[selection]
+                    choice = Contest.get_choices_from_contest(contest['choices'])[selection]
                     self.selection_counts[choice] += 1
                     self.vote_count += 1
                     debug(
@@ -237,7 +269,7 @@ class Tally:
             if len(contest['selection']):
                 # the voter can still leave a RCV contest blank
                 selection = contest['selection'][0]
-                choice = Contest.get_choices(contest['choices'])[selection]
+                choice = Contest.get_choices_from_contest(contest['choices'])[selection]
                 self.selection_counts[choice] += 1
                 self.vote_count += 1
                 debug(
@@ -274,20 +306,23 @@ class Tally:
                                   f"selection={selection}")
                     else:
                         debug(f"RCV: {digest} last-place pop and count ({last_place} -> BLANK")
-            # With the new rcv counts, see if there are enough RCV
-            # winners and if so, return
+            # Order the winners of this round.  This is a tuple, not a
+            # list or dict.
             self.rcv_round[this_round] = sorted(
                 self.selection_counts.items(), key=operator.itemgetter(1), reverse=True)
+            # Create the next round list
             self.rcv_round.append([])
+            # See if there is a wiinner and if so record it
             for choice in self.rcv_round[this_round]:
                 # Note the test is '>' and NOT '>='
-                if float(self.selection_counts[choice]) / float(self.vote_count) > win_by:
-                    # A winner.  Depending on the win_by (which is a
+                if float(self.selection_counts[choice]) /\
+                    float(self.vote_count) > self.defaults['win-by']:
+                    # A winner.  Depending on the win-by (which is a
                     # function of max), there could be multiple
                     # winners in this round.
                     self.winner_order.append({choice: self.selection_counts[choice]})
             # If there are anough winners, stop and return
-            if self.winner_order >= self.contest['max']:
+            if self.winner_order >= self.defaults['max']:
                 return
             # If not, safely determine the next last_place and execute a RCV round
             if self.rcv_round[this_round][-1] == self.rcv_round[this_round][-2]:
@@ -347,7 +382,7 @@ class Tally:
         # Read all the contests, validate, and count votes
         parse_all_contests()
 
-        # For all tallies order what has been counted so far
+        # For all tallies order what has been counted so far (a tuple)
         self.rcv_round[0] = sorted(
             self.selection_counts.items(), key=operator.itemgetter(1), reverse=True)
         self.rcv_round.append([])
@@ -359,29 +394,25 @@ class Tally:
             return
 
         # The rest of this block handles RCV
-        import pdb; pdb.set_trace()
 
         # When max=1 there is only one RCV winner.  However, not only
-        # can max>1 but win_by might be 2/3 and not just a simple
+        # can max>1 but win-by might be 2/3 and not just a simple
         # majority.
-
-        # So, determine the win_by if is not specified by the ElectionConfig
-        win_by = (1.0 / float(1 + self.contest['max'])) \
-                    if not self.contest['win-by'] else float(self.contest['win-by'])
 
         # See if done by first determining if there are enough winning
         # selection counts
-        for choice in self.rcv_round[0]:
+        for choice in Tally.get_choices_from_round(self.rcv_round[0]):
             # Note the test is '>' and NOT '>='
-            if float(self.selection_counts[choice]) / float(self.vote_count) > win_by:
-                # A winner.  Depending on the win_by (which is a
+            if float(self.selection_counts[choice]) /\
+              float(self.vote_count) > self.defaults['win-by']:
+                # A winner.  Depending on the win-by (which is a
                 # function of max), there could be multiple
                 # winners in this round.
-                self.winner_order.append({choice: self.selection_counts[choice]})
+                self.winner_order.append((choice, self.selection_counts[choice]))
 
         # If there are anough winners, stop and return.  Otherwise,
         # start RCV rounds.
-        if self.winner_order >= self.contest['max']:
+        if self.winner_order and len(self.winner_order) >= self.defaults['max']:
             return
 
         # The first or more RCV winners need to be determined.  Loop
@@ -390,7 +421,8 @@ class Tally:
         # which one or more may may not 1/max votes ...
 
         # Safely determine the next last_place and execute a RCV round
-        if self.rcv_round[0][-1] == self.rcv_round[0][-2]:
+        if Tally.get_choices_from_round(self.rcv_round[0], 'count')[-1] == \
+          Tally.get_choices_from_round(self.rcv_round[0], 'count')[-2]:
             # There are two last_place choices - will need more
             # code to handle this situation post the MVP demo
             raise TallyException(
@@ -402,6 +434,7 @@ class Tally:
     def print_results(self, syntax=None):
         """Will print the results of the tally"""
         print(f"Contest {self.contest['name']} (uid={self.contest['uid']}):")
+#        import pdb; pdb.set_trace()
         for winner_blob in self.winner_order:
             print(f"  {winner_blob[0]} : {winner_blob[1]}")
 
