@@ -146,9 +146,9 @@ def main():
             f"({contest_batches[contest_batch][0]['CVR']['name']}) "
             f"(uid={contest_batches[contest_batch][0]['CVR']['uid']})")
         # Create a Tally object for this specific contest
-        import pdb; pdb.set_trace()
         the_tally = Tally(contest_batches[contest_batch][0])
         # Tally all the contests for this contest
+        import pdb; pdb.set_trace()
         the_tally.tallyho(contest_batches[contest_batch])
         # Print stuff
         the_tally.print_results()
