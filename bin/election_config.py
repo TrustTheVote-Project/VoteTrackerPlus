@@ -171,7 +171,7 @@ class ElectionConfig:
         # should really sanity check the contests too
         if 'contests' in config:
             for contest in config['contests']:
-                Contest.check_syntax(contest, filename)
+                Contest.check_contest_blob_syntax(contest, filename)
                 Contest.set_uid(contest, '.')
         return config
 

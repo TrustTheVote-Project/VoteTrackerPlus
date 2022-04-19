@@ -25,8 +25,9 @@ class Contest:
 
     # Legitimate Contest keys.  Note 'selection', 'uid', 'cloak', and
     # 'name' are not legitimate keys for blank ballots
-    _keys = ['choices', 'tally', 'win-by', 'max', 'write-in',
-                 'selection', 'uid', 'name']
+    _config_keys = ['choices', 'tally', 'win-by', 'max', 'write-in']
+    _blank_ballot_keys = _config_keys + ['uid']
+    _cast_keys = _blank_ballot_keys + ['selection', 'name', 'cast_branch', 'ggo']
 
     # A simple numerical n digit uid
     _uids = {}
@@ -49,29 +50,69 @@ class Contest:
         Contest._nextuid += 1
 
     @staticmethod
-    def check_syntax(a_contest_blob, filename='', digest=''):
+    def check_contest_blob_syntax(a_contest_blob, filename='', digest=''):
         """
         Will check the synatx of a contest somewhat and conveniently
         return the contest name
         """
+        ### ZZZ - should sanity check the name
         name = next(iter(a_contest_blob))
-        ### ZZZ - sanity check the name
-        for key in a_contest_blob[name]:
-            if key not in Contest._keys:
-                if filename:
-                    raise KeyError(f"File ({filename}): "
-                                   f"the specified key ({key}) is not a valid Contest key")
-                if digest:
-                    raise KeyError(f"Commit digest ({digest}): "
-                                   f"the specified key ({key}) is not a valid Contest key")
-                raise KeyError(f"The specified key ({key}) is not a valid Contest key")
+
+        if filename:
+            legal_fields = Contest._blank_ballot_keys
+        elif digest:
+            legal_fields = Contest._cast_keys
+        else:
+            legal_fields = Contest._config_keys
+        bad_keys = [key for key in a_contest_blob[name] if key not in legal_fields]
+        if bad_keys:
+            if filename:
+                raise KeyError(f"File ({filename}): "
+                               "the following keys are not valid Contest keys: "
+                               f"{','.join(bad_keys)}")
+            if digest:
+                raise KeyError(f"Commit digest ({digest}): "
+                               "the following keys are not valid Contest keys: "
+                               f"{','.join(bad_keys)}")
+            raise KeyError("the following keys are not valid Contest keys: "
+                           f"{','.join(bad_keys)}")
         return name
+
+    @staticmethod
+    def check_cvr_blob_syntax(a_cvr_blob, filename='', digest=''):
+        """
+        Will check the synatx of a cvr
+        """
+        bad_keys = [key for key in a_cvr_blob if key not in Contest._cast_keys]
+        if bad_keys:
+            if filename:
+                raise KeyError(f"File ({filename}): "
+                               "the following keys are not valid Contest keys: "
+                               f"{','.join(bad_keys)}")
+            if digest:
+                raise KeyError(f"Commit digest ({digest}): "
+                               "the following keys are not valid Contest keys: "
+                               f"{','.join(bad_keys)}")
+            raise KeyError("the following keys are not valid Contest keys: "
+                           f"{','.join(bad_keys)}")
+
+    @staticmethod
+    def get_choices(choices):
+        """Will smartly return just the pure list of choices sans all
+        values and sub dictionaries
+        """
+        # Returns a pure list of choices sans any other values or sub dictionaries
+        if isinstance(choices[0], str):
+            return choices
+        if isinstance(choices[0], dict):
+            return [next(iter(key.keys())) for key in choices]
+        raise ValueError(f"unknown/unsupported contest choices data structure ({choices})")
 
     def __init__(self, a_contest_blob, ggo, contests_index):
         """Construct the object placing the contest info in an attribute
         while recording the meta data
         """
-        self.name = Contest.check_syntax(a_contest_blob, '')
+        self.name = Contest.check_contest_blob_syntax(a_contest_blob, '')
         self.contest = a_contest_blob[self.name]
         self.ggo = ggo
         self.index = contests_index
@@ -89,7 +130,8 @@ class Contest:
     def __str__(self):
         """Return the contest contents as a print-able json string - careful ..."""
         # Note - keep cloak out of it until proven safe to include
-        contest_dict = { key: self.contest[key] for key in Contest._keys if key in self.contest }
+        contest_dict = {
+            key: self.contest[key] for key in Contest._cast_keys if key in self.contest}
         contest_dict.update({'name': self.name, 'ggo': self.ggo, 'cast_branch': self.cast_branch})
         return json.dumps(contest_dict, sort_keys=True, indent=4, ensure_ascii=False)
 
@@ -99,12 +141,12 @@ class Contest:
         if name == 'dict':
             # return the combined psuedo dictionary similar to __str__ above
             contest_dict = \
-                { key: self.contest[key] for key in Contest._keys if key in self.contest }
+                { key: self.contest[key] for key in Contest._cast_keys if key in self.contest }
             contest_dict.update(
                 {'name': self.name, 'ggo': self.ggo, 'cast_branch': self.cast_branch})
             return contest_dict
         if name == 'choices':
-            return self.contest['choices']
+            return Contest.get_choices(self.contest['choices'])
         # Return contest 'meta' data
         if name in ['name', 'ggo', 'index', 'contest']:
             return getattr(self, name)
@@ -139,9 +181,10 @@ class Tally:
         """
         self.digest = a_git_cvr['digest']
         self.contest = a_git_cvr['CVR']
-        self.name = Contest.check_syntax(self.contest, digest=self.digest)
+        self.name = Contest.check_cvr_blob_syntax(self.contest, digest=self.digest)
         # Something to hold the actual tallies
-        self.selection_counts = {choice: 0 for choice in self.contest('choices')}
+        self.selection_counts = \
+            {choice: 0 for choice in Contest.get_choices(self.contest['choices'])}
         # Total vote count for this contest
         self.vote_count = 0
         # Ordered list of winners
@@ -249,7 +292,7 @@ class Tally:
             for a_git_cvr in git_cvr:
                 contest = a_git_cvr['CVR']
                 digest = a_git_cvr['digest']
-                Contest.check_syntax(contest, digest=digest)
+                Contest.check_cvr_blob_syntax(contest, digest=digest)
                 # Validate values
                 for field in ['choices', 'tally', 'win-by', 'max', 'write-in', 'uid', 'name']:
                     if field in self.contest:

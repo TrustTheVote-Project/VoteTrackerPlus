@@ -28,6 +28,7 @@ file was created.
 """
 
 # Standard imports
+import os
 import sys
 import re
 import subprocess
@@ -39,6 +40,7 @@ from logging import info
 
 # Local import
 from election_config import ElectionConfig
+from common import Globals, Shellout
 from contest import Tally
 # Functions
 
@@ -71,8 +73,8 @@ def parse_arguments():
                             help="limit the tally to a specific contest")
     parser.add_argument("-v", "--verbosity", type=int, default=3,
                             help="0 critical, 1 error, 2 warning, 3 info, 4 debug (def=3)")
-    parser.add_argument("-n", "--printonly", action="store_true",
-                            help="will printonly and not write to disk (def=True)")
+#    parser.add_argument("-n", "--printonly", action="store_true",
+#                            help="will printonly and not write to disk (def=True)")
 
     parsed_args = parser.parse_args()
     verbose = {0: logging.CRITICAL, 1: logging.ERROR, 2: logging.WARNING,
@@ -96,43 +98,58 @@ def main():
 
     # Will process all the CVR commits on the master branch and tally
     # all the contests found.
-    git_cvrs = {}
-    with subprocess.Popen(
-        ['git', 'log', '--topo-order', '--no-merges', '--pretty=format:"%H%B"'],
-        stdout=subprocess.PIPE,
-        encoding="utf8") as process:
-        # read lines until there is a complete json object, then
-        # add the object for that contest.
-        block = ''
-        digest = ''
-        recording = False
-        for line in process.stdout.readline():
-            if match := re.match('^([a-f0-9]{40}){', line):
-                digest = match.group(1)
-                recording = True
-                block = '{'
-                continue
-            if recording:
-                block += line
-                if line == '}':
-                    # this loads the contest under the CVR key
-                    cvr = json.loads(block)
-                    cvr['digest'] = digest
-                    git_cvrs[cvr['CVR']['uid']].append(cvr)
-                    block = ''
-                    digest = ''
-                    recording = False
+    contest_batches = {}
+    with Shellout.changed_cwd(os.path.join(
+        the_election_config.get('git_rootdir'), Globals.get('ROOT_ELECTION_DATA_SUBDIR'))):
+        with subprocess.Popen(
+            ['git', 'log', '--topo-order', '--no-merges', '--pretty=format:%H%B'],
+            stdout=subprocess.PIPE,
+            text=True,
+            encoding="utf8") as git_output:
+            # read lines until there is a complete json object, then
+            # add the object for that contest.
+            block = ''
+            digest = ''
+            recording = False
+            # question - how to get "for line in
+            # git_output.stdout.readline():" not to effectively return
+            # the characters in line as opposed to the entire line
+            # itself?
+            while True:
+                line = git_output.stdout.readline()
+                if not line:
+                    break
+                if match := re.match('^([a-f0-9]{40}){', line):
+                    digest = match.group(1)
+                    recording = True
+                    block = '{'
+                    continue
+                if recording:
+                    block += line.strip()
+                    if re.match('^}', line):
+                        # this loads the contest under the CVR key
+                        cvr = json.loads(block)
+                        cvr['digest'] = digest
+                        if cvr['CVR']['uid'] in contest_batches:
+                            contest_batches[cvr['CVR']['uid']].append(cvr)
+                        else:
+                            contest_batches[cvr['CVR']['uid']] = [cvr]
+                        block = ''
+                        digest = ''
+                        recording = False
     # Note - though plurality voting can be counted within the above
     # loop, tallies such as rcv cannot.  So far now, just count
     # everything in a separate loop.
-    for git_cvr in sorted(git_cvrs):
+    for contest_batch in sorted(contest_batches):
         info(
-            f"Scanned {len(git_cvrs[git_cvr])} contests for contest "
-            f"({git_cvr['CVR']['name']}) (uid={git_cvr['CVR']['uid']})")
+            f"Scanned {len(contest_batches[contest_batch])} contests for contest "
+            f"({contest_batches[contest_batch][0]['CVR']['name']}) "
+            f"(uid={contest_batches[contest_batch][0]['CVR']['uid']})")
         # Create a Tally object for this specific contest
-        the_tally = Tally(git_cvr[0])
+        import pdb; pdb.set_trace()
+        the_tally = Tally(contest_batches[contest_batch][0])
         # Tally all the contests for this contest
-        the_tally.tallyho(git_cvr)
+        the_tally.tallyho(contest_batches[contest_batch])
         # Print stuff
         the_tally.print_results()
 
