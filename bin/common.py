@@ -113,7 +113,9 @@ class Shellout:
                 kwargs['stdout'] = subprocess.DEVNULL
             if 'stderr' not in kwargs:
                 kwargs['stderr'] = subprocess.DEVNULL
-        return subprocess.run(argv, timeout=Globals.get('SHELL_TIMEOUT'), **kwargs)
+        if 'timeout' not in kwargs:
+            kwargs['timeout'] = Globals.get('SHELL_TIMEOUT')
+        return subprocess.run(argv, **kwargs)
 
     @staticmethod
     @contextmanager

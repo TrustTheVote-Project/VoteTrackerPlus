@@ -125,7 +125,10 @@ def main():
             # - merge the ballot (first 100 will be a noop)
             Shellout.run(['./merge_contests.py'], args.printonly)
     # merge the remaining contests
-    Shellout.run(['./merge_contests.py', '-f'], args.printonly)
+    # Note - this needs a longer timeout as it can take many seconds
+    Shellout.run(
+        ['./merge_contests.py', '-f'],
+        printonly=args.printonly, verbosity=args.verbosity, timeout=120)
     # tally the contests
     Shellout.run(['./tally_ballot.py'], args.printonly)
 
