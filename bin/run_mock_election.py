@@ -37,7 +37,7 @@ from logging import debug
 
 # Local import
 from common import Globals, Shellout
-from address import Address
+from ballot import Ballot
 from election_config import ElectionConfig
 
 # Functions
@@ -52,11 +52,7 @@ def parse_arguments():
 
     parser = argparse.ArgumentParser(description=
     """run_mock_election.py will run a mock election with N ballots
-    for a given town/GGO and the blank ballots contained within:
-
-        - will randomly cast each blank ballot N times
-
-        - will tally each of race and report the winner
+    across the available blank ballots found in the ElectionData.
 
     One basic idea is to run this in different windows, one per VTP
     scanner.  The scanner is nominally associated with a town (as
@@ -64,14 +60,8 @@ def parse_arguments():
     """,
         formatter_class=argparse.RawDescriptionHelpFormatter)
 
-    Address.add_address_args(parser, True)
     parser.add_argument("-i", "--iterations", type=int, default=10,
                             help="the number of unique blank ballots to cast")
-    parser.add_argument("-t", "--towns",
-        default="Alameda, 'Alum Rock', Berkeley, Evergreen, Milpitas, Oakland",
-        help="the comma separated list of towns to cast ballots from")
-    parser.add_argument("-s", "--state", default="California",
-                            help="the state associated with the supplied towns (def=California)")
     parser.add_argument("-v", "--verbosity", type=int, default=3,
                             help="0 critical, 1 error, 2 warning, 3 info, 4 debug (def=3)")
     parser.add_argument("-n", "--printonly", action="store_true",
@@ -124,17 +114,18 @@ def main():
         for blank_ballot in blank_ballots:
             debug(f"Iteration {count}, processing {blank_ballot}")
             # - cast a ballot
+#            import pdb; pdb.set_trace()
             Shellout.run(
-                ['./cast_ballot.py', 'blank_ballot=' + blank_ballot],
+                ['./cast_ballot.py', '--blank_ballot=' + blank_ballot],
                 args.printonly)
             # - accept the ballot
             Shellout.run(
-                ['./accept_ballot.py', 'ballot_ballot=' + blank_ballot],
+                ['./accept_ballot.py', '--cast_ballot=' + Ballot.get_cast_from_blank(blank_ballot)],
                 args.printonly)
             # - merge the ballot (first 100 will be a noop)
-            Shellout.run(['./merge_ballot.py'], args.printonly)
+            Shellout.run(['./merge_contests.py'], args.printonly)
     # merge the remaining contests
-    Shellout.run(['./merge_ballot.py', '-f'], args.printonly)
+    Shellout.run(['./merge_contests.py', '-f'], args.printonly)
     # tally the contests
     Shellout.run(['./tally_ballot.py'], args.printonly)
 

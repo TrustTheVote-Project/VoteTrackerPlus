@@ -32,6 +32,7 @@ class Contest:
     _config_keys = ['choices', 'tally', 'win-by', 'max', 'write-in']
     _blank_ballot_keys = _config_keys + ['uid']
     _cast_keys = _blank_ballot_keys + ['selection', 'name', 'cast_branch', 'ggo']
+    _choice_keys = ['name', 'party']
 
     # A simple numerical n digit uid
     _uids = {}
@@ -42,7 +43,6 @@ class Contest:
         """Will add a contest uid (only good within the context of this
         specific election) to the supplied contest.
         """
-#        import pdb; pdb.set_trace()
         name = next(iter(a_contest_blob))
         if 'uid' in a_contest_blob[name]:
             raise IndexError(f"The uid of contest {name} is already set")
@@ -54,7 +54,24 @@ class Contest:
         Contest._nextuid += 1
 
     @staticmethod
-    def check_contest_blob_syntax(a_contest_blob, filename='', digest=''):
+    def check_contest_choices(choices):
+        """Will validate the syntax of the contest choice"""
+        for choice in choices:
+            if isinstance(choice, str):
+                continue
+            if isinstance(choice, dict):
+                bad_keys = [key for key in choice if key not in Contest._choice_keys]
+                if bad_keys:
+                    raise KeyError(
+                        "the following keys are not valid Contest choice keys: "
+                        f"{','.join(bad_keys)}")
+                continue
+            if isinstance(choice, bool):
+                continue
+
+    @staticmethod
+    def check_contest_blob_syntax(a_contest_blob, filename='', digest='',
+                                      accept_all_keys=False):
         """
         Will check the synatx of a contest somewhat and conveniently
         return the contest name
@@ -64,7 +81,7 @@ class Contest:
 
         if filename:
             legal_fields = Contest._blank_ballot_keys
-        elif digest:
+        elif digest or accept_all_keys:
             legal_fields = Contest._cast_keys
         else:
             legal_fields = Contest._config_keys
@@ -80,6 +97,9 @@ class Contest:
                                f"{','.join(bad_keys)}")
             raise KeyError("the following keys are not valid Contest keys: "
                            f"{','.join(bad_keys)}")
+        # Need to validate choices sub data structure as well
+        Contest.check_contest_choices(a_contest_blob[name]['choices'])
+        # good enough
         return name
 
     @staticmethod
@@ -99,11 +119,15 @@ class Contest:
                                f"{','.join(bad_keys)}")
             raise KeyError("the following keys are not valid Contest keys: "
                            f"{','.join(bad_keys)}")
+        # Need to validate choices sub data structure as well
+        Contest.check_contest_choices(a_cvr_blob['choices'])
 
     @staticmethod
     def get_choices_from_contest(choices):
         """Will smartly return just the pure list of choices sans all
-        values and sub dictionaries
+        values and sub dictionaries.  An individual choice can either
+        be a simple string, a regulare 1D dictionary, or it turns out
+        a bool.
         """
         # Returns a pure list of choices sans any other values or sub dictionaries
         if isinstance(choices[0], str):
@@ -112,14 +136,14 @@ class Contest:
             return [next(iter(key.keys())) for key in choices]
         if isinstance(choices[0], bool):
             return ['true', 'false'] if choices[0] else ['false', 'true']
-#        import pdb; pdb.set_trace()
         raise ValueError(f"unknown/unsupported contest choices data structure ({choices})")
 
-    def __init__(self, a_contest_blob, ggo, contests_index):
+    def __init__(self, a_contest_blob, ggo, contests_index, accept_all_keys=False):
         """Construct the object placing the contest info in an attribute
         while recording the meta data
         """
-        self.name = Contest.check_contest_blob_syntax(a_contest_blob, '')
+        self.name = Contest.check_contest_blob_syntax(
+            a_contest_blob, '', accept_all_keys=accept_all_keys)
         self.contest = a_contest_blob[self.name]
         self.ggo = ggo
         self.index = contests_index

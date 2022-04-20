@@ -96,7 +96,6 @@ class Address:
             nodes.append(name)
             count += 1
         address = Address(state=nodes[0], town=nodes[1], generic_address=True)
-#        import pdb; pdb.set_trace()
         address.map_ggos(config, ggos=ggos)
         return address
 

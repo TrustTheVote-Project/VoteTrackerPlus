@@ -21,6 +21,7 @@
 import os
 import posixpath
 import re
+from logging import debug
 import yaml
 import networkx
 
@@ -132,7 +133,6 @@ class ElectionConfig:
         bad_keys = [key for key in address_map if not key in
                         ElectionConfig._address_map_keys]
         if bad_keys:
-#            import pdb; pdb.set_trace()
             raise KeyError(f"File ({filename}): "
                            f"the following address_map keys are not supported: {bad_keys}")
         # also check subkeys
@@ -152,6 +152,7 @@ class ElectionConfig:
         only if the file exists.  Check the syntax.
         """
         if os.path.isfile(filename):
+            debug(f"Reading {filename}")
             with open(filename, 'r', encoding="utf8") as map_file:
                 this_address_map = yaml.load(map_file, Loader=yaml.FullLoader)
             # sanity-check it
@@ -164,6 +165,7 @@ class ElectionConfig:
         """
         Read the confgi yaml file return the dictionary and check the syntax.
         """
+        debug(f"Reading {filename}")
         with open(filename, 'r', encoding="utf8") as config_file:
             config = yaml.load(config_file, Loader=yaml.FullLoader)
         # sanity-check it

@@ -19,4 +19,4 @@
 
 class TallyException(Exception):
     """Custom tally exception.  TBD."""
-    pass
+#    pass

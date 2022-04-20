@@ -167,6 +167,8 @@ def parse_arguments():
         formatter_class=argparse.RawDescriptionHelpFormatter)
 
     Address.add_address_args(parser, True)
+    parser.add_argument("--cast_ballot",
+                            help="overrides an address - specifies the specific cast ballot")
     parser.add_argument("-v", "--verbosity", type=int, default=3,
                             help="0 critical, 1 error, 2 warning, 3 info, 4 debug (def=3)")
     parser.add_argument("-n", "--printonly", action="store_true",
@@ -192,20 +194,28 @@ def main():
     the_election_config = ElectionConfig()
     the_election_config.parse_configs()
 
+    # Create a ballot
+    a_ballot = Ballot()
+
     # Note - accept_ballot.py currently only deals with generic
     # addresses since all cast ballots, regardless of active ggos, end
     # up in the same spot, nominally in the town subfolder.
-    the_address = Address.create_address_from_args(args,
-                    ['verbosity', 'printonly'], generic_address=True)
-    the_address.map_ggos(the_election_config, skip_ggos=True)
-
-    # Get the ballot for the specified address.  Note that reading the
-    # cast ballot will define the active ggos etc for the ballot even
-    # though those fields are not defined for the address.  However,
-    # reading a ballot still needs the ballot_subdir field of the
-    # address.
-    a_ballot = Ballot()
-    a_ballot.read_a_cast_ballot(the_address, the_election_config)
+    if args.cast_ballot:
+        # Read the specified cast_ballot
+        with Shellout.changed_cwd(os.path.join(
+            the_election_config.get('git_rootdir'), Globals.get('ROOT_ELECTION_DATA_SUBDIR'))):
+            a_ballot.read_a_cast_ballot('', the_election_config, args.cast_ballot)
+    else:
+        # Use the specified address
+        the_address = Address.create_address_from_args(args,
+                        ['verbosity', 'printonly', 'cast_ballot'], generic_address=True)
+        the_address.map_ggos(the_election_config, skip_ggos=True)
+        # Get the ballot for the specified address.  Note that reading
+        # the cast ballot will define the active ggos etc for the
+        # ballot even though those fields are not defined for the
+        # address.  However, reading a ballot still needs the
+        # ballot_subdir field of the address.
+        a_ballot.read_a_cast_ballot(the_address, the_election_config)
 
     # the voter's row of digests (indexed by contest uid)
     ballot_receipts = {}

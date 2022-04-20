@@ -26,6 +26,7 @@ See ../docs/tech/executable-overview.md for the context in which this file was c
 """
 
 # pylint: disable=wrong-import-position
+import os
 import sys
 import argparse
 import logging
@@ -36,6 +37,7 @@ import pprint
 # Local imports
 from address import Address
 from ballot import Ballot, Contests
+from common import Globals, Shellout
 from election_config import ElectionConfig
 
 ################
@@ -56,6 +58,8 @@ def parse_arguments():
     # ZZZ - cloaked contests are enabled at cast_ballot time
 #    parser.add_argument('-k', "--cloak", action="store_true",
 #                            help="if possible provide a cloaked ballot offset")
+    parser.add_argument("--blank_ballot",
+                            help="overrides an address - specifies the specific blank ballot")
     parser.add_argument("-v", "--verbosity", type=int, default=3,
                             help="0 critical, 1 error, 2 warning, 3 info, 4 debug (def=3)")
     parser.add_argument("-n", "--printonly", action="store_true",
@@ -78,14 +82,22 @@ def main():
     the_election_config = ElectionConfig()
     the_election_config.parse_configs()
 
-    # process the provided address
-    the_address = Address.create_address_from_args(args,
-                    ['verbosity', 'printonly'])
-    the_address.map_ggos(the_election_config)
-
-    # get the ballot for the specified address
+    # Create a ballot
     a_ballot = Ballot()
-    a_ballot.read_a_blank_ballot(the_address, the_election_config)
+
+    # process the provided address
+    if args.blank_ballot:
+        # Read the specified blank_ballot
+        with Shellout.changed_cwd(os.path.join(
+            the_election_config.get('git_rootdir'), Globals.get('ROOT_ELECTION_DATA_SUBDIR'))):
+            a_ballot.read_a_blank_ballot('', the_election_config, args.blank_ballot)
+    else:
+        # Use the specified address
+        the_address = Address.create_address_from_args(args,
+                        ['verbosity', 'printonly', 'blank_ballot'])
+        the_address.map_ggos(the_election_config)
+        # get the ballot for the specified address
+        a_ballot.read_a_blank_ballot(the_address, the_election_config)
 
     # loop over contests
     contests = Contests(a_ballot)

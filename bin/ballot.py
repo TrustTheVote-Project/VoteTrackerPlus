@@ -19,6 +19,7 @@
 
 import os
 import json
+from logging import debug
 # Local imports
 from common import Globals
 from contest import Contest
@@ -68,7 +69,7 @@ class Contests:
 #              next(iter((self.ballot_ref.get('contests')[ggo][self.contest_index].values())))
             # return the next contest in this ggo group
             this_contest = Contest(self.ballot_ref.get('contests')[ggo][self.contest_index],
-                                       ggo, self.contest_index)
+                                       ggo, self.contest_index, accept_all_keys=True)
             self.contest_index += 1
             return this_contest
 
@@ -81,11 +82,10 @@ class Contests:
         if self.ggo_index < self.ggo_max:
             ggo = self.ggos[self.ggo_index]
             self.contest_max = len(self.ballot_ref.get('contests')[ggo])
-#            inner_blob = next(iter((a_ballot.get('contests')[ggo][0].values())))
-#            self.contest_max = len(inner_blob['max']) if 'max' in inner_blob else 1
             if self.contest_index < self.contest_max:
                 this_contest = \
-                  Contest(self.ballot_ref.get('contests')[ggo][self.contest_index], ggo, 0)
+                  Contest(self.ballot_ref.get('contests')[ggo][self.contest_index],
+                              ggo, 0, accept_all_keys=True)
                 self.contest_index += 1
                 return this_contest
         # done - be kind and reset things
@@ -122,6 +122,17 @@ class Ballot:
                     subdir,
                     Globals.get('CONTEST_FILE_SUBDIR'),
                     Globals.get('CONTEST_FILE'))
+
+    @staticmethod
+    def get_cast_from_blank(blank_ballot):
+        """Given a blank ballot relative or absolute path, will map that
+        to the state/town cast ballot location, which is basically up
+        three and down one.
+        """
+        return os.path.join(
+            os.path.dirname(os.path.dirname(os.path.dirname(blank_ballot))),
+            Globals.get('CONTEST_FILE_SUBDIR'),
+            Globals.get('BALLOT_FILE'))
 
     def __init__(self):
         """Constructor - just creates the dictionary and returns the
@@ -313,6 +324,7 @@ class Ballot:
             self.ballot_node = address.get('ballot_node')
             ballot_file = self.gen_blank_ballot_location(config, style)
         if style == 'json':
+            debug(f"Reading {ballot_file}")
             with open(ballot_file, 'r', encoding="utf8") as file:
                 json_doc = json.load(file)
                 self.contests = json_doc['contests']
@@ -322,13 +334,15 @@ class Ballot:
         else:
             raise NotImplementedError(f"Unsupported Ballot type ({style}) for reading")
 
-    def read_a_cast_ballot(self, address, config):
+    def read_a_cast_ballot(self, address, config, ballot_file=""):
         """
         Will return the dictionary of a cast ballot.  Needs an address
         so to get the correct ballot_subdir to read the caste ballot
         from.
         """
-        ballot_file = Ballot.gen_cast_ballot_location(config, address.get('ballot_subdir'))
+        if not ballot_file:
+            ballot_file = Ballot.gen_cast_ballot_location(config, address.get('ballot_subdir'))
+        debug(f"Reading {ballot_file}")
         with open(ballot_file, 'r', encoding="utf8") as file:
             json_doc = json.load(file)
             self.contests = json_doc['contests']
