@@ -133,7 +133,7 @@ class Contest:
         if isinstance(choices[0], str):
             return choices
         if isinstance(choices[0], dict):
-            return [next(iter(key.keys())) for key in choices]
+            return [entry['name'] for entry in choices]
         if isinstance(choices[0], bool):
             return ['true', 'false'] if choices[0] else ['false', 'true']
         raise ValueError(f"unknown/unsupported contest choices data structure ({choices})")
@@ -337,7 +337,7 @@ class Tally:
             # Create the next round list
             self.rcv_round.append([])
             # See if there is a wiinner and if so record it
-            for choice in self.rcv_round[this_round]:
+            for choice in Tally.get_choices_from_round(self.rcv_round[this_round]):
                 # Note the test is '>' and NOT '>='
                 if float(self.selection_counts[choice]) /\
                     float(self.vote_count) > self.defaults['win-by']:
@@ -346,7 +346,8 @@ class Tally:
                     # winners in this round.
                     self.winner_order.append({choice: self.selection_counts[choice]})
             # If there are anough winners, stop and return
-            if self.winner_order >= self.defaults['max']:
+#            import pdb; pdb.set_trace()
+            if len(self.winner_order) >= self.defaults['max']:
                 return
             # If not, safely determine the next last_place and execute a RCV round
             if self.rcv_round[this_round][-1] == self.rcv_round[this_round][-2]:

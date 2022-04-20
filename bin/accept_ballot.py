@@ -77,19 +77,27 @@ def checkout_new_contest_branch(contest, ref_branch):
                         check=True, capture_output=True, text=True).stdout.strip()
     # if after 3 tries it still does not work, raise an error
     for _ in [0, 1, 2]:
-        cmd1 = Shellout.run(["git", "checkout", "-b", branch, branchpoint],
-                                      printonly=args.printonly)
+        cmd1 = Shellout.run(
+            ["git", "checkout", "-b", branch, branchpoint],
+            printonly=args.printonly,
+            verbosity=args.verbosity)
         if cmd1.returncode == 0:
             # Created the local branch - see if it is push-able
-            cmd2 = Shellout.run(["git", "push", "-u", "origin", branch],
-                                      printonly=args.printonly)
+            cmd2 = Shellout.run(
+                ["git", "push", "-u", "origin", branch],
+                printonly=args.printonly,
+                verbosity=args.verbosity)
             if cmd2.returncode == 0:
                 # success
                 return branch
             # At this point there was some type of push failure - delete the
             # local branch and try again
-            Shellout.run(["git", "checkout", current_branch], check=True)
-            Shellout.run(["git", "branch", "-D", branch], check=True)
+            Shellout.run(
+                ["git", "checkout", current_branch],
+                check=True, printonly=args.printonly, verbosity=args.verbosity)
+            Shellout.run(
+                ["git", "branch", "-D", branch],
+                check=True, printonly=args.printonly, verbosity=args.verbosity)
         # At this point the local did not get created - try again
         branch = contest.get('uid') + "/" + secrets.token_hex(5)
 
@@ -103,10 +111,10 @@ def get_n_other_contests(contest, branch):
     Requires the CWD to be the parent of the CVRs directory.
     """
     this_uid = contest.get('uid')
-    return Shellout.run(['git', 'log', branch, '--oneline', '--all-match',
-                             '--grep={"CVR"}',
-                             f'--grep="uid": "{this_uid}"'],
-                     check=True, capture_output=True, text=True).stdout.strip()
+    return Shellout.run(
+        ['git', 'log', branch, '--oneline', '--all-match', '--grep={"CVR"}',
+             f'--grep="uid": "{this_uid}"'],
+        check=True, capture_output=True, text=True).stdout.strip()
 
 def get_cloaked_contests(contest, branch):
     """Return a list of N cloaked cast CVRs for the specified contest.
@@ -120,10 +128,10 @@ def get_cloaked_contests(contest, branch):
     """
     this_uid = contest.get('uid')
     cloak_target = contest.get('cloak')
-    return Shellout.run(['git', 'log', branch, '--oneline', '--all-match',
-                             '--grep={"CVR"}', f'--grep="uid": "{this_uid}"',
-                             f'--grep="cloak": "{cloak_target}"'],
-                     check=True, capture_output=True, text=True).stdout.strip()
+    return Shellout.run(
+        ['git', 'log', branch, '--oneline', '--all-match', '--grep={"CVR"}',
+             f'--grep="uid": "{this_uid}"', f'--grep="cloak": "{cloak_target}"'],
+        check=True, capture_output=True, text=True).stdout.strip()
 
 def contest_add_and_commit(branch):
     """Will git add and commit the new contest content.
@@ -133,12 +141,14 @@ def contest_add_and_commit(branch):
     # If this fails a shell error will be raised
     contest_file = os.path.join(
         Globals.get('CONTEST_FILE_SUBDIR'), Globals.get('CONTEST_FILE'))
-    Shellout.run(['git', 'add', contest_file],
-                     printonly=args.printonly)
-    Shellout.run(['git', 'commit', '-F', contest_file],
-                     printonly=args.printonly)
+    Shellout.run(
+        ['git', 'add', contest_file], printonly=args.printonly,
+        verbosity=args.verbosity)
+    Shellout.run(
+        ['git', 'commit', '-F', contest_file],
+        printonly=args.printonly, verbosity=args.verbosity)
     # Capture the digest
-    digest = Shellout.run(['git', 'log', branch, '-1', '--pretty=format:"%H"'],
+    digest = Shellout.run(['git', 'log', branch, '-1', '--pretty=format:%H'],
                      printonly=args.printonly,
                      check=True, capture_output=True, text=True).stdout.strip()
     return digest
@@ -270,8 +280,9 @@ def main():
         # atomically as possible all the contests.
 #        import pdb; pdb.set_trace()
         for branch in branches:
-            Shellout.run(['git', 'push', 'origin', branch],
-                         printonly=args.printonly)
+            Shellout.run(
+                ['git', 'push', 'origin', branch],
+                printonly=args.printonly, verbosity=args.verbosity)
 
     debug(f"Ballot's digests:\n{ballot_receipts}")
     # ZZZ print the voter's offset
