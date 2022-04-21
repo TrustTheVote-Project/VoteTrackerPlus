@@ -135,7 +135,7 @@ class Contest:
         if isinstance(choices[0], dict):
             return [entry['name'] for entry in choices]
         if isinstance(choices[0], bool):
-            return ['true', 'false'] if choices[0] else ['false', 'true']
+            return ['yes', 'no'] if choices[0] else ['no', 'yes']
         raise ValueError(f"unknown/unsupported contest choices data structure ({choices})")
 
     def __init__(self, a_contest_blob, ggo, contests_index, accept_all_keys=False):
@@ -275,8 +275,8 @@ class Tally:
         if isinstance(pick, dict):
             return pick['name']
         if isinstance(pick, bool):
-            return 'true' if pick else 'false'
-        raise ValueError(f"unknown/unsupported contest choices data structure ({choices})")
+            return 'yes' if pick else 'no'
+        raise ValueError(f"unknown/unsupported contest choices data structure ({pick})")
 
     def tallyho(self, contest_batch):
         """
@@ -314,6 +314,36 @@ class Tally:
             else:
                 debug(f"Vote (RCV): contest={contest['name']} BLANK")
 
+        def safely_determine_last_place_name(current_round):
+            """Safely determine the next last_place_name for which to
+            re-distribute the next RCV round of voting.  Can raise various
+            exceptions.  If possible will return the last_place_name.
+            """
+            import pdb; pdb.set_trace()
+            if Tally.get_choices_from_round(self.rcv_round[current_round], 'count')[-1] == \
+               Tally.get_choices_from_round(self.rcv_round[current_round], 'count')[-2]:
+                # There are two last_place_name choices - will need
+                # more code to handle this situation post the MVP demo
+                raise TallyException(
+                    f"There are two last place choices in contest {self.contest['name']} "
+                    f"(uid={self.contest['uid']}) in round {current_round}.  "
+                    "The code for this is not yet implemented.")
+            # loop over the current round and try to find a legit
+            # last_place_name
+            offset = len(self.rcv_round[current_round])
+            for round_tuple in reversed(self.rcv_round[current_round]):
+                offset -= 1
+                if round_tuple[1] > 0:
+                    last_place_name = round_tuple[0]
+                    break
+            # Validate next round conditions
+            if offset <= 0:
+                raise TallyException(
+                    f"There are no votes for contest {self.contest['name']} "
+                    f"(uid={self.contest['uid']}).")
+            # in theory it should be gopd to go
+            return last_place_name
+
         def handle_another_rcv_round(this_round, last_place_name):
             """For the lowest vote getter, for those CVR's that have
             that as their current first/active-round choice, will
@@ -324,9 +354,8 @@ class Tally:
             # Safety check
             if this_round > 64:
                 raise TallyException("RCV rounds exceeded safety limit of 64 rounds")
-            if last_place_name == None or last_place_name == '':
+            if last_place_name in [None, '']:
                 raise TallyException("RCV rounds error - cannot pop null")
-            # Execute a RCV round
             for uid in contest_batch:
                 contest = uid['CVR']
                 digest = uid['digest']
@@ -349,14 +378,12 @@ class Tally:
 #                        import pdb; pdb.set_trace()
                         choice = self.select_from_choices(selection)
                         self.selection_counts[choice] += 1
-                        self.vote_count += 1
                         debug(f"Vote (RCV): contest={contest['name']} choice={choice} "
                                   f"selection={selection}")
                     else:
                         debug(f"RCV: {digest} last-place pop and count ({last_place_name} -> BLANK")
             # Order the winners of this round.  This is a tuple, not a
             # list or dict.
-#            import pdb; pdb.set_trace()
             self.rcv_round[this_round] = sorted(
                 self.selection_counts.items(), key=operator.itemgetter(1), reverse=True)
             # Create the next round list
@@ -364,23 +391,20 @@ class Tally:
             # See if there is a wiinner and if so record it
             for choice in Tally.get_choices_from_round(self.rcv_round[this_round]):
                 # Note the test is '>' and NOT '>='
+#                import pdb; pdb.set_trace()
                 if float(self.selection_counts[choice]) /\
                     float(self.vote_count) > self.defaults['win-by']:
                     # A winner.  Depending on the win-by (which is a
                     # function of max), there could be multiple
                     # winners in this round.
-                    self.winner_order.append({choice: self.selection_counts[choice]})
+                    self.winner_order.append((choice, self.selection_counts[choice]))
             # If there are anough winners, stop and return
             if len(self.winner_order) >= self.defaults['max']:
                 return
-            # If not, safely determine the next last_place_name and execute a RCV round
-            if self.rcv_round[this_round][-1] == self.rcv_round[this_round][-2]:
-                # There are two last_place_name choices - will need more
-                # code to handle this situation post MVP development
-                raise TallyException(
-                    f"There are two last place choices in contest ({contest}), "
-                    f"round ({this_round}).  The code for this is not yet implemented.")
-            handle_another_rcv_round(this_round + 1, self.rcv_round[this_round][-1][0])
+            # If not, safely determine the next last_place_name and
+            # execute another RCV round
+            last_place_name = safely_determine_last_place_name(this_round)
+            handle_another_rcv_round(this_round + 1, last_place_name)
             return
 
         def parse_all_contests():
@@ -445,12 +469,12 @@ class Tally:
 
         # The rest of this block handles RCV
 
-        # When max=1 there is only one RCV winner.  However, not only
-        # can max>1 but win-by might be 2/3 and not just a simple
-        # majority.
+        # See if another RCV round is necessary.  When max=1 there is
+        # only one RCV winner.  However, not only can max>1 but win-by
+        # might be 2/3 and not just a simple majority.  So only if there
+        # are enough winners with enough votes is this contest done.
 
-        # See if done by first determining if there are enough winning
-        # selection counts
+        # Determine winners if any ...
         for choice in Tally.get_choices_from_round(self.rcv_round[0]):
             # Note the test is '>' and NOT '>='
             if float(self.selection_counts[choice]) /\
@@ -460,30 +484,23 @@ class Tally:
                 # winners in this round.
                 self.winner_order.append((choice, self.selection_counts[choice]))
 
-        # If there are anough winners, stop and return.  Otherwise,
-        # start RCV rounds.
+        # If there are anough winners, stop and return.
         if self.winner_order and len(self.winner_order) >= self.defaults['max']:
             return
+        # More RCV rounds are needed.  Loop until we have enough RCV
+        # winners.
 
-        # The first or more RCV winners need to be determined.  Loop
-        # until we have enough RCV winners regardless of win-by as it
-        # may work out the last round only includes enough winners of
-        # which one or more may may not 1/max votes ...
-
-        # Safely determine the next last_place_name and execute a RCV round
-        if Tally.get_choices_from_round(self.rcv_round[0], 'count')[-1] == \
-          Tally.get_choices_from_round(self.rcv_round[0], 'count')[-2]:
-            # There are two last_place_name choices - will need
-            # more code to handle this situation post the MVP demo
-            raise TallyException(
-                f"There are two last place choices in contest ({self.contest['name']}) "
-                f"(uid={self.contest['uid']}) in the first round.  "
-                "The code for this is not yet implemented.")
-#        import pdb; pdb.set_trace()
-        last_place_name = Tally.get_choices_from_round(self.rcv_round[0])[-1]
+        # Safely determine the next last_place_name and execute a RCV
+        # round However, if the last_place_name has no votes, then it
+        # needs to be skipped.  Note that any choice that has no votes
+        # needs to be skipped as RCV round will not re-assign any votes
+        # in this case.  Also note that all zero vote choices will
+        # already be sorted last in self.rcv_round[0].
+        last_place_name = safely_determine_last_place_name(0)
+        # go
         handle_another_rcv_round(1, last_place_name)
 
-    def print_results(self, syntax=None):
+    def print_results(self):
         """Will print the results of the tally"""
         print(f"Contest {self.contest['name']} (uid={self.contest['uid']}):")
 #        import pdb; pdb.set_trace()
