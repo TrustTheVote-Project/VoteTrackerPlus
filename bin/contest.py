@@ -219,16 +219,19 @@ class Tally:
         self.digest = a_git_cvr['digest']
         self.contest = a_git_cvr['CVR']
         Contest.check_cvr_blob_syntax(self.contest, digest=self.digest)
-        # Something to hold the actual tallies
+        # Something to hold the actual tallies.  During RCV rounds these
+        # will change with last place finishers being decremented to 0.
         self.selection_counts = \
             {choice: 0 for choice in Contest.get_choices_from_contest(self.contest['choices'])}
-        # Total vote count for this contest
+        # Total vote count for this contest.  RCV rounds will not effect
+        # this.
         self.vote_count = 0
-        # Ordered list of winners
+        # Ordered list of winners - a list of tuples and not dictionaries.
         self.winner_order = []
         # Used in both plurality and rcv, but only round 0 is used in
-        # plurality.  Note - rcv_round's are an ordered list of tuples,
-        # not an ordered list of lists or dictionaries.
+        # plurality.  Note - rcv_round's are an ordered list of tuples
+        # as is winner_order.  The code below expects the current round
+        # (beginning as an empty list) to exist within the list.
         self.rcv_round = []
         self.rcv_round.append([])
 
@@ -239,6 +242,10 @@ class Tally:
         self.defaults['max'] = 1 if 'max' not in self.contest else self.contest['max']
         self.defaults['win-by'] = (1.0 / float(1 + self.defaults['max'])) \
             if 'win-by' not in self.contest else Fraction(self.contest['win-by'])
+
+        # Need to keep track of a selections/choices that are no longer
+        # viable - key=choice['name'] value=obe round
+        self.obe_choices = {}
 
         # At this point any contest tallied against this contest must
         # match all the fields with the exception of selection and
@@ -265,7 +272,7 @@ class Tally:
             'winner_order': self.winner_order}
         return json.dumps(tally_dict, sort_keys=True, indent=4, ensure_ascii=False)
 
-    def select_from_choices(self, selection):
+    def select_name_from_choices(self, selection):
         """Will smartly return just the pure selection name sans all
         values and sub dictionaries from a round
         """
@@ -278,183 +285,202 @@ class Tally:
             return 'yes' if pick else 'no'
         raise ValueError(f"unknown/unsupported contest choices data structure ({pick})")
 
+    def tally_a_plurality_contest(self, contest):
+        """plurality tally"""
+        for count in range(self.defaults['max']):
+            if 0 <= count < len(contest['selection']):
+                # yes this can be one line, but the reader may
+                # be interested in verifying the explicit
+                # values
+                selection = contest['selection'][count]
+                choice = Contest.get_choices_from_contest(contest['choices'])[selection]
+                self.selection_counts[choice] += 1
+                self.vote_count += 1
+                debug(
+                    f"Vote (plurality): contest={contest['name']} "
+                    f"choice={choice} selection={selection}")
+            else:
+                debug(f"Vote (plurality): contest={contest['name']} BLANK")
+
+    def tally_a_rcv_contest(self, contest):
+        """RCV tally"""
+        if len(contest['selection']):
+            # the voter can still leave a RCV contest blank
+            selection = contest['selection'][0]
+            choice = Contest.get_choices_from_contest(contest['choices'])[selection]
+            self.selection_counts[choice] += 1
+            self.vote_count += 1
+            debug(
+                f"Vote (RCV): contest={contest['name']} "
+                f"choice={choice} (selection={selection})")
+        else:
+            debug(f"Vote (RCV): contest={contest['name']} BLANK")
+
+
+    def safely_determine_last_place_name(self, current_round):
+        """Safely determine the next last_place_name for which to
+        re-distribute the next RCV round of voting.  Can raise various
+        exceptions.  If possible will return the last_place_name.
+        """
+        if Tally.get_choices_from_round(self.rcv_round[current_round], 'count')[-1] == \
+           Tally.get_choices_from_round(self.rcv_round[current_round], 'count')[-2]:
+            # There are two last_place_name choices - will need
+            # more code to handle this situation post the MVP demo
+            raise TallyException(
+                f"There are two last place choices in contest {self.contest['name']} "
+                f"(uid={self.contest['uid']}) in round {current_round}.  "
+                "The code for this is not yet implemented.")
+        # loop over the current round and try to find a legit
+        # last_place_name
+        offset = len(self.rcv_round[current_round])
+        for round_tuple in reversed(self.rcv_round[current_round]):
+            offset -= 1
+            if round_tuple[1] > 0:
+                last_place_name = round_tuple[0]
+                break
+        # Validate next round conditions
+        if offset <= 0:
+            raise TallyException(
+                f"There are no votes for contest {self.contest['name']} "
+                f"(uid={self.contest['uid']}).")
+        # in theory it should be gopd to go
+        return last_place_name
+
+    def safely_remove_obe_selections(self, contest):
+        """For the specified contest, will 'pop' the current first place
+        selection.  If the next selection is already a loser, will pop
+        that as well.  self.contest['selection'] may or may not have any
+        choices left (it can be empty, have one choice, or multiple
+        choices left).
+
+        Prints nothing - assumes caller handles any info/debug printing.
+        """
+        a_copy = contest['selection'].copy()
+        for selection in a_copy:
+#            import pdb; pdb.set_trace()
+            if self.select_name_from_choices(selection) \
+              in self.obe_choices and selection in contest['selection']:
+                contest['selection'].remove(selection)
+
+    def handle_another_rcv_round(self, this_round, last_place_name, contest_batch):
+        """For the lowest vote getter, for those CVR's that have
+        that as their current first/active-round choice, will
+        slice off that choice off and re-count the now first
+        selection choice (if there is one)
+        """
+        debug(f"RCV: round {this_round}")
+        # Safety check
+        if this_round > 64:
+            raise TallyException("RCV rounds exceeded safety limit of 64 rounds")
+        if last_place_name in [None, '']:
+            raise TallyException("RCV rounds error - cannot pop null")
+        for uid in contest_batch:
+            contest = uid['CVR']
+            digest = uid['digest']
+            if self.select_name_from_choices(contest['selection'][0]) == last_place_name:
+                # Safely pop the current first choice and reset
+                # contest['selection'].  Note that self.obe_choices has
+                # _already_ been updated with this_round's OBE (in the
+                # caller) such that safely_remove_obe_selections will
+                # effectively remove last_place_name from
+                # contest['selection']
+                self.safely_remove_obe_selections(contest)
+                # Regardless of the next choice, the current choice is decremented
+                self.selection_counts[last_place_name] -= 1
+                # Either retarget the vote or let it drop
+                if len(contest['selection']):
+#                    import pdb; pdb.set_trace()
+                    # The voter can still leave a RCV contest blank
+                    # Note - selection is the new selection for this contest
+                    new_selection = contest['selection'][0]
+                    # Select from self.contest['choices'] as that is the
+                    # set-in-stone ordering w.r.t. selection
+                    new_choice_name = self.select_name_from_choices(new_selection)
+                    self.selection_counts[new_choice_name] += 1
+                    debug(f"RCV: {digest} (contest={contest['name']}) last place pop and count "
+                              f"({last_place_name} -> {new_choice_name}")
+                else:
+                    debug(f"RCV: {digest} (contest={contest['name']}) last place pop and drop "
+                              f"({last_place_name} -> BKANK")
+        # Order the winners of this round.  This is a tuple, not a
+        # list or dict.
+        self.rcv_round[this_round] = sorted(
+            self.selection_counts.items(), key=operator.itemgetter(1), reverse=True)
+        # Create the next round list
+        self.rcv_round.append([])
+        # See if there is a wiinner and if so record it
+        for choice in Tally.get_choices_from_round(self.rcv_round[this_round]):
+            # Note the test is '>' and NOT '>='
+#            import pdb; pdb.set_trace()
+            if float(self.selection_counts[choice]) / float(
+                    self.vote_count) > self.defaults['win-by']:
+                # A winner.  Depending on the win-by (which is a
+                # function of max), there could be multiple
+                # winners in this round.
+                self.winner_order.append((choice, self.selection_counts[choice]))
+        # If there are anough winners, stop and return
+        if len(self.winner_order) >= self.defaults['max']:
+            return
+        # If not, safely determine the next last_place_name and
+        # execute another RCV round
+        last_place_name = self.safely_determine_last_place_name(this_round)
+        self.obe_choices[last_place_name] = this_round
+        self.handle_another_rcv_round(this_round + 1, last_place_name, contest_batch)
+        return
+
+    def parse_all_contests(self, contest_batch):
+        """Will parse all the contests validating each"""
+        errors = {}
+        for a_git_cvr in contest_batch:
+            contest = a_git_cvr['CVR']
+            digest = a_git_cvr['digest']
+            Contest.check_cvr_blob_syntax(contest, digest=digest)
+            # Validate the values that should be the same as self
+            for field in ['choices', 'tally', 'win-by', 'max', 'ggo', 'uid', 'name']:
+                if field in self.contest:
+                    if self.contest[field] != contest[field]:
+                        errors[digest].append(
+                            f"{field} field does not match: "
+                            f"{self.contest[field]} != {contest[field]}")
+                elif field in contest:
+                    errors[digest].append(
+                        f"{field} field is not present in Tally object but "
+                        "is present in digest")
+            # Tally the contest - this is just the first pass of a
+            # tally.  It just so happens that with pluraity tallies
+            # the tally can be completed with s single pass over over
+            # the CVRs.  And that can be done here.  But with more
+            # complicated tallies such as RCV, the additional passes
+            # are done outside of this for loop.
+            if contest['tally'] == 'plurality':
+                self.tally_a_plurality_contest(contest)
+            elif contest['tally'] == 'rcv':
+                # Since this is the first round on a rcv tally, just
+                # grap the first selection
+                self.tally_a_rcv_contest(contest)
+            else:
+                # This code block should never be executed as the
+                # constructor or the Validate values clause above will
+                # catch this type of error.  It is here only as a
+                # safety check during development time when adding
+                # support for more tallies.
+                raise NotImplementedError(
+                    f"the specified tally ({contest['tally']}) is not yet implemented")
+
+        # Will the potential CVR errors found, report them all
+        if errors:
+            raise TallyException(
+                "The following CVRs have structural errors:"
+                f"{errors}")
+
     def tallyho(self, contest_batch):
         """
         Will verify and tally the suppllied unique contest across all
         the CVRs.
         """
-        def tally_a_plurality_contest(contest):
-            """plurality tally"""
-            for count in range(self.defaults['max']):
-                if 0 <= count < len(contest['selection']):
-                    # yes this can be one line, but the reader may
-                    # be interested in verifying the explicit
-                    # values
-                    selection = contest['selection'][count]
-                    choice = Contest.get_choices_from_contest(contest['choices'])[selection]
-                    self.selection_counts[choice] += 1
-                    self.vote_count += 1
-                    debug(
-                        f"Vote (plurality): contest={contest['name']} "
-                        f"choice={choice} selection={selection}")
-                else:
-                    debug(f"Vote (plurality): contest={contest['name']} BLANK")
-
-        def tally_a_rcv_contest(contest):
-            """RCV tally"""
-            if len(contest['selection']):
-                # the voter can still leave a RCV contest blank
-                selection = contest['selection'][0]
-                choice = Contest.get_choices_from_contest(contest['choices'])[selection]
-                self.selection_counts[choice] += 1
-                self.vote_count += 1
-                debug(
-                    f"Vote (RCV): contest={contest['name']} "
-                    f"choice={choice} (selection={selection})")
-            else:
-                debug(f"Vote (RCV): contest={contest['name']} BLANK")
-
-        def safely_determine_last_place_name(current_round):
-            """Safely determine the next last_place_name for which to
-            re-distribute the next RCV round of voting.  Can raise various
-            exceptions.  If possible will return the last_place_name.
-            """
-            import pdb; pdb.set_trace()
-            if Tally.get_choices_from_round(self.rcv_round[current_round], 'count')[-1] == \
-               Tally.get_choices_from_round(self.rcv_round[current_round], 'count')[-2]:
-                # There are two last_place_name choices - will need
-                # more code to handle this situation post the MVP demo
-                raise TallyException(
-                    f"There are two last place choices in contest {self.contest['name']} "
-                    f"(uid={self.contest['uid']}) in round {current_round}.  "
-                    "The code for this is not yet implemented.")
-            # loop over the current round and try to find a legit
-            # last_place_name
-            offset = len(self.rcv_round[current_round])
-            for round_tuple in reversed(self.rcv_round[current_round]):
-                offset -= 1
-                if round_tuple[1] > 0:
-                    last_place_name = round_tuple[0]
-                    break
-            # Validate next round conditions
-            if offset <= 0:
-                raise TallyException(
-                    f"There are no votes for contest {self.contest['name']} "
-                    f"(uid={self.contest['uid']}).")
-            # in theory it should be gopd to go
-            return last_place_name
-
-        def handle_another_rcv_round(this_round, last_place_name):
-            """For the lowest vote getter, for those CVR's that have
-            that as their current first/active-round choice, will
-            slice off that choice off and re-count the now first
-            selection choice (if there is one)
-            """
-            debug(f"RCV: round {this_round}")
-            # Safety check
-            if this_round > 64:
-                raise TallyException("RCV rounds exceeded safety limit of 64 rounds")
-            if last_place_name in [None, '']:
-                raise TallyException("RCV rounds error - cannot pop null")
-            for uid in contest_batch:
-                contest = uid['CVR']
-                digest = uid['digest']
-                if self.select_from_choices(contest['selection'][0]) == last_place_name:
-                    # Remove the current first choice of this contest
-                    contest['selection'].pop(0)
-                    # decrement the last_place_name by one
-                    self.selection_counts[last_place_name] -= 1
-                    if len(contest['selection']):
-                        debug(
-                            f"RCV: {digest} last-place pop and count "
-                            f"({last_place_name} -> "
-                            f"{self.select_from_choices(contest['selection'][0])})")
-                        # the voter can still leave a RCV contest blank
-                        # Note - selection is the new selection for this contest
-                        selection = contest['selection'][0]
-                        # Need to select from self.contest['choices']
-                        # as that is the set-in-stone ordering
-                        # w.r.t. selection
-#                        import pdb; pdb.set_trace()
-                        choice = self.select_from_choices(selection)
-                        self.selection_counts[choice] += 1
-                        debug(f"Vote (RCV): contest={contest['name']} choice={choice} "
-                                  f"selection={selection}")
-                    else:
-                        debug(f"RCV: {digest} last-place pop and count ({last_place_name} -> BLANK")
-            # Order the winners of this round.  This is a tuple, not a
-            # list or dict.
-            self.rcv_round[this_round] = sorted(
-                self.selection_counts.items(), key=operator.itemgetter(1), reverse=True)
-            # Create the next round list
-            self.rcv_round.append([])
-            # See if there is a wiinner and if so record it
-            for choice in Tally.get_choices_from_round(self.rcv_round[this_round]):
-                # Note the test is '>' and NOT '>='
-#                import pdb; pdb.set_trace()
-                if float(self.selection_counts[choice]) /\
-                    float(self.vote_count) > self.defaults['win-by']:
-                    # A winner.  Depending on the win-by (which is a
-                    # function of max), there could be multiple
-                    # winners in this round.
-                    self.winner_order.append((choice, self.selection_counts[choice]))
-            # If there are anough winners, stop and return
-            if len(self.winner_order) >= self.defaults['max']:
-                return
-            # If not, safely determine the next last_place_name and
-            # execute another RCV round
-            last_place_name = safely_determine_last_place_name(this_round)
-            handle_another_rcv_round(this_round + 1, last_place_name)
-            return
-
-        def parse_all_contests():
-            """Will parse all the contests validating each"""
-            errors = {}
-            for a_git_cvr in contest_batch:
-                contest = a_git_cvr['CVR']
-                digest = a_git_cvr['digest']
-                Contest.check_cvr_blob_syntax(contest, digest=digest)
-                # Validate the values that should be the same as self
-                for field in ['choices', 'tally', 'win-by', 'max', 'ggo', 'uid', 'name']:
-                    if field in self.contest:
-                        if self.contest[field] != contest[field]:
-                            errors[digest].append(
-                                f"{field} field does not match: "
-                                f"{self.contest[field]} != {contest[field]}")
-                    elif field in contest:
-                        errors[digest].append(
-                            f"{field} field is not present in Tally object but "
-                            "is present in digest")
-                # Tally the contest - this is just the first pass of a
-                # tally.  It just so happens that with pluraity tallies
-                # the tally can be completed with s single pass over over
-                # the CVRs.  And that can be done here.  But with more
-                # complicated tallies such as RCV, the additional passes
-                # are done outside of this for loop.
-                if contest['tally'] == 'plurality':
-                    tally_a_plurality_contest(contest)
-                elif contest['tally'] == 'rcv':
-                    # Since this is the first round on a rcv tally, just
-                    # grap the first selection
-                    tally_a_rcv_contest(contest)
-                else:
-                    # This code block should never be executed as the
-                    # constructor or the Validate values clause above will
-                    # catch this type of error.  It is here only as a
-                    # safety check during development time when adding
-                    # support for more tallies.
-                    raise NotImplementedError(
-                        f"the specified tally ({contest['tally']}) is not yet implemented")
-
-            # Will the potential CVR errors found, report them all
-            if errors:
-                raise TallyException(
-                    "The following CVRs have structural errors:"
-                    f"{errors}")
-
         # Read all the contests, validate, and count votes
         debug("RCV: round 0")
-        parse_all_contests()
+        self.parse_all_contests(contest_batch)
 
         # For all tallies order what has been counted so far (a tuple)
         self.rcv_round[0] = sorted(
@@ -496,15 +522,19 @@ class Tally:
         # needs to be skipped as RCV round will not re-assign any votes
         # in this case.  Also note that all zero vote choices will
         # already be sorted last in self.rcv_round[0].
-        last_place_name = safely_determine_last_place_name(0)
+        last_place_name = self.safely_determine_last_place_name(0)
+        self.obe_choices[last_place_name] = 0
         # go
-        handle_another_rcv_round(1, last_place_name)
+        self.handle_another_rcv_round(1, last_place_name, contest_batch)
 
     def print_results(self):
         """Will print the results of the tally"""
         print(f"Contest {self.contest['name']} (uid={self.contest['uid']}):")
 #        import pdb; pdb.set_trace()
-        for winner_blob in self.winner_order:
-            print(f"  {winner_blob[0]} : {winner_blob[1]}")
+        # Note - better to print the last self.rcv_round than
+        # self.winner_order since the former is a full count across all
+        # choices while the latter is a partial list
+        for result in self.rcv_round[-2]:
+            print(f"  {result}")
 
 # EOF
