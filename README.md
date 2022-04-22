@@ -59,7 +59,7 @@ For more information contact Sandy Currier at: sandy at osetinstitute dot org
 
 See the [bin/README.md](bin/README.md) for notes regarding running and writing code.
 
-# Status - 2021/02/21
+# Status - 2022/04/21
 
 VoteTrackerPlus is currently in the early design phase - still working out the basics and seeking credible peer reviews. The current priorities are:
 * Technical peer reviews
