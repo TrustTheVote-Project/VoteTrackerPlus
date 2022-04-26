@@ -1,4 +1,4 @@
-# An Informal Description of the Security Model of VOTES
+# An Informal Description of the Security Model of VoteTrackerPlus
 
 ## 1) Terminology
 
@@ -6,7 +6,7 @@ For definitions and technical terms, please refer to the [NIST Glossary](https:/
 
 ## 2) What does this page cover?
 
-This page describes a high-level summary of the security model, [cryptographic protocols](https://en.wikipedia.org/wiki/Cryptographic_protocol), and [attack surfaces](https://en.wikipedia.org/wiki/Attack_surface) presented by VOTES.  For ease of understanding, this information is divided five domains:
+This page describes a high-level summary of the security model, [cryptographic protocols](https://en.wikipedia.org/wiki/Cryptographic_protocol), and [attack surfaces](https://en.wikipedia.org/wiki/Attack_surface) presented by VTP.  For ease of understanding, this information is divided five domains:
 
 - Data-at-Rest domain
 - Data-Remote-Update domain
@@ -20,7 +20,7 @@ These domains are overlapping, which is not considered a bad thing since failing
 
 Lots.  This page is a selective slice of the VTP workflows from a security and cryptographic point of view, covering the general high level security models, cryptographic protocols, and attack surfaces.  Other pages describe the various technologies, workflow descriptions, and User eXperiences that comprise VTP.
 
-## 4) VOTES is not introducing a new cryptographic protocol
+## 4) VTP is not introducing a new cryptographic protocol
 
 VTP is not introducing a new cryptographic protocol, such as for example [ElectionGuard](https://www.electionguard.vote/) introducing homomorphic encryption.  New cryptographic protocols need not to be designed, vetted, and built.  VTP leverages already in-play and existing cryptographic protocols for all five security domains.  On the other hand VTP does add at the VTP application level, which is on top of third-party applications that are built on already vetted cryptographic protocols such as [PKI](https://en.wikipedia.org/wiki/Public_key_infrastructure) and [PGP](https://en.wikipedia.org/wiki/Pretty_Good_Privacy), additional security features such as [2FA](https://en.wikipedia.org/wiki/Multi-factor_authentication) as a way to increase tamper-resistance and to add greater resistance to accidental corruption and adversarial attacks.
 
@@ -42,7 +42,7 @@ Data-Remote-Update refers to that part of the attack surface in play when someon
 
 #### Prior to ballots being scanned
 
-Regarding the git hosting service and using GitHub as an example (any sufficiently robust git hosting service can be used), the election is initially setup via a [GitHub Organization](https://docs.github.com/en/organizations/collaborating-with-groups-in-organizations/about-organizations) representing the actual real organization that is running the overall election.  The parent VTP repo for the election is forked from the latest official release of the VOTES open source project.  The organization is set up with the industry/military best practices regarding security.  For purposes of this description, will assume this is for the 2024 US election and that the election is being run by some thin federal agency.
+Regarding the git hosting service and using GitHub as an example (any sufficiently robust git hosting service can be used), the election is initially setup via a [GitHub Organization](https://docs.github.com/en/organizations/collaborating-with-groups-in-organizations/about-organizations) representing the actual real organization that is running the overall election.  The parent VTP repo for the election is forked from the latest official release of the VTP open source project.  The organization is set up with the industry/military best practices regarding security.  For purposes of this description, will assume this is for the 2024 US election and that the election is being run by some thin federal agency.
 
 The parent VTP repo is configured for the next level of the Geopolitical Geographical Overlay (GGO - note, NIST refers to a GGO as a [Geopolitical Unit](https://pages.nist.gov/ElectionGlossary/#geopolitical-unit)) that comprise the first GGO overlay of the physical geographical geopolitical locations on the territory over which the election is being held.  The parent VTP organizations works with official representatives of each of the GGO's to create and verify election officials as GitHub users with the proper security settings (GPG keys etc) and proper forks of the release VTP repos.
 
@@ -83,13 +83,13 @@ Note that since every cast vote records nominally has a voter behind it, a voter
 
 ### 5c) Data-Remote-Motion
 
-This section primarily covers security of when there is data in motion from one spot on the planet / internet to another, for example when a local voting center with its local VTP repo goes to push there repo to the election root VOTES server.
+This section primarily covers security of when there is data in motion from one spot on the planet / internet to another, for example when a local voting center with its local VTP repo goes to push there repo to the election root VTP server.
 
 At the https layer, all election official connections will employ [mutual authentication](https://en.wikipedia.org/wiki/Mutual_authentication) ssl leveraging a root certificate authority chain created and managed by the root level parent GGO running the election.  Note - the CI pipeline testing of this operational part of VTP will include cert revocation - all end points in the operational footprint of a VTP election must be able to adequately and properly handle cert revocation and new/renew cert allocation.  The CI test plan includes this type of adversarial attack.
 
 On top of this military/industrial grade https/ssl layer will reside the GitHub app level security model at the highest grade configuration and implementation.  For example, all commits will be GPG signed and during the cast vote record creation phase, all pull requests require out-of-band 2FA.
 
-Regarding reading/cloning repositories from the VOTES Git service, there will be a mirror of the actual live repos to several different git service end-points.  This will allow the voters at large as well as election officials who only need to read/clone the VTP repos to access services built to handle the traffic (perhaps many millions of connections per second) as well as the adversarial assaults on large capacity servers without effecting the uploading of commits to the real root servers.  The real VTP upstream servers will be hardened in a manner consistent with limited read/write access and hidden to extent possible from the internet at large.
+Regarding reading/cloning repositories from the VTP Git service, there will be a mirror of the actual live repos to several different git service end-points.  This will allow the voters at large as well as election officials who only need to read/clone the VTP repos to access services built to handle the traffic (perhaps many millions of connections per second) as well as the adversarial assaults on large capacity servers without effecting the uploading of commits to the real root servers.  The real VTP upstream servers will be hardened in a manner consistent with limited read/write access and hidden to extent possible from the internet at large.
 
 ### 5d) Data-Local-Motion
 
