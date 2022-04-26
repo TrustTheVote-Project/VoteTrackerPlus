@@ -23,9 +23,9 @@
 2) The voter fills in the ballot as much as desired
 3) If supported by how the election was configured by the election officials, the voter may be able to indicate the following options on their ballot:
     - receive their ballot receipt in the mail or by some other delivery mechanism
-    - by notified (and by how and when and with what limitations) if their ballot receives an invalid CVR contest scan with or without the ballot being accepted
+    - be notified (and by how and when and with what limitations) if their ballot receives an invalid CVR contest scan with or without the ballot being accepted
 4) The voter mails or delivers the absentee/vote-by-mail ballot to their election officials
-5) Depending on what is supported, the voter may receipt their ballot receipt
+5) Depending on what is supported, the voter may eventually receive their ballot receipt
 
 ## 1.3) Accessibility Notes
 
@@ -47,11 +47,11 @@ It is important to note that the public keys are NEVER made available to voters 
 
 If the voter remembers their specific offset into their ballot receipt, then can inspect their actual CVRs.
 
-## 1.6) Once all the polls close, voters can inspect the VTP voter_ID repositories
+## 1.6) Once all the polls close, voters can inspect the VTP voter_ID repositories (VoteTracker+ 2.0 functionality)
 
-Once all the polls close, voters can also download/clone copies of the readonly voter_ID repositories.  These are separate git repositories that record the VTP voter IDs, which are solely voter name and address.
+Once all the polls close, voters can also download/clone copies of the readonly voter-id repositories.  These are separate git repositories that solely record voter name and address 100% indepedently from the ballot repositories.
 
-However, regardless of WITSEC (see below) programs or not, the voter id rolls are already publicly available.  However, most voters do not have easy access to them, which is both a postive and a negative.  However, with regards to the trustworthiness of an election, supporting easy access to the VTP filtered voter id data allows voter in real time to inspect the voter id information for their neighborhood as well as neighborhoods where they may suspect voter id fraud.  By make the data available, false narratives and mis information can be more quickly and more believably be corrected.
+Note that voter id rolls are already publicly available.  However, most voters do not have easy access to them, which is both a postive and a negative.  With regards to the trustworthiness of an election, supporting easy access to the VTP filtered voter id data allows voter in real time to inspect the voter id information for their neighborhood as well as neighborhoods where they may suspect voter id fraud.  By make the data available, false narratives and mis information can be more quickly and more believably be corrected.
 
 ### 1.6.1) WIP/WITSEC Notes
 
@@ -65,11 +65,7 @@ Since the VTP repositories, a.k.a. the election public ledgers, also contain the
 
 If election officials decide to remove a ballot or a set of ballots from the election, for example under a court order or some other direction, the election officials will scan the physical ballots in a special VTP scanner that will match the VTP physical ballot ID with that of the associated contest CVRs, and remove them from the appropriate VTP repositories.  As with voter ballot scanning, these individual commits must be git PGP signed, pushed, reviewed, and merged.  The full history of the removal of ballots will be transparent to the electorate, supporting the possibility of reverse litigation.
 
-## 1.9) Voters can inspect their voter registration status as entered into VTP
-
-For precincts that adopt the VTP registration data as a valid source of truth regarding who is registered to vote, voters in those precincts will be able to validate their registration status.  As more precincts adopt VTP as a valid source of truth, pre-voting registration audits can more effectively be performed to validate the legitimacy of registered voters across the entire electorate.
-
-## 2) How does an election official interact with VOTES?
+## 2) How does an election official interact with VoteTacker+?
 
 The election official interactions with VTP elections will be different depending on the phase of the election, whether it is pre, during/active, or post election.  Here pre-election workflows refer to all the election official workflows and activities prior to the first scan/entry/count of the first ballot anywhere or by any means.  The pre-election phase ends when the first ballot somewhere is scanned/entered/counted.  The 'during' or 'active' election phase is when ballots are being scanned/entered/counted.  NIST implies this phase starts when the first [voting session](https://pages.nist.gov/ElectionGlossary/#voting-session) regardless if the ballot is cast as in person, absentee, early voting, or vote-by-mail.  The active election phase ends when _all the polls close_.  _All the polls close_ is when it is no longer possible to cast a new ballot anywhere again regardless of the type of voting session (in-person, early, absentee, by mail, etc).  This excludes ballots that have already been _accepted_ and not yet scanned/entered/counted.  Note that the specific and detailed definition of _accepted_ can vary from state to state.
 
@@ -82,8 +78,6 @@ The election officials across the GGOs of the election will work both independen
 A primary design point of VTP is the efficacy of the CI/CD pipeline that are an integral part of VTP.  Changes can be vetted in minimal time and thus with minimal cost, including changes to the GGO's specific ballot sections.  The CI/CD pipeline includes tests to make sure the correct addresses are receiving the correct contests.
 
 At some point the complete blank ballot is declared both accurate and complete.  Note that all changes to the ballot have authors and all changes are included in the full public ledger.  Note that VTP can print address specific ballots on demand as well as making available soft copies that any voter can view beforehand.
-
-At this time any GGO that will be accepting and scanning ballots, nominally at the precinct level, will enter voter id into VTP if they are using another system to track voter registration.  The automatic import of voter id information will be supported for various data formats.  And with all things VTP, these voter registration commits will also need to be PGP signed and pushed to the VTP root repositories.
 
 ## 2.2) Vote-by-Mail and other pre-election workflows
 
