@@ -182,12 +182,16 @@ class ElectionConfig:
         populated with _this_ election config data.
         """
 
-        # Determine the directory of the root config.yaml file
-        result = Shellout.run(["git", "rev-parse", "--show-superproject-working-tree"],
-                                      check=False, capture_output=True, text=True)
-        if not result.stdout == "":
-            raise EnvironmentError(("The CWD of the current process is not in the superproject"
-                                    f"working tree ({result.stdout})"))
+        # Determine the directory of the root config.yaml file.
+        # 2022/05/02: there is no bin dir in any of the ElectionData
+        # repos, so this test is no longer interesting (and blocks a
+        # super parent repo to control multi scanner/server test
+        # jigs).
+        # result = Shellout.run(["git", "rev-parse", "--show-superproject-working-tree"],
+        #                               check=False, capture_output=True, text=True)
+        # if not result.stdout == "":
+        #     raise EnvironmentError(("The CWD of the current process is not in the superproject"
+        #                             f"working tree ({result.stdout})"))
         result = Shellout.run(["git", "rev-parse", "--show-toplevel"], check=True,
                                   capture_output=True, text=True)
         if result.stdout == "":

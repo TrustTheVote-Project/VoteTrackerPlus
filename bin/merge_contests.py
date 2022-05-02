@@ -50,16 +50,16 @@ def randomly_merge_contests(uid, batch):
 
     This is the git merge-to-master sequence.
     """
-    rows = Globals.get('BALLOT_RECEIPT_ROWS')
-    if len(batch) <= rows:
+    if len(batch) <= args.minimum_cast_cache:
         if args.flush:
             count = len(batch)
         else:
-            debug(f"Contest {uid} not merged - only {len(batch)} available")
+            info(f"Contest {uid} not merged - only {len(batch)} available")
             return 0
     else:
-        count = len(batch) - rows
+        count = len(batch) - args.minimum_cast_cache
     loop = count
+    info(f"Merging {count} contests for contest {uid}")
     while loop:
         pick = random.randrange(len(batch))
         branch = batch[pick]
@@ -120,12 +120,21 @@ def parse_arguments():
     """,
         formatter_class=argparse.RawDescriptionHelpFormatter)
 
-    parser.add_argument("-f", "--flush", action='store_true',
-                            help="will flush the remaining unmerged contest branches")
-    parser.add_argument("-v", "--verbosity", type=int, default=3,
-                            help="0 critical, 1 error, 2 warning, 3 info, 4 debug (def=3)")
-    parser.add_argument("-n", "--printonly", action="store_true",
-                            help="will printonly and not write to disk (def=True)")
+    parser.add_argument(
+        "-m", "--minimum_cast_cache", type=int, default=100,
+        help="the minimum number of cast ballots required prior to merging (def=100)")
+    parser.add_argument(
+        "-f", "--flush", action='store_true',
+        help="will flush the remaining unmerged contest branches")
+    parser.add_argument(
+        "-r", "--remote", action='store_true',
+        help="will merge remote branches instead of local branches")
+    parser.add_argument(
+        "-v", "--verbosity", type=int, default=3,
+        help="0 critical, 1 error, 2 warning, 3 info, 4 debug (def=3)")
+    parser.add_argument(
+        "-n", "--printonly", action="store_true",
+        help="will printonly and not write to disk (def=True)")
 
     parsed_args = parser.parse_args()
     verbose = {0: logging.CRITICAL, 1: logging.ERROR, 2: logging.WARNING,
@@ -163,9 +172,12 @@ def main():
         # Pull the remote
         Shellout.run(["git", "pull"], args.printonly, check=True)
         # Get the pending CVR branches
+        cmds = ['git', 'branch']
+        if args.remote:
+            cmds.append('-r')
+        # Note - the re.search will strip non CVRs lines
         cvr_branches = [branch.strip() for branch in Shellout.run(
-            ['git', 'branch'],
-            check=True, capture_output=True,
+            cmds, check=True, capture_output=True,
             text=True).stdout.splitlines() if re.search(
                 f"^{Globals.get('CONTEST_FILE_SUBDIR')}/", branch.strip())]
         # Note - sorted alphanumerically on contest UID. Loop over

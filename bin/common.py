@@ -102,10 +102,14 @@ class Shellout:
 
         See for example https://docs.python.org/3.9/library/subprocess.html
         """
+        # Note - it is ok to pass ints and floats down through argv
+        # here, but they need to be individually converted to strings
+        # regardless since _everything_ below wants to see strings.
+        argv_string = [str(arg) for arg in argv]
         if verbosity >= 3:
-            info(f"Running \"{' '.join(argv)}\"")
+            info(f"Running \"{' '.join(argv_string)}\"")
         if printonly:
-            return subprocess.CompletedProcess(argv, 0, stdout="", stderr="")
+            return subprocess.CompletedProcess(argv_string, 0, stdout="", stderr="")
         # the caller desides on whether check is set or not
         # pylint: disable=subprocess-run-check
         if 'capture_output' not in kwargs and verbosity <= 3:
@@ -115,7 +119,7 @@ class Shellout:
                 kwargs['stderr'] = subprocess.DEVNULL
         if 'timeout' not in kwargs:
             kwargs['timeout'] = Globals.get('SHELL_TIMEOUT')
-        return subprocess.run(argv, **kwargs)
+        return subprocess.run(argv_string, **kwargs)
 
     @staticmethod
     @contextmanager

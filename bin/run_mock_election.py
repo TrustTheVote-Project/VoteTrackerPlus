@@ -34,7 +34,7 @@ import sys
 import time
 import argparse
 import logging
-from logging import debug
+from logging import debug, info
 
 # Local import
 from common import Globals, Shellout
@@ -74,14 +74,24 @@ def parse_arguments():
     """,
         formatter_class=argparse.RawDescriptionHelpFormatter)
 
-    parser.add_argument("-d", "--device", default="",
-                            help="specify a specific VC local device (scanner or server) to mock (def='')")
-    parser.add_argument("-i", "--iterations", type=int, default=10,
-                            help="the number of unique blank ballots to cast (def=10)")
-    parser.add_argument("-v", "--verbosity", type=int, default=3,
-                            help="0 critical, 1 error, 2 warning, 3 info, 4 debug (def=3)")
-    parser.add_argument("-n", "--printonly", action="store_true",
-                            help="will printonly and not write to disk (def=True)")
+    parser.add_argument(
+        "-d", "--device", default="",
+        help="specify a specific VC local device (scanner or server) to mock (def='')")
+    parser.add_argument(
+        "-m", "--minimum_cast_cache", type=int, default=100,
+        help="the minimum number of cast ballots required prior to merging (def=100)")
+    parser.add_argument(
+        "-f", "--flush", action='store_true',
+        help="will (force) flush the remaining unmerged contest branches during merge_contests")
+    parser.add_argument(
+        "-i", "--iterations", type=int, default=10,
+        help="the number of unique blank ballots to cast (def=10)")
+    parser.add_argument(
+        "-v", "--verbosity", type=int, default=3,
+        help="0 critical, 1 error, 2 warning, 3 info, 4 debug (def=3)")
+    parser.add_argument(
+        "-n", "--printonly", action="store_true",
+        help="will printonly and not write to disk (def=True)")
 
     parsed_args = parser.parse_args()
     verbose = {0: logging.CRITICAL, 1: logging.ERROR, 2: logging.WARNING,
@@ -95,6 +105,92 @@ def parse_arguments():
                          f"or '' - ({parsed_args.device}) was suppllied.")
     return parsed_args
 
+def scanner_mockup(election_data_dir):
+    """Simulate a VTP scanner"""
+    # Get list of available blank ballots
+    blank_ballots = []
+    with Shellout.changed_cwd(election_data_dir):
+        for dirpath, _, files in os.walk("."):
+            for filename in [f for f in files if f.endswith(",ballot.json") \
+                    and dirpath.endswith("blank-ballots/json") ]:
+                blank_ballots.append(os.path.join(dirpath, filename))
+    # Loop over the list N times
+    if not blank_ballots:
+        raise ValueError("found no blank ballots to cast")
+    for count in range(args.iterations):
+        for blank_ballot in blank_ballots:
+            debug(f"Iteration {count}, processing {blank_ballot}")
+            # - cast a ballot
+#            import pdb; pdb.set_trace()
+            Shellout.run(
+                ['./cast_ballot.py', '--blank_ballot=' + blank_ballot],
+                args.printonly)
+            # - accept the ballot
+            Shellout.run(
+                ['./accept_ballot.py',
+                     '--cast_ballot=' + Ballot.get_cast_from_blank(blank_ballot)],
+                args.printonly)
+            if args.device == '':
+                # - merge the ballot's contests
+                if args.flush:
+                    # Since casting and merging is basically
+                    # synchronous, no need for an extra large timeout
+                    Shellout.run(['./merge_contests.py', '-f'], args.printonly,
+                                     verbosity=args.verbosity, timeout=300)
+                else:
+                    # Should only need to merge one ballot worth of
+                    # contests - also no need for an extra large
+                    # timeout
+                    Shellout.run(['./merge_contests.py', '-m',
+                                    args.minimum_cast_cache], args.printonly,
+                                    verbosity=args.verbosity, timeout=300)
+                # don't let too much garbage build up
+                if count % 10 == 9:
+                    Shellout.run(['git', 'gc'], args.printonly)
+    if args.device == '':
+        # merge the remaining contests
+        # Note - this needs a longer timeout as it can take many seconds
+        Shellout.run(
+            ['./merge_contests.py', '-f'],
+            args.printonly, verbosity=args.verbosity, timeout=None)
+        # tally the contests
+        Shellout.run(['./tally_contests.py'], args.printonly)
+    # clean up git just in case
+    Shellout.run(['git', 'gc'], args.printonly)
+
+def server_mockup(election_data_dir):
+    """Simulate a VTP server"""
+    # This is the VTP server simulation code.  In this case, the VTP
+    # scanners are pushing to an ElectionData remote and this (server)
+    # needs to pull from the ElectionData remote.  And, in this case
+    # the branches to be merged are remote and not local.
+    start_time = time.time()
+    # Loop for a day and sleep for 10 seconds
+    seconds = 3600 * 24
+    while True:
+        with Shellout.changed_cwd(election_data_dir):
+            Shellout.run(['git', 'pull'], args.printonly)
+        if args.flush:
+            Shellout.run(['./merge_contests.py', '-r', '-f'], args.printonly,
+                             verbosity=args.verbosity, timeout=None)
+            Shellout.run(['./tally_contests.py'], args.printonly)
+            return
+        Shellout.run(['./merge_contests.py', '-r', '-m',
+                          args.minimum_cast_cache], args.printonly,
+                         verbosity=args.verbosity, timeout=None)
+        info("Sleeping for 10")
+        time.sleep(10)
+        elapsed_time = time.time() - start_time
+        if elapsed_time > seconds:
+            break
+    print("Cleaning up remaining unmerged ballots")
+    Shellout.run(
+        ['./merge_contests.py', '-r', '-f'],
+        printonly=args.printonly, verbosity=args.verbosity, timeout=None)
+    # tally the contests
+    Shellout.run(['./tally_contests.py'], args.printonly)
+
+
 ################
 # main
 ################
@@ -102,9 +198,12 @@ def parse_arguments():
 def main():
     """Main function - see -h for more info"""
 
-    # Create an VTP election config object
+    # Create an VTP election config object (this will perform an early
+    # check on the ElectionData)
     the_election_config = ElectionConfig()
     the_election_config.parse_configs()
+    election_data_dir = os.path.join(
+        the_election_config.get('git_rootdir'), Globals.get('ROOT_ELECTION_DATA_SUBDIR'))
 
     # Note - this is a serial synchronous mock election loop.  A
     # parallel loop would have one VTP server git workspace somewhere
@@ -120,59 +219,11 @@ def main():
     # Assumes that each supplied town already has the blank ballots
     # generated and/or already committed.
 
-    # Get list of available blank ballots
+    # the VTP scanner mock simulation
     if args.device in ['scanner', '']:
-        blank_ballots = []
-        with Shellout.changed_cwd(os.path.join(
-            the_election_config.get('git_rootdir'), Globals.get('ROOT_ELECTION_DATA_SUBDIR'))):
-            for dirpath, _, files in os.walk("."):
-                for filename in [f for f in files if f.endswith(",ballot.json") \
-                        and dirpath.endswith("blank-ballots/json") ]:
-                    blank_ballots.append(os.path.join(dirpath, filename))
-        # Loop over the list N times
-        if not blank_ballots:
-            raise ValueError("found no blank ballots to cast")
-        for count in range(args.iterations):
-            for blank_ballot in blank_ballots:
-                debug(f"Iteration {count}, processing {blank_ballot}")
-                # - cast a ballot
-    #            import pdb; pdb.set_trace()
-                Shellout.run(
-                    ['./cast_ballot.py', '--blank_ballot=' + blank_ballot],
-                    args.printonly)
-                # - accept the ballot
-                Shellout.run(
-                    ['./accept_ballot.py',
-                         '--cast_ballot=' + Ballot.get_cast_from_blank(blank_ballot)],
-                    args.printonly)
-                if args.device == '':
-                    # - merge the ballot (first 100 will be a noop)
-                    Shellout.run(['./merge_contests.py'], args.printonly)
-        if args.device == '':
-            # merge the remaining contests
-            # Note - this needs a longer timeout as it can take many seconds
-            Shellout.run(
-                ['./merge_contests.py', '-f'],
-                printonly=args.printonly, verbosity=args.verbosity, timeout=300)
-            # tally the contests
-            Shellout.run(['./tally_ballot.py'], args.printonly)
-        return
-
-    # loop for an hour and sleep for 10 seconds
-    start_time = time.time()
-    seconds = 3600
-    while True:
-        Shellout.run(['./tally_ballot.py'], args.printonly)
-        time.sleep(10)
-        elapsed_time = time.time() - start_time
-        if elapsed_time > seconds:
-            break
-    print("Cleaning up remaining unmerged ballots")
-    Shellout.run(
-        ['./merge_contests.py', '-f'],
-        printonly=args.printonly, verbosity=args.verbosity, timeout=300)
-    # tally the contests
-    Shellout.run(['./tally_ballot.py'], args.printonly)
+        scanner_mockup(election_data_dir)
+    else:
+        server_mockup(election_data_dir)
 
 if __name__ == '__main__':
     args = parse_arguments()
