@@ -31,6 +31,7 @@ file was created.
 # pylint: disable=wrong-import-position   # import statements not top of file
 import os
 import sys
+import time
 import argparse
 import logging
 from logging import debug
@@ -57,11 +58,26 @@ def parse_arguments():
     One basic idea is to run this in different windows, one per VTP
     scanner.  The scanner is nominally associated with a town (as
     configured).
+
+    When "-d scanner" is supplied, run_mock_election.py will randomly
+    cast and scan ballots.  It will loop over all available/existing
+    blank ballots found in the ElectionData.
+
+    When "-d server" is supplied, run_mock_election.py will
+    synchronously run the merge_contests.py program which will once
+    every 10 seconds.  Note that nominally 100 contgests need to have
+    been pushed for merge_contests.py to merge in a contest into the
+    master branch.
+
+    If no device is supplied run_mock_election.py will run the scanner
+    workflow N iterations and then merge and tally the contests.
     """,
         formatter_class=argparse.RawDescriptionHelpFormatter)
 
+    parser.add_argument("-d", "--device", default="",
+                            help="specify a specific VC local device (scanner or server) to mock (def='')")
     parser.add_argument("-i", "--iterations", type=int, default=10,
-                            help="the number of unique blank ballots to cast")
+                            help="the number of unique blank ballots to cast (def=10)")
     parser.add_argument("-v", "--verbosity", type=int, default=3,
                             help="0 critical, 1 error, 2 warning, 3 info, 4 debug (def=3)")
     parser.add_argument("-n", "--printonly", action="store_true",
@@ -74,6 +90,9 @@ def parse_arguments():
                             stream=sys.stdout)
 
     # Validate required args
+    if parsed_args.device not in ['scanner', 'server', '']:
+        raise ValueError("The --device parameter only accepts 'device' or 'server' "
+                         f"or '' - ({parsed_args.device}) was suppllied.")
     return parsed_args
 
 ################
@@ -102,33 +121,56 @@ def main():
     # generated and/or already committed.
 
     # Get list of available blank ballots
-    blank_ballots = []
-    with Shellout.changed_cwd(os.path.join(
-        the_election_config.get('git_rootdir'), Globals.get('ROOT_ELECTION_DATA_SUBDIR'))):
-        for dirpath, _, files in os.walk("."):
-            for filename in [f for f in files if f.endswith(",ballot.json") \
-                    and dirpath.endswith("blank-ballots/json") ]:
-                blank_ballots.append(os.path.join(dirpath, filename))
-    # Loop over the list N times
-    for count in range(args.iterations):
-        for blank_ballot in blank_ballots:
-            debug(f"Iteration {count}, processing {blank_ballot}")
-            # - cast a ballot
-#            import pdb; pdb.set_trace()
+    if args.device in ['scanner', '']:
+        blank_ballots = []
+        with Shellout.changed_cwd(os.path.join(
+            the_election_config.get('git_rootdir'), Globals.get('ROOT_ELECTION_DATA_SUBDIR'))):
+            for dirpath, _, files in os.walk("."):
+                for filename in [f for f in files if f.endswith(",ballot.json") \
+                        and dirpath.endswith("blank-ballots/json") ]:
+                    blank_ballots.append(os.path.join(dirpath, filename))
+        # Loop over the list N times
+        if not blank_ballots:
+            raise ValueError("found no blank ballots to cast")
+        for count in range(args.iterations):
+            for blank_ballot in blank_ballots:
+                debug(f"Iteration {count}, processing {blank_ballot}")
+                # - cast a ballot
+    #            import pdb; pdb.set_trace()
+                Shellout.run(
+                    ['./cast_ballot.py', '--blank_ballot=' + blank_ballot],
+                    args.printonly)
+                # - accept the ballot
+                Shellout.run(
+                    ['./accept_ballot.py',
+                         '--cast_ballot=' + Ballot.get_cast_from_blank(blank_ballot)],
+                    args.printonly)
+                if args.device == '':
+                    # - merge the ballot (first 100 will be a noop)
+                    Shellout.run(['./merge_contests.py'], args.printonly)
+        if args.device == '':
+            # merge the remaining contests
+            # Note - this needs a longer timeout as it can take many seconds
             Shellout.run(
-                ['./cast_ballot.py', '--blank_ballot=' + blank_ballot],
-                args.printonly)
-            # - accept the ballot
-            Shellout.run(
-                ['./accept_ballot.py', '--cast_ballot=' + Ballot.get_cast_from_blank(blank_ballot)],
-                args.printonly)
-            # - merge the ballot (first 100 will be a noop)
-            Shellout.run(['./merge_contests.py'], args.printonly)
-    # merge the remaining contests
-    # Note - this needs a longer timeout as it can take many seconds
+                ['./merge_contests.py', '-f'],
+                printonly=args.printonly, verbosity=args.verbosity, timeout=300)
+            # tally the contests
+            Shellout.run(['./tally_ballot.py'], args.printonly)
+        return
+
+    # loop for an hour and sleep for 10 seconds
+    start_time = time.time()
+    seconds = 3600
+    while True:
+        Shellout.run(['./tally_ballot.py'], args.printonly)
+        time.sleep(10)
+        elapsed_time = time.time() - start_time
+        if elapsed_time > seconds:
+            break
+    print("Cleaning up remaining unmerged ballots")
     Shellout.run(
         ['./merge_contests.py', '-f'],
-        printonly=args.printonly, verbosity=args.verbosity, timeout=120)
+        printonly=args.printonly, verbosity=args.verbosity, timeout=300)
     # tally the contests
     Shellout.run(['./tally_ballot.py'], args.printonly)
 
