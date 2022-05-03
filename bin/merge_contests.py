@@ -173,20 +173,22 @@ def main():
         Shellout.run(["git", "pull"], args.printonly, check=True)
         # Get the pending CVR branches
         cmds = ['git', 'branch']
+        cvr_regex = f"{Globals.get('CONTEST_FILE_SUBDIR')}/([^/]+?)/"
         if args.remote:
             cmds.append('-r')
+            cvr_regex = "^origin/" + cvr_regex
+        else:
+            cvr_regex = "^" + cvr_regex
         # Note - the re.search will strip non CVRs lines
         cvr_branches = [branch.strip() for branch in Shellout.run(
             cmds, check=True, capture_output=True,
-            text=True).stdout.splitlines() if re.search(
-                f"^{Globals.get('CONTEST_FILE_SUBDIR')}/", branch.strip())]
+            text=True).stdout.splitlines() if re.search(cvr_regex, branch.strip())]
         # Note - sorted alphanumerically on contest UID. Loop over
         # contests and randomly merge extras
         batch = []   # if ordered_set was native would probably use that
         current_uid = None
         for branch in cvr_branches:
-            uid = re.search(f"^{Globals.get('CONTEST_FILE_SUBDIR')}/([^/]+?)/",
-                                branch).group(1)
+            uid = re.search(cvr_regex, branch).group(1)
             if current_uid == uid:
                 batch.append(branch)
                 continue
