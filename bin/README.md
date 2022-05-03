@@ -76,12 +76,15 @@ Note - currently using a symlink instead of a git submodule:
 ```bash
 # clone both repos
 $ git clone git@github.com:TrustTheVote-Project/VTP-root-repo.git
-$ git clone git@github.com:TrustTheVote-Project/VTP-mock-election.US.01.git
+$ git clone git@github.com:TrustTheVote-Project/VTP-mock-election.US.<nn>.git
 $ cd VTP-root-repo
-$ ln -s ../VTP-mock-election.US.01 ElectionData
+$ ln -s ../VTP-mock-election.US.<nn> ElectionData
+
+Where <nn> is the most recent mock election
+
 ```
 
-See [VTP-mock-election.US.01](https://github.com/TrustTheVote-Project/VTP-mock-election.US.01) as an example
+See [VTP-mock-election.US.05](https://github.com/TrustTheVote-Project/VTP-mock-election.US.05) as an example
 
 Each ElectionData repo can represent a different election.  Some repos may be already configured and can be immediately used to run an election.  Or the repo may be of a past election.  Others may be designed so that an election can be configured.
 
@@ -89,29 +92,43 @@ Regardless, to run a real or mock election one will need a usable ElectionData r
 
 ### 3) Running a mock election
 
-With nominally both repos in place (assuming at this time no git submodules), decide if a serial or parallel election wants to be run.  As of now only serial mock elections are supported.  Eventually more complex election topologies will be supported.
+With nominally both repos in place and assuming at this time no git submodules, run the setup_vtp_demo.py script.  This script will nominally create a mock election with four VTP scanner _apps_ and one VTP local-remote server _app_ as if all ballots were being cast in a single voting center.  By default it will place the git repos in /opt/VotetrackerPlus with the 5 clients (the four scanner apps and one server app) in the _clients_ folder with the two local git upstream bare repositories in the _local-remote-server_ folder.  The directory tree looks like this:
 
-Also configure git with the appropriate remote for the ElectionData repo.  Using the public GitHub is probably not what one wants to do by default.
-
-To run a serial mock election:
-
-```bash
-# bin/generate_all_blank_ballots.py
-# bin/run_mock_election.py -b <number of unique ballots> -s <state> -t <town>
-# bin/tally_contests.py
-
-where:
-
-<number of unique ballots> is the number of GGO unique ballots to cast
-<state> and <town> are nominally the state and town to process cast ballots
-  (assuming ElectionData configured as such)
+```
+/opt/VotetrackerPlus/clients/scanner.00/VTP-mock-election.US.05/.git
+                                        VTP-root-repo/.git
+                             scanner.01/VTP-mock-election.US.05/.git
+                                        VTP-root-repo/.git
+                             scanner.02/VTP-mock-election.US.05/.git
+                                        VTP-root-repo/.git
+                             scanner.03/VTP-mock-election.US.05/.git
+                                        VTP-root-repo/.git
+                             server/VTP-mock-election.US.05/.git
+                                    VTP-root-repo/.git
+/opt/VotetrackerPlus/local-remote-server/VTP-mock-election.US.05.git
+                                         VTP-root-repo.git
 ```
 
-Once it is supported, one can run mock elections in parallel given the git workspace topology that is chosen.  Another way to say the same thing, parallel mock elections can be executed by configuring the VTP server git workspace and one or more VTP scanner git workspaces.  When a parallel mock election is running, it is possible for interactive ballots to be cast and included within the election.
+The git repositories in the _clients_ subfolder all have workspaces as that is where the various commands run to simulate an individual ballot scanner application.  The two bare repostitories in local-remote-server mimick the actual voting center local (bare) git remote repositories for both the VTP scanner and server apps.
+
+The basic demo idea is to start a "__run_mock_election.py -d scanner__" instance in the first three scanner subfolders.  And then in the fourth scanner subfolder manually and interactively cast ballots.  This will simulate a voter at an active voting center.
+
+One should also start a VTP server instance in the _server_ folder via a "__run_mock_election.py -d server__".  The server instance handles the merging of the individual contest CVR branches into the master branch.
+
+By default the three mock scanner apps will iterate for 10 loops across all the possible blank ballots defined in the ElectionData config files, which as of this writing creates slightly less than 2,000 contest branches.  The server by default will run for a day but should be killed when the demo is over.
+
+Running the demo does not modify the VTP-root-repo repo and does not push any changes in the VTP-mock-election.US.05 repository back to the upstream GitHub repositories.  This is because the scanner and server app repos have the git origin pointing to the local bare repositories found in the local-remote-server folder.
+
+At any time and in any repository cloned from the local-remote-server VTP-mock-election.US.05.git repository (that is not running something else) one can run inspect the current tally by:
+
+```bash
+$ cd bin
+$ ./tally_contests.py
+```
 
 ### 4) Development cycle
 
-New development should use a feature branch directly in this repo as well as in the mock election repos:
+New development should use a feature branch directly in this repo.  New ElectionData repositories can be created at will.
 
 1) Create a well named feature git branch
 2) Develop code/tests
