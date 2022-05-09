@@ -10,10 +10,13 @@ packaging @ file:///tmp/build/80754af9/packaging_1637314298585/work
 platformdirs @ file:///tmp/build/80754af9/platformdirs_1638968569495/work
 pluggy @ file:///opt/concourse/worker/volumes/live/b59eda93-c2e0-4d8d-58d7-54246c8e1958/volume/pluggy_1633715226795/work
 py @ file:///opt/conda/conda-bld/py_1644396412707/work
+PyInputPlus==0.2.12
 pylint @ file:///opt/concourse/worker/volumes/live/35d144dd-2adb-4d31-6003-ffc112ccf38a/volume/pylint_1639650625922/work
 pyparsing @ file:///tmp/build/80754af9/pyparsing_1635766073266/work
+PySimpleValidate==0.2.12
 pytest==6.2.5
 PyYAML==6.0
+stdiomask==0.0.6
 toml @ file:///tmp/build/80754af9/toml_1616166611790/work
 typing-extensions @ file:///tmp/build/80754af9/typing_extensions_1631814937681/work
 wrapt @ file:///opt/concourse/worker/volumes/live/99094902-9e15-4318-5ab0-ee253b90775d/volume/wrapt_1638433872602/work
