@@ -41,6 +41,45 @@ from election_config import ElectionConfig
 
 # Functions
 
+def create_client_repos(clone_dirs, remote_1_path, remote_2_path):
+    """create demo clients workspaces"""
+    # Now locally clone those as needed and add the ElectionData
+    # relative symlink. Record the repos to add them to the
+    # superproject later.
+    cloned_repos = [] # a list of tuple pairs
+    for clone_dir in clone_dirs:
+        with Shellout.changed_cwd(clone_dir):
+            info(f"In ({clone_dir}):")
+            Shellout.run(
+                ['git', 'clone', remote_1_path],
+                args.printonly, verbosity=args.verbosity)
+            # Note - since the repo is not a bare, the ".git" suffix
+            # needs to be stripped
+            repo1_dir_name = os.path.basename(remote_1_path).removesuffix('.git')
+            cloned_repos.append((
+                remote_1_path,
+                os.path.join(
+                    os.path.basename(os.path.dirname(clone_dir)),
+                    os.path.basename(clone_dir),
+                    repo1_dir_name)))
+            Shellout.run(
+                ['git', 'clone', remote_2_path],
+                args.printonly, verbosity=args.verbosity)
+            repo2_dir_name = os.path.basename(remote_2_path).removesuffix('.git')
+            cloned_repos.append((
+                remote_2_path,
+                os.path.join(
+                    os.path.basename(os.path.dirname(clone_dir)),
+                    os.path.basename(clone_dir),
+                    repo2_dir_name)))
+            # Add the symlink
+            Shellout.run(
+                ['ln', '-s', os.path.join('..', repo2_dir_name),
+                     os.path.join(clone_dir, repo1_dir_name,
+                                      Globals.get('ROOT_ELECTION_DATA_SUBDIR'))],
+                args.printonly, verbosity=args.verbosity)
+    return cloned_repos
+
 
 ################
 # arg parsing
@@ -81,8 +120,8 @@ def parse_arguments():
         "-s", "--scanners", type=int, default=4,
         help="specify a number of scanner app instances (def=4)")
     parser.add_argument(
-        "-l", "--location", default="/opt/VoteTrackerPlus",
-        help="specify the location of VTP demo (def=/opt/VoteTrackerPlus)")
+        "-l", "--location", default="/opt/VoteTrackerPlus/demo.01",
+        help="specify the location of VTP demo (def=/opt/VoteTrackerPlus/demo.01)")
     parser.add_argument(
         "-v", "--verbosity", type=int, default=3,
         help="0 critical, 1 error, 2 warning, 3 info, 4 debug (def=3)")
@@ -103,8 +142,8 @@ def parse_arguments():
     # Check the root of the demo
     if not os.path.isdir(parsed_args.location):
         raise FileNotFoundError(
-            f"The root demo folder, {args.location}, does not exit."
-            "It needs to pre-exist - please manually create it")
+            f"The root demo folder, {parsed_args.location}, does not exit.  "
+            "It needs to pre-exist - please manually create it.")
     return parsed_args
 
 
@@ -156,7 +195,6 @@ def main():
             ['git', 'config', '--get', 'remote.origin.url'],
             check=True, capture_output=True, text=True).stdout.strip()
     # Bare clone them
-    cloned_repos = [] # a list of tuple pairs
     with Shellout.changed_cwd(full_dir):
         info(f"In ({full_dir}):")
         Shellout.run(
@@ -165,31 +203,13 @@ def main():
         # Note - since the repo is a bare it has the same ".git"
         # suffix as the remote
         remote_1_path = os.path.join(full_dir, os.path.basename(remote_1))
-        cloned_repos.append((remote_1, remote_1_path))
         Shellout.run(
             ['git', 'clone', '--bare', remote_2],
             args.printonly, verbosity=args.verbosity)
         remote_2_path = os.path.join(full_dir, os.path.basename(remote_2))
-        cloned_repos.append((remote_2, remote_2_path))
 
-    # Now locally clone those as needed
-    for clone_dir in clone_dirs:
-        with Shellout.changed_cwd(clone_dir):
-            info(f"In ({clone_dir}):")
-            Shellout.run(
-                ['git', 'clone', remote_1_path],
-                args.printonly, verbosity=args.verbosity)
-            # Note - since the repo is not a bare, the ".git" suffix
-            # needs to be stripped
-            cloned_repos.append((
-                remote_1_path,
-                os.path.join(clone_dir, os.path.basename(remote_1_path).removesuffix('.git'))))
-            Shellout.run(
-                ['git', 'clone', remote_2_path],
-                args.printonly, verbosity=args.verbosity)
-            cloned_repos.append((
-                remote_2_path,
-                os.path.join(clone_dir, os.path.basename(remote_2_path).removesuffix('.git'))))
+    # Create the client repos
+    cloned_repos = create_client_repos(clone_dirs, remote_1_path, remote_2_path)
 
     # Now create a super git project to rule them all
     with Shellout.changed_cwd(args.location):
@@ -203,6 +223,15 @@ def main():
             Shellout.run(
                 ['git', 'submodule', 'add', clone[0], clone[1]],
                 args.printonly, verbosity=args.verbosity)
+        # Ignore the local remote repos directory
+        info('Adding a .gitignore')
+        if not args.printonly:
+            with open('.gitignore', 'w', encoding="utf8") as outfile:
+                outfile.write('# Ignore the local remote repos\n')
+                outfile.write('local-remote-server\n')
+        Shellout.run(
+            ['git', 'add', '.gitignore'],
+            args.printonly, verbosity=args.verbosity)
 
 if __name__ == '__main__':
     args = parse_arguments()

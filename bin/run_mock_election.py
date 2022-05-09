@@ -69,14 +69,16 @@ def parse_arguments():
     been pushed for merge_contests.py to merge in a contest into the
     master branch.
 
-    If no device is supplied run_mock_election.py will run the scanner
-    workflow N iterations and then merge and tally the contests.
+    If "-d both" is supplied, run_mock_election.py will run a single
+    scanner N iterations while also calling the server function.
+    run_mock_election.py will then flush the ballot cache before
+    printing the tallies and exiting.
     """,
         formatter_class=argparse.RawDescriptionHelpFormatter)
 
     parser.add_argument(
         "-d", "--device", default="",
-        help="specify a specific VC local device (scanner or server) to mock (def='')")
+        help="specify a specific VC local device (scanner or server or both) to mock")
     parser.add_argument(
         "-m", "--minimum_cast_cache", type=int, default=100,
         help="the minimum number of cast ballots required prior to merging (def=100)")
@@ -100,9 +102,9 @@ def parse_arguments():
                             stream=sys.stdout)
 
     # Validate required args
-    if parsed_args.device not in ['scanner', 'server', '']:
+    if parsed_args.device not in ['scanner', 'server', 'both']:
         raise ValueError("The --device parameter only accepts 'device' or 'server' "
-                         f"or '' - ({parsed_args.device}) was suppllied.")
+                         f"or 'both' - ({parsed_args.device}) was suppllied.")
     return parsed_args
 
 def scanner_mockup(election_data_dir):
@@ -130,7 +132,7 @@ def scanner_mockup(election_data_dir):
                 ['./accept_ballot.py',
                      '--cast_ballot=' + Ballot.get_cast_from_blank(blank_ballot)],
                 args.printonly)
-            if args.device == '':
+            if args.device == 'both':
                 # - merge the ballot's contests
                 if args.flush:
                     # Since casting and merging is basically
@@ -147,7 +149,7 @@ def scanner_mockup(election_data_dir):
                 # don't let too much garbage build up
                 if count % 10 == 9:
                     Shellout.run(['git', 'gc'], args.printonly)
-    if args.device == '':
+    if args.device == 'both':
         # merge the remaining contests
         # Note - this needs a longer timeout as it can take many seconds
         Shellout.run(
@@ -220,7 +222,7 @@ def main():
     # generated and/or already committed.
 
     # the VTP scanner mock simulation
-    if args.device in ['scanner', '']:
+    if args.device in ['scanner', 'both']:
         scanner_mockup(election_data_dir)
     else:
         server_mockup(election_data_dir)
