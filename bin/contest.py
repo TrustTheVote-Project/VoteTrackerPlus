@@ -181,6 +181,9 @@ class Contest:
         # Return contest 'meta' data
         if name in ['name', 'ggo', 'index', 'contest']:
             return getattr(self, name)
+        # max is optional still
+        if name == 'max':
+            return self.contest['max'] if 'max' in self.contest else 1
         # Else return contest data indexed by name
         return getattr(self, 'contest')[name]
 

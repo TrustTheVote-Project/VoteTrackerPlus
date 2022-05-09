@@ -33,12 +33,122 @@ import logging
 from logging import info, debug
 import random
 import pprint
+import traceback
+import pyinputplus
 
 # Local imports
 from address import Address
 from ballot import Ballot, Contests
 from common import Globals, Shellout
 from election_config import ElectionConfig
+
+################
+# Functions
+################
+def make_random_selection(the_ballot, the_contest):
+    """Will randomly make selections on a contest"""
+    # get the possible choices
+    choices = the_contest.get('choices')
+    tally = the_contest.get('tally')
+    # choose something randomly
+    picks = list(range(len(choices)))
+    # For plurality and max=1, the first choice is the only
+    # choice.  For plurality and max>1, the order does not matter
+    # - a selection is a selection.  For RCV, the order does
+    # matter as that is the ranking.
+    random.shuffle(picks)
+    if 'plurality' == tally:
+        loop = the_contest.get('max')
+    elif 'rcv' == tally:
+        loop = len(choices)
+    else:
+        raise KeyError(f"Unspoorted tally ({tally})")
+    while loop > 0:
+        the_ballot.add_selection(the_contest, picks.pop(0))
+        loop -= 1
+
+def get_user_selection(the_ballot, the_contest):
+    """Print the contest and get the selection(s) from the user"""
+    choices = the_contest.get('choices')
+    tally = the_contest.get('tally')
+    max_votes = the_contest.get('max')
+    # Print something
+    print("################")
+    print(f"Contest {the_contest.get('uid')}: {the_contest.get('name')}")
+    if tally == 'plurality':
+        print(f"- This is a {tally} tally")
+        print(
+            f"- The voting is for {max_votes} open position(s)/choice(s) - "
+            "only that number of selections can be choosen.")
+    else:
+        print(f"- This is a {tally} tally with {max_votes} open position(s)/choice(s).  "
+            f"Regardless up to {len(choices)} selections can be rank choosen.")
+
+    # Need to print the choices first up front
+    count = 0
+    for choice in choices:
+        print(f"  [{count}] {choice}")
+        count += 1
+
+    def validate_multichoice(text):
+        """Will validate the space separated user input choice string"""
+        selections = text.split()
+        choice_max = len(choices)
+        errors = []
+        validated_selections = []
+        for num in selections:
+            if not num.isnumeric():
+                errors.append(f"The supplied choice ({num}) is not a number")
+                continue
+            num = int(num)
+            if num < 0 or num > choice_max:
+                errors.append(
+                    f"The supplied choice ({num}) is not a valid selection "
+                    f"(must be between 0 and {choice_max - 1} inclusive)")
+                continue
+            if tally == 'plurality' and len(selections) > choice_max:
+                errors.append(
+                    f"This contest is limited to at most {max_votes} selection(s): "
+                    f"you supplied {len(selections)}")
+                continue
+#            import pdb; pdb.set_trace()
+            if num in validated_selections:
+                errors.append(
+                    f"The selection {num} was supplied more than once.  "
+                    "Each selection can only be supplied once.")
+                continue
+            validated_selections.append(num)
+        if errors:
+            err_string = '\n'.join(errors)
+            raise Exception(
+                "Warning - you selections have the following errors\n"
+                f"{err_string}")
+        # if still here, set the selection
+        try:
+            for sel in validated_selections:
+                the_ballot.add_selection(the_contest, sel)
+        # pylint: disable=broad-except
+        except Exception:
+            # blow out of the internal pyinputplus try/catch
+            traceback.print_exc()
+            sys.exit(1)
+
+    if tally == 'plurality':
+        if max_votes > 1:
+            prompt = \
+              f"Please enter the numbers for your choices (max={max_votes}) separated by spaces: "
+        else:
+            prompt = "Please enter the number for your choice: "
+        pyinputplus.inputCustom(validate_multichoice,
+                                    prompt=prompt,
+                                    blank=True)
+    else:
+        # Then prompt for input
+        prompt = "Please enter in rank order the numbers of your choices separated by spaces:  "
+        pyinputplus.inputCustom(validate_multichoice,
+                                    prompt=prompt,
+                                    blank=True)
+
 
 ################
 # arg parsing
@@ -49,15 +159,17 @@ def parse_arguments():
     """
 
     parser = argparse.ArgumentParser(description=\
-    """cast_ballot.py will read the blank ballot for a given address
-    and by default randomly make a selection for each choice.  It will
-    then cast the ballot in the corresponding CVRs directory.
+    """cast_ballot.py can either read a blank ballot and allow a user
+    to manually select choices or when in demo mode, cast_ballot.py
+    will randominly select choices.
     """)
 
     Address.add_address_args(parser)
     # ZZZ - cloaked contests are enabled at cast_ballot time
 #    parser.add_argument('-k', "--cloak", action="store_true",
 #                            help="if possible provide a cloaked ballot offset")
+    parser.add_argument("--demo_mode", action="store_true",
+                            help="set demo mode")
     parser.add_argument("--blank_ballot",
                             help="overrides an address - specifies the specific blank ballot")
     parser.add_argument("-v", "--verbosity", type=int, default=3,
@@ -102,25 +214,13 @@ def main():
     # loop over contests
     contests = Contests(a_ballot)
     for contest in contests:
-        # get the possible choices
-        choices = contest.get('choices')
-        tally = contest.get('tally')
-        # choose something randomly
-        picks = list(range(len(choices)))
-        # For plurality and max=1, the first choice is the only
-        # choice.  For plurality and max>1, the order does not matter
-        # - a selection is a selection.  For RCV, the order does
-        # matter as that is the ranking.
-        random.shuffle(picks)
-        if 'plurality' == tally:
-            loop = contest.get('max')
-        elif 'rcv' == tally:
-            loop = len(choices)
+        if args.demo_mode:
+            make_random_selection(a_ballot, contest)
         else:
-            raise KeyError(f"Unspoorted tally ({tally})")
-        while loop > 0:
-            a_ballot.add_selection(contest, picks.pop(0))
-            loop -= 1
+            # Display the tally type and choices and allow the user to manually
+            # enter something.  Might as well validate legal selections (in
+            # this demo) as that is the long-term VTP vision.
+            get_user_selection(a_ballot, contest)
     debug("And the ballot looks like:\n" + pprint.pformat(a_ballot.dict()))
 
     # ZZZ - for this program there is no call to verify_cast_ballot to
