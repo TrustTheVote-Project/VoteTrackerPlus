@@ -145,7 +145,7 @@ class Address:
         if missing_keys:
             raise NameError(("Addresses must include values for the following fields: "
                                  f"{required_fields}"
-                                 "The following fields are undefined: "
+                                 "\nThe following fields are undefined: "
                                  f"{missing_keys}"))
 
     def __iter__(self):

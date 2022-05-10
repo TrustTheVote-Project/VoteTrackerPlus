@@ -67,13 +67,13 @@ def make_random_selection(the_ballot, the_contest):
         the_ballot.add_selection(the_contest, picks.pop(0))
         loop -= 1
 
-def get_user_selection(the_ballot, the_contest):
+def get_user_selection(the_ballot, the_contest, count, total_contests):
     """Print the contest and get the selection(s) from the user"""
     choices = the_contest.get('choices')
     tally = the_contest.get('tally')
     max_votes = the_contest.get('max')
     # Print something
-    print("################")
+    print(f"################ ({count} of {total_contests})")
     print(f"Contest {the_contest.get('uid')}: {the_contest.get('name')}")
     if tally == 'plurality':
         print(f"- This is a {tally} tally")
@@ -169,7 +169,7 @@ def parse_arguments():
 #    parser.add_argument('-k', "--cloak", action="store_true",
 #                            help="if possible provide a cloaked ballot offset")
     parser.add_argument("--demo_mode", action="store_true",
-                            help="set demo mode")
+                            help="set demo mode to automatically cast random ballots")
     parser.add_argument("--blank_ballot",
                             help="overrides an address - specifies the specific blank ballot")
     parser.add_argument("-v", "--verbosity", type=int, default=3,
@@ -206,13 +206,15 @@ def main():
     else:
         # Use the specified address
         the_address = Address.create_address_from_args(args,
-                        ['verbosity', 'printonly', 'blank_ballot'])
+                        ['verbosity', 'printonly', 'blank_ballot', 'demo_mode'])
         the_address.map_ggos(the_election_config)
         # get the ballot for the specified address
         a_ballot.read_a_blank_ballot(the_address, the_election_config)
 
     # loop over contests
     contests = Contests(a_ballot)
+    total_contests = contests.len()
+    count = 0
     for contest in contests:
         if args.demo_mode:
             make_random_selection(a_ballot, contest)
@@ -220,7 +222,8 @@ def main():
             # Display the tally type and choices and allow the user to manually
             # enter something.  Might as well validate legal selections (in
             # this demo) as that is the long-term VTP vision.
-            get_user_selection(a_ballot, contest)
+            count += 1
+            get_user_selection(a_ballot, contest, count, total_contests)
     debug("And the ballot looks like:\n" + pprint.pformat(a_ballot.dict()))
 
     # ZZZ - for this program there is no call to verify_cast_ballot to
@@ -244,3 +247,5 @@ def main():
 if __name__ == '__main__':
     args = parse_arguments()
     main()
+
+# EOF

@@ -18,10 +18,9 @@
 #   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 """
-run_mock_election.py - command line level script to merge CVR contest
-branches into the master branch
+setup_vtp_demo.py - command line level script set up a VTP demo
 
-See './run_mock_election.py -h' for usage information.
+See './setup_vtp_demo -h' for usage information.
 
 See ../docs/tech/run_mock_election.md for the context in which this
 file was created.

@@ -125,7 +125,7 @@ def scanner_mockup(election_data_dir):
             # - cast a ballot
 #            import pdb; pdb.set_trace()
             Shellout.run(
-                ['./cast_ballot.py', '--blank_ballot=' + blank_ballot],
+                ['./cast_ballot.py', '--blank_ballot=' + blank_ballot, '--demo_mode'],
                 args.printonly)
             # - accept the ballot
             Shellout.run(

@@ -93,7 +93,7 @@ class Shellout:
     """
 
     @staticmethod
-    def run(argv, printonly=False, verbosity=3, **kwargs):
+    def run(argv, printonly=False, verbosity=3, no_touch_stds=False, **kwargs):
         """Run a shell command with logging and error handling.  Raises a
         CalledProcessError if the shell command fails - the caller needs to
         deal with that.  Can also raise a TimeoutExpired exception.
@@ -112,11 +112,12 @@ class Shellout:
             return subprocess.CompletedProcess(argv_string, 0, stdout="", stderr="")
         # the caller desides on whether check is set or not
         # pylint: disable=subprocess-run-check
-        if 'capture_output' not in kwargs and verbosity <= 3:
-            if 'stdout' not in kwargs:
-                kwargs['stdout'] = subprocess.DEVNULL
-            if 'stderr' not in kwargs:
-                kwargs['stderr'] = subprocess.DEVNULL
+        if not no_touch_stds:
+            if 'capture_output' not in kwargs and verbosity <= 3:
+                if 'stdout' not in kwargs:
+                    kwargs['stdout'] = subprocess.DEVNULL
+                if 'stderr' not in kwargs:
+                    kwargs['stderr'] = subprocess.DEVNULL
         if 'timeout' not in kwargs:
             kwargs['timeout'] = Globals.get('SHELL_TIMEOUT')
         return subprocess.run(argv_string, **kwargs)
