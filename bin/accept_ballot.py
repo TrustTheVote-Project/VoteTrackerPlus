@@ -275,14 +275,17 @@ def main():
                 # if cloaking, get those as well
                 if 'cloak' in contest.get('contest'):
                     cloak_receipts[uid] = get_cloaked_contests(contest, 'master')
-        # After all the contests digests have been generated and the
-        # others and cloaks are in as much as possible, then push as
+        # After all the contests digests have been generated as well
+        # as the others and cloaks as much as possible, then push as
         # atomically as possible all the contests.
 #        import pdb; pdb.set_trace()
         for branch in branches:
             Shellout.run(
                 ['git', 'push', 'origin', branch],
                 printonly=args.printonly, verbosity=args.verbosity)
+        # Once pushed, leave the local branches for auditing.  The
+        # pushed copies will be pruned since there can be too many
+        # there from all the possible scanner instances.
 
     debug(f"Ballot's digests:\n{ballot_receipts}")
     # ZZZ print the voter's offset

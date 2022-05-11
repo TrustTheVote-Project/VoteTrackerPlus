@@ -106,12 +106,12 @@ def main():
     Shellout.run(
         [os.path.join(bin_dir, 'cast_ballot.py'), '-v', args.verbosity]
         + cast_address_args + (['-n'] if args.printonly else []),
-        check=True, no_touch_stds=True)
+        check=True, no_touch_stds=True, timeout=None)
     # Accept the ballot
     Shellout.run(
         [os.path.join(bin_dir, 'accept_ballot.py'), '-v', args.verbosity]
         + accept_address_args + (['-n'] if args.printonly else []),
-        check=True, no_touch_stds=True)
+        check=True, no_touch_stds=True, timeout=None)
 
 if __name__ == '__main__':
     args = parse_arguments()

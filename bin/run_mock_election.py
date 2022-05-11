@@ -156,7 +156,7 @@ def scanner_mockup(election_data_dir):
             ['./merge_contests.py', '-f'],
             args.printonly, verbosity=args.verbosity, timeout=None)
         # tally the contests
-        Shellout.run(['./tally_contests.py'], args.printonly)
+        Shellout.run(['./tally_contests.py'], args.printonly, no_touch_stds=True)
     # clean up git just in case
     Shellout.run(['git', 'gc'], args.printonly)
 
@@ -190,7 +190,7 @@ def server_mockup(election_data_dir):
         ['./merge_contests.py', '-r', '-f'],
         printonly=args.printonly, verbosity=args.verbosity, timeout=None)
     # tally the contests
-    Shellout.run(['./tally_contests.py'], args.printonly)
+    Shellout.run(['./tally_contests.py'], args.printonly, no_touch_stds=True)
 
 
 ################
