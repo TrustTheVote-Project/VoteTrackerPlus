@@ -236,10 +236,9 @@ def main():
     else:
         ballot_file = a_ballot.write_a_cast_ballot(the_election_config)
     # example of digging deeply into ElectionConfig data ...
+#    import pdb; pdb.set_trace()
     voting_centers = the_election_config.get_node(a_ballot.get('ballot_node'),
                             'config')['voting centers']
-    # write the voted ballot out
-#    import pdb; pdb.set_trace()
     for vote_center in voting_centers:
         info(f"Casting a {contests.len()} contest ballot at VC {vote_center}")
         info(f"Cast ballot file: {ballot_file}")

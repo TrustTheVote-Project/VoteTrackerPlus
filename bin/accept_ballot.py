@@ -111,10 +111,12 @@ def get_n_other_contests(contest, branch):
     Requires the CWD to be the parent of the CVRs directory.
     """
     this_uid = contest.get('uid')
-    return Shellout.run(
-        ['git', 'log', branch, '--oneline', '--all-match', '--grep={"CVR"}',
+#    import pdb; pdb.set_trace()
+    blob = Shellout.run(
+        ['git', 'log', branch, '--oneline', '--all-match', '--grep="CVR"',
              f'--grep="uid": "{this_uid}"'],
         check=True, capture_output=True, text=True).stdout.strip()
+    return blob
 
 def get_cloaked_contests(contest, branch):
     """Return a list of N cloaked cast CVRs for the specified contest.
@@ -288,10 +290,15 @@ def main():
         # there from all the possible scanner instances.
 
     debug(f"Ballot's digests:\n{ballot_receipts}")
-    # ZZZ print the voter's offset
-
-    # ZZZ for now print entire ballot receipt
-
+    # print the voter's offset
+    print("Ballot receipts (contest: key):")
+    for key, value in ballot_receipts.items():
+        print(f"{key}: {value}")
+    # print the other receitps
+    print("Other ballot contests:")
+    for contest, blob in other_receipts.items():
+#        print(f"{contest}: {blob}")
+        break
 
 if __name__ == '__main__':
     args = parse_arguments()
