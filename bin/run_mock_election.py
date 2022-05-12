@@ -38,6 +38,7 @@ from logging import debug, info
 
 # Local import
 from common import Globals, Shellout
+from address import Address
 from ballot import Ballot
 from election_config import ElectionConfig
 
@@ -60,22 +61,29 @@ def parse_arguments():
     configured).
 
     When "-d scanner" is supplied, run_mock_election.py will randomly
-    cast and scan ballots.  It will loop over all available/existing
-    blank ballots found in the ElectionData.
+    cast and scan ballots.
 
     When "-d server" is supplied, run_mock_election.py will
     synchronously run the merge_contests.py program which will once
     every 10 seconds.  Note that nominally 100 contgests need to have
     been pushed for merge_contests.py to merge in a contest into the
-    master branch.
+    master branch without the --flush option.
 
     If "-d both" is supplied, run_mock_election.py will run a single
     scanner N iterations while also calling the server function.
     run_mock_election.py will then flush the ballot cache before
     printing the tallies and exiting.
+
+    By default run_mock_election.py will loop over all available blank
+    ballots found withint the ElectionData tree.  However, either a
+    specific blank ballot or an address can be specified to limit the
+    mock to a single ballot N times.
     """,
         formatter_class=argparse.RawDescriptionHelpFormatter)
 
+    Address.add_address_args(parser)
+    parser.add_argument("--blank_ballot",
+                            help="overrides an address - specifies the specific blank ballot")
     parser.add_argument(
         "-d", "--device", default="",
         help="specify a specific VC local device (scanner or server or both) to mock")
@@ -105,62 +113,77 @@ def parse_arguments():
     if parsed_args.device not in ['scanner', 'server', 'both']:
         raise ValueError("The --device parameter only accepts 'device' or 'server' "
                          f"or 'both' - ({parsed_args.device}) was suppllied.")
+
     return parsed_args
 
-def scanner_mockup(election_data_dir):
+def scanner_mockup(election_data_dir, bin_dir, ballot):
     """Simulate a VTP scanner"""
+
     # Get list of available blank ballots
     blank_ballots = []
-    with Shellout.changed_cwd(election_data_dir):
-        for dirpath, _, files in os.walk("."):
-            for filename in [f for f in files if f.endswith(",ballot.json") \
-                    and dirpath.endswith("blank-ballots/json") ]:
-                blank_ballots.append(os.path.join(dirpath, filename))
+    if ballot:
+        # a blank ballot location was specified (either directly or via an address)
+        blank_ballots.append(ballot)
+    else:
+        with Shellout.changed_cwd(election_data_dir):
+            for dirpath, _, files in os.walk("."):
+                for filename in [f for f in files if f.endswith(",ballot.json") \
+                        and dirpath.endswith("blank-ballots/json") ]:
+                    blank_ballots.append(os.path.join(dirpath, filename))
     # Loop over the list N times
     if not blank_ballots:
         raise ValueError("found no blank ballots to cast")
+    merge_contests = os.path.join(bin_dir, 'merge_contests.py')
     for count in range(args.iterations):
         for blank_ballot in blank_ballots:
             debug(f"Iteration {count}, processing {blank_ballot}")
             # - cast a ballot
 #            import pdb; pdb.set_trace()
             Shellout.run(
-                ['./cast_ballot.py', '--blank_ballot=' + blank_ballot, '--demo_mode'],
-                args.printonly)
+                [os.path.join(bin_dir, 'cast_ballot.py'), '--blank_ballot=' + blank_ballot,
+                     '--demo_mode'],
+                args.printonly, args.verbosity, no_touch_stds=True, timeout=None, check=True)
             # - accept the ballot
             Shellout.run(
-                ['./accept_ballot.py',
+                [os.path.join(bin_dir, 'accept_ballot.py'),
                      '--cast_ballot=' + Ballot.get_cast_from_blank(blank_ballot)],
-                args.printonly)
+                args.printonly, args.verbosity, no_touch_stds=True, timeout=None, check=True)
             if args.device == 'both':
                 # - merge the ballot's contests
                 if args.flush:
                     # Since casting and merging is basically
                     # synchronous, no need for an extra large timeout
-                    Shellout.run(['./merge_contests.py', '-f'], args.printonly,
-                                     verbosity=args.verbosity, timeout=300)
+                    Shellout.run(
+                        [merge_contests, '-f'], args.printonly,
+                        args.verbosity, no_touch_stds=True, timeout=None, check=True)
                 else:
                     # Should only need to merge one ballot worth of
                     # contests - also no need for an extra large
                     # timeout
-                    Shellout.run(['./merge_contests.py', '-m',
-                                    args.minimum_cast_cache], args.printonly,
-                                    verbosity=args.verbosity, timeout=300)
+                    Shellout.run(
+                        [merge_contests, '-m', args.minimum_cast_cache], args.printonly,
+                        args.verbosity, no_touch_stds=True, timeout=None, check=True)
                 # don't let too much garbage build up
                 if count % 10 == 9:
-                    Shellout.run(['git', 'gc'], args.printonly)
+                    Shellout.run(
+                        ['git', 'gc'], args.printonly,
+                        args.verbosity, no_touch_stds=True, timeout=None, check=True)
     if args.device == 'both':
         # merge the remaining contests
         # Note - this needs a longer timeout as it can take many seconds
         Shellout.run(
-            ['./merge_contests.py', '-f'],
-            args.printonly, verbosity=args.verbosity, timeout=None)
+            [merge_contests, '-f'], args.printonly,
+            args.verbosity, no_touch_stds=True, timeout=None, check=True)
         # tally the contests
-        Shellout.run(['./tally_contests.py'], args.printonly, no_touch_stds=True)
+        Shellout.run(
+            [os.path.join(bin_dir, 'tally_contests.py')], args.printonly,
+            args.verbosity, no_touch_stds=True, timeout=None, check=True)
     # clean up git just in case
-    Shellout.run(['git', 'gc'], args.printonly)
+    Shellout.run(
+        ['git', 'gc'], args.printonly,
+        args.verbosity, no_touch_stds=True, timeout=None, check=True)
 
-def server_mockup(election_data_dir):
+def server_mockup(election_data_dir, bin_dir):
     """Simulate a VTP server"""
     # This is the VTP server simulation code.  In this case, the VTP
     # scanners are pushing to an ElectionData remote and this (server)
@@ -169,17 +192,23 @@ def server_mockup(election_data_dir):
     start_time = time.time()
     # Loop for a day and sleep for 10 seconds
     seconds = 3600 * 24
+    merge_contests = os.path.join(bin_dir, 'merge_contests.py')
+    tally_contests = os.path.join(bin_dir, 'tally_contests.py')
     while True:
         with Shellout.changed_cwd(election_data_dir):
-            Shellout.run(['git', 'pull'], args.printonly)
+            Shellout.run(['git', 'pull'], args.printonly,
+            args.verbosity, no_touch_stds=True, timeout=None, check=True)
         if args.flush:
-            Shellout.run(['./merge_contests.py', '-r', '-f'], args.printonly,
-                             verbosity=args.verbosity, timeout=None)
-            Shellout.run(['./tally_contests.py'], args.printonly)
+            Shellout.run(
+                [merge_contests, '-r', '-f'], args.printonly,
+                args.verbosity, no_touch_stds=True, timeout=None, check=True)
+            Shellout.run(
+                [tally_contests], args.printonly,
+                args.verbosity, no_touch_stds=True, timeout=None, check=True)
             return
-        Shellout.run(['./merge_contests.py', '-r', '-m',
-                          args.minimum_cast_cache], args.printonly,
-                         verbosity=args.verbosity, timeout=None)
+        Shellout.run(
+            [merge_contests, '-r', '-m', args.minimum_cast_cache], args.printonly,
+            args.verbosity, no_touch_stds=True, timeout=None, check=True)
         info("Sleeping for 10")
         time.sleep(10)
         elapsed_time = time.time() - start_time
@@ -187,10 +216,12 @@ def server_mockup(election_data_dir):
             break
     print("Cleaning up remaining unmerged ballots")
     Shellout.run(
-        ['./merge_contests.py', '-r', '-f'],
-        printonly=args.printonly, verbosity=args.verbosity, timeout=None)
+        [merge_contests, '-r', '-f'], args.printonly,
+        args.verbosity, no_touch_stds=True, timeout=None, check=True)
     # tally the contests
-    Shellout.run(['./tally_contests.py'], args.printonly, no_touch_stds=True)
+    Shellout.run(
+        [tally_contests], args.printonly,
+        args.verbosity, no_touch_stds=True, timeout=None, check=True)
 
 
 ################
@@ -198,7 +229,22 @@ def server_mockup(election_data_dir):
 ################
 # pylint: disable=duplicate-code
 def main():
-    """Main function - see -h for more info"""
+    """Main function - see -h for more info
+
+    Note - this is a serial synchronous mock election loop.  A
+    parallel loop would have one VTP server git workspace somewhere
+    and N VTP scanner workspaces someplace else.  Depending on the
+    network topology, it is also possible to start up VTP scanner
+    workspaces on other machines as long as the git remotes and clones
+    are properly configured (with access etc).
+
+    While a mock election is running, it is also possible to use yet
+    another VTP scanner workspace to personally cast/insert individual
+    ballots for interactive purposes.
+
+    Assumes that each supplied town already has the blank ballots
+    generated and/or already committed.
+    """
 
     # Create an VTP election config object (this will perform an early
     # check on the ElectionData)
@@ -207,25 +253,23 @@ def main():
     election_data_dir = os.path.join(
         the_election_config.get('git_rootdir'), Globals.get('ROOT_ELECTION_DATA_SUBDIR'))
 
-    # Note - this is a serial synchronous mock election loop.  A
-    # parallel loop would have one VTP server git workspace somewhere
-    # and N VTP scanner workspaces someplace else.  Depending on the
-    # network topology, it is also possible to start up VTP scanner
-    # workspaces on other machines as long as the git remotes and
-    # clones are properly configured (with access etc).
+    # If an address was used, use that
+    if args.address or args.state or args.town or args.substreet:
+        the_address = Address.create_address_from_args(
+            args, ['blank_ballot', 'device', 'minimum_cast_cache', 'flush', 'iterations',
+                       'verbosity', 'printonly'])
+        the_address.map_ggos(the_election_config)
+        blank_ballot = the_address.gen_blank_ballot_location(the_election_config)
+    elif args.blank_ballot:
+        blank_ballot = args.blank_ballot
 
-    # While a mock election is running, it is also possible to use yet
-    # another VTP scanner workspace to personally cast/insert
-    # individual ballots for interactive purposes.
-
-    # Assumes that each supplied town already has the blank ballots
-    # generated and/or already committed.
-
+    # Eventually need the bin dir as well
+    bin_dir = os.path.join(the_election_config.get('git_rootdir'), 'bin')
     # the VTP scanner mock simulation
     if args.device in ['scanner', 'both']:
-        scanner_mockup(election_data_dir)
+        scanner_mockup(election_data_dir, bin_dir, blank_ballot)
     else:
-        server_mockup(election_data_dir)
+        server_mockup(election_data_dir, bin_dir)
 
 if __name__ == '__main__':
     args = parse_arguments()

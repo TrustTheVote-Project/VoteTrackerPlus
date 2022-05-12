@@ -276,7 +276,7 @@ class Ballot:
         ggo_unique_name.append(filename)
         return ','.join(ggo_unique_name)
 
-    def gen_blank_ballot_location(self, config, style):
+    def gen_blank_ballot_location(self, config, style='json'):
         """Return the file location of a blank ballot"""
         return os.path.join(config.get('git_rootdir'),
                     Globals.get('ROOT_ELECTION_DATA_SUBDIR'),
