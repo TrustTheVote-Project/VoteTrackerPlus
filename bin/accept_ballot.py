@@ -31,9 +31,6 @@ import os
 import sys
 import argparse
 import logging
-import json
-import re
-import subprocess
 from logging import debug
 import random
 import secrets
@@ -108,53 +105,6 @@ def checkout_new_contest_branch(contest, ref_branch):
     # tries have also deleted(?)
     raise Exception(f"could not create git branch {branch} on the third attempt")
 
-def cvr_parse_git_log_output(git_log_command, election_config):
-    """Will execute the supplied git log command and process the
-    output of those commits that are CVRs
-    """
-    # Will process all the CVR commits on the master branch and tally
-    # all the contests found.
-    git_log_cvrs = {}
-    with Shellout.changed_cwd(os.path.join(
-        election_config.get('git_rootdir'), Globals.get('ROOT_ELECTION_DATA_SUBDIR'))):
-        with subprocess.Popen(
-            git_log_command,
-            stdout=subprocess.PIPE,
-            text=True,
-            encoding="utf8") as git_output:
-            # read lines until there is a complete json object, then
-            # add the object for that contest.
-            block = ''
-            digest = ''
-            recording = False
-            # question - how to get "for line in
-            # git_output.stdout.readline():" not to effectively return
-            # the characters in line as opposed to the entire line
-            # itself?
-            while True:
-                line = git_output.stdout.readline()
-                if not line:
-                    break
-                if match := re.match('^([a-f0-9]{40}){', line):
-                    digest = match.group(1)
-                    recording = True
-                    block = '{'
-                    continue
-                if recording:
-                    block += line.strip()
-                    if re.match('^}', line):
-                        # this loads the contest under the CVR key
-                        cvr = json.loads(block)
-                        cvr['digest'] = digest
-                        if cvr['CVR']['uid'] in git_log_cvrs:
-                            git_log_cvrs[cvr['CVR']['uid']].append(cvr)
-                        else:
-                            git_log_cvrs[cvr['CVR']['uid']] = [cvr]
-                        block = ''
-                        digest = ''
-                        recording = False
-    return git_log_cvrs
-
 def get_unmerged_contests(config):
     """Queries git for the unmerged CVRs.
     """
@@ -169,9 +119,7 @@ def get_unmerged_contests(config):
         check=True, capture_output=True, text=True).stdout.strip().splitlines()
     # With that list of HEAD exclusion commits, list the rest of the
     # --yes-walk commits and scrape that for the commits of interest.
-    return cvr_parse_git_log_output(
-#        ['git', 'log', '--all', '--no-merges', '--pretty=format:%H%B', '--not'] + head_commits,
-#        config)
+    return Shellout.cvr_parse_git_log_output(
         ['git', 'log', '--no-walk', '--pretty=format:%H%B'] + head_commits,
         config)
 

@@ -19,6 +19,8 @@
 
 import os
 import subprocess
+import re
+import json
 from contextlib import contextmanager
 #  Other imports:  critical, error, warning, info, debug
 from logging import info
@@ -147,5 +149,53 @@ class Shellout:
         finally:
             # switch the branch back
             Shellout.run(["git", "checkout", branch], check=True)
+
+    @staticmethod
+    def cvr_parse_git_log_output(git_log_command, election_config):
+        """Will execute the supplied git log command and process the
+        output of those commits that are CVRs
+        """
+        # Will process all the CVR commits on the master branch and tally
+        # all the contests found.
+        git_log_cvrs = {}
+        with Shellout.changed_cwd(os.path.join(
+            election_config.get('git_rootdir'), Globals.get('ROOT_ELECTION_DATA_SUBDIR'))):
+            with subprocess.Popen(
+                git_log_command,
+                stdout=subprocess.PIPE,
+                text=True,
+                encoding="utf8") as git_output:
+                # read lines until there is a complete json object, then
+                # add the object for that contest.
+                block = ''
+                digest = ''
+                recording = False
+                # question - how to get "for line in
+                # git_output.stdout.readline():" not to effectively return
+                # the characters in line as opposed to the entire line
+                # itself?
+                while True:
+                    line = git_output.stdout.readline()
+                    if not line:
+                        break
+                    if match := re.match('^([a-f0-9]{40}){', line):
+                        digest = match.group(1)
+                        recording = True
+                        block = '{'
+                        continue
+                    if recording:
+                        block += line.strip()
+                        if re.match('^}', line):
+                            # this loads the contest under the CVR key
+                            cvr = json.loads(block)
+                            cvr['digest'] = digest
+                            if cvr['CVR']['uid'] in git_log_cvrs:
+                                git_log_cvrs[cvr['CVR']['uid']].append(cvr)
+                            else:
+                                git_log_cvrs[cvr['CVR']['uid']] = [cvr]
+                            block = ''
+                            digest = ''
+                            recording = False
+        return git_log_cvrs
 
 # EOF
