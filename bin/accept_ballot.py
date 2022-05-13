@@ -31,6 +31,9 @@ import os
 import sys
 import argparse
 import logging
+import json
+import re
+import subprocess
 from logging import debug
 import random
 import secrets
@@ -105,18 +108,72 @@ def checkout_new_contest_branch(contest, ref_branch):
     # tries have also deleted(?)
     raise Exception(f"could not create git branch {branch} on the third attempt")
 
-def get_n_other_contests(contest, branch):
-    """Return a list of N already cast CVRs for the specified contest.
-
-    Requires the CWD to be the parent of the CVRs directory.
+def cvr_parse_git_log_output(git_log_command, election_config):
+    """Will execute the supplied git log command and process the
+    output of those commits that are CVRs
     """
-    this_uid = contest.get('uid')
-#    import pdb; pdb.set_trace()
-    blob = Shellout.run(
-        ['git', 'log', branch, '--oneline', '--all-match', '--grep="CVR"',
-             f'--grep="uid": "{this_uid}"'],
-        check=True, capture_output=True, text=True).stdout.strip()
-    return blob
+    # Will process all the CVR commits on the master branch and tally
+    # all the contests found.
+    git_log_cvrs = {}
+    with Shellout.changed_cwd(os.path.join(
+        election_config.get('git_rootdir'), Globals.get('ROOT_ELECTION_DATA_SUBDIR'))):
+        with subprocess.Popen(
+            git_log_command,
+            stdout=subprocess.PIPE,
+            text=True,
+            encoding="utf8") as git_output:
+            # read lines until there is a complete json object, then
+            # add the object for that contest.
+            block = ''
+            digest = ''
+            recording = False
+            # question - how to get "for line in
+            # git_output.stdout.readline():" not to effectively return
+            # the characters in line as opposed to the entire line
+            # itself?
+            while True:
+                line = git_output.stdout.readline()
+                if not line:
+                    break
+                if match := re.match('^([a-f0-9]{40}){', line):
+                    digest = match.group(1)
+                    recording = True
+                    block = '{'
+                    continue
+                if recording:
+                    block += line.strip()
+                    if re.match('^}', line):
+                        # this loads the contest under the CVR key
+                        cvr = json.loads(block)
+                        cvr['digest'] = digest
+                        if cvr['CVR']['uid'] in git_log_cvrs:
+                            git_log_cvrs[cvr['CVR']['uid']].append(cvr)
+                        else:
+                            git_log_cvrs[cvr['CVR']['uid']] = [cvr]
+                        block = ''
+                        digest = ''
+                        recording = False
+    return git_log_cvrs
+
+def get_unmerged_contests(config):
+    """Queries git for the unmerged CVRs.
+    """
+    # Mmm, at the moment the thought is that we need all the unmerged
+    # contests and ignore anything already merged.  So first get the
+    # list of HEAD commits for all the unmerged branches.  Note that
+    # since this is per contest, there should only be about 100 or so
+    # of them.
+    head_commits = Shellout.run(
+        ['git', 'rev-list', '--no-walk', '--exclude=refs/heads/master', '--exclude=HEAD',
+             '--exclude=refs/remotes/origin/master', '--exclude=refs/remotes/origin/HEAD', '--all'],
+        check=True, capture_output=True, text=True).stdout.strip().splitlines()
+    # With that list of HEAD exclusion commits, list the rest of the
+    # --yes-walk commits and scrape that for the commits of interest.
+    return cvr_parse_git_log_output(
+#        ['git', 'log', '--all', '--no-merges', '--pretty=format:%H%B', '--not'] + head_commits,
+#        config)
+        ['git', 'log', '--no-walk', '--pretty=format:%H%B'] + head_commits,
+        config)
 
 def get_cloaked_contests(contest, branch):
     """Return a list of N cloaked cast CVRs for the specified contest.
@@ -234,7 +291,7 @@ def main():
     # a cloaked receipt
     cloak_receipts = {}
     # 100 additional contest receipts
-    other_receipts = {}
+    unmerged_cvrs = {}
 
     # Set the three EV's
     os.environ['GIT_AUTHOR_DATE'] = '2022-01-01T12:00:00'
@@ -246,11 +303,22 @@ def main():
     contests = Contests(a_ballot)
     with Shellout.changed_cwd(a_ballot.get_cvr_parent_dir(the_election_config)):
         # So, the CWD in this block is the state/town subfolder
+
+        # It turns out that determining the other not yet merged to
+        # master contests is apparently a challangin git query and one
+        # that creates a lot of temporary memory requirements.  One
+        # current way to slice that pie is to just get all such
+        # commits up front similar to the tally_contests.py code.
+        # Then extract from that chunk of memory the contest with the
+        # matching uid's of interest.  In the end this may be the
+        # least expensive as the big reader is thus a stdout PIPE
+        # loop.
+        unmerged_cvrs = get_unmerged_contests(the_election_config)
+
         for contest in contests:
             with Shellout.changed_branch('master'):
                 # get N other values for each contest for this ballot
                 uid = contest.get('uid')
-                other_receipts[uid] = get_n_other_contests(contest, 'master')
                 # atomically create the branch locally and remotely
                 branches.append(checkout_new_contest_branch(contest, 'master'))
                 # Add the cast_branch to the contest json payload
@@ -292,13 +360,29 @@ def main():
     debug(f"Ballot's digests:\n{ballot_receipts}")
     # print the voter's offset
     print("Ballot receipts (contest: key):")
-    for key, value in ballot_receipts.items():
-        print(f"{key}: {value}")
+    for uid, digest in ballot_receipts.items():
+        print(f"{uid}: {digest}")
     # print the other receitps
-    print("Other ballot contests:")
-    for contest, blob in other_receipts.items():
-#        print(f"{contest}: {blob}")
-        break
+    print("Printing up to 100 unmerged contests ...")
+#    import pdb; pdb.set_trace()
+    for uid, digest in ballot_receipts.items():
+        row = 0
+        rows = 0
+        print(f"{uid}:", end='')
+        if uid not in unmerged_cvrs:
+            print(" <no CVRs found>")
+            continue
+        for cvr in unmerged_cvrs[uid]:
+            if digest != cvr['digest']:
+                print(f" {cvr['digest'][0:7]}", end='')
+                row += 1
+            if row == 10:
+                if rows == 10:
+                    break
+                print('\n' + f"{uid}:", end='')
+                row = 0
+                rows += 1
+        print()
 
 if __name__ == '__main__':
     args = parse_arguments()
