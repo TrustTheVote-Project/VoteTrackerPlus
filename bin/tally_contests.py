@@ -28,11 +28,7 @@ file was created.
 """
 
 # Standard imports
-import os
 import sys
-import re
-import subprocess
-import json
 # pylint: disable=wrong-import-position   # import statements not top of file
 import argparse
 import logging
@@ -40,7 +36,7 @@ from logging import info, error
 
 # Local import
 from election_config import ElectionConfig
-from common import Globals, Shellout
+from common import Shellout
 from contest import Tally
 from exceptions import TallyException
 # Functions
@@ -99,45 +95,10 @@ def main():
 
     # Will process all the CVR commits on the master branch and tally
     # all the contests found.
-    contest_batches = {}
-    with Shellout.changed_cwd(os.path.join(
-        the_election_config.get('git_rootdir'), Globals.get('ROOT_ELECTION_DATA_SUBDIR'))):
-        with subprocess.Popen(
-            ['git', 'log', '--topo-order', '--no-merges', '--pretty=format:%H%B'],
-            stdout=subprocess.PIPE,
-            text=True,
-            encoding="utf8") as git_output:
-            # read lines until there is a complete json object, then
-            # add the object for that contest.
-            block = ''
-            digest = ''
-            recording = False
-            # question - how to get "for line in
-            # git_output.stdout.readline():" not to effectively return
-            # the characters in line as opposed to the entire line
-            # itself?
-            while True:
-                line = git_output.stdout.readline()
-                if not line:
-                    break
-                if match := re.match('^([a-f0-9]{40}){', line):
-                    digest = match.group(1)
-                    recording = True
-                    block = '{'
-                    continue
-                if recording:
-                    block += line.strip()
-                    if re.match('^}', line):
-                        # this loads the contest under the CVR key
-                        cvr = json.loads(block)
-                        cvr['digest'] = digest
-                        if cvr['CVR']['uid'] in contest_batches:
-                            contest_batches[cvr['CVR']['uid']].append(cvr)
-                        else:
-                            contest_batches[cvr['CVR']['uid']] = [cvr]
-                        block = ''
-                        digest = ''
-                        recording = False
+    contest_batches = Shellout.cvr_parse_git_log_output(
+        ['git', 'log', '--topo-order', '--no-merges', '--pretty=format:%H%B'],
+        the_election_config)
+
     # Note - though plurality voting can be counted within the above
     # loop, tallies such as rcv cannot.  So far now, just count
     # everything in a separate loop.
