@@ -358,31 +358,31 @@ def main():
         # there from all the possible scanner instances.
 
     debug(f"Ballot's digests:\n{ballot_receipts}")
-    # print the voter's offset
-    print("Ballot receipts (contest: key):")
-    for uid, digest in ballot_receipts.items():
-        print(f"{uid}: {digest}")
     # print the other receitps
-    print("Printing up to 100 unmerged contests ...")
+    print("################\nPrinting up to 100 unmerged other contests:")
 #    import pdb; pdb.set_trace()
     for uid, digest in ballot_receipts.items():
+        col = 0
         row = 0
-        rows = 0
         print(f"{uid}:", end='')
         if uid not in unmerged_cvrs:
             print(" <no CVRs found>")
             continue
         for cvr in unmerged_cvrs[uid]:
             if digest != cvr['digest']:
-                print(f" {cvr['digest'][0:7]}", end='')
-                row += 1
-            if row == 10:
-                if rows == 10:
+                print(f" {cvr['digest'][0:8]}", end='')
+                col += 1
+            if col == 10:
+                if row == 9:
                     break
                 print('\n' + f"{uid}:", end='')
-                row = 0
-                rows += 1
+                col = 0
+                row += 1
         print()
+    # print the voter's receipts
+    print("################\nBallot receipts (contest: key):")
+    for uid, digest in ballot_receipts.items():
+        print(f"{uid}: {digest}")
 
 if __name__ == '__main__':
     args = parse_arguments()
