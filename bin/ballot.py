@@ -194,8 +194,11 @@ class Ballot:
             raise ValueError((f"The selection ({selection_offset}) has already been "
                                   f"selected for contest ({contest_name}) "
                                   f"for GGO ({contest_ggo})"))
-        # pylint: disable=line-too-long
-        self.contests[contest_ggo][contest_index][contest_name]['selection'].append(selection_offset)
+        # For end voter UX, add the selection as the offset + ': ' +
+        # name just because a string is more understandable than json
+        # list syntax
+        self.contests[contest_ggo][contest_index][contest_name]['selection'].append(
+            str(selection_offset) + ':  ' + contest.get['choices'][selection_offset])
 
     def verify_cast_ballot(self):
         """Will validate the ballot contest choices are legitimate.

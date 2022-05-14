@@ -149,6 +149,51 @@ def get_user_selection(the_ballot, the_contest, count, total_contests):
                                     prompt=prompt,
                                     blank=True)
 
+def loop_over_contests(a_ballot):
+    """Will loop over the contests in a ballot and either ask the user
+    for a choice or if in demo mode will randomly choose one.
+    """
+    contests = Contests(a_ballot)
+    total_contests = contests.len()
+    count = 0
+    contest_uids = []
+    for contest in contests:
+        contest_uids.append(contest.get('uid'))
+        if args.demo_mode:
+            make_random_selection(a_ballot, contest)
+        else:
+            # Display the tally type and choices and allow the user to manually
+            # enter something.  Might as well validate legal selections (in
+            # this demo) as that is the long-term VTP vision.
+            count += 1
+            get_user_selection(a_ballot, contest, count, total_contests)
+    if not args.demo_mode:
+        # UX wise replicate the self adjudication experince.  This is
+        # basically another endless loop until done
+        while True:
+            # Print the selections
+            for contest in contests:
+                print(
+                    f"Contest {contest.get('uid')} ({contest.get('name')})   "
+                    f"{contest.get('selection')}")
+            prompt = "Is this correct?  yes (accepts ballot), no (rejects ballot)"
+            if 'yes' == pyinputplus.inputYesNo(prompt):
+                break
+            prompt = ("Enter a contest uid to redo that contest, "
+                          "enter nothing to start completely over")
+            response = pyinputplus.inputChoice(contest_uids + [''], prompt)
+            if response == '':
+                count = 0
+                for contest in contests:
+                    count += 1
+                    get_user_selection(a_ballot, contest, count, total_contests)
+            else:
+                for contest in contests:
+                    if contest['uid'] == response:
+                        get_user_selection(a_ballot, contest, 1, 1)
+                        break
+    # For a convenient side effect, return the contests
+    return contests
 
 ################
 # arg parsing
@@ -211,19 +256,7 @@ def main():
         # get the ballot for the specified address
         a_ballot.read_a_blank_ballot(the_address, the_election_config)
 
-    # loop over contests
-    contests = Contests(a_ballot)
-    total_contests = contests.len()
-    count = 0
-    for contest in contests:
-        if args.demo_mode:
-            make_random_selection(a_ballot, contest)
-        else:
-            # Display the tally type and choices and allow the user to manually
-            # enter something.  Might as well validate legal selections (in
-            # this demo) as that is the long-term VTP vision.
-            count += 1
-            get_user_selection(a_ballot, contest, count, total_contests)
+    contests = loop_over_contests(a_ballot)
     debug("And the ballot looks like:\n" + pprint.pformat(a_ballot.dict()))
 
     # ZZZ - for this program there is no call to verify_cast_ballot to
