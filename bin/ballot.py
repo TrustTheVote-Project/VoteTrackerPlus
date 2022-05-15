@@ -45,6 +45,10 @@ class Contests:
 
     def __iter__(self):
         """boilerplate"""
+        # start - be kind and reset things
+        self.ggo_index = 0
+        self.contest_index = 0
+        self.contest_max = len(self.ballot_ref.get('contests')[self.ggos[0]])
         return self
 
     def __next__(self):
@@ -170,6 +174,10 @@ class Ballot:
                       'ballot_subdir': self.ballot_subdir}
         return json.dumps(ballot, sort_keys=True, indent=4, ensure_ascii=False)
 
+    def clear_selection(self, contest):
+        """Clear the selection (as when self adjudicating)"""
+        self.contests[contest.get('ggo')][contest.get('index')][contest.get('name')]['selection'] = []
+
     def add_selection(self, contest, selection_offset):
         """
         Will add the specified contest choice (offset into the ordered
@@ -198,7 +206,7 @@ class Ballot:
         # name just because a string is more understandable than json
         # list syntax
         self.contests[contest_ggo][contest_index][contest_name]['selection'].append(
-            str(selection_offset) + ':  ' + contest.get['choices'][selection_offset])
+            str(selection_offset) + ': ' + contest.get('choices')[selection_offset])
 
     def verify_cast_ballot(self):
         """Will validate the ballot contest choices are legitimate.
