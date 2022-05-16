@@ -106,7 +106,9 @@ def checkout_new_contest_branch(contest, ref_branch):
     raise Exception(f"could not create git branch {branch} on the third attempt")
 
 def get_unmerged_contests(config):
-    """Queries git for the unmerged CVRs.
+    """Queries git for the unmerged CVRs and returns the list.  See
+    Shellout.cvr_parse_git_log_output for more info.  The returned
+    list is still in git log order.
     """
     # Mmm, at the moment the thought is that we need all the unmerged
     # contests and ignore anything already merged.  So first get the
@@ -142,7 +144,6 @@ def get_cloaked_contests(contest, branch):
 
 def contest_add_and_commit(branch):
     """Will git add and commit the new contest content.
-
     Requires the CWD to be the parent of the CVRs directory.
     """
     # If this fails a shell error will be raised
@@ -160,6 +161,61 @@ def contest_add_and_commit(branch):
                      check=True, capture_output=True, text=True).stdout.strip()
     return digest
 
+def create_ballot_receipt(the_ballot, contest_receipts, unmerged_cvrs, the_election_config):
+    """
+    Create the voter's receipt.  As of this writing this is basically
+    a csv file with a header line with one row in particular being the
+    voter's.
+    """
+    ballot_receipt = []
+#    import pdb; pdb.set_trace()
+    # Not 0 based
+    voters_row = random.randint(1,Globals.get('BALLOT_RECEIPT_ROWS'))
+    # When there are not enough unmerged_receipts to print a receipt
+    redacted_uids = set()
+    # Add column headers - but include the long names as well
+    next_row = []
+    for uid in contest_receipts:
+        next_row.append(
+            '"' + uid + ' - ' + the_ballot.get_contest_name_by_uid(uid).replace('"',"'") + '"')
+    ballot_receipt.append(','.join(next_row))
+    # Loop BALLOT_RECEIPT_ROWS times (the rows) filling in the ballots
+    # uids as the columns.
+    for row in range(Globals.get('BALLOT_RECEIPT_ROWS') - 1):
+        if row == voters_row - 1:
+            # Include the voter's receipts instead
+            ballot_receipt.append(','.join(contest_receipts.values()))
+            # But can just keep going as well
+        next_row = []
+        # Note - these are the voter's uids and digests
+        for uid, digest in contest_receipts.items():
+            if uid not in unmerged_cvrs:
+                # Actually, there are _no_ other such cast uid's in
+                # this case
+                redacted_uids.add(uid)
+                next_row.append("INSUFFICIENT_CVRS")
+            elif row > len(unmerged_cvrs[uid]):
+                redacted_uids.add(uid)
+                next_row.append("INSUFFICIENT_CVRS")
+            elif digest == unmerged_cvrs[uid][row]['digest']:
+                # This is the voter's own digest!
+                if row + 1 > len(unmerged_cvrs[uid]):
+                    redacted_uids.add(uid)
+                    next_row.append("INSUFFICIENT_CVRS")
+                else:
+                    next_row.append(unmerged_cvrs[uid][row + 1]['digest'])
+            else:
+                next_row.append(unmerged_cvrs[uid][row]['digest'])
+        ballot_receipt.append(','.join(next_row))
+    # Now need to redact any uid column that contains one or more
+    # INSUFFICIENT_CVRS
+
+    # Now write out the ballot_receipt in csv for now - can deal with
+    # html (URL links) and a pdf (printable) later - both still a TBD.
+    receipt_file = the_ballot.write_receipt_csv(ballot_receipt, the_election_config)
+    # print the voter's row to STDOUT for now
+    print(f"############\n### Receipt file: {receipt_file}")
+    print(f"### Voter's row: {voters_row}\n############")
 
 ################
 # arg parsing
@@ -235,7 +291,7 @@ def main():
         a_ballot.read_a_cast_ballot(the_address, the_election_config)
 
     # the voter's row of digests (indexed by contest uid)
-    ballot_receipts = {}
+    contest_receipts = {}
     # a cloaked receipt
     cloak_receipts = {}
     # 100 additional contest receipts
@@ -289,14 +345,13 @@ def main():
                 # Write out the voter's contest to CVRs/contest.json
                 a_ballot.write_contest(contest, the_election_config)
                 # commit the voter's contest
-                ballot_receipts[uid] = contest_add_and_commit(branches[-1])
+                contest_receipts[uid] = contest_add_and_commit(branches[-1])
                 # if cloaking, get those as well
                 if 'cloak' in contest.get('contest'):
                     cloak_receipts[uid] = get_cloaked_contests(contest, 'master')
         # After all the contests digests have been generated as well
         # as the others and cloaks as much as possible, then push as
         # atomically as possible all the contests.
-#        import pdb; pdb.set_trace()
         for branch in branches:
             Shellout.run(
                 ['git', 'push', 'origin', branch],
@@ -305,32 +360,14 @@ def main():
         # pushed copies will be pruned since there can be too many
         # there from all the possible scanner instances.
 
-    debug(f"Ballot's digests:\n{ballot_receipts}")
-    # print the other receitps
-    print("################\nPrinting up to 100 unmerged other contests:")
+    debug(f"Ballot's digests:\n{contest_receipts}")
+    # Shuffled the unmerged_cvrs (an inplace shuffle) - only need to
+    # shuffle the uids for this ballot.
 #    import pdb; pdb.set_trace()
-    for uid, digest in ballot_receipts.items():
-        col = 0
-        row = 0
-        print(f"{uid}:", end='')
-        if uid not in unmerged_cvrs:
-            print(" <no CVRs found>")
-            continue
-        for cvr in unmerged_cvrs[uid]:
-            if digest != cvr['digest']:
-                print(f" {cvr['digest'][0:8]}", end='')
-                col += 1
-            if col == 10:
-                if row == 9:
-                    break
-                print('\n' + f"{uid}:", end='')
-                col = 0
-                row += 1
-        print()
-    # print the voter's receipts
-    print("################\nBallot receipts (contest: key):")
-    for uid, digest in ballot_receipts.items():
-        print(f"{uid}: {digest}")
+    for uid in contest_receipts:
+        random.shuffle(unmerged_cvrs[uid])
+    # Create the ballot receipt
+    create_ballot_receipt(a_ballot, contest_receipts, unmerged_cvrs, the_election_config)
 
 if __name__ == '__main__':
     args = parse_arguments()

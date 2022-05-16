@@ -18,6 +18,7 @@
 """How to manage a VTP specific contest"""
 
 import json
+import re
 import operator
 from logging import debug
 from fractions import Fraction
@@ -194,6 +195,7 @@ class Contest:
             return
         raise ValueError(f"Illegal value for Contest attribute ({name})")
 
+# pylint: disable=too-many-instance-attributes # (8/7 - not worth it at this time)
 class Tally:
     """
     A class to tally ballot contests a.k.a. CVRs.  The three primary
@@ -296,6 +298,9 @@ class Tally:
                 # be interested in verifying the explicit
                 # values
                 selection = contest['selection'][count]
+                # depending on version, selection could be an int or a string
+                if isinstance(selection, str):
+                    selection = int(re.search('(^[0-9]+)', selection).group(1))
                 choice = Contest.get_choices_from_contest(contest['choices'])[selection]
                 self.selection_counts[choice] += 1
                 self.vote_count += 1
@@ -310,6 +315,9 @@ class Tally:
         if len(contest['selection']):
             # the voter can still leave a RCV contest blank
             selection = contest['selection'][0]
+            # depending on version, selection could be an int or a string
+            if isinstance(selection, str):
+                selection = int(re.search('(^[0-9]+)', selection).group(1))
             choice = Contest.get_choices_from_contest(contest['choices'])[selection]
             self.selection_counts[choice] += 1
             self.vote_count += 1
