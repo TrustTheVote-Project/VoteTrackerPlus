@@ -37,6 +37,8 @@ class Globals:
         # The default location from the CWD of this program, which is different than
         # The location of the incoming ballot.json file etc
         'BALLOT_FILE': 'ballot.json',
+        'CONTEST_FILE': 'contest.json',
+        'RECEIPT_FILE': 'receipt.csv',
         # The blank ballot folder location
         'BLANK_BALLOT_SUBDIR': 'blank-ballots',
         # The location/name of the config and address map files for this GGO
@@ -44,7 +46,6 @@ class Globals:
         'ADDRESS_MAP_FILE': 'address_map.yaml',
         # The location of the contest cvr file
         'CONTEST_FILE_SUBDIR': 'CVRs',
-        'CONTEST_FILE': 'contest.json',
         # The required address fields for an address. To get around
         # the difficulty of creating a completely generic
         # address-to-ballot function at this time, these fields are
@@ -153,7 +154,13 @@ class Shellout:
     @staticmethod
     def cvr_parse_git_log_output(git_log_command, election_config):
         """Will execute the supplied git log command and process the
-        output of those commits that are CVRs
+        output of those commits that are CVRs.  Will return a
+        dictionary keyed on the contest UID that is a list of CVRs.
+        The CVR is just the CVR from the git log with a 'digest' key
+        added.
+
+        Note the the order of the list is git log order and not
+        randomized FWIIW.
         """
         # Will process all the CVR commits on the master branch and tally
         # all the contests found.

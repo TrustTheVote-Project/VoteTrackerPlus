@@ -128,6 +128,15 @@ class Ballot:
                     Globals.get('CONTEST_FILE'))
 
     @staticmethod
+    def gen_receipt_location(config, subdir):
+        """Return the receipt.csv file location"""
+        return os.path.join(config.get('git_rootdir'),
+                    Globals.get('ROOT_ELECTION_DATA_SUBDIR'),
+                    subdir,
+                    Globals.get('CONTEST_FILE_SUBDIR'),
+                    Globals.get('RECEIPT_FILE'))
+
+    @staticmethod
     def get_cast_from_blank(blank_ballot):
         """Given a blank ballot relative or absolute path, will map that
         to the state/town cast ballot location, which is basically up
@@ -176,11 +185,11 @@ class Ballot:
 
     def clear_selection(self, contest):
         """Clear the selection (as when self adjudicating)"""
-        self.contests[contest.get('ggo')][contest.get('index')][contest.get('name')]['selection'] = []
+        self.contests[contest.get('ggo')][contest.get('index')][contest.get('name')]['selection'] \
+          = []
 
     def add_selection(self, contest, selection_offset):
-        """
-        Will add the specified contest choice (offset into the ordered
+        """Will add the specified contest choice (offset into the ordered
         choices array) to the specified contest.  This is an
         'add' since in plurality one may be voting for more than one
         choice, or in RCV one needs to rank the choices.  In both the
@@ -289,12 +298,13 @@ class Ballot:
 
     def gen_blank_ballot_location(self, config, style='json'):
         """Return the file location of a blank ballot"""
-        return os.path.join(config.get('git_rootdir'),
-                    Globals.get('ROOT_ELECTION_DATA_SUBDIR'),
-                    self.ballot_subdir,
-                    Globals.get('BLANK_BALLOT_SUBDIR'),
-                    style,
-                    self.gen_unique_blank_ballot_name(config, Globals.get('BALLOT_FILE')))
+        return os.path.join(
+            config.get('git_rootdir'),
+            Globals.get('ROOT_ELECTION_DATA_SUBDIR'),
+            self.ballot_subdir,
+            Globals.get('BLANK_BALLOT_SUBDIR'),
+            style,
+            self.gen_unique_blank_ballot_name(config, Globals.get('BALLOT_FILE')))
 
     def write_blank_ballot(self, config, ballot_file='', style='json'):
         """
@@ -385,5 +395,14 @@ class Ballot:
         with open(contest_file, 'w', encoding="utf8") as outfile:
             json.dump(the_aggregate, outfile, sort_keys=True, indent=4, ensure_ascii=False)
         return contest_file
+
+    def write_receipt_csv(self, lines, config):
+        """Write out the voter's ballot receipt"""
+        receipt_file = Ballot.gen_receipt_location(config, self.ballot_subdir)
+        # The parent directory better exist or something is wrong
+        with open(receipt_file, 'w', encoding="utf8") as outfile:
+            for line in lines:
+                outfile.write(f"{line}\n")
+        return receipt_file
 
 # EOF
