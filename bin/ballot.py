@@ -168,6 +168,16 @@ class Ballot:
             return self.ballot_node
         raise NameError(f"Name {name} not accepted/defined for Ballot.get()")
 
+    def get_contest_name_by_uid(self, uid):
+        """Given a blank ballot or better, will return the contest name
+        given a uid.  Will raise an error if the ballot does not contain
+        that uid.
+        """
+        for contest in Contests(self):
+            if uid == contest.get('uid'):
+                return contest.get('name')
+        raise KeyError(f"There is no matching contest uid ({uid}) in the supplied balloot")
+
     def dict(self):
         """Return a dictionary of the ballot by making a copy"""
         return dict({'contests': self.contests,

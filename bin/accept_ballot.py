@@ -163,7 +163,9 @@ def contest_add_and_commit(branch):
 
 def create_ballot_receipt(the_ballot, contest_receipts, unmerged_cvrs, the_election_config):
     """
-    Create the voter's receipt.
+    Create the voter's receipt.  As of this writing this is basically
+    a csv file with a header line with one row in particular being the
+    voter's.
     """
     ballot_receipt = []
 #    import pdb; pdb.set_trace()
@@ -171,8 +173,14 @@ def create_ballot_receipt(the_ballot, contest_receipts, unmerged_cvrs, the_elect
     voters_row = random.randint(1,Globals.get('BALLOT_RECEIPT_ROWS'))
     # When there are not enough unmerged_receipts to print a receipt
     redacted_uids = set()
-    # Add column headers
-    ballot_receipt.append(','.join(unmerged_cvrs.keys()))
+    # Add column headers - but include the long names as well
+    next_row = []
+    for uid in contest_receipts:
+        next_row.append(
+            '"' + uid + ' - ' + the_ballot.get_contest_name_by_uid(uid).replace('"',"'") + '"')
+    ballot_receipt.append(','.join(next_row))
+    # Loop BALLOT_RECEIPT_ROWS times (the rows) filling in the ballots
+    # uids as the columns.
     for row in range(Globals.get('BALLOT_RECEIPT_ROWS') - 1):
         if row == voters_row - 1:
             # Include the voter's receipts instead
