@@ -156,16 +156,17 @@ def main():
             ['git', 'log', '--topo-order', '--no-merges', '--pretty=format:%H%B'],
             the_election_config)
         for contest_batch in sorted(contest_batches):
-            # Maybe skip
+            # Only print active ballot contests
             if contest_batches[contest_batch][0]['CVR']['uid'] not in uids:
                 continue
             # For this contest loop over the reverse ordered CVRs
             # (since it seems TBD that it makes sense to ballot #1 as
             # the first ballot on master).
             count = 0
+            digest = requested_row.pop()
             for cvr in reversed(contest_batch):
                 count += 1
-                if cvr['digest'] in lines[args.row - 1]:
+                if cvr['digest'] == digest:
                     print(
                         f"Contest '{cvr['cvr']['uid']} - {cvr['cvr']['name']}' "
                         f"({cvr['digest']}) is ballot #{count}")
