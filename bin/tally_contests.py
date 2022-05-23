@@ -18,13 +18,12 @@
 #   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 """
-tally_contests.py - command line level script to merge CVR contest
-branches into the master branch
+tally_contests.py - command line level script to tally the contests of
+a election.
 
 See './tally_contests.py -h' for usage information.
 
-See ../docs/tech/tally_contests.md for the context in which this
-file was created.
+See ../docs/tech/*.md for the context in which this file was created.
 """
 
 # Standard imports
@@ -66,8 +65,8 @@ def parse_arguments():
     """,
         formatter_class=argparse.RawDescriptionHelpFormatter)
 
-    parser.add_argument("-c", "--contest",
-                            help="limit the tally to a specific contest")
+    parser.add_argument("-c", "--contest_uid", default="",
+                            help="limit the tally to a specific contest uid")
     parser.add_argument("-v", "--verbosity", type=int, default=3,
                             help="0 critical, 1 error, 2 warning, 3 info, 4 debug (def=3)")
 #    parser.add_argument("-n", "--printonly", action="store_true",
@@ -94,7 +93,11 @@ def main():
     the_election_config.parse_configs()
 
     # Will process all the CVR commits on the master branch and tally
-    # all the contests found.
+    # all the contests found.  Note - even if a contest is specified,
+    # as a first pass it is easier to just perform a git log across
+    # all the contests and then filter later for the contest of
+    # interest than to try to create a git grep query against the CVR
+    # payload.
     contest_batches = Shellout.cvr_parse_git_log_output(
         ['git', 'log', '--topo-order', '--no-merges', '--pretty=format:%H%B'],
         the_election_config)
@@ -103,6 +106,10 @@ def main():
     # loop, tallies such as rcv cannot.  So far now, just count
     # everything in a separate loop.
     for contest_batch in sorted(contest_batches):
+        # Maybe skip
+        if args.contest_uid != '':
+            if contest_batches[contest_batch][0]['CVR']['uid'] != args.contest_uid:
+                continue
         # Create a Tally object for this specific contest
         the_tally = Tally(contest_batches[contest_batch][0])
         info(

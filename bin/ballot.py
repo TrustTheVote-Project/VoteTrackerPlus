@@ -19,6 +19,7 @@
 
 import os
 import json
+import csv
 from logging import debug
 # Local imports
 from common import Globals
@@ -406,13 +407,24 @@ class Ballot:
             json.dump(the_aggregate, outfile, sort_keys=True, indent=4, ensure_ascii=False)
         return contest_file
 
-    def write_receipt_csv(self, lines, config):
+    def write_receipt_csv(self, lines, config, receipt_file=''):
         """Write out the voter's ballot receipt"""
-        receipt_file = Ballot.gen_receipt_location(config, self.ballot_subdir)
+        if not receipt_file:
+            receipt_file = Ballot.gen_receipt_location(config, self.ballot_subdir)
         # The parent directory better exist or something is wrong
         with open(receipt_file, 'w', encoding="utf8") as outfile:
             for line in lines:
                 outfile.write(f"{line}\n")
         return receipt_file
+
+    def read_receipt_csv(self, config, receipt_file='', address=''):
+        """Read the voter's ballot receipt"""
+        if not receipt_file:
+            receipt_file = Ballot.gen_receipt_location(config, address.get('ballot_subdir'))
+        # The parent directory better exist or something is wrong
+        lines = []
+        with open(receipt_file, 'r', encoding="utf8") as infile:
+            lines = list(csv.reader(infile))
+        return lines
 
 # EOF
