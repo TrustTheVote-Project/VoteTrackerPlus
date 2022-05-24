@@ -170,8 +170,9 @@ def main():
 #                import pdb; pdb.set_trace()
                 if contest['digest'] in requested_row:
                     print(
-                        f"Contest '{contest['cvr']['uid']} - {contest['cvr']['name']}' "
-                        f"({contest['digest']}) is ballot #{contest_votes - count}")
+                        f"Contest '{contest['CVR']['uid']} - {contest['CVR']['name']}' "
+                        f"({contest['digest']}) is vote {contest_votes - count} out "
+                        f"of {contest_votes} votes")
                     found = True
                     break
             if found is False:

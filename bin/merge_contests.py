@@ -42,6 +42,41 @@ from common import Globals, Shellout
 from election_config import ElectionConfig
 
 # Functions
+def merge_contest_branch(branch):
+    """Merge a specific branch"""
+    # If the VTP server is processing contests from different
+    # voting centers, then the contest.json could be in different
+    # locations on different branches.
+    contest_file = Shellout.run(
+        ['git', 'diff-tree', '--no-commit-id', '-r', '--name-only', branch],
+        capture_output=True, text=True).stdout.strip()
+    Shellout.run(
+        ['git', 'merge', '--no-ff', '--no-commit', branch],
+        args.printonly)
+    # ZZZ - replace this with an run-time cryptographic value
+    # derived from the run-time election private key (diffent from
+    # the git commit run-time value).  This will basically slam
+    # the contents of the contest file to a second runtime digest
+    # (the first one being contained in the commit itself).
+    result = Shellout.run(
+        ['openssl',  'rand', '-base64',  '48'], capture_output=True, text=True)
+    if result.stdout == '':
+        raise ValueError("'openssl rand' should never return an empty string")
+    if not args.printonly:
+        # ZZZ need to convert the digest to json format ...
+        with open(contest_file, 'w', encoding="utf8") as outfile:
+            # Write a runtime digest as the actual contents of the
+            # merge
+            outfile.write(str(result.stdout))
+    # Force the git add just in case
+    Shellout.run(['git', 'add', contest_file], args.printonly)
+    # Use the default merge message as is
+    Shellout.run(['git', 'commit'], args.printonly)
+    Shellout.run(['git', 'push', 'origin', 'master'], args.printonly)
+    # Delete both the local and remote branch
+    Shellout.run(['git', 'branch', '-d', branch], args.printonly)
+    Shellout.run(['git', 'push', 'origin', ':' + branch], args.printonly)
+
 def randomly_merge_contests(uid, batch):
     """
     Will randomingly select (len(batch) - BALLOT_RECEIPT_ROWS) contest
@@ -63,38 +98,7 @@ def randomly_merge_contests(uid, batch):
     while loop:
         pick = random.randrange(len(batch))
         branch = batch[pick]
-        # If the VTP server is processing contests from different
-        # voting centers, then the contest.json could be in different
-        # locations on different branches.
-        contest_file = Shellout.run(
-            ['git', 'diff-tree', '--no-commit-id', '-r', '--name-only', branch],
-            capture_output=True, text=True).stdout.strip()
-        Shellout.run(
-            ['git', 'merge', '--no-ff', '--no-commit', branch],
-            args.printonly)
-        # ZZZ - replace this with an run-time cryptographic value
-        # derived from the run-time election private key (diffent from
-        # the git commit run-time value).  This will basically slam
-        # the contents of the contest file to a second runtime digest
-        # (the first one being contained in the commit itself).
-        result = Shellout.run(
-            ['openssl',  'rand', '-base64',  '48'], capture_output=True, text=True)
-        if result.stdout == '':
-            raise ValueError("'openssl rand' should never return an empty string")
-        if not args.printonly:
-            # ZZZ need to convert the digest to json format ...
-            with open(contest_file, 'w', encoding="utf8") as outfile:
-                # Write a runtime digest as the actual contents of the
-                # merge
-                outfile.write(str(result.stdout))
-        # Force the git add just in case
-        Shellout.run(['git', 'add', contest_file], args.printonly)
-        # Use the default merge message as is
-        Shellout.run(['git', 'commit'], args.printonly)
-        Shellout.run(['git', 'push', 'origin', 'master'], args.printonly)
-        # Delete both the local and remote branch
-        Shellout.run(['git', 'branch', '-d', batch[pick]], args.printonly)
-        Shellout.run(['git', 'push', 'origin', ':' + batch[pick]], args.printonly)
+        merge_contest_branch(branch)
         # End of loop maintenance
         del batch[pick]
         loop -= 1
@@ -120,6 +124,9 @@ def parse_arguments():
     """,
         formatter_class=argparse.RawDescriptionHelpFormatter)
 
+    parser.add_argument(
+        "-b", "--branch", default='',
+        help="specify a specific branch to merge")
     parser.add_argument(
         "-m", "--minimum_cast_cache", type=int, default=100,
         help="the minimum number of cast ballots required prior to merging (def=100)")
@@ -171,6 +178,10 @@ def main():
         # So, the CWD in this block is the state/town subfolder
         # Pull the remote
         Shellout.run(["git", "pull"], args.printonly, check=True)
+        if args.branch:
+            merge_contest_branch(args.branch)
+            info(f"Merged '{args.branch}'")
+            return
         # Get the pending CVR branches
         cmds = ['git', 'branch']
         cvr_regex = f"{Globals.get('CONTEST_FILE_SUBDIR')}/([^/]+?)/"
