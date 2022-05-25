@@ -33,15 +33,112 @@ import argparse
 import logging
 import re
 import json
-from logging import error
+from logging import error, info
 
 # Local import
 from address import Address
 from ballot import Ballot
 from election_config import ElectionConfig
 from common import Shellout
-# Functions
 
+# Functions
+def verify_rows(lines, the_election_config):
+    """Will verify all the rows in a ballot receipt"""
+    # Loop over each row and grab the header line (the list of UIDs of
+    # interest) and the validate the row one at a time. Validation is
+    # multiple steps: 1) does the digest exist; 2) is it the correct
+    # uid?; 3) is the digest in the tally (legally in master). Some
+    # future meta tests could be: 4) does the receipt have a repeated
+    # digest?; 5) does it have a valid election uid beyond a valid
+    # digest and contest uid (TBD - not implemented yet)
+    headers = lines.pop(0)
+    uids = [ re.match(r'([0-9]+)', column).group(0) for column in headers ]
+    error_strings = []
+    error_digests = set()
+
+    def vet_a_row(uids, contest_batches):
+        for u_count, uid in enumerate(uids):
+            # For this contest loop over the reverse ordered CVRs (since it
+            # seems TBD that it makes sense to ballot #1 as the first ballot on
+            # master).
+            contest_votes = len(contest_batches[uid])
+            found = False
+            for c_count, contest in enumerate(contest_batches[uid]):
+                if contest['digest'] in requested_row:
+                    print(
+                        f"Contest '{contest['CVR']['uid']} - {contest['CVR']['name']}' "
+                        f"({contest['digest']}) is vote {contest_votes - c_count} out "
+                        f"of {contest_votes} votes")
+                    found = True
+                    break
+            if found is False:
+                unmerged_uids[uid] = u_count
+        if unmerged_uids:
+            print("The following contests are not merged to master yet:")
+            for uid,offset in unmerged_uids.items():
+                print(f"{headers[offset]} ({requested_digests[offset]})")
+
+    def vet_rows(lines):
+        for index, row in enumerate(lines):
+            # Note - result errors are ignored/not returned, so walk the list
+            cvrs = Shellout.cvr_parse_git_log_output(
+                ['git', 'log', '--no-walk', '--pretty=format:%H%B'] + row,
+                the_election_config, grouped_by_uid=False)
+            if args.row != '' and int(args.row) - 1 == index:
+                requested_row = cvrs
+                requested_digests = row
+            column = -1
+            for digest in row:
+                column += 1
+                if digest not in cvrs:
+                    error_strings.append(
+                        f"MISSING DIGEST: row {row} column {column} "
+                        "contest {headers[column]} digest={digest}")
+                    error_digests.add(digest)
+                    continue
+                if cvrs[digest]['CVR']['uid'] != uids[column]:
+                    error_strings.append(
+                        f"BAD CONTEST UID: row {row} column {column} "
+                        "contest {headers[column]} != {cvrs[digest]['CVR']['uid']} digest={digest}")
+                    error_digests.add(digest)
+                    continue
+        return(requested_row, requested_digests)
+
+    requested_row, requested_digests = vet_rows(lines)
+
+    # If a row is specified, will print the context index in the
+    # actual contest tally - which basically tells the voter 'your
+    # contest is in the tally at index N'
+    if args.row:
+        for digest in lines[int(args.row) - 1]:
+            if digest in error_digests:
+                error(f"Cannot print {digest} of supplied row {args.row} - it is invalid")
+                break
+            info(f"{json.dumps(requested_row[digest], indent=5, sort_keys=True)}")
+        # Print the offset in the actual tally, but to do that, need
+        # to get the actual complete tally for the contests of
+        # interest.  And at the moment might as well do that for all
+        # contests (unless one cat create the git grep query syntax to
+        # just pull the uids of interest).
+        contest_batches = Shellout.cvr_parse_git_log_output(
+            ['git', 'log', '--topo-order', '--no-merges', '--pretty=format:%H%B'],
+            the_election_config)
+        unmerged_uids = {}
+        vet_a_row(uids, contest_batches)
+
+    # Summerize
+    if error_strings:
+        print(
+            "############\n"
+            f"Ballot receipt INVALID - the supplied ballot receipt has {error_digests} "
+            "errors.  They are:\n"
+            '\n'.join(error_strings))
+        print("############")
+    else:
+        print(
+            "############\n"
+            "### Ballot receipt VALID - no digest errors found\n"
+            "############")
 
 ################
 # arg parsing
@@ -101,85 +198,7 @@ def main():
         the_address.map_ggos(the_election_config, skip_ggos=True)
         lines = a_ballot.read_receipt_csv(the_election_config, address=the_address)
 
-    # Loop over each row and grab the header line (the list of UIDs of
-    # interest) and the validate the row one at a time. Validation is
-    # multiple steps: 1) does the digest exist; 2) is it the correct
-    # uid?; 3) is the digest in the tally (legally in master). Some
-    # future meta tests could be: 4) does the receipt have a repeated
-    # digest?; 5) does it have a valid election uid beyond a valid
-    # digest and contest uid (TBD - not implemented yet)
-    headers = lines.pop(0)
-    uids = [ re.match(r'([0-9]+)', column).group(0) for column in headers ]
-    error_strings = []
-    error_digests = set()
-    requested_row = []
-    for index, row in enumerate(lines):
-        # Note - result errors are ignored/not returned, so walk the list
-        cvrs = Shellout.cvr_parse_git_log_output(
-            ['git', 'log', '--no-walk', '--pretty=format:%H%B'] + row,
-            the_election_config, grouped_by_uid=False)
-        if args.row != '' and int(args.row) - 1 == index:
-#            import pdb; pdb.set_trace()
-            requested_row = cvrs
-        column = -1
-        for digest in row:
-            column += 1
-            if digest not in cvrs:
-                error_strings.append(
-                    f"MISSING DIGEST: row {row} column {column} "
-                    "contest {headers[column]} digest={digest}")
-                error_digests.add(digest)
-                continue
-            if cvrs[digest]['CVR']['uid'] != uids[column]:
-                error_strings.append(
-                    f"BAD CONTEST UID: row {row} column {column} "
-                    "contest {headers[column]} != {cvrs[digest]['CVR']['uid']} digest={digest}")
-                error_digests.add(digest)
-                continue
-    # Summerize
-    if error_strings:
-        error(f"The supplied ballot receipt had {error_digests} errors.  They are:\n"
-                  '\n'.join(error_strings))
-    else:
-        print("No digest errors found")
-    # If a row is specified, will print the context index in the
-    # actual contest tally - which basically tells the voter 'your
-    # contest is in the tally at index N'
-    if args.row:
-        for digest in lines[int(args.row) - 1]:
-            if digest in error_digests:
-                print(f"Digest {digest} is invalid")
-                break
-            print(f"{json.dumps(requested_row[digest], indent=5, sort_keys=True)}")
-        # Print the offset in the actual tally, but to do that, need
-        # to get the actual complete tally for the contests of
-        # interest.  And at the moment might as well do that for all
-        # contests (unless one cat create the git grep query syntax to
-        # just pull the uids of interest).
-        contest_batches = Shellout.cvr_parse_git_log_output(
-            ['git', 'log', '--topo-order', '--no-merges', '--pretty=format:%H%B'],
-            the_election_config)
-        unmerged_uids = []
-        for uid in uids:
-            # For this contest loop over the reverse ordered CVRs (since it
-            # seems TBD that it makes sense to ballot #1 as the first ballot on
-            # master).
-            contest_votes = len(contest_batches[uid])
-            found = False
-            for count, contest in enumerate(contest_batches[uid]):
-#                import pdb; pdb.set_trace()
-                if contest['digest'] in requested_row:
-                    print(
-                        f"Contest '{contest['CVR']['uid']} - {contest['CVR']['name']}' "
-                        f"({contest['digest']}) is vote {contest_votes - count} out "
-                        f"of {contest_votes} votes")
-                    found = True
-                    break
-            if found is False:
-                unmerged_uids.append(uid)
-        if unmerged_uids:
-            print("The following contests are not merged to master yet:")
-            print('\n'.join(unmerged_uids))
+    verify_rows(lines, the_election_config)
 
 if __name__ == '__main__':
     args = parse_arguments()
