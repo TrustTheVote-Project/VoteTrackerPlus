@@ -54,6 +54,8 @@ def parse_arguments():
         formatter_class=argparse.RawDescriptionHelpFormatter)
 
     Address.add_address_args(parser)
+    parser.add_argument("-m", "--merge_contests", action="store_true",
+                            help="Will immediately merge the ballot contests (to master)")
     parser.add_argument("--blank_ballot",
                             help="overrides an address - specifies the specific blank ballot")
     parser.add_argument("-v", "--verbosity", type=int, default=3,
@@ -110,7 +112,8 @@ def main():
     # Accept the ballot
     Shellout.run(
         [os.path.join(bin_dir, 'accept_ballot.py'), '-v', args.verbosity]
-        + accept_address_args + (['-n'] if args.printonly else []),
+        + accept_address_args + (['-n'] if args.printonly else [])
+        + (['-m'] if args.merge_contests else []),
         check=True, no_touch_stds=True, timeout=None)
 
 if __name__ == '__main__':
