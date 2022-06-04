@@ -153,7 +153,8 @@ class Shellout:
 
     @staticmethod
     # ZZZ - could use an optional filter_by_uid argument which is a set object
-    def cvr_parse_git_log_output(git_log_command, election_config, grouped_by_uid=True):
+    def cvr_parse_git_log_output(git_log_command, election_config,
+                                     grouped_by_uid=True, verbosity=3):
         """Will execute the supplied git log command and process the
         output of those commits that are CVRs.  Will return a
         dictionary keyed on the contest UID that is a list of CVRs.
@@ -168,6 +169,8 @@ class Shellout:
         git_log_cvrs = {}
         with Shellout.changed_cwd(os.path.join(
             election_config.get('git_rootdir'), Globals.get('ROOT_ELECTION_DATA_SUBDIR'))):
+            if verbosity >= 3:
+                info(f"Running \"{' '.join(git_log_command)}\"")
             with subprocess.Popen(
                 git_log_command,
                 stdout=subprocess.PIPE,
