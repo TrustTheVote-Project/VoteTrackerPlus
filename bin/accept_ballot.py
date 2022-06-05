@@ -31,7 +31,7 @@ import os
 import sys
 import argparse
 import logging
-from logging import debug
+from logging import debug, warning
 import random
 import secrets
 #import uuid
@@ -181,12 +181,17 @@ def create_ballot_receipt(the_ballot, contest_receipts, unmerged_cvrs, the_elect
             '"' + uid + ' - ' + the_ballot.get_contest_name_by_uid(uid).replace('"',"'") + '"')
     ballot_receipt.append(','.join(next_row))
     # Loop BALLOT_RECEIPT_ROWS times (the rows) filling in the ballots
-    # uids as the columns.
-    for row in range(Globals.get('BALLOT_RECEIPT_ROWS') - 1):
+    # uids as the columns.  Two notes: the range is the full
+    # BALLOT_RECEIPT_ROWS because even though the voter's row is
+    # inserted, the voter's digest might have ended up in the
+    # unmerged_cvrs list.  When that happens, that digest needs to be
+    # skipped and the voter's row digest from unmerged_cvrs used
+    # instead.
+    for row in range(Globals.get('BALLOT_RECEIPT_ROWS')):
         if row == voters_row - 1:
             # Include the voter's receipts instead
             ballot_receipt.append(','.join(contest_receipts.values()))
-            # But can just keep going as well
+            continue
         next_row = []
         # Note - these are the voter's uids and digests
         for uid, digest in contest_receipts.items():
@@ -200,11 +205,11 @@ def create_ballot_receipt(the_ballot, contest_receipts, unmerged_cvrs, the_elect
                 next_row.append("INSUFFICIENT_CVRS")
             elif digest == unmerged_cvrs[uid][row]['digest']:
                 # This is the voter's own digest!
-                if row + 1 > len(unmerged_cvrs[uid]):
+                if voters_row - 1 > len(unmerged_cvrs[uid]):
                     redacted_uids.add(uid)
                     next_row.append("INSUFFICIENT_CVRS")
                 else:
-                    next_row.append(unmerged_cvrs[uid][row + 1]['digest'])
+                    next_row.append(unmerged_cvrs[uid][voters_row - 1]['digest'])
             else:
                 next_row.append(unmerged_cvrs[uid][row]['digest'])
         ballot_receipt.append(','.join(next_row))
@@ -380,10 +385,24 @@ def main():
     # Shuffled the unmerged_cvrs (an inplace shuffle) - only need to
     # shuffle the uids for this ballot.
 #    import pdb; pdb.set_trace()
+    skip_receipt = False
     for uid in contest_receipts:
+        # if there are no unmerged_cvrs, just warn
+        if uid not in unmerged_cvrs:
+            warning(f"Warning - no unmerged_cvrs yet for contest {uid}")
+            skip_receipt = True
+            continue
+        if len(unmerged_cvrs[uid]) < Globals.get('BALLOT_RECEIPT_ROWS'):
+            warning(
+                f"Warning - not enough unmerged CVRs ({len(unmerged_cvrs[uid])}) "
+                f"to print receipt for contest {uid}")
+            skip_receipt = True
         random.shuffle(unmerged_cvrs[uid])
     # Create the ballot receipt
-    create_ballot_receipt(a_ballot, contest_receipts, unmerged_cvrs, the_election_config)
+    if skip_receipt:
+        warning("Skipping ballot receipt due to lack of unmerged CVRs")
+    else:
+        create_ballot_receipt(a_ballot, contest_receipts, unmerged_cvrs, the_election_config)
 
 if __name__ == '__main__':
     args = parse_arguments()
