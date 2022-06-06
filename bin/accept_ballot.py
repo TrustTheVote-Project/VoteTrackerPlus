@@ -31,7 +31,7 @@ import os
 import sys
 import argparse
 import logging
-from logging import debug
+from logging import debug, warning
 import random
 import secrets
 #import uuid
@@ -123,7 +123,8 @@ def get_unmerged_contests(config):
     # --yes-walk commits and scrape that for the commits of interest.
     return Shellout.cvr_parse_git_log_output(
         ['git', 'log', '--no-walk', '--pretty=format:%H%B'] + head_commits,
-        config)
+        config,
+        verbosity=args.verbosity - 1)
 
 def get_cloaked_contests(contest, branch):
     """Return a list of N cloaked cast CVRs for the specified contest.
@@ -180,12 +181,17 @@ def create_ballot_receipt(the_ballot, contest_receipts, unmerged_cvrs, the_elect
             '"' + uid + ' - ' + the_ballot.get_contest_name_by_uid(uid).replace('"',"'") + '"')
     ballot_receipt.append(','.join(next_row))
     # Loop BALLOT_RECEIPT_ROWS times (the rows) filling in the ballots
-    # uids as the columns.
-    for row in range(Globals.get('BALLOT_RECEIPT_ROWS') - 1):
+    # uids as the columns.  Two notes: the range is the full
+    # BALLOT_RECEIPT_ROWS because even though the voter's row is
+    # inserted, the voter's digest might have ended up in the
+    # unmerged_cvrs list.  When that happens, that digest needs to be
+    # skipped and the voter's row digest from unmerged_cvrs used
+    # instead.
+    for row in range(Globals.get('BALLOT_RECEIPT_ROWS')):
         if row == voters_row - 1:
             # Include the voter's receipts instead
             ballot_receipt.append(','.join(contest_receipts.values()))
-            # But can just keep going as well
+            continue
         next_row = []
         # Note - these are the voter's uids and digests
         for uid, digest in contest_receipts.items():
@@ -199,11 +205,11 @@ def create_ballot_receipt(the_ballot, contest_receipts, unmerged_cvrs, the_elect
                 next_row.append("INSUFFICIENT_CVRS")
             elif digest == unmerged_cvrs[uid][row]['digest']:
                 # This is the voter's own digest!
-                if row + 1 > len(unmerged_cvrs[uid]):
+                if voters_row - 1 > len(unmerged_cvrs[uid]):
                     redacted_uids.add(uid)
                     next_row.append("INSUFFICIENT_CVRS")
                 else:
-                    next_row.append(unmerged_cvrs[uid][row + 1]['digest'])
+                    next_row.append(unmerged_cvrs[uid][voters_row - 1]['digest'])
             else:
                 next_row.append(unmerged_cvrs[uid][row]['digest'])
         ballot_receipt.append(','.join(next_row))
@@ -240,8 +246,10 @@ def parse_arguments():
         formatter_class=argparse.RawDescriptionHelpFormatter)
 
     Address.add_address_args(parser, True)
+    parser.add_argument("-m", "--merge_contests", action="store_true",
+                            help="Will immediately merge the ballot contests (to master)")
     parser.add_argument("--cast_ballot",
-                            help="overrides an address - specifies the specific cast ballot")
+                            help="overrides an address - specifies a specific cast ballot")
     parser.add_argument("-v", "--verbosity", type=int, default=3,
                             help="0 critical, 1 error, 2 warning, 3 info, 4 debug (def=3)")
     parser.add_argument("-n", "--printonly", action="store_true",
@@ -280,8 +288,10 @@ def main():
             a_ballot.read_a_cast_ballot('', the_election_config, args.cast_ballot)
     else:
         # Use the specified address
-        the_address = Address.create_address_from_args(args,
-                        ['verbosity', 'printonly', 'cast_ballot'], generic_address=True)
+        the_address = Address.create_address_from_args(
+            args,
+            ['verbosity', 'printonly', 'cast_ballot', 'merge_contests'],
+            generic_address=True)
         the_address.map_ggos(the_election_config, skip_ggos=True)
         # Get the ballot for the specified address.  Note that reading
         # the cast ballot will define the active ggos etc for the
@@ -360,14 +370,39 @@ def main():
         # pushed copies will be pruned since there can be too many
         # there from all the possible scanner instances.
 
+    # If in demo mode, optionally merge the branches
+    if args.merge_contests:
+        bin_dir = os.path.join(the_election_config.get('git_rootdir'), 'bin')
+        for branch in branches:
+            # Merge the branch
+            Shellout.run(
+                [os.path.join(bin_dir, 'merge_contests.py'), '-v', args.verbosity,
+                     '-b', branch]
+                + (['-n'] if args.printonly else []),
+                check=True, no_touch_stds=True, timeout=None)
+
     debug(f"Ballot's digests:\n{contest_receipts}")
     # Shuffled the unmerged_cvrs (an inplace shuffle) - only need to
     # shuffle the uids for this ballot.
 #    import pdb; pdb.set_trace()
+    skip_receipt = False
     for uid in contest_receipts:
+        # if there are no unmerged_cvrs, just warn
+        if uid not in unmerged_cvrs:
+            warning(f"Warning - no unmerged_cvrs yet for contest {uid}")
+            skip_receipt = True
+            continue
+        if len(unmerged_cvrs[uid]) < Globals.get('BALLOT_RECEIPT_ROWS'):
+            warning(
+                f"Warning - not enough unmerged CVRs ({len(unmerged_cvrs[uid])}) "
+                f"to print receipt for contest {uid}")
+            skip_receipt = True
         random.shuffle(unmerged_cvrs[uid])
     # Create the ballot receipt
-    create_ballot_receipt(a_ballot, contest_receipts, unmerged_cvrs, the_election_config)
+    if skip_receipt:
+        warning("Skipping ballot receipt due to lack of unmerged CVRs")
+    else:
+        create_ballot_receipt(a_ballot, contest_receipts, unmerged_cvrs, the_election_config)
 
 if __name__ == '__main__':
     args = parse_arguments()
