@@ -62,9 +62,10 @@ $ openssl sha256 Downloads/Miniconda3-latest-MacOSX-x86_64.sh
 $ bash Downloads/Miniconda3-latest-MacOSX-x86_64.sh
 
 # create an python 3.9 environment
-$ conda create -n votes.01 python=3.9
-$ conda activate votes.01
+$ conda create -n vtp.01 python=3.9
+$ conda activate vtp.01
 $ conda install pylint pytest pyyaml networkx
+$ pip install pyinputplus
 ```
 
 Note - can install matplotlib (conda install matplotlib) to see visual graphs of some of the data.
@@ -84,7 +85,7 @@ Where <nn> is the most recent mock election
 
 ```
 
-See [VTP-mock-election.US.05](https://github.com/TrustTheVote-Project/VTP-mock-election.US.05) as an example
+See [VTP-mock-election.US.07](https://github.com/TrustTheVote-Project/VTP-mock-election.US.07) as an example
 
 Each ElectionData repo can represent a different election.  Some repos may be already configured and can be immediately used to run an election.  Or the repo may be of a past election.  Others may be designed so that an election can be configured.
 
@@ -95,17 +96,17 @@ Regardless, to run a real or mock election one will need a usable ElectionData r
 With nominally both repos in place and assuming at this time no git submodules, run the setup_vtp_demo.py script.  This script will nominally create a mock election with four VTP scanner _apps_ and one VTP local-remote server _app_ as if all ballots were being cast in a single voting center.  By default it will place the git repos in /opt/VotetrackerPlus with the 5 clients (the four scanner apps and one server app) in the _clients_ folder with the two local git upstream bare repositories in the _local-remote-server_ folder.  The directory tree looks like this:
 
 ```
-/opt/VotetrackerPlus/clients/scanner.00/VTP-mock-election.US.05/.git
+/opt/VotetrackerPlus/clients/scanner.00/VTP-mock-election.US.07/.git
                                         VTP-root-repo/.git
-                             scanner.01/VTP-mock-election.US.05/.git
+                             scanner.01/VTP-mock-election.US.07/.git
                                         VTP-root-repo/.git
-                             scanner.02/VTP-mock-election.US.05/.git
+                             scanner.02/VTP-mock-election.US.07/.git
                                         VTP-root-repo/.git
-                             scanner.03/VTP-mock-election.US.05/.git
+                             scanner.03/VTP-mock-election.US.07/.git
                                         VTP-root-repo/.git
-                             server/VTP-mock-election.US.05/.git
+                             server/VTP-mock-election.US.07/.git
                                     VTP-root-repo/.git
-/opt/VotetrackerPlus/local-remote-server/VTP-mock-election.US.05.git
+/opt/VotetrackerPlus/local-remote-server/VTP-mock-election.US.07.git
                                          VTP-root-repo.git
 ```
 
@@ -117,9 +118,9 @@ One should also start a VTP server instance in the _server_ folder via a "__run_
 
 By default the three mock scanner apps will iterate for 10 loops across all the possible blank ballots defined in the ElectionData config files, which as of this writing creates slightly less than 2,000 contest branches.  The server by default will run for a day but should be killed when the demo is over.
 
-Running the demo does not modify the VTP-root-repo repo and does not push any changes in the VTP-mock-election.US.05 repository back to the upstream GitHub repositories.  This is because the scanner and server app repos have the git origin pointing to the local bare repositories found in the local-remote-server folder.
+Running the demo does not modify the VTP-root-repo repo and does not push any changes in the VTP-mock-election.US.nn repository back to the upstream GitHub repositories.  This is because the scanner and server app repos have the git origin pointing to the local bare repositories found in the local-remote-server folder.
 
-At any time and in any repository cloned from the local-remote-server VTP-mock-election.US.05.git repository (that is not running something else) one can run inspect the current tally by:
+At any time and in any repository cloned from the local-remote-server VTP-mock-election.US.nn.git repository (that is not running something else) one can run inspect the current tally by:
 
 ```bash
 $ cd bin
@@ -128,7 +129,7 @@ $ ./tally_contests.py
 
 ### 4) Development cycle
 
-New development should use a feature branch directly in this repo.  New ElectionData repositories can be created at will.
+New development should use a feature branch directly in this repo.  New ElectionData repositories can be created at will.  Signed commits are required in both repos.
 
 1) Create a well named feature git branch
 2) Develop code/tests
