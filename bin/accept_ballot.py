@@ -318,6 +318,13 @@ def main():
     with Shellout.changed_cwd(a_ballot.get_cvr_parent_dir(the_election_config)):
         # So, the CWD in this block is the state/town subfolder
 
+        # git pull the ElectionData repo so to get the latest set of
+        # remote CVRs branches
+        Shellout.run(
+            ["git", "pull"],
+            printonly=args.printonly, verbosity=args.verbosity,
+            check=True)
+
         # It turns out that determining the other not yet merged to
         # master contests is apparently a challangin git query and one
         # that creates a lot of temporary memory requirements.  One
