@@ -383,10 +383,11 @@ def main():
     if args.merge_contests:
         bin_dir = os.path.join(the_election_config.get('git_rootdir'), 'bin')
         for branch in branches:
-            # Merge the branch
+            # Merge the branch (but since the local branch should be
+            # deleted at this point, merge the remote)
             Shellout.run(
                 [os.path.join(bin_dir, 'merge_contests.py'), '-v', args.verbosity,
-                     '-b', branch]
+                     '-b', branch, '-r']
                 + (['-n'] if args.printonly else []),
                 check=True, no_touch_stds=True, timeout=None)
 
