@@ -366,9 +366,11 @@ def main():
             Shellout.run(
                 ['git', 'push', 'origin', branch],
                 printonly=args.printonly, verbosity=args.verbosity)
-        # Once pushed, leave the local branches for auditing.  The
-        # pushed copies will be pruned since there can be too many
-        # there from all the possible scanner instances.
+            # Delete the local as they build up too much.  The local
+            # reflog keeps track of the local branches
+            Shellout.run(
+                ['git', 'branch', '-d', branch],
+                printonly=args.printonly, verbosity=args.verbosity)
 
     # If in demo mode, optionally merge the branches
     if args.merge_contests:
