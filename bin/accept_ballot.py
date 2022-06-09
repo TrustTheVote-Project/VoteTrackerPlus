@@ -384,10 +384,12 @@ def main():
         bin_dir = os.path.join(the_election_config.get('git_rootdir'), 'bin')
         for branch in branches:
             # Merge the branch (but since the local branch should be
-            # deleted at this point, merge the remote)
+            # deleted at this point, merge the remote).  Note -
+            # 'origin' is already hardcoded in several places and
+            # 'remotes' is enough of a constant for this.
             Shellout.run(
                 [os.path.join(bin_dir, 'merge_contests.py'), '-v', args.verbosity,
-                     '-b', branch, '-r']
+                     '-b', 'remotes/origin/' + branch, '-r']
                 + (['-n'] if args.printonly else []),
                 check=True, no_touch_stds=True, timeout=None)
 
