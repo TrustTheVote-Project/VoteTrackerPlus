@@ -35,6 +35,7 @@ import logging
 from election_config import ElectionConfig
 from common import Shellout
 from address import Address
+from ballot import Ballot
 # Functions
 
 
@@ -82,6 +83,15 @@ def main():
     # Create an VTP election config object
     the_election_config = ElectionConfig()
     the_election_config.parse_configs()
+
+    # git pull the ElectionData repo so to get the latest set of
+    # remote CVRs branches
+    a_ballot = Ballot()
+    with Shellout.changed_cwd(a_ballot.get_cvr_parent_dir(the_election_config)):
+        Shellout.run(
+            ["git", "pull"],
+            printonly=args.printonly, verbosity=args.verbosity,
+            check=True)
 
     # If an address was used, use that
     cast_address_args = []
