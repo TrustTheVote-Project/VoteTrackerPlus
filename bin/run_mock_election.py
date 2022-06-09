@@ -139,6 +139,9 @@ def scanner_mockup(election_data_dir, bin_dir, ballot):
             debug(f"Iteration {count} of {args.iterations} - processing {blank_ballot}")
             # - cast a ballot
 #            import pdb; pdb.set_trace()
+            with Shellout.changed_cwd(election_data_dir):
+                Shellout.run(['git', 'pull'], args.printonly,
+                args.verbosity, no_touch_stds=True, timeout=None, check=True)
             Shellout.run(
                 [os.path.join(bin_dir, 'cast_ballot.py'), '--blank_ballot=' + blank_ballot,
                      '--demo_mode'],
