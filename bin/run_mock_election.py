@@ -92,7 +92,7 @@ def parse_arguments():
         help="the minimum number of cast ballots required prior to merging (def=100)")
     parser.add_argument(
         "-f", "--flush_mode", type=int, default=0,
-        help="will either not flush (0), flush on exit (1), or flush on each iteration")
+        help="will either not flush (0), flush on exit (1), or flush on each iteration (2)")
     parser.add_argument(
         "-i", "--iterations", type=int, default=10,
         help="the number of unique blank ballots to cast (def=10)")
