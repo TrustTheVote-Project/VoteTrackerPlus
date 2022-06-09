@@ -148,31 +148,32 @@ def scanner_mockup(election_data_dir, bin_dir, ballot):
                     no_touch_stds=True, timeout=None, check=True)
             Shellout.run(
                 [os.path.join(bin_dir, 'cast_ballot.py'), '--blank_ballot=' + blank_ballot,
-                     '--demo_mode'],
-                printonly=args.printonly, verbosity=args.verbosity, no_touch_stds=True,
+                     '--demo_mode', '-v', args.verbosity],
+                printonly=args.printonly, no_touch_stds=True,
                 timeout=None, check=True)
             # - accept the ballot
             Shellout.run(
                 [os.path.join(bin_dir, 'accept_ballot.py'),
-                     '--cast_ballot=' + Ballot.get_cast_from_blank(blank_ballot)],
-                args.printonly, args.verbosity, no_touch_stds=True,
-                timeout=None, check=True)
+                     '--cast_ballot=' + Ballot.get_cast_from_blank(blank_ballot),
+                     '-v', args.verbosity],
+                printonly=args.printonly, no_touch_stds=True, timeout=None, check=True)
             if args.device == 'both':
                 # - merge the ballot's contests
                 if args.flush_mode == 2:
                     # Since casting and merging is basically
                     # synchronous, no need for an extra large timeout
                     Shellout.run(
-                        [merge_contests, '-f'], printonly=args.printonly,
-                        verbosity=args.verbosity, no_touch_stds=True, timeout=None,
-                        check=True)
+                        [merge_contests, '-f', '-v', args.verbosity],
+                        printonly=args.printonly,
+                        no_touch_stds=True, timeout=None, check=True)
                 else:
                     # Should only need to merge one ballot worth of
                     # contests - also no need for an extra large
                     # timeout
                     Shellout.run(
-                        [merge_contests, '-m', args.minimum_cast_cache],
-                        printonly=args.printonly, verbosity=args.verbosity,
+                        [merge_contests, '-m', args.minimum_cast_cache,
+                             '-v', args.verbosity],
+                        printonly=args.printonly,
                         no_touch_stds=True, timeout=None, check=True)
                 # don't let too much garbage build up
                 if count % 10 == 9:
@@ -184,12 +185,12 @@ def scanner_mockup(election_data_dir, bin_dir, ballot):
         # merge the remaining contests
         # Note - this needs a longer timeout as it can take many seconds
         Shellout.run(
-            [merge_contests, '-f'], printonly=args.printonly,
-            verbosity=args.verbosity, no_touch_stds=True, timeout=None, check=True)
+            [merge_contests, '-f', '-v', args.verbosity], printonly=args.printonly,
+            no_touch_stds=True, timeout=None, check=True)
         # tally the contests
         Shellout.run(
-            [os.path.join(bin_dir, 'tally_contests.py')], printonly=args.printonly,
-            verbosity=args.verbosity, no_touch_stds=True, timeout=None, check=True)
+            [os.path.join(bin_dir, 'tally_contests.py'), '-v', args.verbosity],
+            printonly=args.printonly, no_touch_stds=True, timeout=None, check=True)
     # clean up git just in case
     Shellout.run(
         ['git', 'gc'], printonly=args.printonly, verbosity=args.verbosity,
@@ -212,15 +213,18 @@ def server_mockup(election_data_dir, bin_dir):
             args.verbosity, no_touch_stds=True, timeout=None, check=True)
         if args.flush_mode == 2:
             Shellout.run(
-                [merge_contests, '-r', '-f'], args.printonly,
-                args.verbosity, no_touch_stds=True, timeout=None, check=True)
+                [merge_contests, '-r', '-f', '-v', args.verbosity],
+                printonly=args.printonly,
+                no_touch_stds=True, timeout=None, check=True)
             Shellout.run(
-                [tally_contests], args.printonly,
-                args.verbosity, no_touch_stds=True, timeout=None, check=True)
+                [tally_contests, '-v', args.verbosity],
+                printonly=args.printonly,
+                no_touch_stds=True, timeout=None, check=True)
             return
         Shellout.run(
-            [merge_contests, '-r', '-m', args.minimum_cast_cache], args.printonly,
-            args.verbosity, no_touch_stds=True, timeout=None, check=True)
+            [merge_contests, '-r', '-m', args.minimum_cast_cache, '-v',
+                 args.verbosity], printonly=args.printonly,
+            no_touch_stds=True, timeout=None, check=True)
         info("Sleeping for 10")
         time.sleep(10)
         elapsed_time = time.time() - start_time
@@ -229,12 +233,14 @@ def server_mockup(election_data_dir, bin_dir):
     if args.flush_mode in [1, 2]:
         print("Cleaning up remaining unmerged ballots")
         Shellout.run(
-            [merge_contests, '-r', '-f'], args.printonly,
-            args.verbosity, no_touch_stds=True, timeout=None, check=True)
+            [merge_contests, '-r', '-f', '-v', args.verbosity],
+            printonly=args.printonly,
+            no_touch_stds=True, timeout=None, check=True)
     # tally the contests
     Shellout.run(
-        [tally_contests], args.printonly,
-        args.verbosity, no_touch_stds=True, timeout=None, check=True)
+        [tally_contests, '-v', args.verbosity],
+        printonly=args.printonly,
+        no_touch_stds=True, timeout=None, check=True)
 
 
 ################
