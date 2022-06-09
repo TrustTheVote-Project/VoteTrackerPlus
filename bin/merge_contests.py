@@ -49,6 +49,7 @@ def merge_contest_branch(branch):
     # locations on different branches.
     contest_file = Shellout.run(
         ['git', 'diff-tree', '--no-commit-id', '-r', '--name-only', branch],
+        verbosity=args.verbosity,
         capture_output=True, text=True, check=True).stdout.strip()
     # 2022/06/09: witnessed the above line returning no files several
     # times in an ElectionData repo where I was debugging things. So
@@ -63,7 +64,7 @@ def merge_contest_branch(branch):
     # so this command will always return non zero
     Shellout.run(
         ['git', 'merge', '--no-ff', '--no-commit', branch],
-        args.printonly)
+        printonly=args.printonly, verbosity=args.verbosity)
     # ZZZ - replace this with an run-time cryptographic value
     # derived from the run-time election private key (diffent from
     # the git commit run-time value).  This will basically slam
@@ -71,6 +72,7 @@ def merge_contest_branch(branch):
     # (the first one being contained in the commit itself).
     result = Shellout.run(
         ['openssl',  'rand', '-base64',  '48'],
+        verbosity=args.verbosity,
         capture_output=True, text=True, check=True)
     if result.stdout == '':
         raise ValueError("'openssl rand' should never return an empty string")
@@ -81,22 +83,28 @@ def merge_contest_branch(branch):
             # merge
             outfile.write(str(result.stdout))
     # Force the git add just in case
-    Shellout.run(['git', 'add', contest_file], args.printonly, check=True)
+    Shellout.run(
+        ['git', 'add', contest_file],
+        printonly=args.printonly, verbosity=args.verbosity, check=True)
     # Use the default merge message as is
 #    import pdb; pdb.set_trace()
     Shellout.run(
         ['git', 'commit', '-m', 'auto commit - thank you for voting'],
-        args.printonly, check=True)
+        printonly=args.printonly, verbosity=args.verbosity, check=True)
     Shellout.run(['git', 'push', 'origin', 'master'], args.printonly, check=True)
     # Delete the local and remote branch if this is a local branch
     if not args.remote:
-        Shellout.run(['git', 'push', 'origin', '-d', branch], args.printonly, check=True)
-        Shellout.run(['git', 'branch', '-d', branch], args.printonly, check=True)
+        Shellout.run(
+            ['git', 'push', 'origin', '-d', branch],
+            printonly=args.printonly, verbosity=args.verbosity, check=True)
+        Shellout.run(
+            ['git', 'branch', '-d', branch],
+            printonly=args.printonly, verbosity=args.verbosity, check=True)
     else:
         # otherwise just delete the remote
         Shellout.run(
             ['git', 'push', 'origin', '-d', branch.removeprefix('origin/')],
-            args.printonly, check=True)
+            printonly=args.printonly, verbosity=args.verbosity, check=True)
 
 def randomly_merge_contests(uid, batch):
     """
@@ -198,7 +206,9 @@ def main():
         Globals.get('ROOT_ELECTION_DATA_SUBDIR'))):
         # So, the CWD in this block is the state/town subfolder
         # Pull the remote
-        Shellout.run(["git", "pull"], args.printonly, check=True)
+        Shellout.run(
+            ["git", "pull"],
+            printonly=args.printonly, verbosity=args.verbosity, check=True)
         if args.branch:
             merge_contest_branch(args.branch)
             info(f"Merged '{args.branch}'")
@@ -213,7 +223,7 @@ def main():
             cvr_regex = "^" + cvr_regex
         # Note - the re.search will strip non CVRs lines
         cvr_branches = [branch.strip() for branch in Shellout.run(
-            cmds, check=True, capture_output=True,
+            cmds, verbosity=args.verbosity, check=True, capture_output=True,
             text=True).stdout.splitlines() if re.search(cvr_regex, branch.strip())]
         # Note - sorted alphanumerically on contest UID. Loop over
         # contests and randomly merge extras
