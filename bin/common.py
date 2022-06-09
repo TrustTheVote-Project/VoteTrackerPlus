@@ -116,10 +116,10 @@ class Shellout:
         # the caller desides on whether check is set or not
         # pylint: disable=subprocess-run-check
         if not no_touch_stds:
-            if 'capture_output' not in kwargs and verbosity < 3:
-                if 'stdout' not in kwargs:
+            if 'capture_output' not in kwargs:
+                if 'stdout' not in kwargs and verbosity < 3:
                     kwargs['stdout'] = subprocess.DEVNULL
-                if 'stderr' not in kwargs:
+                if 'stderr' not in kwargs and verbosity <= 3:
                     kwargs['stderr'] = subprocess.DEVNULL
         if 'timeout' not in kwargs:
             kwargs['timeout'] = Globals.get('SHELL_TIMEOUT')
