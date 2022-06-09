@@ -67,12 +67,12 @@ def parse_arguments():
     synchronously run the merge_contests.py program which will once
     every 10 seconds.  Note that nominally 100 contgests need to have
     been pushed for merge_contests.py to merge in a contest into the
-    master branch without the --flush option.
+    master branch without the --flush_mode option.
 
     If "-d both" is supplied, run_mock_election.py will run a single
-    scanner N iterations while also calling the server function.
-    run_mock_election.py will then flush the ballot cache before
-    printing the tallies and exiting.
+    scanner N iterations while also calling the server function.  If
+    --flush_mode is set to 1 or 2, run_mock_election.py will then
+    flush the ballot cache before printing the tallies and exiting.
 
     By default run_mock_election.py will loop over all available blank
     ballots found withint the ElectionData tree.  However, either a
@@ -91,8 +91,8 @@ def parse_arguments():
         "-m", "--minimum_cast_cache", type=int, default=100,
         help="the minimum number of cast ballots required prior to merging (def=100)")
     parser.add_argument(
-        "-f", "--flush", action='store_true',
-        help="will (force) flush the remaining unmerged contest branches during merge_contests")
+        "-f", "--flush_mode", type=int, default=0,
+        help="will either not flush (0), flush on exit (1), or flush on each iteration")
     parser.add_argument(
         "-i", "--iterations", type=int, default=10,
         help="the number of unique blank ballots to cast (def=10)")
@@ -113,7 +113,9 @@ def parse_arguments():
     if parsed_args.device not in ['scanner', 'server', 'both']:
         raise ValueError("The --device parameter only accepts 'device' or 'server' "
                          f"or 'both' - ({parsed_args.device}) was suppllied.")
-
+    if parsed_args.flush_mode not in [0, 1, 2]:
+        raise ValueError("The value of flush_mode must be either 0, 1, or 2"
+                             f" - {parsed_args.flush_mode} was supplied.")
     return parsed_args
 
 def scanner_mockup(election_data_dir, bin_dir, ballot):
@@ -153,7 +155,7 @@ def scanner_mockup(election_data_dir, bin_dir, ballot):
                 args.printonly, args.verbosity, no_touch_stds=True, timeout=None, check=True)
             if args.device == 'both':
                 # - merge the ballot's contests
-                if args.flush:
+                if args.flush_mode == 2:
                     # Since casting and merging is basically
                     # synchronous, no need for an extra large timeout
                     Shellout.run(
@@ -201,7 +203,7 @@ def server_mockup(election_data_dir, bin_dir):
         with Shellout.changed_cwd(election_data_dir):
             Shellout.run(['git', 'pull'], args.printonly,
             args.verbosity, no_touch_stds=True, timeout=None, check=True)
-        if args.flush:
+        if args.flush_mode == 2:
             Shellout.run(
                 [merge_contests, '-r', '-f'], args.printonly,
                 args.verbosity, no_touch_stds=True, timeout=None, check=True)
@@ -217,10 +219,11 @@ def server_mockup(election_data_dir, bin_dir):
         elapsed_time = time.time() - start_time
         if elapsed_time > seconds:
             break
-    print("Cleaning up remaining unmerged ballots")
-    Shellout.run(
-        [merge_contests, '-r', '-f'], args.printonly,
-        args.verbosity, no_touch_stds=True, timeout=None, check=True)
+    if args.flush_mode in [1, 2]:
+        print("Cleaning up remaining unmerged ballots")
+        Shellout.run(
+            [merge_contests, '-r', '-f'], args.printonly,
+            args.verbosity, no_touch_stds=True, timeout=None, check=True)
     # tally the contests
     Shellout.run(
         [tally_contests], args.printonly,
@@ -259,8 +262,8 @@ def main():
     # If an address was used, use that
     if args.address or args.state or args.town or args.substreet:
         the_address = Address.create_address_from_args(
-            args, ['blank_ballot', 'device', 'minimum_cast_cache', 'flush', 'iterations',
-                       'verbosity', 'printonly'])
+            args, ['blank_ballot', 'device', 'minimum_cast_cache', 'flush_mode',
+                       'iterations', 'verbosity', 'printonly'])
         the_address.map_ggos(the_election_config)
         blank_ballot = the_address.gen_blank_ballot_location(the_election_config)
     elif args.blank_ballot:
