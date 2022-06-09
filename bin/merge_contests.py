@@ -35,7 +35,7 @@ import re
 import random
 import argparse
 import logging
-from logging import debug, info
+from logging import debug, info, error
 
 # Local import
 from common import Globals, Shellout
@@ -50,6 +50,16 @@ def merge_contest_branch(branch):
     contest_file = Shellout.run(
         ['git', 'diff-tree', '--no-commit-id', '-r', '--name-only', branch],
         capture_output=True, text=True).stdout.strip()
+    # 2022/06/09: witnessed the above line returning no files several
+    # times in an ElectionData repo where I was debugging things. So
+    # it could be real or perhaps a false one. Regardless adding an
+    # test condition in that if there is no file to merge, there is no
+    # file to merge - pass.
+    if not contest_file:
+        error(f"Error - 'git diff-tree --no-commit-d -r --name-only {branch}'"
+                  "returned no files.  Skipping")
+        return
+    # Merge the branch / file
     Shellout.run(
         ['git', 'merge', '--no-ff', '--no-commit', branch],
         args.printonly)
