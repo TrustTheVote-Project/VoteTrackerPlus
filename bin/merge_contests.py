@@ -86,11 +86,10 @@ def merge_contest_branch(branch):
     Shellout.run(
         ['git', 'add', contest_file],
         printonly=args.printonly, verbosity=args.verbosity, check=True)
-    # Use the default merge message as is
-#    import pdb; pdb.set_trace()
+    # Note - apparently git place the commit msg on STDERR - hide it
     Shellout.run(
         ['git', 'commit', '-m', 'auto commit - thank you for voting'],
-        printonly=args.printonly, verbosity=args.verbosity, check=True)
+        printonly=args.printonly, verbosity=1, check=True)
     Shellout.run(['git', 'push', 'origin', 'master'], args.printonly, check=True)
     # Delete the local and remote branch if this is a local branch
     if not args.remote:

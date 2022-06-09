@@ -153,9 +153,10 @@ def contest_add_and_commit(branch):
     Shellout.run(
         ['git', 'add', contest_file], printonly=args.printonly,
         verbosity=args.verbosity)
+    # Note - apparently git place the commit msg on STDERR - hide it
     Shellout.run(
         ['git', 'commit', '-F', contest_file],
-        printonly=args.printonly, verbosity=args.verbosity)
+        printonly=args.printonly, verbosity=1)
     # Capture the digest
     digest = Shellout.run(['git', 'log', branch, '-1', '--pretty=format:%H'],
                      printonly=args.printonly,
