@@ -204,6 +204,14 @@ class Tally:
     """
 
     @staticmethod
+    def extract_offest_from_selection(selection):
+        """
+        Will extract the int selection choice from the verbose
+        selection string
+        """
+        return int(re.search('(^[0-9]+)', selection).group(1))
+
+    @staticmethod
     def get_choices_from_round(choices, what=''):
         """Will smartly return just the pure list of choices sans all
         values and sub dictionaries from a round
@@ -281,7 +289,7 @@ class Tally:
         """Will smartly return just the pure selection name sans all
         values and sub dictionaries from a round
         """
-        pick = self.contest['choices'][selection]
+        pick = self.contest['choices'][Tally.extract_offest_from_selection(selection)]
         if isinstance(pick, str):
             return pick
         if isinstance(pick, dict):
@@ -300,7 +308,7 @@ class Tally:
                 selection = contest['selection'][count]
                 # depending on version, selection could be an int or a string
                 if isinstance(selection, str):
-                    selection = int(re.search('(^[0-9]+)', selection).group(1))
+                    selection = Tally.extract_offest_from_selection(selection)
                 choice = Contest.get_choices_from_contest(contest['choices'])[selection]
                 self.selection_counts[choice] += 1
                 self.vote_count += 1
@@ -317,7 +325,7 @@ class Tally:
             selection = contest['selection'][0]
             # depending on version, selection could be an int or a string
             if isinstance(selection, str):
-                selection = int(re.search('(^[0-9]+)', selection).group(1))
+                selection = Tally.extract_offest_from_selection(selection)
             choice = Contest.get_choices_from_contest(contest['choices'])[selection]
             self.selection_counts[choice] += 1
             self.vote_count += 1
@@ -388,6 +396,9 @@ class Tally:
         for uid in contest_batch:
             contest = uid['CVR']
             digest = uid['digest']
+            # Note - if there is no selection, there is no selection
+            if not contest['selection']:
+                continue
             if self.select_name_from_choices(contest['selection'][0]) == last_place_name:
                 # Safely pop the current first choice and reset
                 # contest['selection'].  Note that self.obe_choices has
@@ -400,7 +411,6 @@ class Tally:
                 self.selection_counts[last_place_name] -= 1
                 # Either retarget the vote or let it drop
                 if len(contest['selection']):
-#                    import pdb; pdb.set_trace()
                     # The voter can still leave a RCV contest blank
                     # Note - selection is the new selection for this contest
                     new_selection = contest['selection'][0]
