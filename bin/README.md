@@ -62,9 +62,10 @@ $ openssl sha256 Downloads/Miniconda3-latest-MacOSX-x86_64.sh
 $ bash Downloads/Miniconda3-latest-MacOSX-x86_64.sh
 
 # create an python 3.9 environment
-$ conda create -n votes.01 python=3.9
-$ conda activate votes.01
+$ conda create -n vtp.01 python=3.9
+$ conda activate vtp.01
 $ conda install pylint pytest pyyaml networkx
+$ pip install pyinputplus
 ```
 
 Note - can install matplotlib (conda install matplotlib) to see visual graphs of some of the data.
@@ -84,7 +85,7 @@ Where <nn> is the most recent mock election
 
 ```
 
-See [VTP-mock-election.US.05](https://github.com/TrustTheVote-Project/VTP-mock-election.US.05) as an example
+See [VTP-mock-election.US.09](https://github.com/TrustTheVote-Project/VTP-mock-election.US.09) as an example
 
 Each ElectionData repo can represent a different election.  Some repos may be already configured and can be immediately used to run an election.  Or the repo may be of a past election.  Others may be designed so that an election can be configured.
 
@@ -95,40 +96,113 @@ Regardless, to run a real or mock election one will need a usable ElectionData r
 With nominally both repos in place and assuming at this time no git submodules, run the setup_vtp_demo.py script.  This script will nominally create a mock election with four VTP scanner _apps_ and one VTP local-remote server _app_ as if all ballots were being cast in a single voting center.  By default it will place the git repos in /opt/VotetrackerPlus with the 5 clients (the four scanner apps and one server app) in the _clients_ folder with the two local git upstream bare repositories in the _local-remote-server_ folder.  The directory tree looks like this:
 
 ```
-/opt/VotetrackerPlus/clients/scanner.00/VTP-mock-election.US.05/.git
-                                        VTP-root-repo/.git
-                             scanner.01/VTP-mock-election.US.05/.git
-                                        VTP-root-repo/.git
-                             scanner.02/VTP-mock-election.US.05/.git
-                                        VTP-root-repo/.git
-                             scanner.03/VTP-mock-election.US.05/.git
-                                        VTP-root-repo/.git
-                             server/VTP-mock-election.US.05/.git
-                                    VTP-root-repo/.git
-/opt/VotetrackerPlus/local-remote-server/VTP-mock-election.US.05.git
-                                         VTP-root-repo.git
+/opt/VotetrackerPlus/demo.01/clients/scanner.00/VTP-mock-election.US.01/.git
+                                                VTP-root-repo/.git
+                                     scanner.01/VTP-mock-election.US.01/.git
+                                                VTP-root-repo/.git
+                                     scanner.02/VTP-mock-election.US.01/.git
+                                                VTP-root-repo/.git
+                                     scanner.03/VTP-mock-election.US.01/.git
+                                                VTP-root-repo/.git
+                                     server/VTP-mock-election.US.01/.git
+                                                VTP-root-repo/.git
+/opt/VotetrackerPlus/demo.01/local-remote-server/VTP-mock-election.US.01.git
+                                                 VTP-root-repo.git
 ```
 
 The git repositories in the _clients_ subfolder all have workspaces as that is where the various commands run to simulate an individual ballot scanner application.  The two bare repostitories in local-remote-server mimick the actual voting center local (bare) git remote repositories for both the VTP scanner and server apps.
 
-The basic demo idea is to start a "__run_mock_election.py -d scanner__" instance in the first three scanner subfolders.  And then in the fourth scanner subfolder manually and interactively cast ballots.  This will simulate a voter at an active voting center.
+The basic demo idea is to start a separate __run_mock_election.py -d scanner__ instance in the first three scanner subfolders.  And then in the fourth scanner.04 subfolder manually and interactively cast ballots.  This will simulate a voter at an active voting center.  A VTP server app should be run in the server subfolder.
 
-One should also start a VTP server instance in the _server_ folder via a "__run_mock_election.py -d server__".  The server instance handles the merging of the individual contest CVR branches into the master branch.
-
-By default the three mock scanner apps will iterate for 10 loops across all the possible blank ballots defined in the ElectionData config files, which as of this writing creates slightly less than 2,000 contest branches.  The server by default will run for a day but should be killed when the demo is over.
-
-Running the demo does not modify the VTP-root-repo repo and does not push any changes in the VTP-mock-election.US.05 repository back to the upstream GitHub repositories.  This is because the scanner and server app repos have the git origin pointing to the local bare repositories found in the local-remote-server folder.
-
-At any time and in any repository cloned from the local-remote-server VTP-mock-election.US.05.git repository (that is not running something else) one can run inspect the current tally by:
+Here is an example of running a 4 VTP scanner and 1 VTP server app mock demo election.  This simulates an in-person voting center with 4 ballot scanners producing ballot receipts for the voters.  The first three are submitting random ballots while the fourth someone at the keyboard can manually submit one ballot at a time.
 
 ```bash
-$ cd bin
+# In terminal window #1
+$ cd /opt/VotetrackerPlus/demo.01/clients/scanner.00/VTP-mock-election.US.01/bin
+$ conda activate vtp.01
+$ ./run_mock_election.py -s California -t Alameda -a "123 Main Street" -d server
+
+# In terminal window #2
+$ cd /opt/VotetrackerPlus/demo.01/clients/scanner.00/VTP-mock-election.US.01/bin
+$ conda activate vtp.01
+# Auto cast 100 random ballots
+$ ./run_mock_election.py -s California -t Alameda -a "123 Main Street" -d scanner -i 100
+
+# In terminal window #3
+$ cd /opt/VotetrackerPlus/demo.01/clients/scanner.01/VTP-mock-election.US.01/bin
+$ conda activate vtp.01
+# Auto cast 100 random ballots
+$ ./run_mock_election.py -s California -t Alameda -a "123 Main Street" -d scanner -i 100
+
+# In terminal window #4
+$ cd /opt/VotetrackerPlus/demo.01/clients/scanner.02/VTP-mock-election.US.01/bin
+$ conda activate vtp.01
+# Auto cast 100 random ballots
+$ ./run_mock_election.py -s California -t Alameda -a "123 Main Street" -d scanner -i 100
+
+# In terminal window #5
+$ cd /opt/VotetrackerPlus/demo.01/clients/scanner.03/VTP-mock-election.US.01/bin
+$ conda activate vtp.01
+
+# To manually vote and cast one ballot, run vote.py.  The receipt.cvs will be printed to a file
+# as this mock demo is software only.  Please note the ballot's offset row number that is
+# printed to STDOUT at the end of the execution of vote.py.
+$ ./vote.py -s California -t Alameda -a "123 Main Street"
+```
+
+The last few lines printed by ./vote.py should look something like this:
+
+```
+############
+### Receipt file: /opt/VoteTrackerPlus/demo.01/clients/scanner.01/VTP-root-repo/ElectionData/GGOs/states/California/GGOs/towns/Alameda/CVRs/receipt.csv
+### Voter's row: 78
+############
+```
+
+To validate the digests on/in the ballot receipt (use your row, not 74):
+
+```
+$ ./verify_ballot_receipt.py -f /opt/VoteTrackerPlus/demo.01/clients/scanner.03/VTP-root-repo/ElectionData/GGOs/states/California/GGOs/towns/Alameda/CVRs/receipt.csv -r 74
+```
+
+An example ballot is saved off in ElectionData/receipts/receipt.74.csv.  When that receipt is verified, the output currently looks like the following:
+
+```
+$ ./verify_ballot_receipt.py -f ../ElectionData/receipts/receipt.74.csv -r 74
+Running "git rev-parse --show-toplevel"
+Running "git cat-file --buffer --batch-check=%(objectname) %(objecttype)"
+Contest '0000 - US president' (fad4eb1c97b5f547a921c377d8d683d0837f7ff8) is vote 71 out of 146 votes
+Contest '0003 - County Clerk' (7d3e7f992628931d416de2095e0420436ce8f53f) is vote 100 out of 146 votes
+Contest '0005 - mayor' (c9734a3be4ef3533b4c1df0f14305bebe118b031) is vote 96 out of 146 votes
+Contest '0006 - Question 1 - school budget override' (92b70d29cbd677418ffd6166e5c455dedcf4033b) is vote 45 out of 146 votes
+Contest '0007 - Question 2 - new firehouse land purchase' (e4ae73730cf6d00e499af328d17c41f88599711c) is vote 65 out of 146 votes
+The following contests are not merged to master yet:
+0001 - US senate (0a9682dccf6ab5cb83d8a5ce43786e74514ce3ef)
+0002 - governor (ef1b88c931222669997639a0c45f26a4ff0a7342)
+############
+### Ballot receipt VALID - no digest errors found
+############
+```
+
+Note that five of the seven contests have been merged to master and as such now have a fixed offset in the _official_ tally of those contests.  This allows the voter who cast this ballot to say, with a very high level of trust, that their vote in contest '0000 - US president' is 71.  As more contest CVRs are added to the tally (merged to master), the 71 will not change.
+
+Ta Da
+
+Two of the contests above remain in the ballot cache and can still be randomly included in some other ballot receipt.  At some future random time they will be merged to master.  When all the polls close and the vote center has no more incoming ballots, the cache is completely drained and merged to master.
+
+Running the above demo does not modify the VTP-root-repo repo and does not push any changes in the VTP-mock-election.US.nn repository back to the upstream GitHub repositories.  This is because by design the four scanner and server app repo pairs have the git origin pointing to the local bare repositories found in the local-remote-server folder in the demo.nn directory.
+
+At any time and in any repository cloned from the local-remote-server VTP-mock-election.US.nn.git repository (that is not running something else) one can run inspect the current tally by:
+
+```bash
 $ ./tally_contests.py
 ```
 
+However, as of this version, the ./vote.py program does not automatically pull the ElectionData repo as the VTP scanner and server apps do and as such, the ElectionData repo needs to manually 'git pull'ed for it to be updated in the workspace that is manually casting ballots.
+
 ### 4) Development cycle
 
-New development should use a feature branch directly in this repo.  New ElectionData repositories can be created at will.
+New development should use a feature branch directly in this repo.  New ElectionData repositories can be created at will.  Signed commits are required in both repos.
 
 1) Create a well named feature git branch
 2) Develop code/tests

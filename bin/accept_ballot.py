@@ -153,9 +153,10 @@ def contest_add_and_commit(branch):
     Shellout.run(
         ['git', 'add', contest_file], printonly=args.printonly,
         verbosity=args.verbosity)
+    # Note - apparently git place the commit msg on STDERR - hide it
     Shellout.run(
         ['git', 'commit', '-F', contest_file],
-        printonly=args.printonly, verbosity=args.verbosity)
+        printonly=args.printonly, verbosity=1)
     # Capture the digest
     digest = Shellout.run(['git', 'log', branch, '-1', '--pretty=format:%H'],
                      printonly=args.printonly,
@@ -366,18 +367,23 @@ def main():
             Shellout.run(
                 ['git', 'push', 'origin', branch],
                 printonly=args.printonly, verbosity=args.verbosity)
-        # Once pushed, leave the local branches for auditing.  The
-        # pushed copies will be pruned since there can be too many
-        # there from all the possible scanner instances.
+            # Delete the local as they build up too much.  The local
+            # reflog keeps track of the local branches
+            Shellout.run(
+                ['git', 'branch', '-d', branch],
+                printonly=args.printonly, verbosity=args.verbosity)
 
     # If in demo mode, optionally merge the branches
     if args.merge_contests:
         bin_dir = os.path.join(the_election_config.get('git_rootdir'), 'bin')
         for branch in branches:
-            # Merge the branch
+            # Merge the branch (but since the local branch should be
+            # deleted at this point, merge the remote).  Note -
+            # 'origin' is already hardcoded in several places and
+            # 'remotes' is enough of a constant for this.
             Shellout.run(
                 [os.path.join(bin_dir, 'merge_contests.py'), '-v', args.verbosity,
-                     '-b', branch]
+                     '-b', 'remotes/origin/' + branch, '-r']
                 + (['-n'] if args.printonly else []),
                 check=True, no_touch_stds=True, timeout=None)
 

@@ -1,9 +1,11 @@
-name: votes.02
+name: vtp.01
 channels:
   - defaults
 dependencies:
+  - python=3.9
   - pytest
-  - pyyaml
+  - sphinx
   - pylint
+  - pyyaml
   - networkx
-prefix: /Users/sandy/miniconda3/envs/votes.02
+prefix: /Users/sandy/miniconda3/envs/vtp.01
