@@ -34,6 +34,7 @@ import logging
 from logging import info, error
 
 # Local import
+from ballot import Ballot
 from election_config import ElectionConfig
 from common import Shellout
 from contest import Tally
@@ -67,6 +68,8 @@ def parse_arguments():
 
     parser.add_argument("-c", "--contest_uid", default="",
                             help="limit the tally to a specific contest uid")
+    parser.add_argument("-x", "--do_not_pull", action="store_true",
+                            help="Before tallying the votes, pull the ElectionData repo")
     parser.add_argument("-v", "--verbosity", type=int, default=3,
                             help="0 critical, 1 error, 2 warning, 3 info, 4 debug (def=3)")
 #    parser.add_argument("-n", "--printonly", action="store_true",
@@ -91,6 +94,15 @@ def main():
     # Create an VTP election config object
     the_election_config = ElectionConfig()
     the_election_config.parse_configs()
+
+    # git pull the ElectionData repo so to get the latest set of
+    # remote CVRs branches
+    a_ballot = Ballot()
+    with Shellout.changed_cwd(a_ballot.get_cvr_parent_dir(the_election_config)):
+        Shellout.run(
+            ["git", "pull"],
+            verbosity=args.verbosity,
+            check=True)
 
     # Will process all the CVR commits on the master branch and tally
     # all the contests found.  Note - even if a contest is specified,
