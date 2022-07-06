@@ -51,17 +51,25 @@ The voter can continue to do this as more results are uploaded.
 
 Note that with all the data and code available to the electorate, alternate facts, illegitimate narratives, or other attempts at casting doubt on the election can eventually be publicly shown to be false.  And if either the physical ballots are compromised, or if the live VoteTracker+ data is compromised, or if individual or groups of individual collude and generate false narratives or data, the accuracy or inaccuracy of such data and narratives can be determined transparently and universally among the electorate.  With VoteTracker+ there is no single party that privately determines the accuracy of the VoteTracker+ data.
 
-## 4) Basic Election Official Experience (UX)
+## 4) Basic Vote-by-Mail Voter Experience (UX)
+
+VoteTracker+ can enhance the voter vote-by-mail experience depending on the level of adoption by both election officials and the voter.  If configured by election officials, the voter can receive their ballot receipt by mail.  In this scenario election officials would open the mail-in ballot, scan it, and place the ballot receipt in a return envelope.  The voter would not receive their ballot index into the receipt via this method.
+
+However, if election officials have configured support for voter supplied public keys, if the voter has supplied their VTP public key along with their ballot, the voter's ballot index into their receipt is encrypted with the public key and stored in a separate private election repo.  This repo is not publicly available but is still part of the VoteTracker+ repo system.
+
+After all the polls close and election officials have setup access to the private repo, voters can in-person visit election officials, nominally at their town hall.  After the voter has properly identified themselves nominally in a manner similar to casting a ballot in person, an election official can privately and securely reveal to the voter their specific encrypted receipt offset.  The voter can then enter the encrypted offset into the VTP mobile app on their smart device so to reveal their true receipt index.  With that index they can validate that their ballot has been cast, recorded, and tallied as intended via the public VoteTracker+ election repos.
+
+## 5) Basic Election Official Experience (UX)
 
 VoteTracker+ brings significant election transparency to the entire election process by creating two additional CVR copies of the original paper ballots.  By simply using VoteTracker+ election officials leverage an open source validation of their ballot handling process that has come under increasing partisan attack.  The changes that election officials will witness when using a VoteTracker+ based election and voting system are chronologically summarized as follows.
 
-### 4.1) Pre Election Day Summary
+### 5.1) Pre Election Day Summary
 
 Leading up to the election, election officials can iterate over the ballot design and GGO boundaries similar to standard software development practices.  All changes are authenticated to the person making the change and all changes are run against standard automated tests.  Election officials can validate that every address receives the correct ballot via the GGO automated testing that VoteTracker+ supports.
 
 Once a precinct finalizes a ballot, that ballot becomes available for early voting.  Early ballots can be entered into VoteTracker+ at any time, including prior, during, or after election day as configured by the VoteTracker+ configuration for that election.
 
-### 4.2) Day of Election Summary
+### 5.2) Day of Election Summary
 
 1) Depending on the level of adoption of VoteTracker+, all blank ballots can be generated on demand at the voter ID identification station.  There is no need to guess how many blank ballots to print beforehand or which ballots are needed at which voting locations.
 
@@ -73,12 +81,12 @@ Once a precinct finalizes a ballot, that ballot becomes available for early voti
 
 With the full adoption of VoteTracker+ 2.0, the paper ballot themselves can be cryptographically associated with the ballot digital scam images.  The importance of this step is that each paper ballot is cryptographically connected to the digital scan and with voter's receipt in a specific manner that insures anonymity and election security, preventing fraudulent ballots to be added later or for ballots to be removed or even re-ordered.  Full adoption of 2.0 results three copies of the same data distributed in a specific safe and secure manner between election officials, the ballot scanning hardware manufacturer, and the voter themselves.
 
-### 4.3) Post Election-Day Summary
+### 6.3) Post Election-Day Summary
 
 Once the polls close read-only copies of the VoteTracker+ data, which contain the same Merkle Trees originally created by the election officials augmented with all the CVR submitted by the voters, can be made available.  VTP supports incremental releases to the public of this data at a frequency chosen by election officials.
 
 Thus, the voters themselves can download copies of the election data, validate that their ballots are correctly contained within the elections, and tally all the contests themselves.  This is a game changing capability regarding assessing the accuracy and trustworthiness of election.
 
-## 5) Summary
+## 6) Summary
 
 In summary, VoteTracker+ is a 100% open source election and voting system, operated by election officials while being owned and verified by the people, that increases the security, accuracy, and trustworthiness of a paper ballot election.
