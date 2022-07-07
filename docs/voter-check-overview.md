@@ -1,4 +1,4 @@
-# More Details on the VoteTracker+ Voter Receipt
+# More Details on the VoteTracker+ Voter Anonymized Ballot Check
 
 ## 1) Terminology
 
@@ -6,23 +6,23 @@ For definitions and technical terms, please refer to the [NIST Glossary](https:/
 
 ## 2) Background
 
-A foundational aspect of VoteTracker+ is the basic capability to offer to the voter a personalized ballot receipt that contains no connection to their identity nor to their ballot.  To achieve this VoteTracker+ relies on both a specific UX (User eXperience, a.k.a. voter centric workflow) and technology.
+A foundational aspect of VoteTracker+ is the basic capability to offer to the voter a personalized but anonymized ballot check that contains no connection to their identity nor to their ballot.  To achieve this VoteTracker+ relies on both a specific UX (User eXperience, a.k.a. voter centric workflow) and technology.
 
 From a UX point of view an overview of the voter experience is as follows:
 
 1. After the voter marks their ballot, they submit it to the ballot scanner (not part of VoteTracker+)
 1. The ballot scanner scans thier ballot and presents the voter with a human readable form of the [Cast Vote Records](https://pages.nist.gov/ElectionGlossary/#cast-vote-record).  The voter can accept or reject the ballot scanning.
-1. After accepting the CVR, the scanner privately displays to the voter in a manner not observable by a third party their specific row offset on their specific voter receipt
-1. The ballot scanner prints thier ballot receipt on a 8.5x11 sheet of paper
-1. Prior to leaving the voting center, the voter can place their receipt on a separate scanner that will validate that the CVR's referenced on the receipt are now in fact contained in the official voter center's local VoteTracker+ repositories.  These repositories are in fact Merkle Trees that contain additional security details in addition to their history preserving aspects.
+1. After accepting the CVR, the scanner privately displays to the voter in a manner not observable by a third party their specific row offset on their specific voter check
+1. The ballot scanner prints thier ballot check on a 8.5x11 sheet of paper
+1. Prior to leaving the voting center, the voter can place their check on a separate scanner that will validate that the CVR's referenced on the check are now in fact contained in the official voter center's local VoteTracker+ repositories.  These repositories are in fact Merkle Trees that contain additional security details in addition to their history preserving aspects.
 
-The first key step is step 3.  Even though the voter can share their receipt if they so choose, doing so does not reveal how they voted or what their identity is since the sheet contains 100 additional ballots worth of CVRs.
+The first key step is step 3.  Even though the voter can share their check if they so choose, doing so does not reveal how they voted or what their identity is since the sheet contains 100 additional ballots worth of CVRs.
 
-The second key aspect is the Merkle Tree aspect of the VoteTracker+ repositories.  By confirming to the voter that the CVR's on their ballot receipt are now part of the official Merkle Trees of the local voting center, the voter has a valid receipt for 100 CVRs including their own.
+The second key aspect is the Merkle Tree aspect of the VoteTracker+ repositories.  By confirming to the voter that the CVR's on their ballot check are now part of the official Merkle Trees of the local voting center, the voter has a valid check for 100 CVRs including their own.
 
-The rest of this document describes the technology in play regarding the voter receipt and the workflow described above.
+The rest of this document describes the technology in play regarding the voter check and the workflow described above.
 
-## 3) Details of the Timeline for the Generation of the Voter Receipt
+## 3) Details of the Timeline for the Generation of the Voter's Anonymized Ballot Check
 
 The following timeline assumes the following design choices.  These design decisions may change upon further research and discovery.
 
@@ -44,7 +44,7 @@ The following timeline assumes the following design choices.  These design decis
 1. The first contest on the ballot also has a JSON field that contains the same generated paper ballot ID number printed on the ballot.
 1. The actual Git commit digests __are__ the digests that the voter will eventually receive.
 1. The (new) voter's commits are pushed to the local remote Git repo as new branches again in random order, incrementing by N contests the number of unmerged branches on the local remote.
-1. 99 random contest sets are selected (starting from the last fetch) and the 100 row ballot receipt is constructed for the voter.  The voter's specific digests for their ballot/CVR are randomly placed on some row.  That row number is displayed securely and privately to the voter while the voter receipt sheet is being printed.  Once displayed to the voter and cleared, there is no longer any record of the which row belongs to the voters stored anywhere in software.  The public can validate this piece by reviewing the source code contained in the Merkle Tree and the operational provenance of the scanning device.
+1. 99 random contest sets are selected (starting from the last fetch) and the 100 row ballot check is constructed for the voter.  The voter's specific digests for their ballot/CVR are randomly placed on some row.  That row number is displayed securely and privately to the voter while the voter check sheet is being printed.  Once displayed to the voter and cleared, there is no longer any record of the which row belongs to the voters stored anywhere in software.  The public can validate this piece by reviewing the source code contained in the Merkle Tree and the operational provenance of the scanning device.
 1.  It is a TBD how the local contest branches are handled in the local repo - it is a security model TBD.  It may be the case that they are deleted and the local Git is GC'ed and the reflog cleared.  Or it may be the case that some of this data persists for forensics in case of a compromise at the voting center.
 
 ### 3.2) On the local remote Git repo

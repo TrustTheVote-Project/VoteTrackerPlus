@@ -2,7 +2,7 @@ VoteTracker+ is an open software ballot tracking system that increases the secur
 
 VoteTracker+ provides three core capabilities:
 
-1. Directly supplies a cryptographically anonymized ballot receipt back to the voter, allowing the voter to validate that their specific ballot has been interpreted, recorded, and tallied as intended
+1. Directly supplies a cryptographically anonymized ballot check back to the voter, allowing the voter to validate that their specific ballot has been interpreted, recorded, and tallied as intended
 
 2. Cryptographically records and seals the entire history of the election as it occurs in near real time
 
