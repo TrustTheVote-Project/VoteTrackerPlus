@@ -34,7 +34,7 @@ import argparse
 import logging
 import re
 import json
-from logging import error, info, debug
+from logging import error, debug
 
 # Local import
 from address import Address
@@ -238,6 +238,8 @@ def parse_arguments():
                             help="specify the ballot receipt location - overrides an address")
     parser.add_argument("-r", "--row", default='',
                             help="specify a row to further inspect and show (1 based, not 0)")
+    parser.add_argument("-x", "--do_not_pull", action="store_true",
+                            help="Before tallying the votes, pull the ElectionData repo")
     parser.add_argument("-v", "--verbosity", type=int, default=3,
                             help="0 critical, 1 error, 2 warning, 3 info, 4 debug (def=3)")
 #    parser.add_argument("-n", "--printonly", action="store_true",
@@ -262,6 +264,15 @@ def main():
     # Create an VTP election config object
     the_election_config = ElectionConfig()
     the_election_config.parse_configs()
+
+    # git pull the ElectionData repo so to get the latest set of
+    # remote CVRs branches
+    a_ballot = Ballot()
+    with Shellout.changed_cwd(a_ballot.get_cvr_parent_dir(the_election_config)):
+        Shellout.run(
+            ["git", "pull"],
+            verbosity=args.verbosity,
+            check=True)
 
 #    import pdb; pdb.set_trace()
     if args.receipt_file:
