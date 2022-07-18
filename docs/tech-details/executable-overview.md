@@ -1,4 +1,4 @@
-# Basic [VC](https://pages.nist.gov/ElectionGlossary/#vote-center) python executables
+# Basic [Voting Center](https://pages.nist.gov/ElectionGlossary/#vote-center) VoteTracker+ python executables
 
 Some initial/basic python executables geared to supporting a VTP demo
 

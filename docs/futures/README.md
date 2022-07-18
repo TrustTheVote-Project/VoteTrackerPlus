@@ -1,8 +1,8 @@
 # Future VoteTracker+ Goals, Directions, and Notes
 
-This directory is a capturing long-term VoteTracker+ ideas, documentation, and notes.  By long-term it is meant beyond First Customer Ship (FCS) into multiple public elections.
+This directory is a capturing long-term VoteTracker+ ideas, documentation, and notes.  By long-term it is meant VTP 2.0 - beyond First Customer Ship (FCS) into multiple public elections.
 
-FCS is basically a ballot tracking system for paper ballots.  As of 2022/04/25, the thought is that long-term VoteTracker+ would be a more thorough and complete handling of the pre, day-of, and post election day workflows.  The original idea behind VoteTracker+ is to  dramatically increase the trustworth-ness and security of a public election.
+VTP is basically a ballot tracking system for paper ballots.  As of 2022/04/25, the thought is that long-term VoteTracker+ would be a more thorough and complete handling of the pre, day-of, and post election day workflows.  The original idea behind VoteTracker+ is to dramatically increase the trustworth-ness and security of a public election.
 
 ### VoteTracker+ 1.0 (a.k.a. FCS) concerns the tracking of paper ballots and their related [Cast Vote Records](https://pages.nist.gov/ElectionGlossary/#cast-vote-record).
 

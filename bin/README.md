@@ -114,7 +114,7 @@ The git repositories in the _clients_ subfolder all have workspaces as that is w
 
 The basic demo idea is to start a separate __run_mock_election.py -d scanner__ instance in the first three scanner subfolders.  And then in the fourth scanner.04 subfolder manually and interactively cast ballots.  This will simulate a voter at an active voting center.  A VTP server app should be run in the server subfolder.
 
-Here is an example of running a 4 VTP scanner and 1 VTP server app mock demo election.  This simulates an in-person voting center with 4 ballot scanners producing ballot receipts for the voters.  The first three are submitting random ballots while the fourth someone at the keyboard can manually submit one ballot at a time.
+Here is an example of running a 4 VTP scanner and 1 VTP server app mock demo election.  This simulates an in-person voting center with 4 ballot scanners producing the anonymized ballot checks for the voters.  The first three are submitting random ballots while the fourth someone at the keyboard can manually submit one ballot at a time.
 
 ```bash
 # In terminal window #1
@@ -188,7 +188,7 @@ Note that five of the seven contests have been merged to master and as such now 
 
 Ta Da
 
-Two of the contests above remain in the ballot cache and can still be randomly included in some other ballot receipt.  At some future random time they will be merged to master.  When all the polls close and the vote center has no more incoming ballots, the cache is completely drained and merged to master.
+Two of the contests above remain in the ballot cache and can still be randomly included in some other anonymized ballot check.  At some future random time they will be merged to master.  When all the polls close and the vote center has no more incoming ballots, the cache is completely drained and merged to master.
 
 Running the above demo does not modify the VTP-root-repo repo and does not push any changes in the VTP-mock-election.US.nn repository back to the upstream GitHub repositories.  This is because by design the four scanner and server app repo pairs have the git origin pointing to the local bare repositories found in the local-remote-server folder in the demo.nn directory.
 
