@@ -64,15 +64,15 @@ Finally, unlike both Benahloh and blockchain voting implementations, VTP is anon
 
 For more information contact Sandy Currier at: sandy at osetinstitute dot org
 
-## 4) Development
+## 5) Development
 
 See the [bin/README.md](bin/README.md) for notes regarding running and writing code.
 
-## 5) Status - 2022/04/21
+## 6) Status - 2022/07/19
 
 VoteTracker+ is currently in the early design phase - still working out the basics and seeking credible peer reviews. The current priorities are:
 * Technical peer reviews
-* Recruiting contributing developers and UX designers
+* Recruiting contributing developers and UX designers, specifically a javascript engineer to provide a GUI around the current command line based demo
 * Developing a crowdfunding campaign
 
-The crowdfunding project is nearly complete and ready to launch.  A preliminary project video is available at [https://www.youtube.com/watch?v=V0EuZHNHZ6A](https://www.youtube.com/watch?v=V0EuZHNHZ6A).  The launch is delayed until we've acquired adequate peer reviews to independently establish the efficacy and viability of the VoteTracker+ approach to supporting an election.  Donating money and time to a doomed project is not our preference even in this advanced research mode.  So, if you watch the above video and/or read any of the summaries and can offer feedback, it would be greatly appreciated.
+The crowdfunding project is getting closer to launch.  A preliminary project video is available at [https://www.youtube.com/watch?v=V0EuZHNHZ6A](https://www.youtube.com/watch?v=V0EuZHNHZ6A).  The launch is contigent on receiving meaningful peer reviews to independently establish the efficacy and viability of the VoteTracker+ solution and on creating an adequate GUI based demo.
