@@ -60,7 +60,7 @@ The differences between ElectionGuard and VoteTracker+ and that of blockchain te
 
 In addition ElectionGuard is not based on a Merkle Tree as each CVR is independent and not connected with the other CVRs.  VTP adds a significant layer of security and trustworthiness via a Merkle Tree implementation in that the entire change history is stored in the public Merkle Tree ledger.  However, unlike cryptocurrencies which are also Merkle Tree based but which are also based on [blockchain](https://en.wikipedia.org/wiki/Blockchain) technology, VTP is not based on blockchain technology and contains no blockchain [implementation/code](https://github.com/dragonchain/dragonchain).  This again results in VTP being less complex than blockchain solutions while also not subject to the significant issues that blockchains implementations have with voter and ballot anonymity.
 
-Finally, unlike both Benahloh and blockchain voting implementations, VTP is anonymized in time both in an absolute sense, as the ballot data contains no date and time information, and via the Merkle Tree chain itself as the CVRs are randomized in linkage order.
+Finally, unlike both Benaloh and blockchain voting implementations, VTP is anonymized in time both in an absolute sense, as the ballot data contains no date and time information, and via the Merkle Tree chain itself as the CVRs are randomized in linkage order.
 
 For more information contact Sandy Currier at: sandy at osetinstitute dot org
 
