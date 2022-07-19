@@ -46,12 +46,19 @@ VoteTracker+ is intended to be compliant to the sensible extent possible [NIST](
 VoteTracker+ will attempt to leverage as much code and prior art as possible. There are several possible alternatives for standing up a pilot; if you have suggestions please get in touch.
 
 The following is a short and incomplete list of other voting projects that are of relevance:
-* [Helios Voting](https://heliosvoting.org/) 
-* [Scantegrity](https://en.wikipedia.org/wiki/Scantegrity) 
-* [Pret-a-Voter](https://en.wikipedia.org/wiki/Pr%C3%AAt_%C3%A0_Voter) 
-* [STARVote](https://www.usenix.org/conference/evtwote13/workshop-program/presentation/bell) 
+
 * [ElectionGuard](https://freeandfair.us/electionguard/) 
+* [Helios Voting](https://heliosvoting.org/) 
+* [Pret-a-Voter](https://en.wikipedia.org/wiki/Pr%C3%AAt_%C3%A0_Voter) 
+* [Scantegrity](https://en.wikipedia.org/wiki/Scantegrity) 
+* [STARVote](https://www.usenix.org/conference/evtwote13/workshop-program/presentation/bell) 
 * [VotingWorks](https://www.voting.works/) (and [VotingWorks Suite](https://docs.voting.works/vxsuite/))
+
+ElectionGuard and its differences with respect to VoteTracker+ is worth a short note.  ElectionGuard is based on the excellent paper [Simple Verifiable Elections](https://www.usenix.net/legacy/events/evt06/tech/full_papers/benaloh/benaloh.pdf) by Josh Benaloh.  Solutions like ElectionGuard are based on encrypting the individual CVR's of the ballot (encrypting the ballot data at rest) with the inclusion of a [Benaloh Challenge](https://github.com/phayes/benaloh-challenge) implementation to add a layer of trust for the voting machines that perform the encrypting.  VTP is much less complex in that the CVR's are never encrypted and as such no Benaloh Challenge is required.  Voters get direct access to the real and final per contest CVR digests as the CVRs need not be encrypted since the voter's CVR's are effectively anonymized amongst 99 other sets of contest CVRs.  No encryption or decryption is required in VTP for the data-at-rest portion even while encryption and decryption occur in the data-in-movement portion much like today's commercial/military grade encrypted network connections.
+
+ElectionGuard is also not based on a Merkle Tree while VTP is, adding a significant layer of security and trustworthiness.  However, unlike cryptocurrencies which are Merkle Tree based and implemented via a [blockchain](https://en.wikipedia.org/wiki/Blockchain), VTP is not based on blockchain and contains no [blockchain implementation/code](https://github.com/dragonchain/dragonchain), again resulting in a less complex solution.
+
+Finally, unlike both Benahloh and blockchain voting implementations, VTP is anonymized in time both in an absolute sense, as the ballot data contains no date and time information, and via the Merkle Tree chain itself as the CVRs are randomized in linkage order.
 
 For more information contact Sandy Currier at: sandy at osetinstitute dot org
 
