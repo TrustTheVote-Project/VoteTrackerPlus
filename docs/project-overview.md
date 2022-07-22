@@ -31,6 +31,10 @@ A third unique and key aspect of VoteTracker+ is that with VTP every voter can e
 
 ## 3) Basic Voter In-place Experience (UX)
 
+### 3.1) After the first 100 ballots have been cast
+
+This is in the nominal case of there already having been cast 100 ballots of the same type.  VoteTracker+ requires a cache of 100 pre-existing CVRs so to insure the anonymity of the ballot tracking system.  Handling the case of either the first 100 ballots or the case of there being less than 100 ballots cast in the election are covered after this section.
+
 From the voter's point of view, VoteTracker+ is primarily a backoffice implementation that generates cryptographic metadata associated with each [Cast Vote Record](https://pages.nist.gov/ElectionGlossary/#cast-vote-record) (CVR) for storing, retrieving, inspecting, and tallying the CVRs.  As such, the voter's current in-place voting experience changes in a few subtle but significant ways.  The following describes these changes in more or less chronological order from current nominal in-place voting experiences.
 
 The first change a voter will notice will be that the paper ballot scanning device contains a display that privately reveals to the user the CVR itself, not the digitial scan of the ballot.  Every voter is given the oppourtunity , prior to the ballot being accepted in the election to self adjudicate their ballot in the case where the ballot scanned has mis-interpreted their ballot..  This offers the voter the opportunity to void their physical paper ballot and receive a new blank ballot if they believe their CVR is incorrect.  A voter is free to ignore this step and submit their ballot regardless, in which case ballot may be adjudicated by an election official at some later time.
@@ -50,6 +54,22 @@ The next three significant changes occur after all the polls close.  Once all th
 The voter can continue to do this as more results are uploaded.
 
 Note that with all the data and code available to the electorate, alternate facts, illegitimate narratives, or other attempts at casting doubt on the election can eventually be publicly shown to be false.  And if either the physical ballots are compromised, or if the live VoteTracker+ data is compromised, or if individual or groups of individual collude and generate false narratives or data, the accuracy or inaccuracy of such data and narratives can be determined transparently and universally among the electorate.  With VoteTracker+ there is no single party that privately determines the accuracy of the VoteTracker+ data.
+
+### 3.2) Handling the first 100 ballots
+
+VoteTracker+ can be configured to supply ballot checks and offsets to the first 100 voters casting ballots via a special workflow/UX involving a provisional ballot check.  When Election Officials opt to support this workflow, VTP will create a unique public/private key pair that is only used for the first 100 ballots.  After the voter self adjudicates their ballot, VTP generates 100 3 digit random numbers and privately displays the (first) one to the (first provisional) voter.  VTP then prints a special provisional ballot check that has the public key encrypted 3 digit number.  The provisional ballot check contains no CVR digests, not even the voters.
+
+The voter shows the provisional ballot check to the out-processing EO who then records in the out-processing voter id roll that the voter has a provisional ballot check.
+
+Either after 100 ballots have been submitted or after all the polls close assuming the polling center stays open to allow for processing provisional ballot checks, the voter once again enters the polling center and identifies themselves as a provisional ballot check voter.  The EO confirm this is the case and visually inspects the provisional ballot check.
+
+The voter proceeds to a VTP scanner configured for provisional ballot check processing.  The voter inserts their provisional ballot check into the scanner.  The voter must correctly remember their provisional ballot check index and enter that on the keypad next to the private display.  Upon successful entering of both, the real ballot index is privately displayed to the voter and the real ballot check is printed.
+
+### 3.3) When there are less than 100 ballots cast
+
+The case of a precinct with less than 100 voters or ballots that have been cast is similar to immediately preceeding section 3.2 above - "Handling the first 100 ballot".  In the case of less than 100 voters, all the voters have received a provisional ballot check.  once all the polls close, the voters still can exchange their provisional ballot checks for real ballot checks by following the same workflow as in 3.2 above.  However, in this case instead of 100 rows of CVR digests only the total number of rows, which are the total number of ballots, will be printed.
+
+Note that since the contest tallies per precinct are public information regardless of the number of voters, having a ballot check with the same less-then-100 rows will in itself reveal no additional information.
 
 ## 4) Basic Vote-by-Mail Voter Experience (UX)
 
