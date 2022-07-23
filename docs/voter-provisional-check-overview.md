@@ -8,38 +8,39 @@ For definitions and technical terms, please refer to the [NIST Glossary](https:/
 
 See [voter-check-overview.md](./voter-check-overview.md) for background.  The voter provisional check overview is based off of that document.
 
-The provisional ballot check workflow/US occurs when election officials wish to support ballot checks for the first 100 voters.  VoteTracker+ requires a a minimum number of already cast ballots to adequately anonymize the voter's CVRs.  Without a special workflow/UX, the first 100 voters of every unique ballot type would not receive a ballot check.  This special workflow, called the provisional ballot check, supports this.
+The provisional ballot check workflow/US occurs when election officials wish to support ballot checks for the first 100 voters.  VoteTracker+ requires a minimum number of already cast ballots to adequately anonymize the voter's CVRs.  Without a special workflow/UX, the first 100 voters of every unique ballot type would not receive a ballot check.  This special workflow, called the provisional ballot check, supports giving ballot checks to the first 100 voters..
 
 A summary of the provisional ballot check workflow is described in section 3.2 and 3.3 of [project-overview.md](../project-overview.md).
 
 ## 3) Details of the Provisional Ballot Check
 
-When a ballot CVR is created for one of the first 100 ballots, the current git workflows and details remain basically the same with the following additional workflows/details.
-
-### Pre Ballot Scanning
-
-When the VTP scanners are configured for a voting center (wherever ballots will be scanned)
-- a public/private key pair is generated for that location on the local remote git server
-- 100 times the number of VTP scanners random 3 digit numbers are generated and 100 each are distributed to the VTP scanners.  If there are more than 10 VTP scanners, alphanumerics or words (TBD) are used.  These are passed to the user.
-- the public key is also passed to the VTP scanners
+When a ballot CVR is created for one of the first 100 ballots, the current git workflows and details remain the same with the following additional workflows/details.
 
 ### Ballot Scanning
 
-If a CVR digest is created on a VTP scanner and is within the 100 limit
-- a random number is pulled from the local queue
-- it is encrypted with the public key
-- a git tag is created for each CVR branch and also pushed with the branch.  The tag name is the 3 digit random number and the contest UID.  There will be N contest tags for each provisional ballot check
-- the 3 digit random is privately displayed to the voter instead of the real ballot index
-- the encrypted version of the random number is printed on (as) the provisional ballot check for the voter
+If a CVR digest is created on a VTP scanner and is within the 100 limit:
+
+- after the CVR contest branch is created and pushed, the VTP scanner generates 3 digit random number and an associated GUID
+- a git annotated tag is created.  The name of the tag is something like “provisional-NNN-<CVR branch>” and the comment contains the GUID.  The <CVR-branch> matches the created CVR branch name.  The tag is pushed.
+- the 3 digit random number is peivately displayed to the user and the QR code of the GUID is printed on/as the provisiobal ballot check 
 
 ### After 100 ballots are cast or after all-the-polls close
 
-When a provisional ballot check is scanned and validated (the encrypted index must be successfully decrypted and match a live provisional ballot index), the voter is prompted the un-encrypted provisional index.  The private key on the local remote git server is used to attempt to decrypt the input from the voter.
+The voter re-enters the voting center and properly identifies themselves to the election official.  The EO validates that the voter was one of the first 100 voters and verifies the provisional ballot check.  The voter enters the semi-private VTP scanner position.  THe voter inserts the provisional ballot check in the scanner.
 
-If the correct un-encrypted provisional index is entered, using either the 100 or less provisional ballot tags (which reference the correct and real CVR digests), a real ballot check is printed.  The real ballot index is also privately displayed to the voter.  The provisional ballot index is deleted so that it cannot be used again.
+When a provisional ballot check is scanned:
+
+- the provisional tags are retrieved from the local remote server
+- the user is prompted to enter the provisional ballot index
+- if the GUID matches the supplied provisional index, then a real ballot chech is created and the assocuated real index is privately displayed to the user.  If there are less than 100 total ballots, the ballot check will contain that number.
+- the tag is deleted
 
 Note that the CVR digests may or may not already be merged to master as that is a different workflow independent of this one.  This workflow only concerns delivering to the first 100 voters a real after-the-fact ballot check and index.
 
 ## 4) Implementation Notes
 
-It will be an iterative process when coding this how the actual implementation will end up.  More or less than described above may end up leveraging git directly.  Regardless git tags will most likely be used to track the digest values for each provisional ballot index/check.  Careful attention needs to be paid to state and state changes.
+In the wild the git connections to the local remote server will be ssh based so that the git runtime connection is secured.  Access is both authenticated and encrypted.
+
+Note - if the remote tags can be listed with the annotation, do that to minimize the attack surface instead of pulling them.
+
+As such the plaintext encoding of the 3 digit number and the associated GUID may/should be good enough.  More encryption may reduce the attack surface in time and space, but this may be good enough. TBD
