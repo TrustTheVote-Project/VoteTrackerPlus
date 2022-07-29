@@ -57,17 +57,17 @@ Note that with all the data and code available to the electorate, alternate fact
 
 ### 3.2) Handling the first 100 ballots
 
-VoteTracker+ can be configured to supply ballot checks and offsets to the first 100 voters casting ballots via a special workflow/UX involving a provisional ballot check.  When Election Officials opt to support this workflow, VTP will create a unique public/private key pair that is only used for the first 100 ballots.  After the voter self adjudicates their ballot, VTP generates 100 3 digit random numbers and privately displays the (first) one to the (first provisional) voter.  VTP then prints a special provisional ballot check that has the public key encrypted 3 digit number.  The provisional ballot check contains no CVR digests, not even the voters.
+VoteTracker+ can be configured to supply ballot checks and offsets to the first 100 voters casting ballots via a special workflow/UX involving an interim ballot check.  After the voter self adjudicates their ballot, VTP will generate a random 3 digit number and associated one-way GUID, privately displaying the 3 digit interim offset to the voter while printing the GUID as an interum ballot check.  The interim ballot check contains no CVR digests.
 
-The voter shows the provisional ballot check to the out-processing EO who then records in the out-processing voter id roll that the voter has a provisional ballot check.
+The voter shows the interim ballot check to the out-processing EO who then records in the out-processing voter id roll that the voter has an interim ballot check.
 
-Either after 100 ballots have been submitted or after all the polls close assuming the polling center stays open to allow for processing provisional ballot checks, the voter once again enters the polling center and identifies themselves as a provisional ballot check voter.  The EO confirm this is the case and visually inspects the provisional ballot check.
+Either after 100 ballots have been submitted or after all the polls close assuming the polling center stays open to allow for processing interim ballot checks, the voter once again enters the polling center and identifies themselves as an interim ballot check voter.  The EO confirm this is the case and visually inspects the interim ballot check.
 
-The voter proceeds to a VTP scanner configured for provisional ballot check processing.  The voter inserts their provisional ballot check into the scanner.  The voter must correctly remember their provisional ballot check index and enter that on the keypad next to the private display.  Upon successful entering of both, the real ballot index is privately displayed to the voter and the real ballot check is printed.
+The voter proceeds to a VTP scanner and inserts their interim ballot check into the scanner.  The voter must correctly remember their interim ballot check index and enter that on the keypad next to the private display.  Upon successful entering of both, the real ballot index is privately displayed to the voter and the real ballot check is printed.
 
 ### 3.3) When there are less than 100 ballots cast
 
-The case of a precinct with less than 100 voters or ballots that have been cast is similar to immediately preceeding section 3.2 above - "Handling the first 100 ballot".  In the case of less than 100 voters, all the voters have received a provisional ballot check.  once all the polls close, the voters still can exchange their provisional ballot checks for real ballot checks by following the same workflow as in 3.2 above.  However, in this case instead of 100 rows of CVR digests only the total number of rows, which are the total number of ballots, will be printed.
+The case of a precinct with less than 100 voters or ballots that have been cast is similar to immediately preceeding section 3.2 above - "Handling the first 100 ballot".  In the case of less than 100 voters, all the voters have received an interim ballot check.  once all the polls close, the voters still can exchange their interim ballot checks for real ballot checks by following the same workflow as in 3.2 above.  However, in this case instead of 100 rows of CVR digests only the total number of rows, which are the total number of ballots, will be printed.
 
 Note that since the contest tallies per precinct are public information regardless of the number of voters, having a ballot check with the same less-then-100 rows will in itself reveal no additional information.
 
@@ -75,20 +75,39 @@ Note that since the contest tallies per precinct are public information regardle
 
 VoteTracker+ can enhance the voter vote-by-mail experience depending on the level of adoption by both election officials and the voter.  If configured by election officials, the voter can receive their anonymized ballot check by mail.  In this scenario an election official performs the following nominal steps:
 
+Nominal mail-ballot workflow/UX:
+
 - receives/opens mail-in ballot package
 - verifies the voter id
 - places the ballot in the OEM+VTP mail-in scanner
 - the scanner will display on the screen if ballot passes OEM and VTP checks
 - if not, election official follows election guidelines
 - if yes, the following are steps are completed
-- if the voter supplied an optional ballot check (BC) public key, the election official scans the public key
-- the election official accepts the ballot similar to in-place voting
-- if a ballot check public keys was supplied, the scanner stores the encrypted ballot index in the private ballot index ledger
+- if the voter supplied an optional ballot check (BC) public key, the election official scans the public key and the scanner stores the encrypted ballot index in the private ballot index ledger
 - if the voter supplied a self addressed envelope for the ballot check, the VTP mail-in scanner prints ballot check and the EO places the ballot check in the self addressed envelope.
 
 Note that the public key is not associated in any way with the paper ballot, the scanner image, or the ballot check.  The [public private key pair](https://en.wikipedia.org/wiki/Public-key_cryptography) generated by the voter is not tied to anything in particular so cannot really be used for voter identification.
 
 After all the polls close and election officials have setup the required restricted access to the private ballot check index ledger, voters can visit election officials in person, nominally at their town hall or other officially designated location.  After the voter has properly identified themselves nominally in a manner similar to casting a ballot in person, an election official can privately and securely reveal to the voter their specific encrypted ballot index offset.  The voter can then enter the encrypted offset into the VTP mobile app to decrypt the index and reveal their true check index.  With that index they can validate that their specific mail-in ballot has been cast, recorded, and tallied as intended via the public VoteTracker+ election repos.
+
+## 4b) Supporting the first 100 mail-in ballots
+
+Though it is possible to support interim ballot checks to the first 100 mail-in voters, a less cumbersome workflow can be supported since at the time of opening the mail-in ballot the election official is in control of both the ballot and the voter identification.  Specifically:
+
+First 100 mail-ballot workflow/UX:
+
+- receives/opens mail-in ballot package
+- verifies the voter id
+- places the ballot in the OEM+VTP mail-in scanner
+- the scanner will display on the screen if ballot passes OEM and VTP checks
+- if not, election official follows election guidelines
+- if yes, the following are steps are completed
+- election official receives the mail-in interim ballot check which contains both the interim index and the associated GUID
+- election official places the voter package together with the interim ballot check in the first 100 mail-in ballot box/pile
+- this process is repeated until there are 100 interim ballot packages.  Note that VTP will automatically initiate the nominal mail-in ballot workflow when the 100 ballot cache has been achieved.
+- an election official then processes the first 100 mail-in ballot box by re-submitting the interim ballot check in the VTP scanner
+- if the voter supplied an optional ballot check (BC) public key, the election official scans the public key and the scanner stores the encrypted ballot index in the private ballot index ledger
+- if the voter supplied a self addressed envelope for the ballot check, the VTP mail-in scanner prints ballot check and the EO places the ballot check in the self addressed envelope.
 
 ## 5) Basic Election Official Experience (UX)
 
@@ -112,12 +131,24 @@ Once a precinct finalizes a ballot, that ballot becomes available for early voti
 
 With the full adoption of VoteTracker+ 2.0, the paper ballot themselves can be cryptographically associated with the ballot digital scam images.  The importance of this step is that each paper ballot is cryptographically connected to the digital scan and with voter's check in a specific manner that insures anonymity and election security, preventing fraudulent ballots to be added later or for ballots to be removed or even re-ordered.  Full adoption of 2.0 results three copies of the same data distributed in a specific safe and secure manner between election officials, the ballot scanning hardware manufacturer, and the voter themselves.
 
-### 6.3) Post Election-Day Summary
+### 5.3) Post Election-Day Summary
 
 Once the polls close read-only copies of the VoteTracker+ data, which contain the same Merkle Trees originally created by the election officials augmented with all the CVR submitted by the voters, can be made available.  VTP supports incremental releases to the public of this data at a frequency chosen by election officials.
 
 Thus, the voters themselves can download copies of the election data, validate that their ballots are correctly contained within the elections, and tally all the contests themselves.  This is a game changing capability regarding assessing the accuracy and trustworthiness of election.
 
-## 6) Summary
+## 6) Franking - a VoteTracker+ 2.0 Consideration
+
+[Franking](https://en.wikipedia.org/wiki/Franking) is the process of marking the paper ballot once it has been scanned to create the CVRs for the contests on the ballot.  This step can only really be attempted with 100% open software as it is all too easy to embed within the frank mark an indication of voter id.  As VoteTracker+ is 100% opensource, franking is a VoteTracker+ 2.0 consideration.
+
+The general idea is to mark the paper ballot post the self adjudication thereof with contest digests generated by VTP.  In addition a run-time election private key generated GUID is also franked.  The digests and the GUID would also be associated with the digital image of the ballot.  However the GUID is not recorded in any of the VTP public ledgers.  Neither the paper ballots nor the actual digital images are public.
+
+This allows an exact one-to-one mapping between the paper ballot and the digital scans thereof.  Both frank marks limit the ability of ballots to be inserted and removed from one of the two sources of this data, either the paper ballots themselves or the digital scans of the paper ballots.  The GUID also limits the ability fraudulent VTP ledgers to be added into the election's real VTP aggregated ledgers.
+
+This also allows specific ballots or large numbers of ballots to be rejected post acceptance into the tally while allowing the voters who cast the ballots to know that their specific ballot has been rejected.  This allows the opportunity for election officials to nullify ballots after the fact while both having the original VTP tally remain accurate and having the voter able raise an anonymous claim that their ballot was incorrectly rejected.
+
+If a voting center CVR records are rejected but the paper ballots are not, re-scanning the paper ballots a second time would render the voter's original ballot checks invalid and useless.  Any type of rescanning of the paper ballots nullify pre-existing ballot checks for those ballots.
+
+## 7) Summary
 
 In summary, VoteTracker+ is a 100% open source election and voting system, operated by election officials while being owned and verified by the people, that increases the security, accuracy, and trustworthiness of a paper ballot election.
