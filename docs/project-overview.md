@@ -147,7 +147,7 @@ This allows an exact one-to-one mapping between the paper ballot and the digital
 
 This also allows specific ballots or large numbers of ballots to be rejected post acceptance into the tally while allowing the voters who cast the ballots to know that their specific ballot has been rejected.  This allows the opportunity for election officials to nullify ballots after the fact while both having the original VTP tally remain accurate and having the voter able raise an anonymous claim that their ballot was incorrectly rejected.
 
-If a voting center CVR records are rejected but the paper ballots are not, re-scanning the paper ballots a second time would render the voter's original ballot checks invalid and useless.  Any type of rescanning of the paper ballots nullify pre-existing ballot checks for those ballots.
+Regardless of franking or not, if a voting center CVR records are rejected and the paper ballots are not, re-scanning the paper ballots a second time would render the voter's original ballot checks invalid and useless.  In fact any type of rescanning of the paper ballots nullify pre-existing ballot checks for those ballots.
 
 ## 7) Summary
 
