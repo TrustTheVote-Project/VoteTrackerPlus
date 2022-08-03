@@ -1,4 +1,4 @@
-# An Informal Description of the Security Model of VoteTrackerPlus
+# An Informal Description of the Security Model of VoteTracker+
 
 ## 1) Terminology
 
