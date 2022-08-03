@@ -8,10 +8,10 @@
 2) The election official verifies their identity and registration status
 3) The election official gives the voter an address correct blank ballot
 4) The voter proceeds to a private location to complete as much of the ballot as desired
-5) The voter proceeds to a second semi private self adjudication /outtake location.  Self-adjudication is when the voter self adjudicates the digital interpretation of the physical markings on the ballot by elf verifying the generated [CVRs](https://pages.nist.gov/ElectionGlossary/#cast-vote-record).  Outtake is when the election officials records the voter as having voted and completed voting.  Note that the election official cannot see the screen of the self-adjudicating scanner but can a have safe and respectful direct conversation with the voter and offer assistance.
+5) The voter proceeds to a second semi private self ballot verification/outtake location.  Ballot verification is when the voter verifies the digital interpretation of the physical markings on the ballot by elf verifying the generated [CVRs](https://pages.nist.gov/ElectionGlossary/#cast-vote-record).  Outtake is when the election officials records the voter as having voted and completed voting.  Note that the election official cannot see the screen of the ballot verification scanner but can a have safe and respectful direct conversation with the voter and offer assistance.
     1) The voter privately inserts their ballot into a VTP scanner
     2) The scanner displays the Cast Vote Records for all the contests on the ballot.  Blank contests are indicated as such (legitimate [undervotes](https://en.wikipedia.org/wiki/Undervote)).
-    3) If the interpreted CVRs are not to the liking of the voter, the voter can reject the ballot.  If rejected, the ballot is returned to the voter.  With the ballot selections covered but with the ballot header exposed, the voter shows the ballot header to the self-adjudication/outtake election official, who will supply a new and correct blank ballot.  The current completed ballot is then shredded in the presence of both the voter and the election official, and the voter returns to the private voting location to try again.
+    3) If the interpreted CVRs are not to the liking of the voter, the voter can reject the ballot.  If rejected, the ballot is returned to the voter.  With the ballot selections covered but with the ballot header exposed, the voter shows the ballot header to the ballot verification/outtake election official, who will supply a new and correct blank ballot.  The current completed ballot is then shredded in the presence of both the voter and the election official, and the voter returns to the private voting location to try again.
     4) If the interpreted CVRs are to the liking of the voter, the voter accepts the CVRs and the ballot is officially accepted.  An anonymized ballot check is printed and a voter row number is privately shown to the voter.
 6) The election official records the outtake and the voter departs the voting area.
 
@@ -58,7 +58,7 @@ Since the VTP repositories, a.k.a. the election public ledgers, also pre contain
 
 ## 1.7) The voter can tell if their ballot is removed from the tally
 
-If election officials decide to remove a ballot or a set of ballots from the election, for example under a court order or some other adjudication, the election officials will either:
+If election officials decide to remove a ballot or a set of ballots from the election, for example under a court order, the election officials will either:
 
 ### 1.7.1) Rescan the voting center ballots, nullifying the previous scans
 

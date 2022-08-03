@@ -30,7 +30,6 @@ The following timeline assumes the following design choices.  These design decis
 1. Each voting center basically contains a Git service that hosts a voting center local git repository.  Various devices in the voting center will pull and push into this Git service.  For reference this repo is referred to as the local remote repository.
 1. The local remote Git repo primarily operates on the master branch.
 1. The ballot scanners have the ability to print but only in one color that does not match either the lead pencil or the ink pens provided by the election officials to the voters to fill out the ballot.
-1. Both the physical ballots and digital image scans of the ballots are considered confidential and private information never to be made publicly available.
 1. The JSON payload that contains the CVRs as well as additional VoteTracker+ fields is stored as the Git commit comment and not as a separate file on a file system.
 1. The various voting center devices participating in VoteTracker+ are hardwired together.  There are specific security procedures in play on the physical LAN.
 
