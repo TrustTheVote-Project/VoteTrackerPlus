@@ -77,4 +77,4 @@ VoteTracker+ is currently in the early design phase - still working out the basi
 
 The crowdfunding project is getting closer to launch.  A preliminary project video is available at [https://www.youtube.com/watch?v=V0EuZHNHZ6A](https://www.youtube.com/watch?v=V0EuZHNHZ6A).  The launch is contigent on receiving meaningful peer reviews to independently establish the efficacy and viability of the VoteTracker+ solution and on creating an adequate GUI based demo.
 
-The non-public [Project Plan](https://github.com/orgs/TrustTheVote-Project/projects/2/views/1) is using the native GitHub [project planning for developers](https://github.com/features/issues).
+VoteTracker+ is currently using GitHub's beta [project planning for developers](https://github.com/features/issues) for the [VoteTracker+ Project Plan](https://github.com/orgs/TrustTheVote-Project/projects/2/views/1).  It is currently non-public - get involved or join the team to gain access to it.  :-)
