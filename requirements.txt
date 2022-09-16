@@ -1,51 +1,56 @@
-alabaster @ file:///home/ktietz/src/ci/alabaster_1611921544520/work
-astroid @ file:///opt/concourse/worker/volumes/live/0a6e6368-0831-4a84-577d-f57d6f278a8b/volume/astroid_1639044240452/work
-attrs @ file:///opt/conda/conda-bld/attrs_1642510447205/work
-Babel @ file:///tmp/build/80754af9/babel_1620871417480/work
+alabaster==0.7.12
+astroid==2.11.7
+attrs==21.4.0
+Babel==2.9.1
 brotlipy==0.7.0
-certifi==2021.10.8
-cffi @ file:///private/var/folders/sy/f16zz6x50xz3113nwtb9bvq00000gp/T/croot-2p6q7e2r/cffi_1642701115063/work
-charset-normalizer @ file:///tmp/build/80754af9/charset-normalizer_1630003229654/work
-colorama @ file:///tmp/build/80754af9/colorama_1607707115595/work
-cryptography @ file:///opt/concourse/worker/volumes/live/a9ca20dd-e1fe-4ed3-754e-0db64082a5d2/volume/cryptography_1639414576087/work
-docutils @ file:///opt/concourse/worker/volumes/live/c87e10af-317d-45cb-7142-3d02053858ee/volume/docutils_1620827978243/work
-idna @ file:///tmp/build/80754af9/idna_1637925883363/work
-imagesize @ file:///tmp/build/80754af9/imagesize_1637939814114/work
-importlib-metadata @ file:///opt/concourse/worker/volumes/live/deb4b040-5d3d-417b-6177-7bbc888e23de/volume/importlib-metadata_1638542901294/work
-iniconfig @ file:///home/linux1/recipes/ci/iniconfig_1610983019677/work
-isort @ file:///tmp/build/80754af9/isort_1628603791788/work
-Jinja2 @ file:///tmp/build/80754af9/jinja2_1635780242639/work
-lazy-object-proxy @ file:///opt/concourse/worker/volumes/live/a169db40-97bf-4f51-6893-dc751f705b7b/volume/lazy-object-proxy_1616529067444/work
-MarkupSafe @ file:///opt/concourse/worker/volumes/live/1bcf0940-5bf8-4171-61e3-2133f5885e8b/volume/markupsafe_1621528148241/work
-mccabe==0.6.1
-networkx @ file:///opt/conda/conda-bld/networkx_1647437648384/work
-packaging @ file:///tmp/build/80754af9/packaging_1637314298585/work
-platformdirs @ file:///tmp/build/80754af9/platformdirs_1638968569495/work
-pluggy @ file:///opt/concourse/worker/volumes/live/b59eda93-c2e0-4d8d-58d7-54246c8e1958/volume/pluggy_1633715226795/work
-py @ file:///opt/conda/conda-bld/py_1644396412707/work
-pycparser @ file:///tmp/build/80754af9/pycparser_1636541352034/work
-Pygments @ file:///opt/conda/conda-bld/pygments_1644249106324/work
+certifi==2022.6.15
+cffi==1.15.1
+charset-normalizer==2.0.4
+colorama==0.4.5
+cryptography==37.0.1
+dill==0.3.4
+docutils==0.18.1
+idna==3.3
+imagesize==1.4.1
+importlib-metadata==4.11.3
+iniconfig==1.1.1
+isort==5.9.3
+Jinja2==3.0.3
+lazy-object-proxy==1.6.0
+MarkupSafe==2.1.1
+mccabe==0.7.0
+networkx==2.8.4
+packaging==21.3
+pip==22.1.2
+platformdirs==2.5.2
+pluggy==1.0.0
+py==1.11.0
+pycparser==2.21
+Pygments==2.11.2
 PyInputPlus==0.2.12
-pylint @ file:///opt/concourse/worker/volumes/live/35d144dd-2adb-4d31-6003-ffc112ccf38a/volume/pylint_1639650625922/work
-pyOpenSSL @ file:///opt/conda/conda-bld/pyopenssl_1643788558760/work
-pyparsing @ file:///tmp/build/80754af9/pyparsing_1635766073266/work
+pylint==2.14.5
+pyOpenSSL==22.0.0
+pyparsing==3.0.9
 PySimpleValidate==0.2.12
-PySocks @ file:///opt/concourse/worker/volumes/live/112288ac-9cb0-4e73-768b-13baf4ca6419/volume/pysocks_1605305820043/work
-pytest==6.2.5
-pytz==2021.3
+PySocks==1.7.1
+pytest==7.1.2
+pytz==2022.1
 PyYAML==6.0
-requests @ file:///opt/conda/conda-bld/requests_1641824580448/work
-snowballstemmer @ file:///tmp/build/80754af9/snowballstemmer_1637937080595/work
-Sphinx @ file:///opt/conda/conda-bld/sphinx_1643644169832/work
-sphinxcontrib-applehelp @ file:///home/ktietz/src/ci/sphinxcontrib-applehelp_1611920841464/work
-sphinxcontrib-devhelp @ file:///home/ktietz/src/ci/sphinxcontrib-devhelp_1611920923094/work
-sphinxcontrib-htmlhelp @ file:///tmp/build/80754af9/sphinxcontrib-htmlhelp_1623945626792/work
-sphinxcontrib-jsmath @ file:///home/ktietz/src/ci/sphinxcontrib-jsmath_1611920942228/work
-sphinxcontrib-qthelp @ file:///home/ktietz/src/ci/sphinxcontrib-qthelp_1611921055322/work
-sphinxcontrib-serializinghtml @ file:///tmp/build/80754af9/sphinxcontrib-serializinghtml_1624451540180/work
+requests==2.28.1
+setuptools==63.4.1
+snowballstemmer==2.2.0
+Sphinx==5.0.2
+sphinxcontrib-applehelp==1.0.2
+sphinxcontrib-devhelp==1.0.2
+sphinxcontrib-htmlhelp==2.0.0
+sphinxcontrib-jsmath==1.0.1
+sphinxcontrib-qthelp==1.0.3
+sphinxcontrib-serializinghtml==1.1.5
 stdiomask==0.0.6
-toml @ file:///tmp/build/80754af9/toml_1616166611790/work
-typing-extensions @ file:///tmp/build/80754af9/typing_extensions_1631814937681/work
-urllib3 @ file:///opt/conda/conda-bld/urllib3_1643638302206/work
-wrapt @ file:///opt/concourse/worker/volumes/live/99094902-9e15-4318-5ab0-ee253b90775d/volume/wrapt_1638433872602/work
-zipp @ file:///opt/conda/conda-bld/zipp_1641824620731/work
+tomli==2.0.1
+tomlkit==0.11.1
+typing_extensions==4.3.0
+urllib3==1.26.11
+wheel==0.37.1
+wrapt==1.14.1
+zipp==3.8.0

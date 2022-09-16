@@ -3,9 +3,9 @@ channels:
   - defaults
 dependencies:
   - python=3.9
-  - pytest
-  - sphinx
-  - pylint
-  - pyyaml
   - networkx
+  - pylint
+  - pytest
+  - pyyaml
+  - sphinx
 prefix: /Users/sandy/miniconda3/envs/vtp.01
