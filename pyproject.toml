@@ -1,0 +1,23 @@
+[tool.poetry]
+name = "vtp-root-repo"
+version = "0.1.0"
+description = "VoteTracker+ - a distributed, open-source, public ballot and Cast Vote Record integrity and tracking system"
+authors = ["Sandy Currier <windoverwater@users.noreply.github.com>"]
+license = "GPL-2.0"
+readme = "README.md"
+packages = [{include = "vtp_root_repo"}]
+
+[tool.poetry.dependencies]
+python = "^3.9"
+pylint = "^2.15.3"
+pytest = "^7.1.3"
+PyYAML = "^6.0"
+networkx = "^2.8.6"
+PyInputPlus = "^0.2.12"
+
+[tool.poetry.group.dev.dependencies]
+sphynx = "^0.0.3"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
