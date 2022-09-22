@@ -312,9 +312,9 @@ class Tally:
                 choice = Contest.get_choices_from_contest(contest['choices'])[selection]
                 self.selection_counts[choice] += 1
                 self.vote_count += 1
-                debug(
-                    f"Vote (plurality): contest={contest['name']} "
-                    f"choice={choice} selection={selection}")
+#                debug(
+#                    f"Vote (plurality): contest={contest['name']} "
+#                    f"choice={choice} selection={selection}")
             else:
                 debug(f"Vote (plurality): contest={contest['name']} BLANK")
 
@@ -329,9 +329,9 @@ class Tally:
             choice = Contest.get_choices_from_contest(contest['choices'])[selection]
             self.selection_counts[choice] += 1
             self.vote_count += 1
-            debug(
-                f"Vote (RCV): contest={contest['name']} "
-                f"choice={choice} (selection={selection})")
+#            debug(
+#                f"Vote (RCV): contest={contest['name']} "
+#                f"choice={choice} (selection={selection})")
         else:
             debug(f"Vote (RCV): contest={contest['name']} BLANK")
 
@@ -341,14 +341,30 @@ class Tally:
         re-distribute the next RCV round of voting.  Can raise various
         exceptions.  If possible will return the last_place_name.
         """
-        if Tally.get_choices_from_round(self.rcv_round[current_round], 'count')[-1] == \
-           Tally.get_choices_from_round(self.rcv_round[current_round], 'count')[-2]:
+#        import pprint
+#        import pdb; pdb.set_trace()
+        debug(f"{self.rcv_round[current_round]}")
+
+        if Tally.get_choices_from_round(self.rcv_round[current_round], 'count')[-current_round] == \
+           Tally.get_choices_from_round(self.rcv_round[current_round], 'count')[-current_round - 1]:
             # There are two last_place_name choices - will need
             # more code to handle this situation post the MVP demo
             raise TallyException(
                 f"There are two last place choices in contest {self.contest['name']} "
                 f"(uid={self.contest['uid']}) in round {current_round}.  "
                 "The code for this is not yet implemented.")
+        if current_round + 2 == len(self.selection_counts):
+            #  Mmm, this is RCV and there are only two active choices
+            #  left.  This is not good unless it is s tie
+            if self.rcv_round[current_round][0][1] == self.rcv_round[current_round][1][1]:
+                # a tie
+                raise TallyException(
+                    f"Contest uid={self.contest['uid']} has ended with a tie in round {current_round}: "
+                    f"{self.rcv_round[current_round][0]} and {self.rcv_round[current_round][1]}\n")
+            raise TallyException(
+                "There are only two surviving RCV choices remaining and no winner."
+                f"There are two last place choices in contest {self.contest['name']} "
+                f"(uid={self.contest['uid']}) in round {current_round}.")
         # loop over the current round and try to find a legit
         # last_place_name
         offset = len(self.rcv_round[current_round])
@@ -362,7 +378,7 @@ class Tally:
             raise TallyException(
                 f"There are no votes for contest {self.contest['name']} "
                 f"(uid={self.contest['uid']}).")
-        # in theory it should be gopd to go
+        # in theory it should be good to go
         return last_place_name
 
     def safely_remove_obe_selections(self, contest):
@@ -418,8 +434,8 @@ class Tally:
                     # set-in-stone ordering w.r.t. selection
                     new_choice_name = self.select_name_from_choices(new_selection)
                     self.selection_counts[new_choice_name] += 1
-                    debug(f"RCV: {digest} (contest={contest['name']}) last place pop and count "
-                              f"({last_place_name} -> {new_choice_name}")
+#                    debug(f"RCV: {digest} (contest={contest['name']}) last place pop and count "
+#                              f"({last_place_name} -> {new_choice_name}")
                 else:
                     debug(f"RCV: {digest} (contest={contest['name']}) last place pop and drop "
                               f"({last_place_name} -> BKANK")
