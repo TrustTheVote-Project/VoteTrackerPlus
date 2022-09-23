@@ -38,8 +38,8 @@ import logging
 from logging import debug, info, error
 
 # Local import
-from common import Globals, Shellout
-from election_config import ElectionConfig
+from .common import Globals, Shellout
+from .election_config import ElectionConfig
 
 # Functions
 def merge_contest_branch(branch):

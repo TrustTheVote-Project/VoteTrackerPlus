@@ -23,7 +23,7 @@ import operator
 from logging import info, debug
 from fractions import Fraction
 # local
-from exceptions import TallyException
+from .exceptions import TallyException
 
 class Contest:
     """A wrapper around the rules of engagement regarding a specific contest"""

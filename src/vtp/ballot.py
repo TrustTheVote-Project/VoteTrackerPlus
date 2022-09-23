@@ -22,8 +22,8 @@ import json
 import csv
 from logging import debug
 # Local imports
-from common import Globals
-from contest import Contest
+from .common import Globals
+from .contest import Contest
 
 class Contests:
     """An iteratable object for the contests in a ballot"""

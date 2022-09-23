@@ -37,10 +37,10 @@ import secrets
 #import uuid
 
 # Local import
-from common import Globals, Shellout
-from address import Address
-from ballot import Ballot, Contests
-from election_config import ElectionConfig
+from .common import Globals, Shellout
+from .address import Address
+from .ballot import Ballot, Contests
+from .election_config import ElectionConfig
 
 # Functions
 def get_random_branchpoint(branch):

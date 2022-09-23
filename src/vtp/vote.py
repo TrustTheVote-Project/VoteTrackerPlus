@@ -32,10 +32,10 @@ import argparse
 import logging
 
 # Local import
-from election_config import ElectionConfig
-from common import Shellout
-from address import Address
-from ballot import Ballot
+from .election_config import ElectionConfig
+from .common import Shellout
+from .address import Address
+from .ballot import Ballot
 # Functions
 
 

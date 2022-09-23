@@ -37,10 +37,10 @@ import json
 from logging import error, debug
 
 # Local import
-from address import Address
-from ballot import Ballot
-from common import Shellout, Globals
-from election_config import ElectionConfig
+from .address import Address
+from .ballot import Ballot
+from .common import Shellout, Globals
+from .election_config import ElectionConfig
 
 # Functions
 def validate_ballot_lines(lines, headers, uids, e_config, error_digests):

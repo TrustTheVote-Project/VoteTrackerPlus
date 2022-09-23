@@ -34,9 +34,9 @@ from logging import info, debug
 import pprint
 
 # Local imports
-from address import Address
-from ballot import BlankBallot
-from election_config import ElectionConfig
+from .address import Address
+from .ballot import Ballot
+from .election_config import ElectionConfig
 
 
 ################
