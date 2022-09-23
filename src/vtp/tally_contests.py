@@ -34,11 +34,11 @@ import logging
 from logging import info, error
 
 # Local import
-from ballot import Ballot
-from election_config import ElectionConfig
-from common import Shellout
-from contest import Tally
-from exceptions import TallyException
+from .ballot import Ballot
+from .election_config import ElectionConfig
+from .common import Shellout
+from .contest import Tally
+from .exceptions import TallyException
 # Functions
 
 

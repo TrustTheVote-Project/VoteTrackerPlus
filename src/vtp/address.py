@@ -20,7 +20,7 @@
 import os
 import re
 import posixpath
-from common import Globals
+from .common import Globals
 
 class Address:
     """A class to create an address object, which is just an address

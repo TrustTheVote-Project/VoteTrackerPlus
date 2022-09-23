@@ -26,8 +26,8 @@ import yaml
 import networkx
 
 # local imports
-from contest import Contest
-from common import Globals, Shellout
+from .contest import Contest
+from .common import Globals, Shellout
 
 class ElectionConfig:
     """A class to parse all the VTP election config.yaml files and
