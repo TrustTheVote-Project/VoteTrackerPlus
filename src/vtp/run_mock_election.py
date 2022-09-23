@@ -29,21 +29,21 @@ file was created.
 
 # Standard imports
 # pylint: disable=wrong-import-position   # import statements not top of file
+import argparse
+import logging
 import os
 import sys
 import time
-import argparse
-import logging
 from logging import debug, info
 
 # Local import
-from .common import Globals, Shellout
 from .address import Address
 from .ballot import Ballot
+from .common import Globals, Shellout
 from .election_config import ElectionConfig
 
-# Functions
 
+# Functions
 
 ################
 # arg parsing

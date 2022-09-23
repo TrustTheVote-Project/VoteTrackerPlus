@@ -17,17 +17,19 @@
 
 """The VTP ElectionConfig class - everything needed to parse the config.yaml tree."""
 
-# statndard imports
+# standard imports
 import os
 import posixpath
 import re
 from logging import debug
-import yaml
+
 import networkx
+import yaml
 
 # local imports
-from .contest import Contest
 from .common import Globals, Shellout
+from .contest import Contest
+
 
 class ElectionConfig:
     """A class to parse all the VTP election config.yaml files and

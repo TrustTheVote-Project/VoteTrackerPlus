@@ -26,20 +26,21 @@ See './tally_contests.py -h' for usage information.
 See ../docs/tech/*.md for the context in which this file was created.
 """
 
-# Standard imports
-import sys
-import re
 # pylint: disable=wrong-import-position   # import statements not top of file
+# Standard imports
 import argparse
 import logging
-from logging import info, error
+import sys
+from logging import error, info
 
 # Local import
 from .ballot import Ballot
-from .election_config import ElectionConfig
 from .common import Shellout
 from .contest import Tally
+from .election_config import ElectionConfig
 from .exceptions import TallyException
+
+
 # Functions
 
 

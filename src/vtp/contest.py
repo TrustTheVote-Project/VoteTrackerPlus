@@ -18,12 +18,14 @@
 """How to manage a VTP specific contest"""
 
 import json
-import re
 import operator
-from logging import info, debug
+import re
 from fractions import Fraction
+from logging import debug
+
 # local
 from .exceptions import TallyException
+
 
 class Contest:
     """A wrapper around the rules of engagement regarding a specific contest"""

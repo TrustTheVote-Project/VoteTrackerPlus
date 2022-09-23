@@ -27,20 +27,21 @@ See ../docs/tech/executable-overview.md for the context in which this file was c
 
 # Standard imports
 # pylint: disable=wrong-import-position   # import statements not top of file
-import os
-import sys
 import argparse
 import logging
-from logging import debug, warning
+import os
 import random
 import secrets
+import sys
 #import uuid
+from logging import debug, warning
 
 # Local import
-from .common import Globals, Shellout
 from .address import Address
 from .ballot import Ballot, Contests
+from .common import Globals, Shellout
 from .election_config import ElectionConfig
+
 
 # Functions
 def get_random_branchpoint(branch):
