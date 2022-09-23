@@ -19,7 +19,7 @@
 
 # standard imports
 import os
-import posixpath
+import os.path
 import re
 from logging import debug
 
@@ -338,7 +338,7 @@ class ElectionConfig:
                         # Now add this ggo_kind and ggo to the DAG.
                         # Always use '/' - nodes in the digraph always
                         # use forward slash, but subdir are os.path.sep
-                        this_dag_node = posixpath.join(subdir.replace('\\','/'),
+                        this_dag_node = os.path.join(subdir.replace('\\','/'),
                                                            ggo_kind, ggo)
                         if this_dag_node in self.digraph.nodes:
                             raise LookupError(("Attempting to re-add the same node "
