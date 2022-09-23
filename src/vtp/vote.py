@@ -24,20 +24,21 @@ simply wraps a call to cast_ballot.py and accept_ballot.py.
 See './vote.py -h' for usage information.
 """
 
-# Standard imports
-import os
-import sys
 # pylint: disable=wrong-import-position   # import statements not top of file
+# Standard imports
 import argparse
 import logging
+import os
+import sys
 
 # Local import
-from .election_config import ElectionConfig
-from .common import Shellout
 from .address import Address
 from .ballot import Ballot
-# Functions
+from .common import Shellout
+from .election_config import ElectionConfig
 
+
+# Functions
 
 ################
 # arg parsing

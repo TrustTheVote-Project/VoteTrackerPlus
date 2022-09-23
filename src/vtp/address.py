@@ -18,9 +18,11 @@
 """An Address class for VoteTracker+"""
 
 import os
-import re
 import posixpath
+import re
+
 from .common import Globals
+
 
 class Address:
     """A class to create an address object, which is just an address

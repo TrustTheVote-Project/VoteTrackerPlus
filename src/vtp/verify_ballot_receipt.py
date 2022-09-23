@@ -28,19 +28,20 @@ See ../docs/tech/*.md for the context in which this file was created.
 
 # Standard imports
 # pylint: disable=wrong-import-position   # import statements not top of file
-import sys
-import os
 import argparse
-import logging
-import re
 import json
-from logging import error, debug
+import logging
+import os
+import re
+import sys
+from logging import debug, error
 
 # Local import
 from .address import Address
 from .ballot import Ballot
-from .common import Shellout, Globals
+from .common import Globals, Shellout
 from .election_config import ElectionConfig
+
 
 # Functions
 def validate_ballot_lines(lines, headers, uids, e_config, error_digests):

@@ -29,17 +29,18 @@ file was created.
 
 # Standard imports
 # pylint: disable=wrong-import-position   # import statements not top of file
-import sys
-import os
-import re
-import random
 import argparse
 import logging
-from logging import debug, info, error
+import os
+import random
+import re
+import sys
+from logging import debug, error, info
 
 # Local import
 from .common import Globals, Shellout
 from .election_config import ElectionConfig
+
 
 # Functions
 def merge_contest_branch(branch):

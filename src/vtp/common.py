@@ -17,15 +17,16 @@
 
 """A kitchen sync for VTP classes for the moment"""
 
-import os
-import subprocess
-import re
+# pylint: disable=too-few-public-methods
 import json
+import os
+import re
+import subprocess
 from contextlib import contextmanager
 #  Other imports:  critical, error, warning, info, debug
 from logging import info
 
-# pylint: disable=too-few-public-methods
+
 class Globals:
     """
     A placeholder for python code constants, not to be confused with VTP

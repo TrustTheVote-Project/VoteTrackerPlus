@@ -26,14 +26,15 @@ See ../docs/tech/executable-overview.md for the context in which this file was c
 """
 
 # pylint: disable=wrong-import-position
-import os
-import sys
 import argparse
 import logging
-from logging import info, debug
-import random
+import os
 import pprint
+import random
+import sys
 import traceback
+from logging import debug, info
+
 import pyinputplus
 
 # Local imports
@@ -41,6 +42,7 @@ from .address import Address
 from .ballot import Ballot, Contests
 from .common import Globals, Shellout
 from .election_config import ElectionConfig
+
 
 ################
 # Functions

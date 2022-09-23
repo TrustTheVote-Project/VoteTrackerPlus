@@ -28,15 +28,16 @@ file was created.
 
 # Standard imports
 # pylint: disable=wrong-import-position   # import statements not top of file
-import os
-import sys
 import argparse
 import logging
+import os
+import sys
 from logging import debug, info
 
 # Local import
 from .common import Globals, Shellout
 from .election_config import ElectionConfig
+
 
 # Functions
 

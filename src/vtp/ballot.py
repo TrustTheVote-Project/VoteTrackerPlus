@@ -17,13 +17,15 @@
 
 """How to manage a VTP Ballot"""
 
-import os
-import json
 import csv
+import json
+import os
 from logging import debug
+
 # Local imports
 from .common import Globals
 from .contest import Contest
+
 
 class Contests:
     """An iteratable object for the contests in a ballot"""

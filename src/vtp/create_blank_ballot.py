@@ -27,11 +27,11 @@ See ../docs/tech/executable-overview.md for the context in which this file was c
 
 # Standard imports
 # pylint: disable=wrong-import-position
-import sys
 import argparse
 import logging
-from logging import info, debug
 import pprint
+import sys
+from logging import debug, info
 
 # Local imports
 from .address import Address
