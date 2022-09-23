@@ -5,7 +5,10 @@ description = "VoteTracker+ - a distributed, open-source, public ballot and Cast
 authors = ["Sandy Currier <windoverwater@users.noreply.github.com>"]
 license = "GPL-2.0"
 readme = "README.md"
-packages = [{include = "vtp_root_repo"}]
+packages = [
+  { include = "vtp", from = "src" }
+  # { include = "electos/vtp", from = "src" }
+]
 
 [tool.poetry.dependencies]
 python = "^3.8"
