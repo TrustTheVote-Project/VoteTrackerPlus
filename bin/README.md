@@ -111,36 +111,34 @@ The basic demo idea is to start a separate __run_mock_election.py -d scanner__ i
 Here is an example of running a 4 VTP scanner and 1 VTP server app mock demo election.  This simulates an in-person voting center with 4 ballot scanners producing the anonymized ballot checks for the voters.  The first three are submitting random ballots while the fourth someone at the keyboard can manually submit one ballot at a time.
 
 ```bash
-# In terminal window #1
-$ cd /opt/VotetrackerPlus/demo.01/clients/scanner.00/VTP-mock-election.US.01/bin
-$ conda activate vtp.01
+# In terminal window #1, run a VTP remote-local server
+# Note - this assumes the explicit setup steps above - note the poetry pyproject.toml location
+$ cd repos/VTP-root-repo
+$ poetry shell
+$ cd /opt/VotetrackerPlus/demo.01/clients/server/VTP-mock-election.US.01/bin
 $ ./run_mock_election.py -s California -t Alameda -a "123 Main Street" -d server
 
-# In terminal window #2
-$ cd /opt/VotetrackerPlus/demo.01/clients/scanner.00/VTP-mock-election.US.01/bin
-$ conda activate vtp.01
-# Auto cast 100 random ballots
-$ ./run_mock_election.py -s California -t Alameda -a "123 Main Street" -d scanner -i 100
-
-# In terminal window #3
+# In terminal window #2, run a VTP scanner in mock election mode
+$ cd repos/VTP-root-repo
+$ poetry shell
 $ cd /opt/VotetrackerPlus/demo.01/clients/scanner.01/VTP-mock-election.US.01/bin
-$ conda activate vtp.01
 # Auto cast 100 random ballots
 $ ./run_mock_election.py -s California -t Alameda -a "123 Main Street" -d scanner -i 100
 
-# In terminal window #4
+# In terminal window #3, run a second VTP scanner in mock election mode
+$ cd repos/VTP-root-repo
+$ poetry shell
 $ cd /opt/VotetrackerPlus/demo.01/clients/scanner.02/VTP-mock-election.US.01/bin
-$ conda activate vtp.01
 # Auto cast 100 random ballots
 $ ./run_mock_election.py -s California -t Alameda -a "123 Main Street" -d scanner -i 100
 
-# In terminal window #5
-$ cd /opt/VotetrackerPlus/demo.01/clients/scanner.03/VTP-mock-election.US.01/bin
-$ conda activate vtp.01
+# In terminal window #4, run an interactive VTP scanner to cast ballots
+$ cd repos/VTP-root-repo
+$ poetry shell
+$ cd /opt/VotetrackerPlus/demo.01/clients/scanner.00/VTP-mock-election.US.01/bin
 
 # To manually vote and cast one ballot, run vote.py.  The receipt.cvs will be printed to a file
-# as this mock demo is software only.  Please note the ballot's offset row number that is
-# printed to STDOUT at the end of the execution of vote.py.
+# and the row offset will be printed to the screen (STDOUT).
 $ ./vote.py -s California -t Alameda -a "123 Main Street"
 ```
 
@@ -148,7 +146,7 @@ The last few lines printed by ./vote.py should look something like this:
 
 ```
 ############
-### Receipt file: /opt/VoteTrackerPlus/demo.01/clients/scanner.01/VTP-root-repo/ElectionData/GGOs/states/California/GGOs/towns/Alameda/CVRs/receipt.csv
+### Receipt file: /opt/VoteTrackerPlus/demo.01/clients/scanner.00/VTP-root-repo/ElectionData/GGOs/states/California/GGOs/towns/Alameda/CVRs/receipt.csv
 ### Voter's row: 78
 ############
 ```
@@ -156,10 +154,10 @@ The last few lines printed by ./vote.py should look something like this:
 To validate the digests on/in the ballot receipt (use your row, not 74):
 
 ```
-$ ./verify_ballot_receipt.py -f /opt/VoteTrackerPlus/demo.01/clients/scanner.03/VTP-root-repo/ElectionData/GGOs/states/California/GGOs/towns/Alameda/CVRs/receipt.csv -r 74
+$ ./verify_ballot_receipt.py -f /opt/VoteTrackerPlus/demo.01/clients/scanner.00/VTP-root-repo/ElectionData/GGOs/states/California/GGOs/towns/Alameda/CVRs/receipt.csv -r 74
 ```
 
-An example ballot is saved off in ElectionData/receipts/receipt.74.csv.  When that receipt is verified, the output currently looks like the following:
+An random example ballot is saved off in ElectionData/receipts/receipt.74.csv.  When that receipt is verified, the output currently looks like the following:
 
 ```
 $ ./verify_ballot_receipt.py -f ../ElectionData/receipts/receipt.74.csv -r 74
@@ -178,21 +176,19 @@ The following contests are not merged to master yet:
 ############
 ```
 
-Note that five of the seven contests have been merged to master and as such now have a fixed offset in the _official_ tally of those contests.  This allows the voter who cast this ballot to say, with a very high level of trust, that their vote in contest '0000 - US president' is 71.  As more contest CVRs are added to the tally (merged to master), the 71 will not change.
+Note that five of the seven contests have been merged to master and as such now have a fixed offset in the _official_ tally of those contests.  This allows the voter who cast this ballot to say, with a very high level of trust, that their vote in contest '0000 - US president' is number 71 out of N.  As more contest CVRs are added to the tally (merged to master), the 71 will not change for this repo/precinct.  However, the vote number will changes as precincts are aggregated.
 
 Ta Da
 
-Two of the contests above remain in the ballot cache and can still be randomly included in some other anonymized ballot check.  At some future random time they will be merged to master.  When all the polls close and the vote center has no more incoming ballots, the cache is completely drained and merged to master.
+Two of the contests above remain in the ballot cache and can still be randomly included in some other anonymized ballot check.  They will be merged to master by the VTP server at some point, either randomly during the voting or once the voting ceases at the polling location.
 
-Running the above demo does not modify the VTP-root-repo repo and does not push any changes in the VTP-mock-election.US.nn repository back to the upstream GitHub repositories.  This is because by design the four scanner and server app repo pairs have the git origin pointing to the local bare repositories found in the local-remote-server folder in the demo.nn directory.
+Running the above demo does not modify the VTP-root-repo repo and does not push any changes in the VTP-mock-election.US.nn repository back to the upstream GitHub repositories.  This is because by design the VTP scanner and server app repo pairs have the git origin pointing to the local bare repositories found in the local-remote-server folder in the demo.nn directory.
 
 At any time and in any repository cloned from the local-remote-server VTP-mock-election.US.nn.git repository (that is not running something else) one can run inspect the current tally by:
 
 ```bash
 $ ./tally_contests.py
 ```
-
-However, as of this version, the ./vote.py program does not automatically pull the ElectionData repo as the VTP scanner and server apps do and as such, the ElectionData repo needs to manually 'git pull'ed for it to be updated in the workspace that is manually casting ballots.
 
 ### 5) Development cycle
 
