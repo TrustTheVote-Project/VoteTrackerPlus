@@ -45,68 +45,62 @@ This project is not there yet.
 
 ## Current Development Process
 
-Note - this is very much in flux as the project is still being designed and framed out as code is being written.  This documentation may also be behind the actual code development.
+The current development process is in flux as the project is still being designed / framed out as code is being written.  This documentation may also be behind the actual code development.
 
 ### 1) One time python environment setup
 
-Note - I am currently using [miniconda](https://docs.conda.io/en/latest/miniconda.html) - there are requirements.txt and environment.yml files that in theory should work.  Currently using python 3.9:
+Currently Votetracker+ is using [poetry](https://python-poetry.org/) as the python package and dependency manager.  The base python is currently 3.9.
 
 ```bash
-# install conda (Mac example) - download from https://docs.conda.io/en/latest/miniconda.html
-$ curl https://repo.anaconda.com/miniconda/Miniconda3-latest-MacOSX-x86_64.sh -o Downloads/Miniconda3-latest-MacOSX-x86_64.sh
-
-# validate digest
-$ openssl sha256 Downloads/Miniconda3-latest-MacOSX-x86_64.sh
-
-# install it - see conda instructions!
-$ bash Downloads/Miniconda3-latest-MacOSX-x86_64.sh
-
-# create an python 3.9 environment
-$ conda create -n vtp.01 python=3.9
-$ conda activate vtp.01
-$ conda install pylint pytest pyyaml networkx
-$ pip install pyinputplus
+# install poetry (Mac example) - see https://python-poetry.org/docs/ for poetry documentation
+$ mkdir repos && cd repos
+$ git clone https://github.com/python-poetry/poetry.git
+$ cd install.python-poetry.org
+$ python3 install-poetry.py
 ```
-
-Note - can install matplotlib (conda install matplotlib) to see visual graphs of some of the data.
+Note the [poetry installation](https://python-poetry.org/docs/#installation) directions regarding shell integrations
 
 ### 2) Clone this repo and an ElectionData repo
 
-Note - currently using a symlink instead of a git submodule:
-
 ```bash
-# clone both repos
+# pull the Votetracker+ project - clone both repositories - and create an ElectionData symlink
+$ cd ..
 $ git clone git@github.com:TrustTheVote-Project/VTP-root-repo.git
 $ git clone git@github.com:TrustTheVote-Project/VTP-mock-election.US.<nn>.git
 $ cd VTP-root-repo
 $ ln -s ../VTP-mock-election.US.<nn> ElectionData
 
-Where <nn> is the most recent mock election
-
+# Where <nn> is the most recent available mock election 
 ```
+Note - Votetracker+ is currently using a symlink instead of a git submodule for ElectionData
 
 See [VTP-mock-election.US.09](https://github.com/TrustTheVote-Project/VTP-mock-election.US.09) as an example
 
-Each ElectionData repo can represent a different election.  Some repos may be already configured and can be immediately used to run an election.  Or the repo may be of a past election.  Others may be designed so that an election can be configured.
+Each ElectionData repo can represent a different election.  Some repos may be already configured and can be immediately used to run an election, or the repo may be of a past election.  Regardless, to run a real or mock election one will need a usable ElectionData repo.
 
-Regardless, to run a real or mock election one will need a usable ElectionData repo.
+### 3) Create/set the python environment
 
-### 3) Running a mock election
+```bash
+$ poetry init
+$ poetry shell
+```
+
+### 4) Running a mock election
 
 With nominally both repos in place and assuming at this time no git submodules, run the setup_vtp_demo.py script.  This script will nominally create a mock election with four VTP scanner _apps_ and one VTP local-remote server _app_ as if all ballots were being cast in a single voting center.  By default it will place the git repos in /opt/VotetrackerPlus with the 5 clients (the four scanner apps and one server app) in the _clients_ folder with the two local git upstream bare repositories in the _local-remote-server_ folder.  The directory tree looks like this:
 
 ```
-/opt/VotetrackerPlus/demo.01/clients/scanner.00/VTP-mock-election.US.01/.git
+/opt/VotetrackerPlus/demo.01/clients/scanner.00/VTP-mock-election.US.<nn>/.git
                                                 VTP-root-repo/.git
-                                     scanner.01/VTP-mock-election.US.01/.git
+                                     scanner.01/VTP-mock-election.US.<nn>/.git
                                                 VTP-root-repo/.git
-                                     scanner.02/VTP-mock-election.US.01/.git
+                                     scanner.02/VTP-mock-election.US.<nn>/.git
                                                 VTP-root-repo/.git
-                                     scanner.03/VTP-mock-election.US.01/.git
+                                     scanner.03/VTP-mock-election.US.<nn>/.git
                                                 VTP-root-repo/.git
-                                     server/VTP-mock-election.US.01/.git
+                                     server/VTP-mock-election.US.<nn>/.git
                                                 VTP-root-repo/.git
-/opt/VotetrackerPlus/demo.01/local-remote-server/VTP-mock-election.US.01.git
+/opt/VotetrackerPlus/demo.01/local-remote-server/VTP-mock-election.US.<nn>.git
                                                  VTP-root-repo.git
 ```
 
@@ -200,7 +194,7 @@ $ ./tally_contests.py
 
 However, as of this version, the ./vote.py program does not automatically pull the ElectionData repo as the VTP scanner and server apps do and as such, the ElectionData repo needs to manually 'git pull'ed for it to be updated in the workspace that is manually casting ballots.
 
-### 4) Development cycle
+### 5) Development cycle
 
 New development should use a feature branch directly in this repo.  New ElectionData repositories can be created at will.  Signed commits are required in both repos.
 
