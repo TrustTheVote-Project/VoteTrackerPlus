@@ -359,7 +359,8 @@ class Tally:
             if self.rcv_round[current_round][0][1] == self.rcv_round[current_round][1][1]:
                 # a tie
                 raise TallyException(
-                    f"Contest uid={self.contest['uid']} has ended with a tie in round {current_round}: "
+                    f"Contest uid={self.contest['uid']} "
+                    f"has ended with a tie in round {current_round}: "
                     f"{self.rcv_round[current_round][0]} and {self.rcv_round[current_round][1]}\n")
             raise TallyException(
                 "There are only two surviving RCV choices remaining and no winner."
