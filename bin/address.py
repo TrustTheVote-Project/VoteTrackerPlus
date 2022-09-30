@@ -295,7 +295,6 @@ class Address:
         ggo_unique_name.append(filename)
         return ','.join(ggo_unique_name)
 
-    # Warning - duplicate code as in ballot.py - needs to be resolved
     def gen_blank_ballot_location(self, config, style='json'):
         """Return the file location of a blank ballot per the address"""
         return os.path.join(

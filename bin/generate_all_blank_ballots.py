@@ -36,7 +36,7 @@ import pprint
 
 # Local import
 from address import Address
-from ballot import Ballot
+from ballot import BlankBallot
 from election_config import ElectionConfig
 
 # Functions
@@ -96,7 +96,7 @@ def main():
                 # associated generic blank ballot, and store it out
                 generic_address = Address.create_generic_address(
                     the_election_config, subdir, ggos)
-                generic_ballot = Ballot()
+                generic_ballot = BlankBallot()
                 generic_ballot.create_blank_ballot(
                     generic_address, the_election_config)
                 info(f"Active GGOs for blank ballot ({generic_address}): "

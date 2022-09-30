@@ -228,19 +228,87 @@ class Ballot:
         self.contests[contest_ggo][contest_index][contest_name]['selection'].append(
             str(selection_offset) + ': ' + contest.get('choices')[selection_offset])
 
-    def verify_cast_ballot(self):
-        """Will validate the ballot contest choices are legitimate.
-        Will raise an error with the list of invalid contests and
-        returns the number of contests with either blank of less than
-        legal selections.
-        """
-        raise NotImplementedError("verify_cast_ballot is not yet implemented")
+    # def verify_cast_ballot(self):
+    #     """Will validate the ballot contest choices are legitimate.
+    #     Will raise an error with the list of invalid contests and
+    #     returns the number of contests with either blank of less than
+    #     legal selections.
+    #     """
+    #     raise NotImplementedError("verify_cast_ballot is not yet implemented")
 
     def get_cvr_parent_dir(self, config):
         """Return the directory that contains the CVR directory for this ballot"""
         return os.path.join(config.get('git_rootdir'),
                                 Globals.get('ROOT_ELECTION_DATA_SUBDIR'),
                                 self.ballot_subdir)
+
+    def read_a_cast_ballot(self, address, config, ballot_file=""):
+        """
+        Will return the dictionary of a cast ballot.  Needs an address
+        so to get the correct ballot_subdir to read the caste ballot
+        from.
+        """
+        if not ballot_file:
+            ballot_file = Ballot.gen_cast_ballot_location(config, address.get('ballot_subdir'))
+        debug(f"Reading {ballot_file}")
+        with open(ballot_file, 'r', encoding="utf8") as file:
+            json_doc = json.load(file)
+            self.contests = json_doc['contests']
+            self.active_ggos = json_doc['active_ggos']
+            self.ballot_subdir = json_doc['ballot_subdir']
+            self.ballot_node = json_doc['ballot_node']
+
+    def write_a_cast_ballot(self, config):
+        """
+        Will write out a cast ballot in json
+        """
+        ballot_file = Ballot.gen_cast_ballot_location(config, self.ballot_subdir)
+        os.makedirs(os.path.dirname(ballot_file), exist_ok=True)
+        # might was well write out everything, yes?
+        the_aggregate = {'contests': self.contests,
+                         'active_ggos': self.active_ggos,
+                         'ballot_subdir': self.ballot_subdir,
+                         'ballot_node': self.ballot_node}
+        with open(ballot_file, 'w', encoding="utf8") as outfile:
+            json.dump(the_aggregate, outfile, sort_keys=True, indent=4, ensure_ascii=False)
+        return ballot_file
+
+    def write_contest(self, contest, config):
+        """Write out the voter's contest"""
+        contest_file = Ballot.gen_contest_location(config, self.ballot_subdir)
+        # Prepend the dictionary with a CVR key
+        the_aggregate = {'CVR': contest.get('dict')}
+        # The parent directory better exist or something is wrong
+        with open(contest_file, 'w', encoding="utf8") as outfile:
+            json.dump(the_aggregate, outfile, sort_keys=True, indent=4, ensure_ascii=False)
+        return contest_file
+
+    def write_receipt_csv(self, lines, config, receipt_file=''):
+        """Write out the voter's ballot receipt"""
+        if not receipt_file:
+            receipt_file = Ballot.gen_receipt_location(config, self.ballot_subdir)
+        # The parent directory better exist or something is wrong
+        with open(receipt_file, 'w', encoding="utf8") as outfile:
+            for line in lines:
+                outfile.write(f"{line}\n")
+        return receipt_file
+
+    def read_receipt_csv(self, config, receipt_file='', address=''):
+        """Read the voter's ballot receipt"""
+        if not receipt_file:
+            receipt_file = Ballot.gen_receipt_location(config, address.get('ballot_subdir'))
+        # The parent directory better exist or something is wrong
+        lines = []
+        with open(receipt_file, 'r', encoding="utf8") as infile:
+            lines = list(csv.reader(infile))
+        return lines
+
+class BlankBallot(Ballot):
+    """
+    A child class of Ballot - Ballot was getting too large but at the
+    moment blank ballot is just a regular ballot with a few more
+    methods.
+    """
 
     def create_blank_ballot(self, address, config):
         """Given an Address and a ElectionConfig, will generate the
@@ -287,8 +355,9 @@ class Ballot:
         # 'proper' leaf node off 'the_address_node'.  However, there
         # no budget for that now and it would probably be better to
         # see what real life constraints and requirements exist.  So
-        # punt that for now - just place this ballot in the porper
-        # leaf node (assuming 100% overlapping/coherent boundaries).
+        # punt that for now - just place this ballot in the proper
+        # leaf node assuming 100% overlapping/coherent boundaries at
+        # state/town heiracrchy.
         self.ballot_subdir = address.get('ballot_subdir')
         self.ballot_node = address.get('ballot_node')
         # cache the active ggos as well
@@ -365,66 +434,5 @@ class Ballot:
                 self.ballot_node = json_doc['ballot_node']
         else:
             raise NotImplementedError(f"Unsupported Ballot type ({style}) for reading")
-
-    def read_a_cast_ballot(self, address, config, ballot_file=""):
-        """
-        Will return the dictionary of a cast ballot.  Needs an address
-        so to get the correct ballot_subdir to read the caste ballot
-        from.
-        """
-        if not ballot_file:
-            ballot_file = Ballot.gen_cast_ballot_location(config, address.get('ballot_subdir'))
-        debug(f"Reading {ballot_file}")
-        with open(ballot_file, 'r', encoding="utf8") as file:
-            json_doc = json.load(file)
-            self.contests = json_doc['contests']
-            self.active_ggos = json_doc['active_ggos']
-            self.ballot_subdir = json_doc['ballot_subdir']
-            self.ballot_node = json_doc['ballot_node']
-
-    def write_a_cast_ballot(self, config):
-        """
-        Will write out a cast ballot in json
-        """
-        ballot_file = Ballot.gen_cast_ballot_location(config, self.ballot_subdir)
-        os.makedirs(os.path.dirname(ballot_file), exist_ok=True)
-        # might was well write out everything, yes?
-        the_aggregate = {'contests': self.contests,
-                         'active_ggos': self.active_ggos,
-                         'ballot_subdir': self.ballot_subdir,
-                         'ballot_node': self.ballot_node}
-        with open(ballot_file, 'w', encoding="utf8") as outfile:
-            json.dump(the_aggregate, outfile, sort_keys=True, indent=4, ensure_ascii=False)
-        return ballot_file
-
-    def write_contest(self, contest, config):
-        """Write out the voter's contest"""
-        contest_file = Ballot.gen_contest_location(config, self.ballot_subdir)
-        # Prepend the dictionary with a CVR key
-        the_aggregate = {'CVR': contest.get('dict')}
-        # The parent directory better exist or something is wrong
-        with open(contest_file, 'w', encoding="utf8") as outfile:
-            json.dump(the_aggregate, outfile, sort_keys=True, indent=4, ensure_ascii=False)
-        return contest_file
-
-    def write_receipt_csv(self, lines, config, receipt_file=''):
-        """Write out the voter's ballot receipt"""
-        if not receipt_file:
-            receipt_file = Ballot.gen_receipt_location(config, self.ballot_subdir)
-        # The parent directory better exist or something is wrong
-        with open(receipt_file, 'w', encoding="utf8") as outfile:
-            for line in lines:
-                outfile.write(f"{line}\n")
-        return receipt_file
-
-    def read_receipt_csv(self, config, receipt_file='', address=''):
-        """Read the voter's ballot receipt"""
-        if not receipt_file:
-            receipt_file = Ballot.gen_receipt_location(config, address.get('ballot_subdir'))
-        # The parent directory better exist or something is wrong
-        lines = []
-        with open(receipt_file, 'r', encoding="utf8") as infile:
-            lines = list(csv.reader(infile))
-        return lines
 
 # EOF

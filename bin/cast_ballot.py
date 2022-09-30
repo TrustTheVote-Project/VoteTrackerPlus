@@ -38,7 +38,7 @@ import pyinputplus
 
 # Local imports
 from address import Address
-from ballot import Ballot, Contests
+from ballot import Ballot, BlankBallot, Contests
 from common import Globals, Shellout
 from election_config import ElectionConfig
 
@@ -243,7 +243,7 @@ def main():
     the_election_config.parse_configs()
 
     # Create a ballot
-    a_ballot = Ballot()
+    a_ballot = BlankBallot()
 
     # process the provided address
     if args.blank_ballot:
