@@ -278,7 +278,8 @@ def main():
             args, ['blank_ballot', 'device', 'minimum_cast_cache', 'flush_mode',
                        'iterations', 'verbosity', 'printonly'])
         the_address.map_ggos(the_election_config)
-        blank_ballot = the_address.gen_blank_ballot_location(the_election_config)
+        blank_ballot = the_election_config.gen_blank_ballot_location(
+            the_address.active_ggos, the_address.ballot_subdir)
     elif args.blank_ballot:
         blank_ballot = args.blank_ballot
 

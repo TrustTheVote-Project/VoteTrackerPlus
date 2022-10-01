@@ -228,143 +228,19 @@ class Ballot:
         self.contests[contest_ggo][contest_index][contest_name]['selection'].append(
             str(selection_offset) + ': ' + contest.get('choices')[selection_offset])
 
-    def verify_cast_ballot(self):
-        """Will validate the ballot contest choices are legitimate.
-        Will raise an error with the list of invalid contests and
-        returns the number of contests with either blank of less than
-        legal selections.
-        """
-        raise NotImplementedError("verify_cast_ballot is not yet implemented")
+    # def verify_cast_ballot(self):
+    #     """Will validate the ballot contest choices are legitimate.
+    #     Will raise an error with the list of invalid contests and
+    #     returns the number of contests with either blank of less than
+    #     legal selections.
+    #     """
+    #     raise NotImplementedError("verify_cast_ballot is not yet implemented")
 
     def get_cvr_parent_dir(self, config):
         """Return the directory that contains the CVR directory for this ballot"""
         return os.path.join(config.get('git_rootdir'),
                                 Globals.get('ROOT_ELECTION_DATA_SUBDIR'),
                                 self.ballot_subdir)
-
-    def create_blank_ballot(self, address, config):
-        """Given an Address and a ElectionConfig, will generate the
-        appropriate blank ballot.  Implementation note - this function
-        needs to be smart in that it needs to deal with various regex
-        and other rules/conventions/specs of the address_map files.  The
-        development of the support of that is an R&D iterative process.
-
-        Initially this class/functions only understand two address_map
-        syntaxes (defined in ElectionConfig which is what parses the
-        address_map files).
-
-        'address_map': {'ggos': {<ggo-kind>: ['.*']}
-
-        'address_map': {'addresses': ['.*']}
-
-        Where <ggo-kind> is the name of the child GGO group (there can
-        be different 'kinds' of GGO children).  The above syntax follows
-        what is known 'regex' expressions.
-
-        The first defines that the addresses for this GGO are handled by
-        the ggo-kind/ggo specified, which is in this case all ggos of
-        the specified kind.  In other words, the parent GGO accepts all
-        the addresses that specified child GGOs accept.
-
-        The second defines that all the addresses in this specific GGO
-        are valid for this GGO.
-
-        Note the value of the required address fields in the Globals
-        class - the implicit algorithm used to map an address to the
-        active GGOs is dependent on the defined fields.
-        """
-
-        # With the list of active GGOs, add in the contests for each one
-        for node in address.get('active_ggos'):
-            cfg = config.get_node(node, 'config')
-            if 'contests' in cfg:
-                self.contests[node] = cfg['contests']
-
-        # To determine the location of the blank ballot, the real
-        # solution is probably something like determining the
-        # addresses for each unique blank ballot and generate a unique
-        # filename or directory based on that and put them in the
-        # 'proper' leaf node off 'the_address_node'.  However, there
-        # no budget for that now and it would probably be better to
-        # see what real life constraints and requirements exist.  So
-        # punt that for now - just place this ballot in the porper
-        # leaf node (assuming 100% overlapping/coherent boundaries).
-        self.ballot_subdir = address.get('ballot_subdir')
-        self.ballot_node = address.get('ballot_node')
-        # cache the active ggos as well
-        self.active_ggos = address.get('active_ggos')
-
-    def gen_unique_blank_ballot_name(self, config, filename):
-        """
-        ZZZ - this will need to be re-written at some point - tries to
-        generate a unique ballot name per unique address across the set
-        of active GGOs
-        """
-        ggo_unique_name = [config.get_node(ggo, 'uid') for ggo in self.active_ggos]
-        # alphanumerically sort the string
-        ggo_unique_name.sort(key=int)
-        # for now, no error checking ...
-        ggo_unique_name.append(filename)
-        return ','.join(ggo_unique_name)
-
-    def gen_blank_ballot_location(self, config, style='json'):
-        """Return the file location of a blank ballot"""
-        return os.path.join(
-            config.get('git_rootdir'),
-            Globals.get('ROOT_ELECTION_DATA_SUBDIR'),
-            self.ballot_subdir,
-            Globals.get('BLANK_BALLOT_SUBDIR'),
-            style,
-            self.gen_unique_blank_ballot_name(config, Globals.get('BALLOT_FILE')))
-
-    def write_blank_ballot(self, config, ballot_file='', style='json'):
-        """
-        will write out a blank ballot to a file in some format.
-        """
-        if not ballot_file:
-            ballot_file = self.gen_blank_ballot_location(config, style)
-            os.makedirs(os.path.dirname(ballot_file), exist_ok=True)
-        if style == 'json':
-            # When the style is json, print all three dictionaries as one
-            the_aggregate = {'contests': self.contests,
-                                 'active_ggos': self.active_ggos,
-                                 'ballot_subdir': self.ballot_subdir,
-                                 'ballot_node': self.ballot_node}
-            with open(ballot_file, 'w', encoding="utf8") as outfile:
-                json.dump(the_aggregate, outfile, sort_keys=True, indent=4, ensure_ascii=False)
-        elif style == 'pdf':
-            # See https://github.com/rst2pdf/rst2pdf
-            raise NotImplementedError(("Apologies but printing the pdf of a ballot "
-                                           "is not implemented yet"))
-        else:
-            raise NotImplementedError(f"Unsupported Ballot type ({style}) for writing")
-        return ballot_file
-
-    def read_a_blank_ballot(self, address, config, ballot_file="", style='json'):
-        """
-        Will return the dictionary of a blank ballot (given an address
-        so to be able to find the correct blank ballot)
-        """
-        if not ballot_file:
-            # hackito ergo sum - since the ballot has not yet been
-            # read, the ballot attributes are not yet known.  But the
-            # ones that overlap with address attributes are the same
-            # as those.  They will be re-written later anyway with the
-            # same value when the ballot is read...
-            self.active_ggos = address.get('active_ggos')
-            self.ballot_subdir = address.get('ballot_subdir')
-            self.ballot_node = address.get('ballot_node')
-            ballot_file = self.gen_blank_ballot_location(config, style)
-        if style == 'json':
-            debug(f"Reading {ballot_file}")
-            with open(ballot_file, 'r', encoding="utf8") as file:
-                json_doc = json.load(file)
-                self.contests = json_doc['contests']
-                self.active_ggos = json_doc['active_ggos']
-                self.ballot_subdir = json_doc['ballot_subdir']
-                self.ballot_node = json_doc['ballot_node']
-        else:
-            raise NotImplementedError(f"Unsupported Ballot type ({style}) for reading")
 
     def read_a_cast_ballot(self, address, config, ballot_file=""):
         """
@@ -426,5 +302,116 @@ class Ballot:
         with open(receipt_file, 'r', encoding="utf8") as infile:
             lines = list(csv.reader(infile))
         return lines
+
+class BlankBallot(Ballot):
+    """
+    A child class of Ballot - Ballot was getting too large but at the
+    moment blank ballot is just a regular ballot with a few more
+    methods.
+    """
+
+    def create_blank_ballot(self, address, config):
+        """Given an Address and a ElectionConfig, will generate the
+        appropriate blank ballot.  Implementation note - this function
+        needs to be smart in that it needs to deal with various regex
+        and other rules/conventions/specs of the address_map files.  The
+        development of the support of that is an R&D iterative process.
+
+        Initially this class/functions only understand two address_map
+        syntaxes (defined in ElectionConfig which is what parses the
+        address_map files).
+
+        'address_map': {'ggos': {<ggo-kind>: ['.*']}
+
+        'address_map': {'addresses': ['.*']}
+
+        Where <ggo-kind> is the name of the child GGO group (there can
+        be different 'kinds' of GGO children).  The above syntax follows
+        what is known 'regex' expressions.
+
+        The first defines that the addresses for this GGO are handled by
+        the ggo-kind/ggo specified, which is in this case all ggos of
+        the specified kind.  In other words, the parent GGO accepts all
+        the addresses that specified child GGOs accept.
+
+        The second defines that all the addresses in this specific GGO
+        are valid for this GGO.
+
+        Note the value of the required address fields in the Globals
+        class - the implicit algorithm used to map an address to the
+        active GGOs is dependent on the defined fields.
+        """
+
+        # With the list of active GGOs, add in the contests for each one
+        for node in address.get('active_ggos'):
+            cfg = config.get_node(node, 'config')
+            if 'contests' in cfg:
+                self.contests[node] = cfg['contests']
+
+        # To determine the location of the blank ballot, the real
+        # solution is probably something like determining the
+        # addresses for each unique blank ballot and generate a unique
+        # filename or directory based on that and put them in the
+        # 'proper' leaf node off 'the_address_node'.  However, there
+        # no budget for that now and it would probably be better to
+        # see what real life constraints and requirements exist.  So
+        # punt that for now - just place this ballot in the proper
+        # leaf node assuming 100% overlapping/coherent boundaries at
+        # state/town heiracrchy.
+        self.ballot_subdir = address.get('ballot_subdir')
+        self.ballot_node = address.get('ballot_node')
+        # cache the active ggos as well
+        self.active_ggos = address.get('active_ggos')
+
+    def write_blank_ballot(self, config, ballot_file='', style='json'):
+        """
+        will write out a blank ballot to a file in some format.
+        """
+        if not ballot_file:
+            ballot_file = config.gen_blank_ballot_location(
+                self.active_ggos, self.ballot_subdir, style)
+            os.makedirs(os.path.dirname(ballot_file), exist_ok=True)
+        if style == 'json':
+            # When the style is json, print all three dictionaries as one
+            the_aggregate = {'contests': self.contests,
+                                 'active_ggos': self.active_ggos,
+                                 'ballot_subdir': self.ballot_subdir,
+                                 'ballot_node': self.ballot_node}
+            with open(ballot_file, 'w', encoding="utf8") as outfile:
+                json.dump(the_aggregate, outfile, sort_keys=True, indent=4, ensure_ascii=False)
+        elif style == 'pdf':
+            # See https://github.com/rst2pdf/rst2pdf
+            raise NotImplementedError(("Apologies but printing the pdf of a ballot "
+                                           "is not implemented yet"))
+        else:
+            raise NotImplementedError(f"Unsupported Ballot type ({style}) for writing")
+        return ballot_file
+
+    def read_a_blank_ballot(self, address, config, ballot_file="", style='json'):
+        """
+        Will return the dictionary of a blank ballot (given an address
+        so to be able to find the correct blank ballot)
+        """
+        if not ballot_file:
+            # hackito ergo sum - since the ballot has not yet been
+            # read, the ballot attributes are not yet known.  But the
+            # ones that overlap with address attributes are the same
+            # as those.  They will be re-written later anyway with the
+            # same value when the ballot is read...
+            self.active_ggos = address.get('active_ggos')
+            self.ballot_subdir = address.get('ballot_subdir')
+            self.ballot_node = address.get('ballot_node')
+            ballot_file = config.gen_blank_ballot_location(
+                self.active_ggos, self.ballot_subdir, style)
+        if style == 'json':
+            debug(f"Reading {ballot_file}")
+            with open(ballot_file, 'r', encoding="utf8") as file:
+                json_doc = json.load(file)
+                self.contests = json_doc['contests']
+                self.active_ggos = json_doc['active_ggos']
+                self.ballot_subdir = json_doc['ballot_subdir']
+                self.ballot_node = json_doc['ballot_node']
+        else:
+            raise NotImplementedError(f"Unsupported Ballot type ({style}) for reading")
 
 # EOF

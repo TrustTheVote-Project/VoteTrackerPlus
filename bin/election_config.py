@@ -361,4 +361,27 @@ class ElectionConfig:
                                   subdir=".")
         recursively_parse_tree ("GGOs", '.')
 
+    def gen_unique_ggo_name(self, active_ggos, filename):
+        """
+        Given a set of active ggos, create a unique ggo name.  For the
+        time being, just sort order the ggos UIDs
+        """
+        ggo_unique_name = [self.get_node(ggo, 'uid') for ggo in active_ggos]
+        # alphanumerically sort the string
+        ggo_unique_name.sort(key=int)
+        # for now, no error checking ...
+        ggo_unique_name.append(filename)
+        return ','.join(ggo_unique_name)
+
+    def gen_blank_ballot_location(self, active_ggos, ballot_subdir, style='json'):
+        """Return the file location of a blank ballot"""
+        return os.path.join(
+            self.get('git_rootdir'),
+            Globals.get('ROOT_ELECTION_DATA_SUBDIR'),
+            ballot_subdir,
+            Globals.get('BLANK_BALLOT_SUBDIR'),
+            style,
+            self.gen_unique_ggo_name(
+                active_ggos, Globals.get('BALLOT_FILE')))
+
 # EOF
