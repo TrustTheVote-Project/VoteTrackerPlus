@@ -281,28 +281,4 @@ class Address:
         # Ditto for ballot_node - set the blank-ballot / CVRs node
         self.ballot_node = the_leaf_node
 
-    # Warning - duplicate code as in ballot.py - needs to be resolved
-    def gen_unique_blank_ballot_name(self, config, filename):
-        """
-        ZZZ - this will need to be re-written at some point - tries to
-        generate a unique ballot name per unique address across the set
-        of active GGOs
-        """
-        ggo_unique_name = [config.get_node(ggo, 'uid') for ggo in self.active_ggos]
-        # alphanumerically sort the string
-        ggo_unique_name.sort(key=int)
-        # for now, no error checking ...
-        ggo_unique_name.append(filename)
-        return ','.join(ggo_unique_name)
-
-    def gen_blank_ballot_location(self, config, style='json'):
-        """Return the file location of a blank ballot per the address"""
-        return os.path.join(
-            config.get('git_rootdir'),
-            Globals.get('ROOT_ELECTION_DATA_SUBDIR'),
-            self.ballot_subdir,
-            Globals.get('BLANK_BALLOT_SUBDIR'),
-            style,
-            self.gen_unique_blank_ballot_name(config, Globals.get('BALLOT_FILE')))
-
 # EOF

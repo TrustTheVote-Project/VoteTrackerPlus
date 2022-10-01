@@ -105,8 +105,8 @@ def main():
                           pprint.pformat(generic_ballot.dict()))
                 # Write it out
                 if args.printonly:
-                    ballot_file = generic_ballot.gen_blank_ballot_location(
-                        the_election_config, 'json')
+                    ballot_file = the_election_config.gen_blank_ballot_location(
+                        generic_address.active_ggos, generic_address.ballot_subdir, 'json')
                 else:
                     ballot_file = generic_ballot.write_blank_ballot(the_election_config)
                 info(f"Blank ballot file: {ballot_file}")

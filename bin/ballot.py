@@ -363,35 +363,13 @@ class BlankBallot(Ballot):
         # cache the active ggos as well
         self.active_ggos = address.get('active_ggos')
 
-    def gen_unique_blank_ballot_name(self, config, filename):
-        """
-        ZZZ - this will need to be re-written at some point - tries to
-        generate a unique ballot name per unique address across the set
-        of active GGOs
-        """
-        ggo_unique_name = [config.get_node(ggo, 'uid') for ggo in self.active_ggos]
-        # alphanumerically sort the string
-        ggo_unique_name.sort(key=int)
-        # for now, no error checking ...
-        ggo_unique_name.append(filename)
-        return ','.join(ggo_unique_name)
-
-    def gen_blank_ballot_location(self, config, style='json'):
-        """Return the file location of a blank ballot"""
-        return os.path.join(
-            config.get('git_rootdir'),
-            Globals.get('ROOT_ELECTION_DATA_SUBDIR'),
-            self.ballot_subdir,
-            Globals.get('BLANK_BALLOT_SUBDIR'),
-            style,
-            self.gen_unique_blank_ballot_name(config, Globals.get('BALLOT_FILE')))
-
     def write_blank_ballot(self, config, ballot_file='', style='json'):
         """
         will write out a blank ballot to a file in some format.
         """
         if not ballot_file:
-            ballot_file = self.gen_blank_ballot_location(config, style)
+            ballot_file = config.gen_blank_ballot_location(
+                self.active_ggos, self.ballot_subdir, style)
             os.makedirs(os.path.dirname(ballot_file), exist_ok=True)
         if style == 'json':
             # When the style is json, print all three dictionaries as one
@@ -423,7 +401,8 @@ class BlankBallot(Ballot):
             self.active_ggos = address.get('active_ggos')
             self.ballot_subdir = address.get('ballot_subdir')
             self.ballot_node = address.get('ballot_node')
-            ballot_file = self.gen_blank_ballot_location(config, style)
+            ballot_file = config.gen_blank_ballot_location(
+                self.active_ggos, self.ballot_subdir, style)
         if style == 'json':
             debug(f"Reading {ballot_file}")
             with open(ballot_file, 'r', encoding="utf8") as file:
