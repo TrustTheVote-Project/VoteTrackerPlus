@@ -17,9 +17,9 @@
 #   with this program; if not, write to the Free Software Foundation, Inc.,
 #   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
-"""cast_a_ballot.py - command line level test script to automatically cast a ballot.
+"""cast_ballot.py - command line level test script to automatically cast a ballot.
 
-See './cast_a_ballot.py -h' for usage information.
+See './cast_ballot.py -h' for usage information.
 
 See ../docs/tech/executable-overview.md for the context in which this file was created.
 
