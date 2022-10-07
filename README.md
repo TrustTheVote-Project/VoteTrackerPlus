@@ -6,7 +6,7 @@ VoteTracker+ (VTP or VoteTrackerPlus) is a 100% open software ballot tracking sy
 
 ## 1) Overview
 
-Read the [pitch](docs/pitch.md)
+Read the [pitch](docs/pitch.md), ask for a live demo.
 
 VoteTracker+ is a distributed, open-source ballot and Cast Vote Record ([CVR](https://pages.nist.gov/ElectionGlossary/#cast-vote-record)) integrity and tracking system to support public [elections](https://en.wikipedia.org/wiki/Election). It enables verifiable, accurate, secure and transparent elections with full voter based [End-to-end](https://en.wikipedia.org/wiki/End-to-end_auditable_voting_systems) verifiable (E2EV) ballots.  VoteTracker+ maximizes the transparency and trust of an election throughout the election process by:
 
