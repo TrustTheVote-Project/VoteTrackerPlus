@@ -20,7 +20,7 @@
 import json
 import re
 import operator
-from logging import debug
+from logging import debug,info
 from fractions import Fraction
 # local
 from exceptions import TallyException
@@ -343,7 +343,7 @@ class Tally:
         """
 #        import pprint
 #        import pdb; pdb.set_trace()
-        debug(f"{self.rcv_round[current_round]}")
+        info(f"{self.rcv_round[current_round]}")
 
         if Tally.get_choices_from_round(self.rcv_round[current_round], 'count')[-current_round] == \
            Tally.get_choices_from_round(self.rcv_round[current_round], 'count')[-current_round - 1]:
@@ -355,7 +355,7 @@ class Tally:
                 "The code for this is not yet implemented.")
         if current_round + 2 == len(self.selection_counts):
             #  Mmm, this is RCV and there are only two active choices
-            #  left.  This is not good unless it is s tie
+            #  left.  This is not good unless it is a tie
             if self.rcv_round[current_round][0][1] == self.rcv_round[current_round][1][1]:
                 # a tie
                 raise TallyException(
@@ -398,13 +398,32 @@ class Tally:
               in self.obe_choices and selection in contest['selection']:
                 contest['selection'].remove(selection)
 
+    def restore_proper_rcv_round_ordering(self, this_round):
+        """Restore the 'proper' ordering of the losers in the current
+        and previous rcv rounds.  Note: at this point the
+        self.rcv_round has been sorted by count with the obe_choices
+        effectively randomized.  Also note that new incoming
+        last_place_name is not yet in self.obe_choices and will not be
+        until post the self.safely_determine_last_place_name call
+        below.
+        """
+        loser_order = []
+        for loser in sorted(self.obe_choices.items(), key=operator.itemgetter(1), reverse=True):
+            loser_order.append(loser)
+        # Replace the effectively improperly unordered losers with a
+        # properly ordered list of losers. One way is to replace the
+        # last N entries with the properly ordered losers.
+        if len(loser_order) > 1:
+            for index, item in enumerate(reversed(loser_order)):
+                self.rcv_round[this_round][-index - 1] = (item[0], 0)
+
     def handle_another_rcv_round(self, this_round, last_place_name, contest_batch):
         """For the lowest vote getter, for those CVR's that have
         that as their current first/active-round choice, will
         slice off that choice off and re-count the now first
         selection choice (if there is one)
         """
-        debug(f"RCV: round {this_round}")
+        info(f"RCV: round {this_round}")
         # Safety check
         if this_round > 64:
             raise TallyException("RCV rounds exceeded safety limit of 64 rounds")
@@ -435,15 +454,17 @@ class Tally:
                     # set-in-stone ordering w.r.t. selection
                     new_choice_name = self.select_name_from_choices(new_selection)
                     self.selection_counts[new_choice_name] += 1
-#                    debug(f"RCV: {digest} (contest={contest['name']}) last place pop and count "
-#                              f"({last_place_name} -> {new_choice_name}")
+                    debug(f"RCV: {digest} (contest={contest['name']}) last place pop and count "
+                              f"({last_place_name} -> {new_choice_name}")
                 else:
                     debug(f"RCV: {digest} (contest={contest['name']}) last place pop and drop "
-                              f"({last_place_name} -> BKANK")
+                              f"({last_place_name} -> BLANK")
         # Order the winners of this round.  This is a tuple, not a
-        # list or dict.
+        # list or dict.  Note - the rcv round losers should not be
+        # re-ordered as there is value to retaining that order
         self.rcv_round[this_round] = sorted(
             self.selection_counts.items(), key=operator.itemgetter(1), reverse=True)
+        self.restore_proper_rcv_round_ordering(this_round)
         # Create the next round list
         self.rcv_round.append([])
         # See if there is a wiinner and if so record it
@@ -460,8 +481,9 @@ class Tally:
         if len(self.winner_order) >= self.defaults['max']:
             return
         # If not, safely determine the next last_place_name and
-        # execute another RCV round
+        # execute another RCV round.
         last_place_name = self.safely_determine_last_place_name(this_round)
+        # Add this loser to the obe record
         self.obe_choices[last_place_name] = this_round
         self.handle_another_rcv_round(this_round + 1, last_place_name, contest_batch)
         return
@@ -517,7 +539,7 @@ class Tally:
         the CVRs.
         """
         # Read all the contests, validate, and count votes
-        debug("RCV: round 0")
+        info("RCV: round 0")
         self.parse_all_contests(contest_batch)
 
         # For all tallies order what has been counted so far (a tuple)

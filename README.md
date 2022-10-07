@@ -31,19 +31,23 @@ VoteTracker+ is NOT a:
 * ballot scanner nor contains ballot scanning software - VoteTracker+ receives the interpreted ballot from the ballot scanner, which could be a traditional mechanical scanner, smart phone application, or manually from an election official
 * replacement for paper ballots - VoteTracker+ requires the balloting process to start and end with a paper ballot
 
-## 2) Basic 50,000 Foot Overview
+## 2) Basic 10,000 Foot Overview
 
 The VTP root repo (this repo) is meant to be directly integrated via a git submodule with a VTP ElectionData directory tree which is comprised of one or more git submodules (though as of this writing and stage of agile software development, an OS level symbolic-link is typically used instead).  An VTP ElectionData tree is a directory tree that _componentizes_ the backend election configuration data into separate GGOs (Geopolitical Geographical Overlays - NIST calls this a [geopolitical unit](https://pages.nist.gov/ElectionGlossary/#geopolitical-unit)).  Each GGO can have is its own [RBAC](https://en.wikipedia.org/wiki/Role-based_access_control) authority or share another GGO's RBAC.  Independent of the GGO components the ElectionData tree supports arbitrary git submodule componentization which ultimately allows a [Voting Center](https://pages.nist.gov/ElectionGlossary/#vote-center) to operate completely disconnected from an external computer network.
 
-A sample mock ElectionData repo can be found at [VTP-mock-election.US.01](https://github.com/TrustTheVote-Project/VTP-mock-election.US.01).
+A sample mock ElectionData repo can be found at [VTP-mock-election.US.09](https://github.com/TrustTheVote-Project/VTP-mock-election.US.09).
 
 Note that for convenience all VTP repos in the [TrustTheVote](https://github.com/TrustTheVote-Project) GitHub domain start with the four letter prefix __VTP-__.
 
+A diagram representing the high level in-person voter experience is located [here](https://drive.google.com/file/d/1-vKSE89R6DGvIs2JduyOt1AojmEXongL/view?usp=sharing) (Google Drive).
+
+A diagram representing the high level mail-in ballot workflow is located [here](https://drive.google.com/file/d/107M8GcjGfCZ7Vu1j__OT7xYtE-D-xiia/view?usp=sharing) (Google Drive).
+
 ## 3) Additional Details
 
-For a more detailed overview, see the file [./docs/project-overview.md](./docs/project-overview.md) in this git repo.  The docs folder also contains the current [pitch](./docs/pitch.md) as well as an [informal security description](./docs/informal-security-description.md).
+For a more detailed overview, see the file [./docs/project-overview.md](./docs/project-overview.md) in this git repo.  The docs folder also contains the current [pitch](./docs/pitch.md) as well as an [informal security description](./docs/informal-security-description.md).  There is a high level scurity threat model located at [VoteTracker+ Threat Model Mind Map](https://mm.tt/1939443508?t=DuNY3bTVbg).  Note - VTP was originally named VOTES before the project transitioned to OSET.
 
-VoteTracker+ is intended to be compliant to the sensible extent possible [NIST](https://en.wikipedia.org/wiki/National_Institute_of_Standards_and_Technology)'s [voting](https://www.nist.gov/itl/voting) efforts.
+VoteTracker+ is intended to be compliant to the sensible extent possible [NIST](https://en.wikipedia.org/wiki/National_Institute_of_Standards_and_Technology)'s [voting](https://www.nist.gov/itl/voting) efforts.  With funding the intent is to be compiant with NIST's [Special Publication 1500-100](https://pages.nist.gov/ElectionResultsReporting/), Election Results Reporting Common Data Format Specification Revision 2.
 
 VoteTracker+ will attempt to leverage as much code and prior art as possible. There are several possible alternatives for standing up a pilot; if you have suggestions please get in touch.
 
