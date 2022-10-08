@@ -216,7 +216,7 @@ Contest US president (uid=0000):
   ('Cory Booker', 0)
   ('Ron DeSantis', 0)
 ```
-FYI - with -v4 and RCV contests, how each specific voter's selection gets re-directed from the last place loosing candidate to their next choice candidate is printed, offering full transparency to RVC contests.
+FYI - with -v4 and RCV contests, how each specific voter's ranked choice selection gets re-directed from the last place loosing candidate to their next choice candidate is printed, offering full transparency to RVC contests.
 
 ### 5) Development cycle
 
