@@ -72,7 +72,7 @@ $ ln -s ../VTP-mock-election.US.<nn> ElectionData
 
 # Where <nn> is the most recent available mock election 
 ```
-Note - Votetracker+ is currently using a symlink instead of a git submodule for ElectionData
+Note - Votetracker+ is currently using a symlink instead of a git submodule for ElectionData (the _ln -s_ step above).
 
 See [VTP-mock-election.US.09](https://github.com/TrustTheVote-Project/VTP-mock-election.US.09) as an example
 
@@ -115,27 +115,27 @@ Here is an example of running a 4 VTP scanner and 1 VTP server app mock demo ele
 # Note - this assumes the explicit setup steps above - note the poetry pyproject.toml location
 $ cd repos/VTP-root-repo
 $ poetry shell
-$ cd /opt/VotetrackerPlus/demo.01/clients/server/VTP-mock-election.US.01/bin
+$ cd /opt/VotetrackerPlus/demo.01/clients/server/VTP-root-repo/bin
 $ ./run_mock_election.py -s California -t Alameda -a "123 Main Street" -d server
 
 # In terminal window #2, run a VTP scanner in mock election mode
 $ cd repos/VTP-root-repo
 $ poetry shell
-$ cd /opt/VotetrackerPlus/demo.01/clients/scanner.01/VTP-mock-election.US.01/bin
+$ cd /opt/VotetrackerPlus/demo.01/clients/scanner.01/VTP-root-repo/bin
 # Auto cast 100 random ballots
 $ ./run_mock_election.py -s California -t Alameda -a "123 Main Street" -d scanner -i 100
 
 # In terminal window #3, run a second VTP scanner in mock election mode
 $ cd repos/VTP-root-repo
 $ poetry shell
-$ cd /opt/VotetrackerPlus/demo.01/clients/scanner.02/VTP-mock-election.US.01/bin
+$ cd /opt/VotetrackerPlus/demo.01/clients/scanner.02/VTP-root-repo/bin
 # Auto cast 100 random ballots
 $ ./run_mock_election.py -s California -t Alameda -a "123 Main Street" -d scanner -i 100
 
 # In terminal window #4, run an interactive VTP scanner to cast ballots
 $ cd repos/VTP-root-repo
 $ poetry shell
-$ cd /opt/VotetrackerPlus/demo.01/clients/scanner.00/VTP-mock-election.US.01/bin
+$ cd /opt/VotetrackerPlus/demo.01/clients/scanner.00/VTP-root-repo/bin
 
 # To manually vote and cast one ballot, run vote.py.  The receipt.cvs will be printed to a file
 # and the row offset will be printed to the screen (STDOUT).
@@ -189,6 +189,34 @@ At any time and in any repository cloned from the local-remote-server VTP-mock-e
 ```bash
 $ ./tally_contests.py
 ```
+
+tally_contests.py can be restricted to a single contest or report on all the contests that span all the ballot types.  It also supports a verbose switch so that one can see details about the tally.  This is helpful with RCV as one can then inspect the RCV rounds and what is happening to the candidates:
+
+```bash
+% ./tally_contests.py -c 0000 -v 3
+Running "git rev-parse --show-toplevel"
+Running "git pull"
+Already up to date.
+Running "git log --topo-order --no-merges --pretty=format:%H%B"
+Scanned 186 contests for contest (US president) uid=0000, tally=rcv, max=1, win-by>0.5
+RCV: round 0
+[('Phil Scott', 38), ('Mitt Romney', 36), ('Kamala Harris', 34), ("Beta O'rourke", 30), ('Cory Booker', 28), ('Ron DeSantis', 20)]
+RCV: round 1
+[('Phil Scott', 41), ('Mitt Romney', 40), ('Kamala Harris', 38), ("Beta O'rourke", 37), ('Cory Booker', 30), ('Ron DeSantis', 0)]
+RCV: round 2
+[('Mitt Romney', 49), ('Kamala Harris', 47), ("Beta O'rourke", 46), ('Phil Scott', 44), ('Cory Booker', 0), ('Ron DeSantis', 0)]
+RCV: round 3
+[("Beta O'rourke", 64), ('Mitt Romney', 62), ('Kamala Harris', 60), ('Phil Scott', 0), ('Cory Booker', 0), ('Ron DeSantis', 0)]
+RCV: round 4
+Contest US president (uid=0000):
+  ('Mitt Romney', 94)
+  ("Beta O'rourke", 92)
+  ('Kamala Harris', 0)
+  ('Phil Scott', 0)
+  ('Cory Booker', 0)
+  ('Ron DeSantis', 0)
+```
+FYI - with -v4 how each specific vote get re-directed to the next candidate that the voter specified is printed, offering full transparency to RVC contests.
 
 ### 5) Development cycle
 
