@@ -84,7 +84,7 @@ def main():
     # Just cd into the ElectionData repo and run the git command
     with Shellout.changed_cwd(election_data_dir):
         Shellout.run(
-            ['git', 'show', args.contest_check],
+            ['git', 'log', '-1', args.contest_check],
             check=True)
 
 if __name__ == '__main__':

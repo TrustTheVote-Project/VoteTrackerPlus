@@ -20,7 +20,7 @@
 import json
 import re
 import operator
-from logging import debug,info
+from logging import info
 from fractions import Fraction
 # local
 from exceptions import TallyException
@@ -298,7 +298,7 @@ class Tally:
             return 'yes' if pick else 'no'
         raise ValueError(f"unknown/unsupported contest choices data structure ({pick})")
 
-    def tally_a_plurality_contest(self, contest):
+    def tally_a_plurality_contest(self, contest, provenance_digest):
         """plurality tally"""
         for count in range(self.defaults['max']):
             if 0 <= count < len(contest['selection']):
@@ -312,13 +312,16 @@ class Tally:
                 choice = Contest.get_choices_from_contest(contest['choices'])[selection]
                 self.selection_counts[choice] += 1
                 self.vote_count += 1
-#                debug(
-#                    f"Vote (plurality): contest={contest['name']} "
-#                    f"choice={choice} selection={selection}")
+                if provenance_digest:
+                    info(
+                        f"Counted ({provenance_digest}): contest={contest['name']} "
+                        f"choice={choice} selection={selection}")
             else:
-                debug(f"Vote (plurality): contest={contest['name']} BLANK")
+                if provenance_digest:
+                    info(
+                        f"No-vote ({provenance_digest}): contest={contest['name']} BLANK")
 
-    def tally_a_rcv_contest(self, contest):
+    def tally_a_rcv_contest(self, contest, provenance_digest):
         """RCV tally"""
         if len(contest['selection']):
             # the voter can still leave a RCV contest blank
@@ -329,11 +332,13 @@ class Tally:
             choice = Contest.get_choices_from_contest(contest['choices'])[selection]
             self.selection_counts[choice] += 1
             self.vote_count += 1
-#            debug(
-#                f"Vote (RCV): contest={contest['name']} "
-#                f"choice={choice} (selection={selection})")
+            if provenance_digest:
+                info(
+                    f"Counted ({provenance_digest}): contest={contest['name']} "
+                    f"choice={choice}")
         else:
-            debug(f"Vote (RCV): contest={contest['name']} BLANK")
+            if provenance_digest:
+                info(f"No vote ({provenance_digest}): contest={contest['name']} BLANK")
 
 
     def safely_determine_last_place_name(self, current_round):
@@ -417,7 +422,7 @@ class Tally:
             for index, item in enumerate(reversed(loser_order)):
                 self.rcv_round[this_round][-index - 1] = (item[0], 0)
 
-    def handle_another_rcv_round(self, this_round, last_place_name, contest_batch):
+    def handle_another_rcv_round(self, this_round, last_place_name, contest_batch, checks):
         """For the lowest vote getter, for those CVR's that have
         that as their current first/active-round choice, will
         slice off that choice off and re-count the now first
@@ -454,11 +459,13 @@ class Tally:
                     # set-in-stone ordering w.r.t. selection
                     new_choice_name = self.select_name_from_choices(new_selection)
                     self.selection_counts[new_choice_name] += 1
-                    debug(f"RCV: {digest} (contest={contest['name']}) last place pop and count "
-                              f"({last_place_name} -> {new_choice_name}")
+                    if digest in checks:
+                        info(f"RCV: {digest} (contest={contest['name']}) last place pop and count "
+                             f"({last_place_name} -> {new_choice_name}")
                 else:
-                    debug(f"RCV: {digest} (contest={contest['name']}) last place pop and drop "
-                              f"({last_place_name} -> BLANK")
+                    if digest in checks:
+                        info(f"RCV: {digest} (contest={contest['name']}) last place pop and drop "
+                             f"({last_place_name} -> BLANK")
         # Order the winners of this round.  This is a tuple, not a
         # list or dict.  Note - the rcv round losers should not be
         # re-ordered as there is value to retaining that order
@@ -485,16 +492,18 @@ class Tally:
         last_place_name = self.safely_determine_last_place_name(this_round)
         # Add this loser to the obe record
         self.obe_choices[last_place_name] = this_round
-        self.handle_another_rcv_round(this_round + 1, last_place_name, contest_batch)
+        self.handle_another_rcv_round(this_round + 1, last_place_name, contest_batch, checks)
         return
 
-    def parse_all_contests(self, contest_batch):
+    def parse_all_contests(self, contest_batch, checks):
         """Will parse all the contests validating each"""
         errors = {}
         for a_git_cvr in contest_batch:
             contest = a_git_cvr['CVR']
             digest = a_git_cvr['digest']
             Contest.check_cvr_blob_syntax(contest, digest=digest)
+            # Maybe print an provenance log for the tally of this contest
+            provenance_digest = digest if digest in checks else ""
             # Validate the values that should be the same as self
             for field in ['choices', 'tally', 'win-by', 'max', 'ggo', 'uid', 'name']:
                 if field in self.contest:
@@ -513,11 +522,11 @@ class Tally:
             # complicated tallies such as RCV, the additional passes
             # are done outside of this for loop.
             if contest['tally'] == 'plurality':
-                self.tally_a_plurality_contest(contest)
+                self.tally_a_plurality_contest(contest, provenance_digest)
             elif contest['tally'] == 'rcv':
                 # Since this is the first round on a rcv tally, just
                 # grap the first selection
-                self.tally_a_rcv_contest(contest)
+                self.tally_a_rcv_contest(contest, provenance_digest)
             else:
                 # This code block should never be executed as the
                 # constructor or the Validate values clause above will
@@ -533,14 +542,17 @@ class Tally:
                 "The following CVRs have structural errors:"
                 f"{errors}")
 
-    def tallyho(self, contest_batch):
+    def tallyho(self, contest_batch, checks):
         """
         Will verify and tally the suppllied unique contest across all
         the CVRs.
         """
         # Read all the contests, validate, and count votes
-        info("RCV: round 0")
-        self.parse_all_contests(contest_batch)
+        if self.contest['tally'] == 'plurality':
+            info("Plurality - one round")
+        else:
+            info("RCV: round 0")
+        self.parse_all_contests(contest_batch, checks)
 
         # For all tallies order what has been counted so far (a tuple)
         self.rcv_round[0] = sorted(
@@ -585,7 +597,7 @@ class Tally:
         last_place_name = self.safely_determine_last_place_name(0)
         self.obe_choices[last_place_name] = 0
         # go
-        self.handle_another_rcv_round(1, last_place_name, contest_batch)
+        self.handle_another_rcv_round(1, last_place_name, contest_batch, checks)
 
     def print_results(self):
         """Will print the results of the tally"""
