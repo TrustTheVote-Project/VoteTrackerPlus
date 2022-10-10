@@ -10,4 +10,4 @@ VoteTracker+ provides three core capabilities:
 
 3. Allows the public to inspect and validate the official Cast Vote Records and tally as well as potentially, via optional future extensions, the aggregate voter ID rolls across the entire electorate
 
-See [docs/E2EV.md](docs/E2EV.md) for more details regarding how VTP supplies E2EV and how the live [CLI](https://en.wikipedia.org/wiki/Command-line_interface) based demo demonstrates that.
+See [E2EV.md](E2EV.md) for more details regarding how VTP supplies E2EV and how the live [CLI](https://en.wikipedia.org/wiki/Command-line_interface) based demo demonstrates that.
