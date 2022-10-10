@@ -346,8 +346,6 @@ class Tally:
         re-distribute the next RCV round of voting.  Can raise various
         exceptions.  If possible will return the last_place_name.
         """
-#        import pprint
-#        import pdb; pdb.set_trace()
         info(f"{self.rcv_round[current_round]}")
 
         if Tally.get_choices_from_round(self.rcv_round[current_round], 'count')[-current_round] == \
@@ -359,8 +357,9 @@ class Tally:
                 f"(uid={self.contest['uid']}) in round {current_round}.  "
                 "The code for this is not yet implemented.")
         if current_round + 2 == len(self.selection_counts):
-            #  Mmm, this is RCV and there are only two active choices
-            #  left.  This is not good unless it is a tie
+            #  Mmm, this is RCV and this was the last round - and
+            #  there was no winner.  This is not good unless it is a
+            #  tie.
             if self.rcv_round[current_round][0][1] == self.rcv_round[current_round][1][1]:
                 # a tie
                 raise TallyException(
@@ -422,6 +421,17 @@ class Tally:
             for index, item in enumerate(reversed(loser_order)):
                 self.rcv_round[this_round][-index - 1] = (item[0], 0)
 
+    def get_total_vote_count(self, this_round):
+        """
+        To get the correct denominator to determine the minimum
+        required win amount, all the _current_ candidate counts need
+        to be added since some ballots may either be blank OR have
+        less then the maximum number of rank choices.  Note -
+        """
+        return sum(
+            self.selection_counts[choice]
+            for choice in Tally.get_choices_from_round(self.rcv_round[this_round]))
+
     def handle_another_rcv_round(self, this_round, last_place_name, contest_batch, checks):
         """For the lowest vote getter, for those CVR's that have
         that as their current first/active-round choice, will
@@ -474,12 +484,15 @@ class Tally:
         self.restore_proper_rcv_round_ordering(this_round)
         # Create the next round list
         self.rcv_round.append([])
-        # See if there is a wiinner and if so record it
+        # Get the correct current total vote count for this round
+        total_current_vote_count = self.get_total_vote_count(this_round)
+        info(f"Total vote count: {total_current_vote_count}")
+#        import pprint
+#        import pdb; pdb.set_trace()
         for choice in Tally.get_choices_from_round(self.rcv_round[this_round]):
             # Note the test is '>' and NOT '>='
-#            import pdb; pdb.set_trace()
-            if float(self.selection_counts[choice]) / float(
-                    self.vote_count) > self.defaults['win-by']:
+            if (float(self.selection_counts[choice]) /
+                    float(total_current_vote_count)) > self.defaults['win-by']:
                 # A winner.  Depending on the win-by (which is a
                 # function of max), there could be multiple
                 # winners in this round.
@@ -572,11 +585,15 @@ class Tally:
         # might be 2/3 and not just a simple majority.  So only if there
         # are enough winners with enough votes is this contest done.
 
+        # Get the correct current total vote count for this round
+        total_current_vote_count = self.get_total_vote_count(0)
+        info(f"Total vote count: {total_current_vote_count}")
+
         # Determine winners if any ...
         for choice in Tally.get_choices_from_round(self.rcv_round[0]):
             # Note the test is '>' and NOT '>='
-            if float(self.selection_counts[choice]) /\
-              float(self.vote_count) > self.defaults['win-by']:
+            if (float(self.selection_counts[choice]) /
+                    float(total_current_vote_count)) > self.defaults['win-by']:
                 # A winner.  Depending on the win-by (which is a
                 # function of max), there could be multiple
                 # winners in this round.

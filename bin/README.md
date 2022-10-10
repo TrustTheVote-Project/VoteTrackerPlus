@@ -2,7 +2,7 @@
 
 This is significantly incomplete and needs more thought and work but it is a start.
 
-## Terminology
+## 1) Terminology
 
 For basic terminology see the [NIST](https://pages.nist.gov/ElectionGlossary/) glossary page.
 
@@ -22,7 +22,7 @@ Also, though disconnected network wise, each VTP location processes ballots with
 
 So, to create a VTP election configuration is to create these yaml files and git submodules either from scratch or to import/merge them from a previous or similar election.  Once imported/merged they can be updated and modified.  And once imported, the unit, functional, and mock election tests can be run locally as they are always executed as part of the VTP development process as part of the GitHub devsecops infrastructure.
 
-## Background and Caveats
+## 2) Background and Caveats
 
 The VoteTrackerPlus project with respect to executable programs currently consists of a handfull of python scripts and libraries all in this directory.  To run these scripts the CWD (current working directory) for the programs can either be the git workspace root or this bin directory.  Other CWD's may not work as they are not currently part of the test matrix.
 
@@ -30,7 +30,7 @@ It is important that the end-voter usage model be as simple as possible and as i
 
 Therefor, there is no setup.py file for this project as there is no __pip install votetracker+__ or similar installation step.  As there is no VTP installation step, tests are run directly via pylint and  pytest and not via tox.  It is important that end-voters can also run the all the VTP tests on their computers.
 
-## Development Process Target Goal
+## 3) Development Process Target Goal
 
 It is a goal to create a development process that eventually includes the following:
 
@@ -43,11 +43,11 @@ It is a goal to create a development process that eventually includes the follow
 
 This project is not there yet.
 
-## Current Development Process
+## 4) Current Development Process
 
 The current development process is in flux as the project is still being designed / framed out as code is being written.  This documentation may also be behind the actual code development.
 
-### 1) One time python environment setup
+### 4.1) One time python environment setup
 
 Currently Votetracker+ is using [poetry](https://python-poetry.org/) as the python package and dependency manager.  The base python is currently 3.9.
 
@@ -60,7 +60,7 @@ $ python3 install-poetry.py
 ```
 Note the [poetry installation](https://python-poetry.org/docs/#installation) directions regarding shell integrations
 
-### 2) Clone this repo and an ElectionData repo
+### 4.2) Clone this repo and an ElectionData repo
 
 ```bash
 # pull the Votetracker+ project - clone both repositories - and create an ElectionData symlink
@@ -78,14 +78,14 @@ See [VTP-mock-election.US.09](https://github.com/TrustTheVote-Project/VTP-mock-e
 
 Each ElectionData repo can represent a different election.  Some repos may be already configured and can be immediately used to run an election, or the repo may be of a past election.  Regardless, to run a real or mock election one will need a usable ElectionData repo.
 
-### 3) Create/set the python environment
+### 4.3) Create/set the python environment
 
 ```bash
 $ poetry init
 $ poetry shell
 ```
 
-### 4) Running a mock election
+### 4.4) Running a mock election
 
 With nominally both repos in place and assuming at this time no git submodules, run the setup_vtp_demo.py script.  This script will nominally create a mock election with four VTP scanner _apps_ and one VTP local-remote server _app_ as if all ballots were being cast in a single voting center.  By default it will place the git repos in /opt/VotetrackerPlus with the 5 clients (the four scanner apps and one server app) in the _clients_ folder with the two local git upstream bare repositories in the _local-remote-server_ folder.  The directory tree looks like this:
 
@@ -178,8 +178,6 @@ The following contests are not merged to master yet:
 
 Note that five of the seven contests have been merged to master and as such now have a fixed offset in the _official_ tally of those contests.  This allows the voter who cast this ballot to say, with a very high level of trust, that their vote in contest '0000 - US president' is number 71 out of N.  As more contest CVRs are added to the tally (merged to master), the 71 will not change for this repo/precinct.  However, the vote number will changes as precincts are aggregated.
 
-Ta Da
-
 Two of the contests above remain in the ballot cache and can still be randomly included in some other anonymized ballot check.  They will be merged to master by the VTP server at some point, either randomly during the voting or once the voting ceases at the polling location.
 
 Running the above demo does not modify the VTP-root-repo repo and does not push any changes in the VTP-mock-election.US.nn repository back to the upstream GitHub repositories.  This is because by design the VTP scanner and server app repo pairs have the git origin pointing to the local bare repositories found in the local-remote-server folder in the demo.nn directory.
@@ -218,7 +216,7 @@ Contest US president (uid=0000):
 ```
 FYI - with -v4 and RCV contests, how each specific voter's ranked choice selection gets re-directed from their last place loosing candidate to their next choice candidate is printed, offering full transparency to RVC contests.
 
-### 5) Development cycle
+### 4.5) Development cycle
 
 New development should use a feature branch directly in this repo.  New ElectionData repositories can be created at will.  Signed commits are required in both repos.
 
