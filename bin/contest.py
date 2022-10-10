@@ -20,7 +20,7 @@
 import json
 import re
 import operator
-from logging import info
+from logging import info, debug
 from fractions import Fraction
 # local
 from exceptions import TallyException
@@ -314,12 +314,11 @@ class Tally:
                 self.vote_count += 1
                 if provenance_digest:
                     info(
-                        f"Counted ({provenance_digest}): contest={contest['name']} "
-                        f"choice={choice} selection={selection}")
+                        f"Counted {provenance_digest}: choice={choice}")
             else:
                 if provenance_digest:
                     info(
-                        f"No-vote ({provenance_digest}): contest={contest['name']} BLANK")
+                        f"No-vote {provenance_digest}: BLANK")
 
     def tally_a_rcv_contest(self, contest, provenance_digest):
         """RCV tally"""
@@ -334,11 +333,10 @@ class Tally:
             self.vote_count += 1
             if provenance_digest:
                 info(
-                    f"Counted ({provenance_digest}): contest={contest['name']} "
-                    f"choice={choice}")
+                    f"Counted {provenance_digest}: choice={choice}")
         else:
             if provenance_digest:
-                info(f"No vote ({provenance_digest}): contest={contest['name']} BLANK")
+                info(f"No vote {provenance_digest}: BLANK")
 
 
     def safely_determine_last_place_name(self, current_round):
@@ -447,6 +445,8 @@ class Tally:
         for uid in contest_batch:
             contest = uid['CVR']
             digest = uid['digest']
+            if digest in checks:
+                debug(f"INSPECTING: {digest} (contest={contest['name']})")
             # Note - if there is no selection, there is no selection
             if not contest['selection']:
                 continue
@@ -471,11 +471,11 @@ class Tally:
                     self.selection_counts[new_choice_name] += 1
                     if digest in checks:
                         info(f"RCV: {digest} (contest={contest['name']}) last place pop and count "
-                             f"({last_place_name} -> {new_choice_name}")
+                             f"({last_place_name} -> {new_choice_name})")
                 else:
                     if digest in checks:
                         info(f"RCV: {digest} (contest={contest['name']}) last place pop and drop "
-                             f"({last_place_name} -> BLANK")
+                             f"({last_place_name} -> BLANK)")
         # Order the winners of this round.  This is a tuple, not a
         # list or dict.  Note - the rcv round losers should not be
         # re-ordered as there is value to retaining that order
@@ -487,8 +487,6 @@ class Tally:
         # Get the correct current total vote count for this round
         total_current_vote_count = self.get_total_vote_count(this_round)
         info(f"Total vote count: {total_current_vote_count}")
-#        import pprint
-#        import pdb; pdb.set_trace()
         for choice in Tally.get_choices_from_round(self.rcv_round[this_round]):
             # Note the test is '>' and NOT '>='
             if (float(self.selection_counts[choice]) /
@@ -497,6 +495,8 @@ class Tally:
                 # function of max), there could be multiple
                 # winners in this round.
                 self.winner_order.append((choice, self.selection_counts[choice]))
+#        import pprint
+#        import pdb; pdb.set_trace()
         # If there are anough winners, stop and return
         if len(self.winner_order) >= self.defaults['max']:
             return
