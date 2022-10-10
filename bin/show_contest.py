@@ -27,9 +27,11 @@ See ../docs/tech/executable-overview.md for the context in which this file was c
 
 # pylint: disable=wrong-import-position
 import os
+import re
 import sys
 import argparse
 import logging
+from logging import error
 
 # Local imports
 from common import Globals, Shellout
@@ -39,6 +41,32 @@ from election_config import ElectionConfig
 # Functions
 ################
 
+def validate_digests(digests, election_data_dir, error_digests):
+    """Will scan the supplied digests for validity.  Will print and
+    return the invalid digests.
+    """
+    errors = 0
+    input_data = '\n'.join(digests.split(',')) + '\n'
+    with Shellout.changed_cwd(election_data_dir):
+        output_lines = Shellout.run(
+            ['git', 'cat-file', '--buffer', '--batch-check=%(objectname) %(objecttype)'],
+            verbosity=args.verbosity,
+            input=input_data,
+            text=True,
+            check=True,
+            capture_output=True).stdout.strip().splitlines()
+    for count, line in enumerate(output_lines):
+        digest, commit_type = line.split()
+        if commit_type == 'missing':
+            error(f"[ERROR]: missing digest: n={count} digest={digest}")
+            error_digests.add(digest)
+            errors += 1
+        elif commit_type != 'commit':
+            error(f"[ERROR]: invalid digest type: n={count} digest={digest} type={commit_type}")
+            error_digests.add(digest)
+            errors += 1
+    if errors:
+        raise ValueError(f"Found {errors} invalid digest(s)")
 
 ################
 # arg parsing
@@ -53,7 +81,7 @@ def parse_arguments():
     """)
 
     parser.add_argument("-c", "--contest-check",
-                            help="the contest check to display")
+                            help="a comma separate list of contests digests to validate/display")
     parser.add_argument("-v", "--verbosity", type=int, default=3,
                             help="0 critical, 1 error, 2 warning, 3 info, 4 debug (def=3)")
     parser.add_argument("-n", "--printonly", action="store_true",
@@ -66,6 +94,10 @@ def parse_arguments():
     # Validate required args
     if not parsed_args.contest_check:
         raise ValueError("The contest check is required")
+    if not bool(re.match('^[0-9a-f,]', parsed_args.contest_check)):
+        raise ValueError(
+            "The contest_check parameter only accepts a comma separated (no spaces) "
+            "list of contest checks/digests to track.")
     return parsed_args
 
 ################
@@ -81,11 +113,28 @@ def main():
     election_data_dir = os.path.join(
         the_election_config.get('git_rootdir'), Globals.get('ROOT_ELECTION_DATA_SUBDIR'))
 
-    # Just cd into the ElectionData repo and run the git command
+    # First validate the digests
+    error_digests = set()
+    validate_digests(args.contest_check, election_data_dir, error_digests)
+    valid_digests = [digest for digest in args.contest_check.split(',')
+                         if digest not in error_digests]
+    # show/log the digests
     with Shellout.changed_cwd(election_data_dir):
-        Shellout.run(
-            ['git', 'log', '-1', args.contest_check],
-            check=True)
+        Shellout.run(['git', 'show', '-s'] + valid_digests, check=True)
+
+# this is a loop of shell commands
+#        for digest in args.contest_check.split(','):
+#            if digest not in error_digests:
+#                Shellout.run(['git', 'log', '-1', digest], check=True)
+
+# this does not work well enough either
+#        input_data = '\n'.join(args.contest_check.split(',')) + '\n'
+#        Shellout.run(
+#            ['git', 'cat-file', '--batch=%(objectname)'],
+#            input=input_data,
+#            text=True,
+#            check=True,
+#            verbosity=args.verbosity)
 
 if __name__ == '__main__':
     args = parse_arguments()

@@ -67,13 +67,13 @@ def validate_ballot_lines(lines, headers, uids, e_config, error_digests):
     for line in results:
         digest, commit_type = line.split()
         if commit_type == 'missing':
-            print(
-                f"MISSING DIGEST IN REPO: row {row} column {column} "
+            error(
+                f"[ERROR]: missing digest: row {row} column {column} "
                 f"contest='{headers[column-1]}' digest={digest}")
             error_digests.add(digest)
         elif commit_type != 'commit':
-            print(
-                f"INVALID DIGEST TYPE: row {row} column {column} "
+            error(
+                f"[ERROR]: invalid digest type: row {row} column {column} "
                 f"contest='{headers[column-1]}' digest={digest} type={commit_type}")
             error_digests.add(digest)
         column += 1
@@ -118,14 +118,14 @@ def vet_rows(lines, headers, uids, e_config, error_digests):
                 # keep incrementing column regardless
                 continue
             if digest not in cvrs:
-                print(
-                    f"MISSING DIGEST IN MASTER: row {index} "
+                error(
+                    f"[ERROR]: missing digest in master branch: row {index} "
                     f"contest='{headers[column]}' digest={digest}")
                 error_digests.add(digest)
                 continue
             if cvrs[digest]['CVR']['uid'] != uids[column]:
-                print(
-                    f"BAD CONTEST UID: row {row} column {column} "
+                error(
+                    f"[ERROR]: bad contest uid: row {row} column {column} "
                     f"contest {headers[column]} != {cvrs[digest]['CVR']['uid']} digest={digest}")
                 error_digests.add(digest)
                 continue
@@ -200,23 +200,21 @@ def verify_ballot_receipt(receipt_file, e_config):
     if args.row:
         for digest in lines[int(args.row) - 1]:
             if digest in error_digests:
-                error(f"Cannot print CVR for {digest} (row {args.row}) - it is invalid")
+                error(f"[ERROR]: cannot print CVR for {digest} (row {args.row}) - it is invalid")
                 continue
             debug(f"{json.dumps(requested_row[digest], indent=5, sort_keys=True)}")
         vet_a_row()
 
     # Summerize
     if error_digests:
-        print(
+        error(
             "############\n"
-            f"Ballot receipt INVALID - the supplied ballot receipt has {len(error_digests)} "
-            "errors.")
-        print("############")
+            "[ERROR]: ballot receipt INVALID - the supplied ballot receipt has "
+            f"{len(error_digests)} errors.{os.linesep}############")
     else:
         print(
             "############\n"
-            "### Ballot receipt VALID - no digest errors found\n"
-            "############")
+            "[GOOD]: ballot receipt VALID - no digest errors found\n############")
 
 ################
 # arg parsing
