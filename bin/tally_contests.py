@@ -28,6 +28,7 @@ See ../docs/tech/*.md for the context in which this file was created.
 
 # Standard imports
 import sys
+import re
 # pylint: disable=wrong-import-position   # import statements not top of file
 import argparse
 import logging
@@ -68,6 +69,8 @@ def parse_arguments():
 
     parser.add_argument("-c", "--contest_uid", default="",
                             help="limit the tally to a specific contest uid")
+    parser.add_argument("-t", "--track_contests", default="",
+                            help="a comma separated list of contests checks to track")
     parser.add_argument("-x", "--do_not_pull", action="store_true",
                             help="Before tallying the votes, pull the ElectionData repo")
     parser.add_argument("-v", "--verbosity", type=int, default=3,
@@ -82,6 +85,14 @@ def parse_arguments():
                             stream=sys.stdout)
 
     # Validate required args
+    if parsed_args.track_contests:
+        if not bool(re.match('^[0-9a-f,]', parsed_args.track_contests)):
+            raise ValueError(
+                "The track_contests parameter only accepts a comma separated (no spaces) "
+                "list of contest checks/digests to track.")
+        parsed_args.track_contests = parsed_args.track_contests.split(',')
+    else:
+        parsed_args.track_contests = []
     return parsed_args
 
 ################
@@ -135,7 +146,7 @@ def main():
         # Tally all the contests for this contest
 #        import pdb; pdb.set_trace()
         try:
-            the_tally.tallyho(contest_batches[contest_batch])
+            the_tally.tallyho(contest_batches[contest_batch], args.track_contests)
             # Print stuff
             the_tally.print_results()
         except TallyException as tally_error:

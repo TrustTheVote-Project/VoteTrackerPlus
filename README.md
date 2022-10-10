@@ -4,13 +4,13 @@
 
 VoteTracker+ (VTP or VoteTrackerPlus) is a 100% open software ballot tracking system that increases the security, accuracy, and trustworthiness of paper ballot based elections by cryptographically tracking the paper ballots.  VTP is a software only product comprised of backoffice plugins with voter and election official facing frontoffice components.  VTP can leverage existing election hardware infrastructure to the extent that the OEM manufacturers allow and support the installation of the VTP plugins.
 
+Read the [pitch](docs/pitch.md), ask for a live demo, or run your own live demo on your own Apple or Linux desktop.
+
+To run your own [CLI](https://en.wikipedia.org/wiki/Command-line_interface) based demo, clone this and the [mock election](https://github.com/TrustTheVote-Project/VTP-mock-election.US.09) git repositories.  And then run your own election, manually casting ballots in parallel with N simulated in-person voting center VTP ballot scanners and one VTP ballot server.  See the [bin/README.md](bin/README.md) file for more details.  Note - the live demo actually includes a complete election, from limited JSON _data only_ blank ballots (no description, language, or printing) to full tallies of the contests.
+
 ## 1) Overview
 
-Read the [pitch](docs/pitch.md), ask for a live demo.
-
-Or clone this and the [mock election repo](https://github.com/TrustTheVote-Project/VTP-mock-election.US.09) and run your own election, casting manual votes in parallel with N automated ballot scanners and one ballot server.  See the [bin/README.md](bin/README.md) file for more details.  Note - the live demo actually includes a complete election, from limited JSON _data only_ (no pdf, no description, no multi language translations) blank ballots to complete tallies of the contests.
-
-VoteTracker+ is a distributed, open-source ballot and Cast Vote Record ([CVR](https://pages.nist.gov/ElectionGlossary/#cast-vote-record)) integrity and tracking system to support public [elections](https://en.wikipedia.org/wiki/Election). It enables verifiable, accurate, secure and transparent elections with full voter based [End-to-end](https://en.wikipedia.org/wiki/End-to-end_auditable_voting_systems) verifiable (E2EV) ballots.  VoteTracker+ maximizes the transparency and trust of an election throughout the election process by:
+VoteTracker+ is a distributed, open-source ballot and Cast Vote Record ([CVR](https://pages.nist.gov/ElectionGlossary/#cast-vote-record)) integrity and tracking system to support public [elections](https://en.wikipedia.org/wiki/Election).  It enables verifiable, accurate, secure and transparent elections with full voter based [End-to-End Verifiable](https://en.wikipedia.org/wiki/End-to-end_auditable_voting_systems) (E2EV) ballots - see [docs/E2EV.md](docs/E2EV.md).  VoteTracker+ maximizes the transparency and trust of an election throughout the election process by:
 
 * allowing each voter to verify that their ballot is electronically cast, collected, and counted as intended
 * allowing each voter and all election officials to verify the tally of all the ballot questions
@@ -20,7 +20,7 @@ VoteTracker+ is a distributed, open-source ballot and Cast Vote Record ([CVR](ht
 
 VoteTracker+ is an open source distributed database/repository and application that supports:
 
-* full End-to-End validation (E2EV) of the paper and digital ballots
+* full End-to-End validation (E2EV) of the paper and digital ballots - see [docs/E2EV.md](docs/E2EV.md) for more details
 * storing all the digitally interpreted scans of the paper ballots in a secure and anonymous manner
 * executing the tally of all the races via 100% open source software contained within the same repositories as the ballot data
 * creating blank ballots as a function of address
