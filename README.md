@@ -20,7 +20,7 @@ VoteTracker+ is a distributed, open-source ballot and Cast Vote Record ([CVR](ht
 
 VoteTracker+ is an open source distributed database/repository and application that supports:
 
-* full End-to-End validation (E2EV) of the paper and digital ballots
+* full End-to-End validation (E2EV) of the paper and digital ballots - see [docs/E2EV.md](docs/E2EV.md) for more details
 * storing all the digitally interpreted scans of the paper ballots in a secure and anonymous manner
 * executing the tally of all the races via 100% open source software contained within the same repositories as the ballot data
 * creating blank ballots as a function of address
