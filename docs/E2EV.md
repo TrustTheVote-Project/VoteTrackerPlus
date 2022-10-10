@@ -1,14 +1,14 @@
-## VoteTracker+ provides complete E2EV
+## VoteTracker+ provides full E2EV
 
-VTP provides E2EV, specifically the E2EV properties of  __cast as intended__, __recorded as cast__, and __tallied as recorded__, without the need to encrypt the data-at-rest - without the need to encrypt the [OCR'ed](https://en.wikipedia.org/wiki/Optical_character_recognition) CVRs of the ballot.  VTP accomplishes this by privately and securely passing back to the voter their specific ballot check ID in a paperless, anonymous manner while also printing an anonymized paper based receipt.  Neither needs encryption.  The paper based receipt contains hundreds of randomized and anonymized validatable checks, only a handfull of which belong to a specific voter.
+VTP provides E2EV, specifically the E2EV properties of __cast as intended__, __recorded as cast__, and __tallied as recorded__, without the need to encrypt the data-at-rest - without the need to encrypt the [OCR'ed](https://en.wikipedia.org/wiki/Optical_character_recognition) CVRs of the ballot.  VTP accomplishes this by privately and securely passing back to the voter their specific ballot check ID in a paperless, anonymous manner while also printing an anonymized paper based receipt.  Neither needs encryption.  The paper based receipt contains hundreds of randomized and anonymized validatable checks, only a handfull of which belong to a specific voter.
 
 If one runs the demo included in this repo, one can witness the delivery of these three properties live:
 
 ### Cast as Intended
 
-The [CLI](https://en.wikipedia.org/wiki/Command-line_interface) (shell) output below shows the CLI based VTP demo accepting an interactive ballot from the user, offering the user a chance to self adjudicate the OCR of their ballot before it is officially submitted into the tally.  The user is prompted to accept or reject how the scanner has interpreted their paper ballot.
+The [CLI](https://en.wikipedia.org/wiki/Command-line_interface) (shell) output below shows the CLI based VTP demo accepting an interactive ballot from the user, offering the user a chance to self adjudicate the OCR of their ballot _before_ it is officially submitted into the tally.  The user is prompted to accept or reject how the scanner has interpreted their paper ballot.
 
-```bash
+```
 % ./vote.py --state=California --town=Alameda --address="123 Main Street"
 Running "git rev-parse --show-toplevel"
 Running "git pull"
@@ -81,9 +81,9 @@ Is this correct?  Enter yes to accept the ballot, no to reject the ballot: yes
 [...]
 ```
 
-Once the user has typed 'yes' above (this is just a demo), then VTP virtually prints the ballot receipt to a file (this is just a demo) and prints the voter's ballot index to the screen (this is just a demo):
+Once the user has typed 'yes' above (this is just a demo), then VTP virtually _prints_ the ballot receipt to a file and simulates privately passing the voter's ballot receipt index back to the voter by also printing it to the screen (this is just a demo):
 
-```bash
+```
 [...]
 ############
 ### Receipt file: /opt/VoteTrackerPlus/demo.15/clients/scanner.00/VTP-root-repo/ElectionData/GGOs/states/California/GGOs/towns/Alameda/CVRs/receipt.csv
@@ -96,7 +96,7 @@ Once the user has typed 'yes' above (this is just a demo), then VTP virtually pr
 
 Once the voter has been out-processed by an election official and before leaving the voting center, they can optionally place their ballot check in a read-only VTP ballot check scanner which will validate whether or not all the digests on the ballot check are correct.
 
-```bash
+```
 % ./verify_ballot_receipt.py -f ../../receipts.51.csv -r 51
 Running "git rev-parse --show-toplevel"
 Running "git pull"
