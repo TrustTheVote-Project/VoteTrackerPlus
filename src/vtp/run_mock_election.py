@@ -42,7 +42,6 @@ from .ballot import Ballot
 from .common import Globals, Shellout
 from .election_config import ElectionConfig
 
-
 # Functions
 
 ################

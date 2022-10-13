@@ -38,7 +38,6 @@ from logging import debug, info
 from .common import Globals, Shellout
 from .election_config import ElectionConfig
 
-
 # Functions
 
 def create_client_repos(clone_dirs, remote_1_path, remote_2_path):

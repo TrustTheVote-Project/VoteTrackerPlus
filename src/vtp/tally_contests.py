@@ -40,7 +40,6 @@ from .contest import Tally
 from .election_config import ElectionConfig
 from .exceptions import TallyException
 
-
 # Functions
 
 

@@ -25,12 +25,12 @@ See ../docs/tech/executable-overview.md for the context in which this file was c
 
 """
 
+import argparse
+import logging
 # pylint: disable=wrong-import-position
 import os
 import re
 import sys
-import argparse
-import logging
 from logging import error
 
 # Local imports

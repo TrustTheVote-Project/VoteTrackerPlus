@@ -39,7 +39,6 @@ from .address import Address
 from .ballot import Ballot
 from .election_config import ElectionConfig
 
-
 # Functions
 
 ################
