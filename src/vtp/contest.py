@@ -21,7 +21,7 @@ import json
 import operator
 import re
 from fractions import Fraction
-from logging import debug
+from logging import debug, info
 
 # local
 from .exceptions import TallyException

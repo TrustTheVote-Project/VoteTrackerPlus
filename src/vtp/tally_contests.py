@@ -30,6 +30,7 @@ See ../docs/tech/*.md for the context in which this file was created.
 # Standard imports
 import argparse
 import logging
+import re
 import sys
 from logging import error, info
 

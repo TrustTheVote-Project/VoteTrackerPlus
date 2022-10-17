@@ -36,7 +36,7 @@ from logging import debug, info
 
 # Local import
 from .address import Address
-from .ballot import Ballot
+from .ballot import BlankBallot
 from .election_config import ElectionConfig
 
 # Functions

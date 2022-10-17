@@ -39,7 +39,7 @@ import pyinputplus
 
 # Local imports
 from .address import Address
-from .ballot import Ballot, Contests
+from .ballot import Ballot, BlankBallot, Contests
 from .common import Globals, Shellout
 from .election_config import ElectionConfig
 
