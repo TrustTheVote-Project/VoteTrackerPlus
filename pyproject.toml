@@ -19,7 +19,7 @@ networkx = "^2.8.6"
 pyinputplus = "^0.2.12"
 
 [tool.poetry.dev-dependencies]
-sphynx = "^0.0.3"
+sphinx = "^5.3.0"
 
 [build-system]
 requires = ["poetry-core>=1.1.0"]
