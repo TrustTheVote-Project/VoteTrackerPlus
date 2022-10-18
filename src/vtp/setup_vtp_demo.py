@@ -48,7 +48,6 @@ def create_client_repos(clone_dirs, remote_path):
     cloned_repos = [] # a list of tuple pairs
     for clone_dir in clone_dirs:
         with Shellout.changed_cwd(clone_dir):
-            info(f"In ({clone_dir}):")
             Shellout.run(
                 ['git', 'clone', '--recurse-submodules', remote_path],
                 args.printonly, verbosity=args.verbosity)
@@ -178,7 +177,6 @@ def main():
         check=True, capture_output=True, text=True).stdout.strip()
     # Bare clone them
     with Shellout.changed_cwd(full_dir):
-        info(f"In ({full_dir}):")
         Shellout.run(
             ['git', 'clone', '--bare', remote_1],
             args.printonly, verbosity=args.verbosity)
@@ -201,7 +199,6 @@ def main():
 
     # Now create a super git project to rule them all
     with Shellout.changed_cwd(args.location):
-        info(f"In ({args.location}):")
         # init it
         Shellout.run(
             ['git', 'init'],

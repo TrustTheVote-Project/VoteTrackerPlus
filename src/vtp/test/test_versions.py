@@ -24,6 +24,7 @@
 # pylint: disable=wrong-import-position
 import sys
 
+
 # save the user from themselves
 def test_python_version():
     """Test python version - needs to run in older versions ..."""

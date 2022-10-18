@@ -24,7 +24,7 @@ import re
 import subprocess
 from contextlib import contextmanager
 #  Other imports:  critical, error, warning, info, debug
-from logging import info
+from logging import debug, info
 
 
 class Globals:
@@ -136,10 +136,12 @@ class Shellout:
         """Context manager for temporarily changing the CWD"""
         oldpwd=os.getcwd()
         os.chdir(path)
+        debug(f"Entering dir ({path}):")
         try:
             yield
         finally:
             os.chdir(oldpwd)
+            debug(f"Leaving dir ({path}):")
 
     @staticmethod
     @contextmanager
@@ -150,11 +152,13 @@ class Shellout:
         before yielding.
         """
         Shellout.run(["git", "checkout", branch], check=True)
+        debug(f"Entering branch ({branch}):")
         try:
             yield
         finally:
             # switch the branch back
             Shellout.run(["git", "checkout", branch], check=True)
+            debug(f"Leaving branch ({branch}):")
 
     @staticmethod
     # ZZZ - could use an optional filter_by_uid argument which is a set object
