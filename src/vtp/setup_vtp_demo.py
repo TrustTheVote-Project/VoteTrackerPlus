@@ -40,7 +40,7 @@ from utils.election_config import ElectionConfig
 
 # Functions
 
-def create_client_repos(clone_dirs, remote_1_path, remote_2_path):
+def create_client_repos(clone_dirs, remote_path):
     """create demo clients workspaces"""
     # Now locally clone those as needed.  With the use of submodules
     # there is no longer an ElectionData symlink to manage.  Record
@@ -50,33 +50,17 @@ def create_client_repos(clone_dirs, remote_1_path, remote_2_path):
         with Shellout.changed_cwd(clone_dir):
             info(f"In ({clone_dir}):")
             Shellout.run(
-                ['git', 'clone', remote_1_path],
+                ['git', 'clone', '--recurse-submodules', remote_path],
                 args.printonly, verbosity=args.verbosity)
             # Note - since the repo is not a bare, the ".git" suffix
             # needs to be stripped
-            repo1_dir_name = os.path.basename(remote_1_path).removesuffix('.git')
+            repo_dir_name = os.path.basename(remote_path).removesuffix('.git')
             cloned_repos.append((
-                remote_1_path,
+                remote_path,
                 os.path.join(
                     os.path.basename(os.path.dirname(clone_dir)),
                     os.path.basename(clone_dir),
-                    repo1_dir_name)))
-            Shellout.run(
-                ['git', 'clone', remote_2_path],
-                args.printonly, verbosity=args.verbosity)
-            repo2_dir_name = os.path.basename(remote_2_path).removesuffix('.git')
-            cloned_repos.append((
-                remote_2_path,
-                os.path.join(
-                    os.path.basename(os.path.dirname(clone_dir)),
-                    os.path.basename(clone_dir),
-                    repo2_dir_name)))
-            # Add the symlink
-            Shellout.run(
-                ['ln', '-s', os.path.join('..', repo2_dir_name),
-                     os.path.join(clone_dir, repo1_dir_name,
-                                      Globals.get('ROOT_ELECTION_DATA_SUBDIR'))],
-                args.printonly, verbosity=args.verbosity)
+                    repo_dir_name)))
     return cloned_repos
 
 
@@ -185,13 +169,13 @@ def main():
     # Clone the two local-remotes
     full_dir = os.path.join(args.location, 'local-remote-server')
     # Get the two remotes
-    remote_1 = Shellout.run(
-        ['git', 'config', '--get', 'remote.origin.url'],
-        check=True, capture_output=True, text=True).stdout.strip()
     with Shellout.changed_cwd(election_data_dir):
-        remote_2 = Shellout.run(
+        remote_1 = Shellout.run(
             ['git', 'config', '--get', 'remote.origin.url'],
             check=True, capture_output=True, text=True).stdout.strip()
+    remote_2 = Shellout.run(
+        ['git', 'config', '--get', 'remote.origin.url'],
+        check=True, capture_output=True, text=True).stdout.strip()
     # Bare clone them
     with Shellout.changed_cwd(full_dir):
         info(f"In ({full_dir}):")
@@ -204,10 +188,16 @@ def main():
         Shellout.run(
             ['git', 'clone', '--bare', remote_2],
             args.printonly, verbosity=args.verbosity)
-        remote_2_path = os.path.join(full_dir, os.path.basename(remote_2))
 
-    # Create the client repos
-    cloned_repos = create_client_repos(clone_dirs, remote_1_path, remote_2_path)
+    # Create the client repos via the outer/root repo leveraging submodules
+    cloned_repos = create_client_repos(clone_dirs, remote_1_path)
+
+    # Note - in theory during a mock election run, it probably is not
+    # the normal case that the end user wants to actively develop code
+    # there, so no need to tweak the .git/config files with the git
+    # submodule UX customizations in the client (local) clones.
+    # However, w.r.t. the super project, it may make sense to add
+    # it there as an example.
 
     # Now create a super git project to rule them all
     with Shellout.changed_cwd(args.location):
