@@ -34,7 +34,7 @@ import sys
 # Local import
 from utils.address import Address
 from utils.ballot import Ballot
-from utils.common import Shellout
+from utils.common import Globals, Shellout
 from utils.election_config import ElectionConfig
 
 # Functions
@@ -113,7 +113,7 @@ def main():
 
     # Basically only do as little as necessary to call cast_ballot.py
     # followed by accept_ballot.py
-    bin_dir = os.path.join(the_election_config.get('git_rootdir'), 'bin')
+    bin_dir = os.path.join(the_election_config.get('git_rootdir'), Globals.get('BIN_DIR'))
     # Cast a ballot
     Shellout.run(
         [os.path.join(bin_dir, 'cast_ballot.py'), '-v', args.verbosity]

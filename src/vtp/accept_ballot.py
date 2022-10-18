@@ -376,7 +376,7 @@ def main():
 
     # If in demo mode, optionally merge the branches
     if args.merge_contests:
-        bin_dir = os.path.join(the_election_config.get('git_rootdir'), 'bin')
+        bin_dir = os.path.join(the_election_config.get('git_rootdir'), Globals.get('BIN_DIR'))
         for branch in branches:
             # Merge the branch (but since the local branch should be
             # deleted at this point, merge the remote).  Note -

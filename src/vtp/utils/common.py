@@ -67,6 +67,8 @@ class Globals:
         # two subdirs down from the git toplevel.  So need to pop up 3
         # levels to get out of this repo and into that one.
         'ROOT_ELECTION_DATA_SUBDIR': '..',
+        # Where the bin directory is relative from the root of _this_ repo
+        'BIN_DIR': 'src/vtp',
         # How long to wait for a git shell command to complete - maybe a bad idea
         'SHELL_TIMEOUT': 15,
         # Number of ballots on a ballot receipt

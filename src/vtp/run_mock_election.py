@@ -283,7 +283,7 @@ def main():
         blank_ballot = args.blank_ballot
 
     # Eventually need the bin dir as well
-    bin_dir = os.path.join(the_election_config.get('git_rootdir'), 'bin')
+    bin_dir = os.path.join(the_election_config.get('git_rootdir'), Globals.get('BIN_DIR'))
     # the VTP scanner mock simulation
     if args.device in ['scanner', 'both']:
         scanner_mockup(election_data_dir, bin_dir, blank_ballot)
