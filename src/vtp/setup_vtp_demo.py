@@ -42,9 +42,9 @@ from .election_config import ElectionConfig
 
 def create_client_repos(clone_dirs, remote_1_path, remote_2_path):
     """create demo clients workspaces"""
-    # Now locally clone those as needed and add the ElectionData
-    # relative symlink. Record the repos to add them to the
-    # superproject later.
+    # Now locally clone those as needed.  With the use of submodules
+    # there is no longer an ElectionData symlink to manage.  Record
+    # the repos to add them to the superproject later.
     cloned_repos = [] # a list of tuple pairs
     for clone_dir in clone_dirs:
         with Shellout.changed_cwd(clone_dir):
@@ -89,20 +89,19 @@ def parse_arguments():
 
     parser = argparse.ArgumentParser(description=
     """setup_vtp_demo.py will leverage this current git repository
-    (VTP-root-repo) and the associated ElectionData (associated via
-    either a symlink or a git submodule) and nominally create in
-    /opt/VoteTrackerPlus (the default) a demo election mock up of 4
-    ballot scanner apps and one voting center server app.  The initial
-    demo idea is to have three scanners scanning random ballots while
-    one scanner is used interactively.  However, any number of scanner
-    apps instances can be started.
+    (VTP-root-repo) and the associated ElectionData repos and
+    nominally create in /opt/VoteTrackerPlus (the default) a demo
+    election mock up of 4 ballot scanner apps and one voting center
+    server app.  The initial demo idea is to have three scanners
+    scanning random ballots while one scanner is used interactively.
+    However, any number of scanner apps instances can be started.
 
     All five apps run in a pair of separate git repos that are clones
-    of the same VTP-root-repo and ElectionData repos as this one and
-    are contained in a subfolder called 'clients'.  All the client
-    apps' git repos have had the remote origin configured to point to
-    two local-remote bare clones of the GitHub remotes located in the
-    subfolder 'local-remote-server'.
+    of the same ElectionData repos as this one and are contained in a
+    subfolder called 'clients'.  All the client apps' git repos have
+    had the remote origin configured to point to two local-remote bare
+    clones of the GitHub remotes located in the subfolder
+    'local-remote-server'.
 
     Normally no demo git commits are pushed back to GiHub, but to do
     so one would normally use the bare repos and not the client repos.

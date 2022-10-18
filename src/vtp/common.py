@@ -61,8 +61,12 @@ class Globals:
         # is where the CVR and blank ballots are placed.
         'REQUIRED_GGO_ADDRESS_FIELDS': ['state', 'town'],
         'REQUIRED_NG_ADDRESS_FIELDS': ['street', 'number'],
-        # Root Election Data subdir
-        'ROOT_ELECTION_DATA_SUBDIR': 'ElectionData',
+        # Root Election Data subdir.  As of 2022/10/17 this (VTP-core)
+        # repo is a submodule of the root election repo (which used to
+        # a subling symlink ElectionData) with 'this' direcory being
+        # two subdirs down from the git toplevel.  So need to pop up 3
+        # levels to get out of this repo and into that one.
+        'ROOT_ELECTION_DATA_SUBDIR': '../../..',
         # How long to wait for a git shell command to complete - maybe a bad idea
         'SHELL_TIMEOUT': 15,
         # Number of ballots on a ballot receipt
