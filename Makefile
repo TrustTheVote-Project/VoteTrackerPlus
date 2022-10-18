@@ -23,7 +23,7 @@ export:
 pylint:
 # As there are multiple commands with the same boilerplate scaffolding, when
 # pylinting from the top ignore R0801
-	pylint ${SRC_DIR}
+	pylint --recursive y ${SRC_DIR}
 
 # Run tests
 .PHONY: pytest

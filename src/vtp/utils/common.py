@@ -66,7 +66,7 @@ class Globals:
         # a subling symlink ElectionData) with 'this' direcory being
         # two subdirs down from the git toplevel.  So need to pop up 3
         # levels to get out of this repo and into that one.
-        'ROOT_ELECTION_DATA_SUBDIR': '../../..',
+        'ROOT_ELECTION_DATA_SUBDIR': '..',
         # How long to wait for a git shell command to complete - maybe a bad idea
         'SHELL_TIMEOUT': 15,
         # Number of ballots on a ballot receipt

@@ -38,10 +38,10 @@ from logging import debug, info
 import pyinputplus
 
 # Local imports
-from .address import Address
-from .ballot import Ballot, BlankBallot, Contests
-from .common import Globals, Shellout
-from .election_config import ElectionConfig
+from utils.address import Address
+from utils.ballot import Ballot, BlankBallot, Contests
+from utils.common import Globals, Shellout
+from utils.election_config import ElectionConfig
 
 
 ################

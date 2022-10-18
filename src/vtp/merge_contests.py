@@ -38,8 +38,8 @@ import sys
 from logging import debug, error, info
 
 # Local import
-from .common import Globals, Shellout
-from .election_config import ElectionConfig
+from utils.common import Globals, Shellout
+from utils.election_config import ElectionConfig
 
 
 # Functions

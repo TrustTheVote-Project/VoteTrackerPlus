@@ -35,11 +35,11 @@ import sys
 from logging import error, info
 
 # Local import
-from .ballot import Ballot
-from .common import Shellout
-from .contest import Tally
-from .election_config import ElectionConfig
-from .exceptions import TallyException
+from utils.ballot import Ballot
+from utils.common import Shellout
+from utils.contest import Tally
+from utils.election_config import ElectionConfig
+from utils.exceptions import TallyException
 
 # Functions
 

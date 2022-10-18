@@ -37,10 +37,10 @@ import sys
 from logging import debug, error
 
 # Local import
-from .address import Address
-from .ballot import Ballot
-from .common import Globals, Shellout
-from .election_config import ElectionConfig
+from utils.address import Address
+from utils.ballot import Ballot
+from utils.common import Globals, Shellout
+from utils.election_config import ElectionConfig
 
 
 # Functions
