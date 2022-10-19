@@ -137,9 +137,9 @@ class Shellout:
     def changed_cwd(path):
         """Context manager for temporarily changing the CWD"""
         oldpwd=os.getcwd()
-        os.chdir(path)
-        debug(f"Entering dir ({path}):")
         try:
+            os.chdir(path)
+            debug(f"Entering dir ({path}):")
             yield
         finally:
             os.chdir(oldpwd)
