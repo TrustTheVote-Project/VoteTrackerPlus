@@ -11,6 +11,7 @@
 
 # Variables
 SRC_DIR := src/vtp
+TEST_DIR := test
 
 # Create the python environment files
 .PHONY: export
