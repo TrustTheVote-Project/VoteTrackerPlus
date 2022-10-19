@@ -28,7 +28,7 @@ pylint:
 # Run tests
 .PHONY: pytest
 pytest:
-	pytest ${SRC_DIR}
+	pytest ${TEST_DIR}
 
 # emacs tags
 ETAG_SRCS := $(shell find ${SRC_DIR} -type file -name '*.py')
