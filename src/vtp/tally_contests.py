@@ -32,7 +32,6 @@ import argparse
 import logging
 import re
 import sys
-from logging import error, info
 
 # Local import
 from .utils.ballot import Ballot
@@ -136,7 +135,7 @@ def main():
                 continue
         # Create a Tally object for this specific contest
         the_tally = Tally(contest_batches[contest_batch][0])
-        info(
+        logging.info(
             f"Scanned {len(contest_batches[contest_batch])} contests for contest "
             f"({contest_batches[contest_batch][0]['CVR']['name']}) "
             f"uid={contest_batches[contest_batch][0]['CVR']['uid']}, "
@@ -151,7 +150,7 @@ def main():
             # Print stuff
             the_tally.print_results()
         except TallyException as tally_error:
-            error(f"[ERROR]: {tally_error}  "
+            logging.error(f"[ERROR]: {tally_error}  "
                   "Continuing with other contests ...")
 
 if __name__ == '__main__':

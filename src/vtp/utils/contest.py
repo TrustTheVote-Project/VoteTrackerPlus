@@ -21,7 +21,7 @@ import json
 import operator
 import re
 from fractions import Fraction
-from logging import debug, info
+import logging
 
 # local
 from .exceptions import TallyException
@@ -315,11 +315,11 @@ class Tally:
                 self.selection_counts[choice] += 1
                 self.vote_count += 1
                 if provenance_digest:
-                    info(
+                    logging.info(
                         f"Counted {provenance_digest}: choice={choice}")
             else:
                 if provenance_digest:
-                    info(
+                    logging.info(
                         f"No-vote {provenance_digest}: BLANK")
 
     def tally_a_rcv_contest(self, contest, provenance_digest):
@@ -334,11 +334,11 @@ class Tally:
             self.selection_counts[choice] += 1
             self.vote_count += 1
             if provenance_digest:
-                info(
+                logging.info(
                     f"Counted {provenance_digest}: choice={choice}")
         else:
             if provenance_digest:
-                info(f"No vote {provenance_digest}: BLANK")
+                logging.info(f"No vote {provenance_digest}: BLANK")
 
 
     def safely_determine_last_place_name(self, current_round):
@@ -346,7 +346,7 @@ class Tally:
         re-distribute the next RCV round of voting.  Can raise various
         exceptions.  If possible will return the last_place_name.
         """
-        info(f"{self.rcv_round[current_round]}")
+        logging.info(f"{self.rcv_round[current_round]}")
 
         if Tally.get_choices_from_round(self.rcv_round[current_round], 'count')[-current_round] == \
            Tally.get_choices_from_round(self.rcv_round[current_round], 'count')[-current_round - 1]:
@@ -438,7 +438,7 @@ class Tally:
         slice off that choice off and re-count the now first
         selection choice (if there is one)
         """
-        info(f"RCV: round {this_round}")
+        logging.info(f"RCV: round {this_round}")
         # Safety check
         if this_round > 64:
             raise TallyException("RCV rounds exceeded safety limit of 64 rounds")
@@ -448,7 +448,7 @@ class Tally:
             contest = uid['CVR']
             digest = uid['digest']
             if digest in checks:
-                debug(f"INSPECTING: {digest} (contest={contest['name']})")
+                logging.debug(f"INSPECTING: {digest} (contest={contest['name']})")
             # Note - if there is no selection, there is no selection
             if not contest['selection']:
                 continue
@@ -472,12 +472,14 @@ class Tally:
                     new_choice_name = self.select_name_from_choices(new_selection)
                     self.selection_counts[new_choice_name] += 1
                     if digest in checks:
-                        info(f"RCV: {digest} (contest={contest['name']}) last place pop and count "
-                             f"({last_place_name} -> {new_choice_name})")
+                        logging.info(
+                            f"RCV: {digest} (contest={contest['name']}) last place pop and count "
+                            f"({last_place_name} -> {new_choice_name})")
                 else:
                     if digest in checks:
-                        info(f"RCV: {digest} (contest={contest['name']}) last place pop and drop "
-                             f"({last_place_name} -> BLANK)")
+                        logging.info(
+                            f"RCV: {digest} (contest={contest['name']}) last place pop and drop "
+                            f"({last_place_name} -> BLANK)")
         # Order the winners of this round.  This is a tuple, not a
         # list or dict.  Note - the rcv round losers should not be
         # re-ordered as there is value to retaining that order
@@ -488,7 +490,7 @@ class Tally:
         self.rcv_round.append([])
         # Get the correct current total vote count for this round
         total_current_vote_count = self.get_total_vote_count(this_round)
-        info(f"Total vote count: {total_current_vote_count}")
+        logging.info(f"Total vote count: {total_current_vote_count}")
         for choice in Tally.get_choices_from_round(self.rcv_round[this_round]):
             # Note the test is '>' and NOT '>='
             if (float(self.selection_counts[choice]) /
@@ -564,9 +566,9 @@ class Tally:
         """
         # Read all the contests, validate, and count votes
         if self.contest['tally'] == 'plurality':
-            info("Plurality - one round")
+            logging.info("Plurality - one round")
         else:
-            info("RCV: round 0")
+            logging.info("RCV: round 0")
         self.parse_all_contests(contest_batch, checks)
 
         # For all tallies order what has been counted so far (a tuple)
@@ -589,7 +591,7 @@ class Tally:
 
         # Get the correct current total vote count for this round
         total_current_vote_count = self.get_total_vote_count(0)
-        info(f"Total vote count: {total_current_vote_count}")
+        logging.info(f"Total vote count: {total_current_vote_count}")
 
         # Determine winners if any ...
         for choice in Tally.get_choices_from_round(self.rcv_round[0]):

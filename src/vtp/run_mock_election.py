@@ -34,7 +34,6 @@ import logging
 import os
 import sys
 import time
-from logging import debug, info
 
 # Local import
 from .utils.address import Address
@@ -137,7 +136,7 @@ def scanner_mockup(election_data_dir, bin_dir, ballot):
     merge_contests = os.path.join(bin_dir, 'merge_contests.py')
     for count in range(args.iterations):
         for blank_ballot in blank_ballots:
-            debug(f"Iteration {count} of {args.iterations} - processing {blank_ballot}")
+            logging.debug(f"Iteration {count} of {args.iterations} - processing {blank_ballot}")
             # - cast a ballot
 #            import pdb; pdb.set_trace()
             with Shellout.changed_cwd(election_data_dir):
@@ -224,7 +223,7 @@ def server_mockup(election_data_dir, bin_dir):
             [merge_contests, '-r', '-m', args.minimum_cast_cache, '-v',
                  args.verbosity], printonly=args.printonly,
             no_touch_stds=True, timeout=None, check=True)
-        info("Sleeping for 10")
+        logging.info("Sleeping for 10")
         time.sleep(10)
         elapsed_time = time.time() - start_time
         if elapsed_time > seconds:

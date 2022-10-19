@@ -32,7 +32,6 @@ import logging
 import os
 import pprint
 import sys
-from logging import debug, info
 
 # Local import
 from .utils.address import Address
@@ -98,9 +97,9 @@ def main():
                 generic_ballot = BlankBallot()
                 generic_ballot.create_blank_ballot(
                     generic_address, the_election_config)
-                info(f"Active GGOs for blank ballot ({generic_address}): "
+                logging.info(f"Active GGOs for blank ballot ({generic_address}): "
                          "{generic_ballot.get('active_ggos')}")
-                debug("And the blank ballot looks like:\n" +
+                logging.debug("And the blank ballot looks like:\n" +
                           pprint.pformat(generic_ballot.dict()))
                 # Write it out
                 if args.printonly:
@@ -108,7 +107,7 @@ def main():
                         generic_address.active_ggos, generic_address.ballot_subdir, 'json')
                 else:
                     ballot_file = generic_ballot.write_blank_ballot(the_election_config)
-                info(f"Blank ballot file: {ballot_file}")
+                logging.info(f"Blank ballot file: {ballot_file}")
 #                import pdb; pdb.set_trace()
 
 if __name__ == '__main__':

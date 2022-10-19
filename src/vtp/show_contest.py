@@ -31,7 +31,6 @@ import logging
 import os
 import re
 import sys
-from logging import error
 
 # Local imports
 from .utils.common import Globals, Shellout
@@ -58,11 +57,12 @@ def validate_digests(digests, election_data_dir, error_digests):
     for count, line in enumerate(output_lines):
         digest, commit_type = line.split()
         if commit_type == 'missing':
-            error(f"[ERROR]: missing digest: n={count} digest={digest}")
+            logging.error(f"[ERROR]: missing digest: n={count} digest={digest}")
             error_digests.add(digest)
             errors += 1
         elif commit_type != 'commit':
-            error(f"[ERROR]: invalid digest type: n={count} digest={digest} type={commit_type}")
+            logging.error(
+                f"[ERROR]: invalid digest type: n={count} digest={digest} type={commit_type}")
             error_digests.add(digest)
             errors += 1
     if errors:

@@ -21,8 +21,7 @@
 import os
 import os.path
 import re
-from logging import debug
-
+import logging
 import networkx
 import yaml
 
@@ -154,7 +153,7 @@ class ElectionConfig:
         only if the file exists.  Check the syntax.
         """
         if os.path.isfile(filename):
-            debug(f"Reading {filename}")
+            logging.debug(f"Reading {filename}")
             with open(filename, 'r', encoding="utf8") as map_file:
                 this_address_map = yaml.load(map_file, Loader=yaml.FullLoader)
             # sanity-check it
@@ -167,7 +166,7 @@ class ElectionConfig:
         """
         Read the confgi yaml file return the dictionary and check the syntax.
         """
-        debug(f"Reading {filename}")
+        logging.debug(f"Reading {filename}")
         with open(filename, 'r', encoding="utf8") as config_file:
             config = yaml.load(config_file, Loader=yaml.FullLoader)
         # sanity-check it

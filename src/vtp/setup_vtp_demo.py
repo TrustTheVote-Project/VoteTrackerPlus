@@ -32,7 +32,6 @@ import argparse
 import logging
 import os
 import sys
-from logging import debug, info
 
 # Local import
 from .utils.common import Globals, Shellout
@@ -145,7 +144,7 @@ def main():
     for subdir in ['clients', 'local-remote-server']:
         full_dir = os.path.join(args.location, subdir)
         if not os.path.isdir(full_dir):
-            debug(f"creating ({full_dir})")
+            logging.debug(f"creating ({full_dir})")
             if not args.printonly:
                 os.mkdir(full_dir)
     # The client side scanner app instances
@@ -154,14 +153,14 @@ def main():
         full_dir = os.path.join(args.location, 'clients', 'scanner.' + f"{count:02d}")
         clone_dirs.append(full_dir)
         if not os.path.isdir(full_dir):
-            debug(f"creating ({full_dir})")
+            logging.debug(f"creating ({full_dir})")
             if not args.printonly:
                 os.mkdir(full_dir)
     # The client side app server instance
     full_dir = os.path.join(args.location, 'clients', 'server')
     clone_dirs.append(full_dir)
     if not os.path.isdir(full_dir):
-        debug(f"creating ({full_dir})")
+        logging.debug(f"creating ({full_dir})")
         if not args.printonly:
             os.mkdir(full_dir)
 
@@ -209,7 +208,7 @@ def main():
                 ['git', 'submodule', 'add', clone[0], clone[1]],
                 args.printonly, verbosity=args.verbosity)
         # Ignore the local remote repos directory
-        info('Adding a .gitignore')
+        logging.info('Adding a .gitignore')
         if not args.printonly:
             with open('.gitignore', 'w', encoding="utf8") as outfile:
                 outfile.write('# Ignore the local remote repos\n')

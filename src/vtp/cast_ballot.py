@@ -33,8 +33,6 @@ import pprint
 import random
 import sys
 import traceback
-from logging import debug, info
-
 import pyinputplus
 
 # Local imports
@@ -262,7 +260,7 @@ def main():
         a_ballot.read_a_blank_ballot(the_address, the_election_config)
 
     contests = loop_over_contests(a_ballot)
-    debug("And the ballot looks like:\n" + pprint.pformat(a_ballot.dict()))
+    logging.debug("And the ballot looks like:\n" + pprint.pformat(a_ballot.dict()))
 
     # ZZZ - for this program there is no call to verify_cast_ballot to
     # verify that the ballot has been filled out correctly and offer
@@ -278,8 +276,8 @@ def main():
     voting_centers = the_election_config.get_node(a_ballot.get('ballot_node'),
                             'config')['voting centers']
     for vote_center in voting_centers:
-        info(f"Casting a {contests.len()} contest ballot at VC {vote_center}")
-        info(f"Cast ballot file: {ballot_file}")
+        logging.info(f"Casting a {contests.len()} contest ballot at VC {vote_center}")
+        logging.info(f"Cast ballot file: {ballot_file}")
 
 if __name__ == '__main__':
     args = parse_arguments()
