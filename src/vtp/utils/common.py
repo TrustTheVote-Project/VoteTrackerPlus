@@ -63,7 +63,7 @@ class Globals:
         'REQUIRED_NG_ADDRESS_FIELDS': ['street', 'number'],
         # Root Election Data subdir.  As of 2022/10/17 this (VTP-core)
         # repo is a submodule of the root election repo (which used to
-        # a subling symlink ElectionData) with 'this' direcory being
+        # be a sibling symlink ElectionData) with 'this' directory being
         # two subdirs down from the git toplevel.  So need to pop up 3
         # levels to get out of this repo and into that one.
         'ROOT_ELECTION_DATA_SUBDIR': '..',
