@@ -136,7 +136,9 @@ def scanner_mockup(election_data_dir, bin_dir, ballot):
     merge_contests = os.path.join(bin_dir, 'merge_contests.py')
     for count in range(args.iterations):
         for blank_ballot in blank_ballots:
-            logging.debug(f"Iteration {count} of {args.iterations} - processing {blank_ballot}")
+            logging.debug(
+                "Iteration %s of %s - processing %s",
+                count, args.iterations, blank_ballot)
             # - cast a ballot
 #            import pdb; pdb.set_trace()
             with Shellout.changed_cwd(election_data_dir):

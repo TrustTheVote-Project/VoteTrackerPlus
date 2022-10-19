@@ -144,7 +144,7 @@ def main():
     for subdir in ['clients', 'local-remote-server']:
         full_dir = os.path.join(args.location, subdir)
         if not os.path.isdir(full_dir):
-            logging.debug(f"creating ({full_dir})")
+            logging.debug("creating (%s)", full_dir)
             if not args.printonly:
                 os.mkdir(full_dir)
     # The client side scanner app instances
@@ -153,14 +153,14 @@ def main():
         full_dir = os.path.join(args.location, 'clients', 'scanner.' + f"{count:02d}")
         clone_dirs.append(full_dir)
         if not os.path.isdir(full_dir):
-            logging.debug(f"creating ({full_dir})")
+            logging.debug("creating (%s)", full_dir)
             if not args.printonly:
                 os.mkdir(full_dir)
     # The client side app server instance
     full_dir = os.path.join(args.location, 'clients', 'server')
     clone_dirs.append(full_dir)
     if not os.path.isdir(full_dir):
-        logging.debug(f"creating ({full_dir})")
+        logging.debug("creating (%s)", full_dir)
         if not args.printonly:
             os.mkdir(full_dir)
 

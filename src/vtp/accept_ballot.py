@@ -387,7 +387,7 @@ def main():
                 + (['-n'] if args.printonly else []),
                 check=True, no_touch_stds=True, timeout=None)
 
-    logging.debug(f"Ballot's digests:\n{contest_receipts}")
+    logging.debug("Ballot's digests:\n%s", contest_receipts)
     # Shuffled the unmerged_cvrs (an inplace shuffle) - only need to
     # shuffle the uids for this ballot.
 #    import pdb; pdb.set_trace()
@@ -395,13 +395,13 @@ def main():
     for uid in contest_receipts:
         # if there are no unmerged_cvrs, just warn
         if uid not in unmerged_cvrs:
-            logging.warning(f"Warning - no unmerged_cvrs yet for contest {uid}")
+            logging.warning("Warning - no unmerged_cvrs yet for contest %s", uid)
             skip_receipt = True
             continue
         if len(unmerged_cvrs[uid]) < Globals.get('BALLOT_RECEIPT_ROWS'):
             logging.warning(
-                f"Warning - not enough unmerged CVRs ({len(unmerged_cvrs[uid])}) "
-                f"to print receipt for contest {uid}")
+                "Warning - not enough unmerged CVRs (%s) to print receipt for contest %s",
+                len(unmerged_cvrs[uid]), uid)
             skip_receipt = True
         random.shuffle(unmerged_cvrs[uid])
     # Create the ballot receipt

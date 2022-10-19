@@ -136,13 +136,13 @@ def main():
         # Create a Tally object for this specific contest
         the_tally = Tally(contest_batches[contest_batch][0])
         logging.info(
-            f"Scanned {len(contest_batches[contest_batch])} contests for contest "
-            f"({contest_batches[contest_batch][0]['CVR']['name']}) "
-            f"uid={contest_batches[contest_batch][0]['CVR']['uid']}, "
-            f"tally={contest_batches[contest_batch][0]['CVR']['tally']}, "
-            f"max={the_tally.get('max')}, "
-            f"win-by>{the_tally.get('win-by')}"
-            )
+            "Scanned %s contests for contest (%s) uid=%s, tally=%s, max=%s, win-by>%s",
+            len(contest_batches[contest_batch]),
+            contest_batches[contest_batch][0]['CVR']['name'],
+            contest_batches[contest_batch][0]['CVR']['uid'],
+            contest_batches[contest_batch][0]['CVR']['tally'],
+            the_tally.get('max'),
+            the_tally.get('win-by'))
         # Tally all the contests for this contest
 #        import pdb; pdb.set_trace()
         try:
@@ -150,8 +150,7 @@ def main():
             # Print stuff
             the_tally.print_results()
         except TallyException as tally_error:
-            logging.error(f"[ERROR]: {tally_error}  "
-                  "Continuing with other contests ...")
+            logging.error("[ERROR]: %s\nContinuing with other contests ...", tally_error)
 
 if __name__ == '__main__':
     args = parse_arguments()

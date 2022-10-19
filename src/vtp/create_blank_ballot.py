@@ -95,24 +95,25 @@ def main():
     the_address.map_ggos(the_election_config)
 
     # print some debugging info
-    logging.debug(f"The election config ggos are: {the_election_config}")
-    logging.debug("And the address is: " + str(the_address))
+    logging.debug("The election config ggos are: %s", the_election_config)
+    logging.debug("And the address is: %s", str(the_address))
     node = 'GGOs/states/California/GGOs/towns/Oakland'
-    logging.debug(f"And a/the node ({node}) looks like:\n" +
-        pprint.pformat(the_election_config.get_node(node, 'ALL')))
-    logging.debug("And the edges are: " +
+    logging.debug(
+        "And a/the node (%s) looks like:\n%s",
+        node, pprint.pformat(the_election_config.get_node(node, 'ALL')))
+    logging.debug("And the edges are: %s",
         pprint.pformat(the_election_config.get_dag('edges')))
 
     # Construct a blank ballot
     the_ballot = BlankBallot()
     the_ballot.create_blank_ballot(the_address, the_election_config)
-    logging.info(f"Active GGOs: {the_ballot.get('active_ggos')}")
-    logging.debug("And the blank ballot looks like:\n" + pprint.pformat(the_ballot.dict()))
+    logging.info("Active GGOs: %s", the_ballot.get('active_ggos'))
+    logging.debug("And the blank ballot looks like:\n%s", pprint.pformat(the_ballot.dict()))
 
     # Write it out
     if not args.printonly:
         ballot_file = the_ballot.write_blank_ballot(the_election_config)
-        logging.info(f"Blank ballot file: {ballot_file}")
+        logging.info("Blank ballot file: %s", ballot_file)
 
 if __name__ == '__main__':
     args = parse_arguments()

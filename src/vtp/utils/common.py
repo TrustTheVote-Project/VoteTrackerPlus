@@ -117,7 +117,7 @@ class Shellout:
         # regardless since _everything_ below wants to see strings.
         argv_string = [str(arg) for arg in argv]
         if verbosity >= 3:
-            logging.info(f"Running \"{' '.join(argv_string)}\"")
+            logging.info('Running "%s"', ' '.join(argv_string))
         if printonly:
             return subprocess.CompletedProcess(argv_string, 0, stdout="", stderr="")
         # the caller desides on whether check is set or not
@@ -139,11 +139,11 @@ class Shellout:
         oldpwd=os.getcwd()
         try:
             os.chdir(path)
-            logging.debug(f"Entering dir ({path}):")
+            logging.debug("Entering dir (%s):", path)
             yield
         finally:
             os.chdir(oldpwd)
-            logging.debug(f"Leaving dir ({path}):")
+            logging.debug("Leaving dir (%s):", path)
 
     @staticmethod
     @contextmanager
@@ -154,13 +154,13 @@ class Shellout:
         before yielding.
         """
         Shellout.run(["git", "checkout", branch], check=True)
-        logging.debug(f"Entering branch ({branch}):")
+        logging.debug("Entering branch (%s):", branch)
         try:
             yield
         finally:
             # switch the branch back
             Shellout.run(["git", "checkout", branch], check=True)
-            logging.debug(f"Leaving branch ({branch}):")
+            logging.debug("Leaving branch (%s):", branch)
 
     @staticmethod
     # ZZZ - could use an optional filter_by_uid argument which is a set object
@@ -181,7 +181,7 @@ class Shellout:
         with Shellout.changed_cwd(os.path.join(
             election_config.get('git_rootdir'), Globals.get('ROOT_ELECTION_DATA_SUBDIR'))):
             if verbosity >= 3:
-                logging.info(f"Running \"{' '.join(git_log_command)}\"")
+                logging.info('Running "%s"', ' '.join(git_log_command))
             with subprocess.Popen(
                 git_log_command,
                 stdout=subprocess.PIPE,

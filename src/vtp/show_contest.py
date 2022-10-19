@@ -57,12 +57,13 @@ def validate_digests(digests, election_data_dir, error_digests):
     for count, line in enumerate(output_lines):
         digest, commit_type = line.split()
         if commit_type == 'missing':
-            logging.error(f"[ERROR]: missing digest: n={count} digest={digest}")
+            logging.error("[ERROR]: missing digest: n=%s digest=%s", count, digest)
             error_digests.add(digest)
             errors += 1
         elif commit_type != 'commit':
             logging.error(
-                f"[ERROR]: invalid digest type: n={count} digest={digest} type={commit_type}")
+                "[ERROR]: invalid digest type: n=%s digest=%s type=%s",
+                count, digest, commit_type)
             error_digests.add(digest)
             errors += 1
     if errors:

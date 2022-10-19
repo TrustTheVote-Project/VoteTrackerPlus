@@ -153,7 +153,7 @@ class ElectionConfig:
         only if the file exists.  Check the syntax.
         """
         if os.path.isfile(filename):
-            logging.debug(f"Reading {filename}")
+            logging.debug("Reading %s", filename)
             with open(filename, 'r', encoding="utf8") as map_file:
                 this_address_map = yaml.load(map_file, Loader=yaml.FullLoader)
             # sanity-check it
@@ -166,7 +166,7 @@ class ElectionConfig:
         """
         Read the confgi yaml file return the dictionary and check the syntax.
         """
-        logging.debug(f"Reading {filename}")
+        logging.debug("Reading %s", filename)
         with open(filename, 'r', encoding="utf8") as config_file:
             config = yaml.load(config_file, Loader=yaml.FullLoader)
         # sanity-check it

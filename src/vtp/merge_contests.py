@@ -57,8 +57,9 @@ def merge_contest_branch(branch):
     # test condition in that if there is no file to merge, there is no
     # file to merge - pass.
     if not contest_file:
-        logging.error(f"Error - 'git diff-tree --no-commit-d -r --name-only {branch}'"
-                  "returned no files.  Skipping")
+        logging.error(
+            "Error - 'git diff-tree --no-commit-d -r --name-only %s' returned no files.  Skipping",
+            branch)
         return
     # Merge the branch / file.  Note - there will always be a conflict
     # so this command will always return non zero
@@ -117,12 +118,12 @@ def randomly_merge_contests(uid, batch):
         if args.flush:
             count = len(batch)
         else:
-            logging.info(f"Contest {uid} not merged - only {len(batch)} available")
+            logging.info("Contest %s not merged - only %s available", uid, len(batch))
             return 0
     else:
         count = len(batch) - args.minimum_cast_cache
     loop = count
-    logging.info(f"Merging {count} contests for contest {uid}")
+    logging.info("Merging %s contests for contest %s", count, uid)
     while loop:
         pick = random.randrange(len(batch))
         branch = batch[pick]
@@ -130,7 +131,7 @@ def randomly_merge_contests(uid, batch):
         # End of loop maintenance
         del batch[pick]
         loop -= 1
-    logging.debug(f"Merged {count} {uid} contests")
+    logging.debug("Merged %s %s contests", count, uid)
     return count
 
 ################
@@ -210,7 +211,7 @@ def main():
             printonly=args.printonly, verbosity=args.verbosity, check=True)
         if args.branch:
             merge_contest_branch(args.branch)
-            logging.info(f"Merged '{args.branch}'")
+            logging.info("Merged '%s'", args.branch)
             return
         # Get the pending CVR branches
         cmds = ['git', 'branch']
@@ -246,7 +247,7 @@ def main():
         if batch:
             # Always try to merge the remaining batch
             merged += randomly_merge_contests(current_uid, batch)
-    logging.info(f"Merged {merged} contest branches")
+    logging.info("Merged %s contest branches", merged)
 
 if __name__ == '__main__':
     args = parse_arguments()
