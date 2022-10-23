@@ -34,11 +34,11 @@ import re
 import sys
 
 # Local import
-from .utils.ballot import Ballot
-from .utils.common import Shellout
-from .utils.contest import Tally
-from .utils.election_config import ElectionConfig
-from .utils.exceptions import TallyException
+from utils.ballot import Ballot
+from utils.common import Shellout
+from utils.contest import Tally
+from utils.election_config import ElectionConfig
+from utils.exceptions import TallyException
 
 # Functions
 

@@ -37,8 +37,8 @@ import re
 import sys
 
 # Local import
-from .utils.common import Globals, Shellout
-from .utils.election_config import ElectionConfig
+from utils.common import Globals, Shellout
+from utils.election_config import ElectionConfig
 
 
 # Functions
