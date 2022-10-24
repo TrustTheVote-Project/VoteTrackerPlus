@@ -112,18 +112,13 @@ $ conda activate vtp.01
 To run a mock election, run the setup_vtp_demo.py script.  This script will nominally create a mock election with four VTP scanner _apps_ and one VTP local-remote server _app_ as if all ballots were being cast in a single voting center with four separate and independent ballot scanners.  By default it will place the git repos in /opt/VotetrackerPlus with the 5 clients (the four scanner apps and one server app) in the _clients_ folder with the two local git upstream bare repositories in the _local-remote-server_ folder.  The directory tree looks like this:
 
 ```
-/opt/VotetrackerPlus/demo.01/clients/scanner.00/VTP-mock-election.US.<nn>/.git
-                                                VTP-root-repo/.git
-                                     scanner.01/VTP-mock-election.US.<nn>/.git
-                                                VTP-root-repo/.git
-                                     scanner.02/VTP-mock-election.US.<nn>/.git
-                                                VTP-root-repo/.git
-                                     scanner.03/VTP-mock-election.US.<nn>/.git
-                                                VTP-root-repo/.git
-                                     server/VTP-mock-election.US.<nn>/.git
-                                                VTP-root-repo/.git
+/opt/VotetrackerPlus/demo.01/clients/scanner.00/VTP-mock-election.US.<nn>/VoteTrackerPlus
+                                     scanner.01/VTP-mock-election.US.<nn>/VoteTrackerPlus
+                                     scanner.02/VTP-mock-election.US.<nn>/VoteTrackerPlus
+                                     scanner.03/VTP-mock-election.US.<nn>/VoteTrackerPlus
+                                     server/VTP-mock-election.US.<nn>/VoteTrackerPlus
 /opt/VotetrackerPlus/demo.01/local-remote-server/VTP-mock-election.US.<nn>.git
-                                                 VTP-root-repo.git
+                                                 VoteTrackerPlus.git
 ```
 
 The git repositories in the _clients_ subfolder all have workspaces as that is where the various commands run to simulate an individual ballot scanner application.  The two bare repostitories in local-remote-server mimick the actual voting center local (bare) git remote repositories for both the VTP scanner and server apps.
@@ -137,27 +132,27 @@ Here is an example of running a 4 VTP scanner and 1 VTP server app mock demo ele
 # Note - this assumes the explicit setup steps above - note the poetry pyproject.toml location
 $ cd repos/VTP-mock-election.US.10/VoteTrackerPlus
 $ poetry shell
-$ cd /opt/VotetrackerPlus/demo.01/clients/server/VTP-root-repo/bin
+$ cd /opt/VotetrackerPlus/demo.01/clients/server/VoteTrackerPlus/src/vtp
 $ ./run_mock_election.py -s California -t Alameda -a "123 Main Street" -d server
 
 # In terminal window #2, run a VTP scanner in mock election mode
 $ cd repos/VTP-mock-election.US.10/VoteTrackerPlus
 $ poetry shell
-$ cd /opt/VotetrackerPlus/demo.01/clients/scanner.01/VTP-root-repo/bin
+$ cd /opt/VotetrackerPlus/demo.01/clients/scanner.01/VoteTrackerPlus/src/vtp
 # Auto cast 100 random ballots
 $ ./run_mock_election.py -s California -t Alameda -a "123 Main Street" -d scanner -i 100
 
 # In terminal window #3, run a second VTP scanner in mock election mode
 $ cd repos/VTP-mock-election.US.10/VoteTrackerPlus
 $ poetry shell
-$ cd /opt/VotetrackerPlus/demo.01/clients/scanner.02/VTP-root-repo/bin
+$ cd /opt/VotetrackerPlus/demo.01/clients/scanner.02/VoteTrackerPlus/src/vtp
 # Auto cast 100 random ballots
 $ ./run_mock_election.py -s California -t Alameda -a "123 Main Street" -d scanner -i 100
 
 # In terminal window #4, run an interactive VTP scanner to cast ballots
 $ cd repos/VTP-mock-election.US.10/VoteTrackerPlus
 $ poetry shell
-$ cd /opt/VotetrackerPlus/demo.01/clients/scanner.00/VTP-root-repo/bin
+$ cd /opt/VotetrackerPlus/demo.01/clients/scanner.00/VoteTrackerPlus/src/vtp
 
 # To manually vote and cast one ballot, run vote.py.  The receipt.csv will be printed to a file
 # and the row offset will be printed to the screen (STDOUT).
@@ -168,7 +163,7 @@ The last few lines printed by ./vote.py should look something like this:
 
 ```
 ############
-### Receipt file: /opt/VoteTrackerPlus/demo.01/clients/scanner.00/VTP-root-repo/ElectionData/GGOs/states/California/GGOs/towns/Alameda/CVRs/receipt.csv
+### Receipt file: /opt/VoteTrackerPlus/demo.01/clients/scanner.00/VoteTrackerPlus/ElectionData/GGOs/states/California/GGOs/towns/Alameda/CVRs/receipt.csv
 ### Voter's row: 78
 ############
 ```
@@ -176,7 +171,7 @@ The last few lines printed by ./vote.py should look something like this:
 See [../../docs/E2EV.md](../../docs/E2EV.md) for more details regarding casting and inspecting ballots.  To validate the digests on/in the ballot receipt (use your row, not 78):
 
 ```
-$ ./verify_ballot_receipt.py -f /opt/VoteTrackerPlus/demo.01/clients/scanner.00/VTP-root-repo/ElectionData/GGOs/states/California/GGOs/towns/Alameda/CVRs/receipt.csv -r 78
+$ ./verify_ballot_receipt.py -f /opt/VoteTrackerPlus/demo.01/clients/scanner.00/VoteTrackerPlus/ElectionData/GGOs/states/California/GGOs/towns/Alameda/CVRs/receipt.csv -r 78
 ```
 
 An random example ballot is saved off in ElectionData/receipts/receipt.74.csv.  When that receipt is verified, the output currently looks like the following:
@@ -202,7 +197,7 @@ Note that five of the seven contests have been merged to master and as such now 
 
 Two of the contests above remain in the ballot cache and can still be randomly included in some other anonymized ballot check.  They will be merged to master by the VTP server at some point, either randomly during the voting or once the voting ceases at the polling location.
 
-Running the above demo does not modify the VTP-root-repo repo and does not push any changes in the VTP-mock-election.US.nn repository back to the upstream GitHub repositories.  This is because by design the VTP scanner and server app repo pairs have the git origin pointing to the local bare repositories found in the local-remote-server folder in the demo.nn directory.
+Running the above demo does not modify the VoteTrackerPlus repo and does not push any changes in the VTP-mock-election.US.nn repository back to the upstream GitHub repositories.  This is because by design the VTP scanner and server app repo pairs have the git origin pointing to the local bare repositories found in the local-remote-server folder in the demo.nn directory.
 
 At any time and in any repository cloned from the local-remote-server VTP-mock-election.US.nn.git repository (that is not running something else) one can run inspect the current tally by:
 

@@ -71,7 +71,7 @@ def parse_arguments():
 
     parser = argparse.ArgumentParser(description=
     """setup_vtp_demo.py will leverage this current git repository
-    (VTP-root-repo) and the associated ElectionData repos
+    (VoteTrackerPlus) and the associated ElectionData repos
     nominally create in /opt/VoteTrackerPlus (the default) a demo
     election mock up of 4 ballot scanner apps and one voting center
     server app.  The initial demo idea is to have three scanners

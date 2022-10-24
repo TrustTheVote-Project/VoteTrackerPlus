@@ -10,7 +10,8 @@
 %.mk:
 
 # Variables
-SRC_DIR := src/vtp
+DOC_DIR  := docs
+SRC_DIR  := src/vtp
 TEST_DIR := test
 
 # Create the python environment files
@@ -32,7 +33,7 @@ pytest:
 	pytest ${TEST_DIR}
 
 # emacs tags
-ETAG_SRCS := $(shell find ${SRC_DIR} -type file -name '*.py')
+ETAG_SRCS := $(shell find ${SRC_DIR} ${DOC_DIR} -type f -name '*.py' -o -name '*.md' | grep -v defunct)
 .PHONY: etags
 etags: ${ETAG_SRCS}
 	etags ${ETAG_SRCS}
