@@ -140,7 +140,7 @@ US-2024-National-Election/.git
                           .gitmodules
                           LICENSE
                           README.md
-                          VTP-core/
+                          VoteTrackerPlus/
                           address_map.yaml
                           config.yaml
                           GGOs/Massachusetts/.git

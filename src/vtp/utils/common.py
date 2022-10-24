@@ -61,11 +61,14 @@ class Globals:
         # is where the CVR and blank ballots are placed.
         'REQUIRED_GGO_ADDRESS_FIELDS': ['state', 'town'],
         'REQUIRED_NG_ADDRESS_FIELDS': ['street', 'number'],
-        # Root Election Data subdir.  As of 2022/10/17 this (VTP-core)
-        # repo is a submodule of the root election repo (which used to
-        # be a sibling symlink ElectionData) with 'this' directory being
-        # two subdirs down from the git toplevel.  So need to pop up 3
-        # levels to get out of this repo and into that one.
+        # The Root/Parent Election Data directory.  As of 2022/10/17
+        # this repo is a submodule of the root election repo (which
+        # used to be a sibling symlink named ElectionData) with
+        # python's sys.path being one level above this utils directory
+        # for the scripts placed there.  Independent of the python
+        # sys.path gyrations, this repo is still one level below the
+        # outer most root/parent election repo.  Hence, one set of
+        # '..' here since git commands are using this.
         'ROOT_ELECTION_DATA_SUBDIR': '..',
         # Where the bin directory is relative from the root of _this_ repo
         'BIN_DIR': 'src/vtp',
