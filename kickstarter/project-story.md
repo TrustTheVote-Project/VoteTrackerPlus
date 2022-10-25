@@ -165,7 +165,7 @@ And both these domains are not static - they are continually evolving and being 
 
 In short, VOTES is **NOT** proposing, creating, or adding a new encryption protocol or scheme - it is more simply leveraging existing military and industrial best practices.
 
-For a more security information, see the file [./docs/informal-security-description.md](./docs/informal-security-description.md) in this git repo.
+For a more security information, see the file [../docs/informal-security-description.md](../docs/informal-security-description.md) in this git repo.
 
 # 8) What is the kickstarter campaign funding?
 

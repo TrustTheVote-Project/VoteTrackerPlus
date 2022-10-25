@@ -22,7 +22,7 @@ setup_vtp_demo.py - command line level script set up a VTP demo
 
 See './setup_vtp_demo -h' for usage information.
 
-See ../docs/tech/run_mock_election.md for the context in which this
+See ../../docs/tech/run_mock_election.md for the context in which this
 file was created.
 """
 

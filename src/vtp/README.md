@@ -8,7 +8,7 @@ For basic terminology see the [NIST](https://pages.nist.gov/ElectionGlossary/) g
 
 VoteTracker+ (VTP) URL's and PATH references have the '+' spelled out (VoteTrackerPlus).
 
-See [../docs/project-overview.md](../docs/project-overview.md) for more general VTP information.  In particular see [../../docs/project-overview.md](../../docs/tech-details/more-tech-details.md) for details of the VTP election directory layout.  The directory layout is key to better understand the VoteTracker+ solution and how election data is organized the directory, file, and git repository levels.
+See [../../docs/project-overview.md](../../docs/project-overview.md) for more general VTP information.  In particular see [../../docs/project-overview.md](../../docs/tech-details/more-tech-details.md) for details of the VTP election directory layout.  The directory layout is key to better understand the VoteTracker+ solution and how election data is organized the directory, file, and git repository levels.
 
 A VTP election in essence is the directory structure that represents a specific election.  The directory structure is rooted with a clone of a root election repository, representing either a real or mock election, that contains this repository as a direct submodule.  The election may have zero or more additional git submodules organized in a specific manner, primarily a function of voting precinct and/or computer network isolation.  One potentially common layout/deployment is one git repo per voting center.
 

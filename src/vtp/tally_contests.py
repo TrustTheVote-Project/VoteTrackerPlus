@@ -23,7 +23,7 @@ a election.
 
 See './tally_contests.py -h' for usage information.
 
-See ../docs/tech/*.md for the context in which this file was created.
+See ../../docs/tech/*.md for the context in which this file was created.
 """
 
 # pylint: disable=wrong-import-position   # import statements not top of file

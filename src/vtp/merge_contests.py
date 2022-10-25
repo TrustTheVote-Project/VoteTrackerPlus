@@ -23,7 +23,7 @@ branches into the master branch
 
 See './merge_contests.py -h' for usage information.
 
-See ../docs/tech/merge_contests.md for the context in which this
+See ../../docs/tech/merge_contests.md for the context in which this
 file was created.
 """
 

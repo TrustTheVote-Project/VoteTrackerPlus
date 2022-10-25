@@ -21,7 +21,7 @@
 
 See './show_contest.py -h' for usage information.
 
-See ../docs/tech/executable-overview.md for the context in which this file was created.
+See ../../docs/tech/executable-overview.md for the context in which this file was created.
 
 """
 

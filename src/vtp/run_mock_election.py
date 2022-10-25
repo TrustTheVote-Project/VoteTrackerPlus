@@ -23,7 +23,7 @@ branches into the master branch
 
 See './run_mock_election.py -h' for usage information.
 
-See ../docs/tech/run_mock_election.md for the context in which this
+See ../../docs/tech/run_mock_election.md for the context in which this
 file was created.
 """
 

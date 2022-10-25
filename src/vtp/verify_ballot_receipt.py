@@ -23,7 +23,7 @@ voters ballot receipt.
 
 See './verify_ballot_receipt.py -h' for usage information.
 
-See ../docs/tech/*.md for the context in which this file was created.
+See ../../docs/tech/*.md for the context in which this file was created.
 """
 
 # Standard imports
