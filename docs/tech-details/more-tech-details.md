@@ -66,9 +66,9 @@ So the root most GGO is that git repo _owned/authored_ by the VoteTracker+ root 
 
 Contains configuration data for this GGO in yaml form (unless it really needs to be xml or something else).  Yaml is more human readable and more (git) merge-able.  If so necessary it can be translated into xml when needed.
 
-#### ./bin
+#### ./src/vtp
 
-Contains executables directly associated with the VTP repos are located in this folder.  Includes the executables necessary to tally the various contests and leverages configuration data.  For example the tally scheme for a GGO or a contest within the GGO can be configured in ./config while the actual algorithms and tally code is implemented in ./bin.
+Contains executables directly associated with the VTP repos are located in this folder.  Includes the executables necessary to tally the various contests and leverages configuration data.  For example the tally scheme for a GGO or a contest within the GGO can be configured in ./config while the actual algorithms and tally code is implemented in ./src/vtp.
 
 For a US presidential election, due to the electorial college the states tally function will mirror/implement the states electorial tally function, which is basically a summation.  However different states do it differently, and in the case of the electoral college the electors actually must vote, so the tally function non binding and perfunctory only.
 
@@ -136,42 +136,44 @@ Four implementation notes:
 As an example, the following section assumes the town of Cambridge Massachusetts.  When the city of Cambridge clones the VTP repo for the 2018 election, assuming that all the parent GGO are indeed participating in a VTP framework, the directory tree will look someting like:
 
 ```
-US-2018-National-Election/.git
-                          config.yaml
+US-2024-National-Election/.git
+                          .gitmodules
+                          LICENSE
+                          README.md
+                          VoteTrackerPlus/
                           address_map.yaml
-                          ballot.rst
-                          bin
-                          ggos/Massachusetts/.git
+                          config.yaml
+                          GGOs/Massachusetts/.git
                                              config.yaml
                                              address_map.yaml
-                                             ballot.rst
-                                             ggos/Cambridge/.git
+                                             GGOs/Cambridge/.git
                                                             config.yaml
                                                             address_map.yaml
                                                             ballot.rst
-                                                            blank-ballots/<language>/<ggo-GUID>.pdf
-                                                            CVRs (a batch scanner for the city of Cambridge)
-                                                            ggos/5th Congressional District/.git
+                                                            blank-ballots/json/<ggo-GUID>.json
+                                                                          <language>/<ggo-GUID>.pdf
+                                                            CVRs/
+                                                            GGOs/5th Congressional District/.git
                                                                                             config.yaml
                                                                                             address_map.yaml
                                                                                             ballot.rst
-                                                                                            blank-ballots/\
-                                                                                        <language>/<ggo-GUID>.pdf
-                                                                                            CVRs
+                                                                                            blank-ballots/json/<ggo-GUID>.json
+                                                                                                          <language>/<ggo-GUID>.pdf
+                                                                                            CVRs/
                                                                  7th Congressional District/.git
                                                                                             config.yaml
                                                                                             address_map.yaml
                                                                                             ballot.rst
-                                                                                            blank-ballots/\
-                                                                                        <language>/<ggo-GUID>.pdf
-                                                                                            CVRs
+                                                                                            blank-ballots/json/<ggo-GUID>.json
+                                                                                                          <language>/<ggo-GUID>.pdf
+                                                                                            CVRs/
                                                                  ward 1-1/{config,ballot}
                                                                  ward 1-2/{config,ballot}
                                                                  ...
                                                                  ward 11-2/{config,ballot}
                                                                  ward 11-3/{config,ballot}
 ```
-Each Congressional District and Ward would have a git repo where there respective ballot contests can be entered.  When the voter gets a ballot from the VC (either an absentee, early, or on election day ballot), the VoteTracker+ framework will generate the correct ballot for the address.
+Each Congressional District and Ward could either each have a git repo where there respective ballot contests can be entered or they can be share git repos.  When the voter gets a ballot from the VC (either an absentee, early, or on election day ballot), the VoteTracker+ framework can generate the correct ballot for the address.
 
 Implementation note: it is possible for precincts/VC to share the same repo or leverage a parent repo to cast votes into - it is configurable into which repo a precinct/VC submits votes to.
 
@@ -211,17 +213,13 @@ Note - there are different classes/sets of VoteTracker+ supported workflows/UX e
 
 Separate from voter UX is the GGO pre-election day workflows.  These include how the various GGO's construct their ballots and configure VTP to handle customizable aspects of the voter experience.  Section 6 pertains to the GGO centric UX.
 
-## 6.1) Pre Ballot Freeze Date
+## 6.1) Pre Blank Ballot Freeze Date
 
 Each GGO (Geopolitical Geographical Overlay) starts filling in their respective information and data per the Ballot Freeze Date (BFD) workflows.  The various entities/overlay owners enter the races/questions they wish to be contained on their respective ballot sections.  These can be ballot races, ballot questions, etc.
 
-Each GGO can also select the voting algorithm if different from the default tally settings.  One reason for a default [tally algorithm](https://electology.org/library#104) to be approval is due to the shortcoming of plurality voting.  Having a GGO to take action to change the default is to plurality hopefully will increase awareness of better tally alternatives.
+Each GGO can also select the [tally algorithm](https://electology.org/library#104) per contest.
 
-Note that each GGO/overlay in one sense works independently of all the others.  Each entity can only modify their repo - their own specific GGO information.  Note - various git hooks and other aspects of the VTP framework enforce the non-alteration of VTP framework repo local files which defines how the GGO interact in a hierarchical tally sense.   Similar to software development across a distributed project spanning distributed teams, the different entities pull and push their work to the configured VTP SaaS github servers.  There is distributed, tracked, authenticated sharing of the specific election repos during the pre-election day workflows.
-
-Note that virgin ballot free VTP repo contains VTP framework files as well as files and templates for use by the various GGO.  A ballot that is given to a specific voter at a specific location will be a function of the aggregation of the ballot questions of the various overlays and the specific street address of the voter.  Each GGO composes their respective section of the ballot.
-
-As mentioned each GGO owns a repo that is submodule of the parent GGO.
+Note that each GGO/overlay can work independently of all the others or in conjunction with other GGOs.  Each entity can only modify their repo - their own specific GGO information.  Note - various git hooks and other aspects of the VTP framework enforce the non-alteration of VTP framework repo local files which defines how the GGO interact in a hierarchical tally sense.   Similar to software development across a distributed project spanning distributed teams, the different entities pull and push their work to the configured VTP SaaS github servers.  There is distributed, tracked, authenticated sharing of the specific election repos during the pre-election day workflows.
 
 Note that during this process each entity can both test their election independently of other parent/sibling/child repos as well as test a full election.  The VTP repo/SaaS framework comes with a test harness and test data for testing.
 
@@ -229,11 +227,9 @@ With this overview of VTP in mind, once again note that VTP (the framework and h
 
 Regarding the voter-id repo, though it is highly recommended that election official pre-fill out the voter-id repos with the registered voters, actually doing so is optional.  Voters can be added to the voter-id repo directly at the voting center if so configured by the election officials.
 
-Once a GGO achieves their BFD, their portion of ballot is ready.
-
 ## 6.2) Pre Election Day, Post Ballot Freeze Data
 
-Once all the GGO's complete their portions of the ballot, the ballot is said to be done and is made available to all voters.  Due to the inherent design nature of the GGO's, every address in a precinct can obtain their address correct ballot via either the publicly available ballot repo or via their election officials - who obtain it via the public ballot repo as well.
+Once all the GGO's complete their portions of the blank ballot, the blank ballot is said to be done and is made available to all voters.  Due to the inherent design nature of the GGO's, every address in a precinct can obtain their address correct ballot via either the publicly available VTP repos or via their election officials - who obtain it via the public ballot repo as well.
 
 As the precincts/state support it, early voting, absentee voting, and UVBM workflows can commence.  Each precinct/state follow their own workflows regarding when the ballots are actually cast and scanned.  Note that the ballot repo is __not__ publicly updated once ballots are allowed to be entered into VoteTracker+.
 
@@ -277,7 +273,4 @@ However, the VoteTracker+ EULA prohibits the use of VTP data for monetary or mil
 
 ## 7.1) Exposing Gerrymandering
 
-The legality and morality of [gerrymandering](https://en.wikipedia.org/wiki/Gerrymandering) is an important democratic question to be asked and answered.  But the legal/moral question is a different question as to whether or not gerrymandering is happening and if so to what degree.  All citizens should be able to observe the effects of gerrymandering on the votes in their community.  The open source nature of VoteTracker+ allows for the inclusion of [Markov chain Monte Carlo](https://en.wikipedia.org/wiki/Markov_chain_Monte_Carlo) as a way of nonpartisan evaluation of the presence of gerrymandering so that every citizen can see the effects of current electoral district maps per GGO per election.
-
-With VTP, any voter or 3rd party can look at any specific ballot in VTP, enter an arbitrary address for that ballot, and VTP can display the gerrymandering coefficients as a function of current and other hypothetical fair electoral GGO boundaries.  The gerrymandering coefficient for each such scenario, be it the current or a hypothetical districting boundary, can be generated and displayed.  And it is all open source and transparent.
-
+The legality and morality of [gerrymandering](https://en.wikipedia.org/wiki/Gerrymandering) is an important democratic question to be asked and answered by the electorate.  But the legal/moral question is a different question as to whether or not gerrymandering is happening and if so to what degree.  All citizens should be able to observe the effects of gerrymandering on the votes in their community.  The open source nature of VoteTracker+ allows for the inclusion of [Markov chain Monte Carlo](https://en.wikipedia.org/wiki/Markov_chain_Monte_Carlo) as a way of nonpartisan evaluation of the presence of gerrymandering so that every citizen can see the effects of district maps per GGO per election.

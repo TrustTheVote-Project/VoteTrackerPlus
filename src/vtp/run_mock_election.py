@@ -23,27 +23,25 @@ branches into the master branch
 
 See './run_mock_election.py -h' for usage information.
 
-See ../docs/tech/run_mock_election.md for the context in which this
+See ../../docs/tech/run_mock_election.md for the context in which this
 file was created.
 """
 
 # Standard imports
 # pylint: disable=wrong-import-position   # import statements not top of file
+import argparse
+import logging
 import os
 import sys
 import time
-import argparse
-import logging
-from logging import debug, info
 
 # Local import
-from common import Globals, Shellout
-from address import Address
-from ballot import Ballot
-from election_config import ElectionConfig
+from utils.address import Address
+from utils.ballot import Ballot
+from utils.common import Globals, Shellout
+from utils.election_config import ElectionConfig
 
 # Functions
-
 
 ################
 # arg parsing
@@ -138,7 +136,9 @@ def scanner_mockup(election_data_dir, bin_dir, ballot):
     merge_contests = os.path.join(bin_dir, 'merge_contests.py')
     for count in range(args.iterations):
         for blank_ballot in blank_ballots:
-            debug(f"Iteration {count} of {args.iterations} - processing {blank_ballot}")
+            logging.debug(
+                "Iteration %s of %s - processing %s",
+                count, args.iterations, blank_ballot)
             # - cast a ballot
 #            import pdb; pdb.set_trace()
             with Shellout.changed_cwd(election_data_dir):
@@ -225,7 +225,7 @@ def server_mockup(election_data_dir, bin_dir):
             [merge_contests, '-r', '-m', args.minimum_cast_cache, '-v',
                  args.verbosity], printonly=args.printonly,
             no_touch_stds=True, timeout=None, check=True)
-        info("Sleeping for 10")
+        logging.info("Sleeping for 10")
         time.sleep(10)
         elapsed_time = time.time() - start_time
         if elapsed_time > seconds:
@@ -284,7 +284,7 @@ def main():
         blank_ballot = args.blank_ballot
 
     # Eventually need the bin dir as well
-    bin_dir = os.path.join(the_election_config.get('git_rootdir'), 'bin')
+    bin_dir = os.path.join(the_election_config.get('git_rootdir'), Globals.get('BIN_DIR'))
     # the VTP scanner mock simulation
     if args.device in ['scanner', 'both']:
         scanner_mockup(election_data_dir, bin_dir, blank_ballot)

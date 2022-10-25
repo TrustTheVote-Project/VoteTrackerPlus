@@ -21,26 +21,24 @@
 
 See 'generate_all_blank_ballots.py -h' for usage information.
 
-See ../docs/tech/executable-overview.md for the context in which this file was created.
+See ../../docs/tech/executable-overview.md for the context in which this file was created.
 
 """
 
 # Standard imports
 # pylint: disable=wrong-import-position   # import statements not top of file
-import os
-import sys
 import argparse
 import logging
-from logging import info, debug
+import os
 import pprint
+import sys
 
 # Local import
-from address import Address
-from ballot import BlankBallot
-from election_config import ElectionConfig
+from utils.address import Address
+from utils.ballot import BlankBallot
+from utils.election_config import ElectionConfig
 
 # Functions
-
 
 ################
 # arg parsing
@@ -99,17 +97,19 @@ def main():
                 generic_ballot = BlankBallot()
                 generic_ballot.create_blank_ballot(
                     generic_address, the_election_config)
-                info(f"Active GGOs for blank ballot ({generic_address}): "
-                         "{generic_ballot.get('active_ggos')}")
-                debug("And the blank ballot looks like:\n" +
-                          pprint.pformat(generic_ballot.dict()))
+                logging.info(
+                    "Active GGOs for blank ballot (%s): %s",
+                    generic_address, generic_ballot.get('active_ggos'))
+                logging.debug(
+                    "And the blank ballot looks like:\n%s",
+                    pprint.pformat(generic_ballot.dict()))
                 # Write it out
                 if args.printonly:
                     ballot_file = the_election_config.gen_blank_ballot_location(
                         generic_address.active_ggos, generic_address.ballot_subdir, 'json')
                 else:
                     ballot_file = generic_ballot.write_blank_ballot(the_election_config)
-                info(f"Blank ballot file: {ballot_file}")
+                logging.info("Blank ballot file: %s", ballot_file)
 #                import pdb; pdb.set_trace()
 
 if __name__ == '__main__':

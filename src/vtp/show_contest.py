@@ -21,21 +21,20 @@
 
 See './show_contest.py -h' for usage information.
 
-See ../docs/tech/executable-overview.md for the context in which this file was created.
+See ../../docs/tech/executable-overview.md for the context in which this file was created.
 
 """
 
+import argparse
+import logging
 # pylint: disable=wrong-import-position
 import os
 import re
 import sys
-import argparse
-import logging
-from logging import error
 
 # Local imports
-from common import Globals, Shellout
-from election_config import ElectionConfig
+from utils.common import Globals, Shellout
+from utils.election_config import ElectionConfig
 
 ################
 # Functions
@@ -58,11 +57,13 @@ def validate_digests(digests, election_data_dir, error_digests):
     for count, line in enumerate(output_lines):
         digest, commit_type = line.split()
         if commit_type == 'missing':
-            error(f"[ERROR]: missing digest: n={count} digest={digest}")
+            logging.error("[ERROR]: missing digest: n=%s digest=%s", count, digest)
             error_digests.add(digest)
             errors += 1
         elif commit_type != 'commit':
-            error(f"[ERROR]: invalid digest type: n={count} digest={digest} type={commit_type}")
+            logging.error(
+                "[ERROR]: invalid digest type: n=%s digest=%s type=%s",
+                count, digest, commit_type)
             error_digests.add(digest)
             errors += 1
     if errors:

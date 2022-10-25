@@ -9,6 +9,11 @@
 %.tex: %.w %.ch
 %.mk:
 
+# Variables
+DOC_DIR  := docs
+SRC_DIR  := src/vtp
+TEST_DIR := test
+
 # Create the python environment files
 .PHONY: export
 export:
@@ -20,14 +25,15 @@ export:
 pylint:
 # As there are multiple commands with the same boilerplate scaffolding, when
 # pylinting from the top ignore R0801
-	pylint -d duplicate-code bin
+	pylint --recursive y ${SRC_DIR}
 
 # Run tests
 .PHONY: pytest
 pytest:
-	pytest
+	pytest ${TEST_DIR}
 
 # emacs tags
-ETAG_SRCS := $(shell find bin -type file -name '*.py')
-TAGS: ${ETAG_SRCS}
+ETAG_SRCS := $(shell find * -type f -name '*.py' -o -name '*.md' | grep -v defunct)
+.PHONY: etags
+etags: ${ETAG_SRCS}
 	etags ${ETAG_SRCS}

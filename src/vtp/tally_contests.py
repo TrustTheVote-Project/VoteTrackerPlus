@@ -23,23 +23,23 @@ a election.
 
 See './tally_contests.py -h' for usage information.
 
-See ../docs/tech/*.md for the context in which this file was created.
+See ../../docs/tech/*.md for the context in which this file was created.
 """
 
-# Standard imports
-import sys
-import re
 # pylint: disable=wrong-import-position   # import statements not top of file
+# Standard imports
 import argparse
 import logging
-from logging import info, error
+import re
+import sys
 
 # Local import
-from ballot import Ballot
-from election_config import ElectionConfig
-from common import Shellout
-from contest import Tally
-from exceptions import TallyException
+from utils.ballot import Ballot
+from utils.common import Shellout
+from utils.contest import Tally
+from utils.election_config import ElectionConfig
+from utils.exceptions import TallyException
+
 # Functions
 
 
@@ -135,14 +135,14 @@ def main():
                 continue
         # Create a Tally object for this specific contest
         the_tally = Tally(contest_batches[contest_batch][0])
-        info(
-            f"Scanned {len(contest_batches[contest_batch])} contests for contest "
-            f"({contest_batches[contest_batch][0]['CVR']['name']}) "
-            f"uid={contest_batches[contest_batch][0]['CVR']['uid']}, "
-            f"tally={contest_batches[contest_batch][0]['CVR']['tally']}, "
-            f"max={the_tally.get('max')}, "
-            f"win-by>{the_tally.get('win-by')}"
-            )
+        logging.info(
+            "Scanned %s contests for contest (%s) uid=%s, tally=%s, max=%s, win-by>%s",
+            len(contest_batches[contest_batch]),
+            contest_batches[contest_batch][0]['CVR']['name'],
+            contest_batches[contest_batch][0]['CVR']['uid'],
+            contest_batches[contest_batch][0]['CVR']['tally'],
+            the_tally.get('max'),
+            the_tally.get('win-by'))
         # Tally all the contests for this contest
 #        import pdb; pdb.set_trace()
         try:
@@ -150,8 +150,7 @@ def main():
             # Print stuff
             the_tally.print_results()
         except TallyException as tally_error:
-            error(f"[ERROR]: {tally_error}  "
-                  "Continuing with other contests ...")
+            logging.error("[ERROR]: %s\nContinuing with other contests ...", tally_error)
 
 if __name__ == '__main__':
     args = parse_arguments()

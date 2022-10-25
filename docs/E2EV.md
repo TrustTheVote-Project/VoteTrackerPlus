@@ -13,7 +13,7 @@ The [CLI](https://en.wikipedia.org/wiki/Command-line_interface) (shell) output b
 Running "git rev-parse --show-toplevel"
 Running "git pull"
 Already up to date.
-Running "/opt/VoteTrackerPlus/demo.16/clients/scanner.00/VTP-root-repo/bin/cast_ballot.py -v 3 -s California -t Alameda -a 123 Main Street"
+Running "/opt/VoteTrackerPlus/demo.16/clients/scanner.00/VoteTrackerPlus/src/vtp/cast_ballot.py -v 3 -s California -t Alameda -a 123 Main Street"
 Running "git rev-parse --show-toplevel"
 ################ (1 of 7)
 Contest 0000: US president
@@ -86,7 +86,7 @@ Once the user has typed 'yes' above (this is just a demo), then VTP virtually _p
 ```
 [...]
 ############
-### Receipt file: /opt/VoteTrackerPlus/demo.16/clients/scanner.00/VTP-root-repo/ElectionData/GGOs/states/California/GGOs/towns/Alameda/CVRs/receipt.csv
+### Receipt file: /opt/VoteTrackerPlus/demo.16/clients/scanner.00/VoteTrackerPlus/ElectionData/GGOs/states/California/GGOs/towns/Alameda/CVRs/receipt.csv
 ### Voter's row: 87
 ############
 
@@ -99,7 +99,7 @@ Once the voter has been out-processed by an election official and before leaving
 First, check that _all_ the ballot digests are valid:
 
 ```
-% ./verify_ballot_receipt.py -f /opt/VoteTrackerPlus/demo.16/clients/scanner.00/VTP-root-repo/ElectionData/GGOs/states/California/GGOs/towns/Alameda/CVRs/receipt.csv -r 87
+% ./verify_ballot_receipt.py -f /opt/VoteTrackerPlus/demo.16/clients/scanner.00/VoteTrackerPlus/ElectionData/GGOs/states/California/GGOs/towns/Alameda/CVRs/receipt.csv -r 87
 Running "git rev-parse --show-toplevel"
 Running "git pull"
 Already up to date.

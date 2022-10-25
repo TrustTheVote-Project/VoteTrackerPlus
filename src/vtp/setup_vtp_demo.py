@@ -22,61 +22,43 @@ setup_vtp_demo.py - command line level script set up a VTP demo
 
 See './setup_vtp_demo -h' for usage information.
 
-See ../docs/tech/run_mock_election.md for the context in which this
+See ../../docs/tech/run_mock_election.md for the context in which this
 file was created.
 """
 
 # Standard imports
 # pylint: disable=wrong-import-position   # import statements not top of file
-import os
-import sys
 import argparse
 import logging
-from logging import debug, info
+import os
+import sys
 
 # Local import
-from common import Globals, Shellout
-from election_config import ElectionConfig
+from utils.common import Globals, Shellout
+from utils.election_config import ElectionConfig
 
 # Functions
 
-def create_client_repos(clone_dirs, remote_1_path, remote_2_path):
+def create_client_repos(clone_dirs, remote_path):
     """create demo clients workspaces"""
-    # Now locally clone those as needed and add the ElectionData
-    # relative symlink. Record the repos to add them to the
-    # superproject later.
+    # Now locally clone those as needed.  With the use of submodules
+    # there is no longer an ElectionData symlink to manage.  Record
+    # the repos to add them to the superproject later.
     cloned_repos = [] # a list of tuple pairs
     for clone_dir in clone_dirs:
         with Shellout.changed_cwd(clone_dir):
-            info(f"In ({clone_dir}):")
             Shellout.run(
-                ['git', 'clone', remote_1_path],
+                ['git', 'clone', '--recurse-submodules', remote_path],
                 args.printonly, verbosity=args.verbosity)
             # Note - since the repo is not a bare, the ".git" suffix
             # needs to be stripped
-            repo1_dir_name = os.path.basename(remote_1_path).removesuffix('.git')
+            repo_dir_name = os.path.basename(remote_path).removesuffix('.git')
             cloned_repos.append((
-                remote_1_path,
+                remote_path,
                 os.path.join(
                     os.path.basename(os.path.dirname(clone_dir)),
                     os.path.basename(clone_dir),
-                    repo1_dir_name)))
-            Shellout.run(
-                ['git', 'clone', remote_2_path],
-                args.printonly, verbosity=args.verbosity)
-            repo2_dir_name = os.path.basename(remote_2_path).removesuffix('.git')
-            cloned_repos.append((
-                remote_2_path,
-                os.path.join(
-                    os.path.basename(os.path.dirname(clone_dir)),
-                    os.path.basename(clone_dir),
-                    repo2_dir_name)))
-            # Add the symlink
-            Shellout.run(
-                ['ln', '-s', os.path.join('..', repo2_dir_name),
-                     os.path.join(clone_dir, repo1_dir_name,
-                                      Globals.get('ROOT_ELECTION_DATA_SUBDIR'))],
-                args.printonly, verbosity=args.verbosity)
+                    repo_dir_name)))
     return cloned_repos
 
 
@@ -89,20 +71,19 @@ def parse_arguments():
 
     parser = argparse.ArgumentParser(description=
     """setup_vtp_demo.py will leverage this current git repository
-    (VTP-root-repo) and the associated ElectionData (associated via
-    either a symlink or a git submodule) and nominally create in
-    /opt/VoteTrackerPlus (the default) a demo election mock up of 4
-    ballot scanner apps and one voting center server app.  The initial
-    demo idea is to have three scanners scanning random ballots while
-    one scanner is used interactively.  However, any number of scanner
-    apps instances can be started.
+    (VoteTrackerPlus) and the associated ElectionData repos
+    nominally create in /opt/VoteTrackerPlus (the default) a demo
+    election mock up of 4 ballot scanner apps and one voting center
+    server app.  The initial demo idea is to have three scanners
+    scanning random ballots while one scanner is used interactively.
+    However, any number of scanner apps instances can be started.
 
     All five apps run in a pair of separate git repos that are clones
-    of the same VTP-root-repo and ElectionData repos as this one and
-    are contained in a subfolder called 'clients'.  All the client
-    apps' git repos have had the remote origin configured to point to
-    two local-remote bare clones of the GitHub remotes located in the
-    subfolder 'local-remote-server'.
+    of the same ElectionData repos as this one and are contained in a
+    subfolder called 'clients'.  All the client apps' git repos have
+    had the remote origin configured to point to two local-remote bare
+    clones of the GitHub remotes located in the subfolder
+    'local-remote-server'.
 
     Normally no demo git commits are pushed back to GiHub, but to do
     so one would normally use the bare repos and not the client repos.
@@ -163,7 +144,7 @@ def main():
     for subdir in ['clients', 'local-remote-server']:
         full_dir = os.path.join(args.location, subdir)
         if not os.path.isdir(full_dir):
-            debug(f"creating ({full_dir})")
+            logging.debug("creating (%s)", full_dir)
             if not args.printonly:
                 os.mkdir(full_dir)
     # The client side scanner app instances
@@ -172,30 +153,29 @@ def main():
         full_dir = os.path.join(args.location, 'clients', 'scanner.' + f"{count:02d}")
         clone_dirs.append(full_dir)
         if not os.path.isdir(full_dir):
-            debug(f"creating ({full_dir})")
+            logging.debug("creating (%s)", full_dir)
             if not args.printonly:
                 os.mkdir(full_dir)
     # The client side app server instance
     full_dir = os.path.join(args.location, 'clients', 'server')
     clone_dirs.append(full_dir)
     if not os.path.isdir(full_dir):
-        debug(f"creating ({full_dir})")
+        logging.debug("creating (%s)", full_dir)
         if not args.printonly:
             os.mkdir(full_dir)
 
     # Clone the two local-remotes
     full_dir = os.path.join(args.location, 'local-remote-server')
     # Get the two remotes
-    remote_1 = Shellout.run(
-        ['git', 'config', '--get', 'remote.origin.url'],
-        check=True, capture_output=True, text=True).stdout.strip()
     with Shellout.changed_cwd(election_data_dir):
-        remote_2 = Shellout.run(
+        remote_1 = Shellout.run(
             ['git', 'config', '--get', 'remote.origin.url'],
             check=True, capture_output=True, text=True).stdout.strip()
+    remote_2 = Shellout.run(
+        ['git', 'config', '--get', 'remote.origin.url'],
+        check=True, capture_output=True, text=True).stdout.strip()
     # Bare clone them
     with Shellout.changed_cwd(full_dir):
-        info(f"In ({full_dir}):")
         Shellout.run(
             ['git', 'clone', '--bare', remote_1],
             args.printonly, verbosity=args.verbosity)
@@ -205,14 +185,19 @@ def main():
         Shellout.run(
             ['git', 'clone', '--bare', remote_2],
             args.printonly, verbosity=args.verbosity)
-        remote_2_path = os.path.join(full_dir, os.path.basename(remote_2))
 
-    # Create the client repos
-    cloned_repos = create_client_repos(clone_dirs, remote_1_path, remote_2_path)
+    # Create the client repos via the outer/root repo leveraging submodules
+    cloned_repos = create_client_repos(clone_dirs, remote_1_path)
+
+    # Note - in theory during a mock election run, it probably is not
+    # the normal case that the end user wants to actively develop code
+    # there, so no need to tweak the .git/config files with the git
+    # submodule UX customizations in the client (local) clones.
+    # However, w.r.t. the super project, it may make sense to add
+    # it there as an example.
 
     # Now create a super git project to rule them all
     with Shellout.changed_cwd(args.location):
-        info(f"In ({args.location}):")
         # init it
         Shellout.run(
             ['git', 'init'],
@@ -223,7 +208,7 @@ def main():
                 ['git', 'submodule', 'add', clone[0], clone[1]],
                 args.printonly, verbosity=args.verbosity)
         # Ignore the local remote repos directory
-        info('Adding a .gitignore')
+        logging.info('Adding a .gitignore')
         if not args.printonly:
             with open('.gitignore', 'w', encoding="utf8") as outfile:
                 outfile.write('# Ignore the local remote repos\n')

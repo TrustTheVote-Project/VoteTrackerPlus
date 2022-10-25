@@ -21,26 +21,26 @@
 
 See './cast_ballot.py -h' for usage information.
 
-See ../docs/tech/executable-overview.md for the context in which this file was created.
+See ../../docs/tech/executable-overview.md for the context in which this file was created.
 
 """
 
 # pylint: disable=wrong-import-position
-import os
-import sys
 import argparse
 import logging
-from logging import info, debug
-import random
+import os
 import pprint
+import random
+import sys
 import traceback
 import pyinputplus
 
 # Local imports
-from address import Address
-from ballot import Ballot, BlankBallot, Contests
-from common import Globals, Shellout
-from election_config import ElectionConfig
+from utils.address import Address
+from utils.ballot import Ballot, BlankBallot, Contests
+from utils.common import Globals, Shellout
+from utils.election_config import ElectionConfig
+
 
 ################
 # Functions
@@ -260,7 +260,7 @@ def main():
         a_ballot.read_a_blank_ballot(the_address, the_election_config)
 
     contests = loop_over_contests(a_ballot)
-    debug("And the ballot looks like:\n" + pprint.pformat(a_ballot.dict()))
+    logging.debug("And the ballot looks like:\n%s", pprint.pformat(a_ballot.dict()))
 
     # ZZZ - for this program there is no call to verify_cast_ballot to
     # verify that the ballot has been filled out correctly and offer
@@ -276,8 +276,8 @@ def main():
     voting_centers = the_election_config.get_node(a_ballot.get('ballot_node'),
                             'config')['voting centers']
     for vote_center in voting_centers:
-        info(f"Casting a {contests.len()} contest ballot at VC {vote_center}")
-        info(f"Cast ballot file: {ballot_file}")
+        logging.info("Casting a %s contest ballot at VC %s", contests.len(), vote_center)
+        logging.info("Cast ballot file: %s", ballot_file)
 
 if __name__ == '__main__':
     args = parse_arguments()

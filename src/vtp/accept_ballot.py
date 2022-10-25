@@ -21,26 +21,26 @@
 
 See './accept_ballot.py -h' for usage information.
 
-See ../docs/tech/executable-overview.md for the context in which this file was created.
+See ../../docs/tech/executable-overview.md for the context in which this file was created.
 
 """
 
 # Standard imports
 # pylint: disable=wrong-import-position   # import statements not top of file
-import os
-import sys
 import argparse
 import logging
-from logging import debug, warning
+import os
 import random
 import secrets
+import sys
 #import uuid
 
 # Local import
-from common import Globals, Shellout
-from address import Address
-from ballot import Ballot, Contests
-from election_config import ElectionConfig
+from utils.address import Address
+from utils.ballot import Ballot, Contests
+from utils.common import Globals, Shellout
+from utils.election_config import ElectionConfig
+
 
 # Functions
 def get_random_branchpoint(branch):
@@ -375,7 +375,7 @@ def main():
 
     # If in demo mode, optionally merge the branches
     if args.merge_contests:
-        bin_dir = os.path.join(the_election_config.get('git_rootdir'), 'bin')
+        bin_dir = os.path.join(the_election_config.get('git_rootdir'), Globals.get('BIN_DIR'))
         for branch in branches:
             # Merge the branch (but since the local branch should be
             # deleted at this point, merge the remote).  Note -
@@ -387,7 +387,7 @@ def main():
                 + (['-n'] if args.printonly else []),
                 check=True, no_touch_stds=True, timeout=None)
 
-    debug(f"Ballot's digests:\n{contest_receipts}")
+    logging.debug("Ballot's digests:\n%s", contest_receipts)
     # Shuffled the unmerged_cvrs (an inplace shuffle) - only need to
     # shuffle the uids for this ballot.
 #    import pdb; pdb.set_trace()
@@ -395,18 +395,18 @@ def main():
     for uid in contest_receipts:
         # if there are no unmerged_cvrs, just warn
         if uid not in unmerged_cvrs:
-            warning(f"Warning - no unmerged_cvrs yet for contest {uid}")
+            logging.warning("Warning - no unmerged_cvrs yet for contest %s", uid)
             skip_receipt = True
             continue
         if len(unmerged_cvrs[uid]) < Globals.get('BALLOT_RECEIPT_ROWS'):
-            warning(
-                f"Warning - not enough unmerged CVRs ({len(unmerged_cvrs[uid])}) "
-                f"to print receipt for contest {uid}")
+            logging.warning(
+                "Warning - not enough unmerged CVRs (%s) to print receipt for contest %s",
+                len(unmerged_cvrs[uid]), uid)
             skip_receipt = True
         random.shuffle(unmerged_cvrs[uid])
     # Create the ballot receipt
     if skip_receipt:
-        warning("Skipping ballot receipt due to lack of unmerged CVRs")
+        logging.warning("Skipping ballot receipt due to lack of unmerged CVRs")
     else:
         create_ballot_receipt(a_ballot, contest_receipts, unmerged_cvrs, the_election_config)
 

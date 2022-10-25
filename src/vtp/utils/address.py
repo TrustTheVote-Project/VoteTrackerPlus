@@ -18,9 +18,11 @@
 """An Address class for VoteTracker+"""
 
 import os
+import os.path
 import re
-import posixpath
-from common import Globals
+
+from .common import Globals
+
 
 class Address:
     """A class to create an address object, which is just an address
@@ -248,7 +250,7 @@ class Address:
         # Walk the address in DAG order from root to the prescribed leafs
         for field in Globals.get('REQUIRED_GGO_ADDRESS_FIELDS'):
             # For this field in the address, get the correct ggo kind and instance
-            node = posixpath.join(breadcrumbtrail, 'GGOs',
+            node = os.path.join(breadcrumbtrail, 'GGOs',
                                       Globals.get('kinds_map')[field], self.get(field))
             # Better to sanity check now later
             if not config.is_node(node):

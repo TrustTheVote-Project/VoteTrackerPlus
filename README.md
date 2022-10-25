@@ -1,12 +1,12 @@
 # VoteTracker+
 
-[![CodeQL](https://github.com/TrustTheVote-Project/VTP-root-repo/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/TrustTheVote-Project/VTP-root-repo/actions/workflows/codeql-analysis.yml)
+[![CodeQL](https://github.com/TrustTheVote-Project/VoteTrackerPlus/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/TrustTheVote-Project/VoteTrackerPlus/actions/workflows/codeql-analysis.yml)
 
 VoteTracker+ (VTP or VoteTrackerPlus) is a 100% open software ballot tracking system that increases the security, accuracy, and trustworthiness of paper ballot based elections by cryptographically tracking the paper ballots.  VTP is a software only product comprised of backoffice plugins with voter and election official facing frontoffice components.  VTP can leverage existing election hardware infrastructure to the extent that the OEM manufacturers allow and support the installation of the VTP plugins.
 
 Read the [pitch](docs/pitch.md), ask for a live demo, or run your own live demo on your own Apple or Linux desktop.
 
-To run your own [CLI](https://en.wikipedia.org/wiki/Command-line_interface) based demo, clone this and the [mock election](https://github.com/TrustTheVote-Project/VTP-mock-election.US.09) git repositories.  And then run your own election, manually casting ballots in parallel with N simulated in-person voting center VTP ballot scanners and one VTP ballot server.  See the [bin/README.md](bin/README.md) file for more details.  Note - the live demo actually includes a complete election, from limited JSON _data only_ blank ballots (no description, language, or printing) to full tallies of the contests.
+To run your own [CLI](https://en.wikipedia.org/wiki/Command-line_interface) based demo, clone the [mock election](https://github.com/TrustTheVote-Project/VTP-mock-election.US.10) git repository including submodules (git clone --recurse-submodules https://github.com/TrustTheVote-Project/VTP-mock-election.US.10.git).  And then run your own election, manually casting ballots in parallel with N simulated in-person voting center VTP ballot scanners and one VTP ballot server.  See the [src/vtp/README.md](src/vtp/README.md) file for more details.  Note - the live demo actually includes a complete election, from limited JSON _data only_ blank ballots (no description, language, or printing) to full tallies of the contests.
 
 ## 1) Overview
 
@@ -39,9 +39,7 @@ VoteTracker+ is NOT a:
 
 The VTP root repo (this repo) is meant to be directly integrated via a git submodule with a VTP ElectionData directory tree which is comprised of one or more git submodules (though as of this writing and stage of agile software development, an OS level symbolic-link is typically used instead).  An VTP ElectionData tree is a directory tree that _componentizes_ the backend election configuration data into separate GGOs (Geopolitical Geographical Overlays - NIST calls this a [geopolitical unit](https://pages.nist.gov/ElectionGlossary/#geopolitical-unit)).  Each GGO can have is its own [RBAC](https://en.wikipedia.org/wiki/Role-based_access_control) authority or share another GGO's RBAC.  Independent of the GGO components the ElectionData tree supports arbitrary git submodule componentization which ultimately allows a [Voting Center](https://pages.nist.gov/ElectionGlossary/#vote-center) to operate completely disconnected from an external computer network.
 
-A sample mock ElectionData repo can be found at [VTP-mock-election.US.09](https://github.com/TrustTheVote-Project/VTP-mock-election.US.09).
-
-Note that for convenience all VTP repos in the [TrustTheVote](https://github.com/TrustTheVote-Project) GitHub domain start with the four letter prefix __VTP-__.
+A sample mock ElectionData repo can be found at [VTP-mock-election.US.10](https://github.com/TrustTheVote-Project/VTP-mock-election.US.10).
 
 A diagram representing the high level in-person voter experience is located [here](https://drive.google.com/file/d/1-vKSE89R6DGvIs2JduyOt1AojmEXongL/view?usp=sharing) (Google Drive).
 
@@ -49,7 +47,7 @@ A diagram representing the high level mail-in ballot workflow is located [here](
 
 ## 3) Additional Details
 
-For a more detailed overview, see the file [./docs/project-overview.md](./docs/project-overview.md) in this git repo.  The docs folder also contains the current [pitch](./docs/pitch.md) as well as an [informal security description](./docs/informal-security-description.md).  There is a high level scurity threat model located at [VoteTracker+ Threat Model Mind Map](https://mm.tt/1939443508?t=DuNY3bTVbg).  Note - VTP was originally named VOTES before the project transitioned to OSET.
+For a more detailed overview, see the file [./docs/project-overview.md](./docs/project-overview.md) in this git repo.  The docs folder also contains the current [pitch](./docs/pitch.md) as well as an [informal security description](./docs/informal-security-description.md).  There is a high level scurity threat model located at [VoteTracker+ Threat Model Mind Map](https://mm.tt/1939443508?t=DuNY3bTVbg).  See [docs/E2EV.md](docs/E2EV.md) for more examples of the current basic command line interface.
 
 VoteTracker+ is intended to be compliant to the sensible extent possible [NIST](https://en.wikipedia.org/wiki/National_Institute_of_Standards_and_Technology)'s [voting](https://www.nist.gov/itl/voting) efforts.  With funding the intent is to be compiant with NIST's [Special Publication 1500-100](https://pages.nist.gov/ElectionResultsReporting/), Election Results Reporting Common Data Format Specification Revision 2.
 
@@ -66,25 +64,29 @@ The following is a short and incomplete list of other voting projects that are o
 * [STARVote](https://www.usenix.org/conference/evtwote13/workshop-program/presentation/bell) 
 * [VotingWorks](https://www.voting.works/) (and [VotingWorks Suite](https://docs.voting.works/vxsuite/))
 
-The differences between ElectionGuard and VoteTracker+ and that of blockchain technologies in general is worth a special note.  ElectionGuard is based on the paper [Simple Verifiable Elections](https://www.usenix.net/legacy/events/evt06/tech/full_papers/benaloh/benaloh.pdf) by Josh Benaloh.  Such solutions are based on independently encrypting the individual CVR's of the ballot (encrypting the ballot data at rest) and with the necessary inclusion of a [Benaloh Challenge](https://github.com/phayes/benaloh-challenge) implementation to add a layer of trust for the voting machines that perform the encrypting.  VTP is less complex in that the CVR's are never encrypted and as such no Benaloh Challenge is required.  Voters get direct access to the real and final per contest CVR digests as the CVRs need not be encrypted since the voter's CVR's are effectively anonymized amongst 99 other sets of contest CVRs.  No encryption / decryption is required for the VTP data-at-rest portion even while significant encryption occurs in the VTP data-in-movement portion much like today's commercial/military grade encrypted network connections.
+The differences between VoteTracker+ and blockchain and other encrypt-the-data-at-rest solutions such as ElectionGuard are particularly and important to note.
 
-In addition ElectionGuard is not based on a Merkle Tree as each CVR is independent and not connected with the other CVRs.  VTP adds a significant layer of security and trustworthiness via a Merkle Tree implementation in that the entire change history is stored in the public Merkle Tree ledger.  However, unlike cryptocurrencies which are also Merkle Tree based but which are also based on [blockchain](https://en.wikipedia.org/wiki/Blockchain) technology, VTP is not based on blockchain technology and contains no blockchain [implementation/code](https://github.com/dragonchain/dragonchain).  This again results in VTP being less complex than blockchain solutions while also not subject to the significant issues that blockchains implementations have with voter and ballot anonymity.
+Regarding blockchain solutions, blockchains have as a fundemental design goal the existance of private keys that conver private ownership.  This is the opposite of a basic principle of public voting - the absense of ownership of the ballot.  The ballots of public elections need to remain anonymous.  In addition that are ownership questions of who actually owns the blockchain and what can happen to the blockchain when there is collusion of a majority of the minors - when a major of the minors do not like the outcome of an election.
 
-Finally, unlike both Benaloh and blockchain voting implementations, VTP is anonymized in time both in an absolute sense, as the ballot data contains no date and time information, and via the Merkle Tree chain itself as the CVRs are randomized in linkage order.
+Regarding ElectionGuard, ElectionGuard is based on the paper [Simple Verifiable Elections](https://www.usenix.net/legacy/events/evt06/tech/full_papers/benaloh/benaloh.pdf).  Such solutions are based on independently encrypting the individual CVR's of the ballot (encrypting the ballot data at rest) and with the necessary inclusion of a [Device Challenge](https://github.com/phayes/benaloh-challenge) implementation to add a layer of trust for the voting machines that perform the encrypting.  VTP is less complex in that the CVR's are never encrypted and as such no Benaloh Challenge is required.  Voters get direct access to the real and final per contest CVR digests as the CVRs need not be encrypted since the voter's CVR's are effectively anonymized amongst 99 other sets of contest CVRs.  No encryption / decryption is required for the VTP data-at-rest portion even while significant encryption occurs in the VTP data-in-movement portion much like today's commercial/military grade encrypted network connections.
+
+In addition ElectionGuard is not based on a Merkle Tree.  VTP adds a significant layer of security and trustworthiness via a Merkle Tree implementation in that the entire change history is stored in the public Merkle Tree ledger.  However, unlike cryptocurrencies which are also Merkle Tree based but which are also based on [blockchain](https://en.wikipedia.org/wiki/Blockchain) technology, VTP is not based on blockchain technology and contains no blockchain [implementation/code](https://github.com/dragonchain/dragonchain).  This again results in VTP being less complex than blockchain solutions while also not subject to the significant issues that blockchains implementations have with voter and ballot anonymity.
+
+Finally, unlike the ElectionGuard and blockchain voting implementations, VTP is anonymized in time both in an absolute sense as the ballot data contains no date-time information and via the Merkle Tree chain itself as the CVRs are randomized in linkage order.
 
 For more information contact Sandy Currier at: sandy at osetinstitute dot org
 
 ## 5) Development
 
-See the [bin/README.md](bin/README.md) for notes regarding running and writing code.
+See the [src/vtp/README.md](src/vtp/README.md) for notes regarding running and writing code.
 
 ## 6) Status - 2022/07/19
 
-VoteTracker+ is currently in the early design phase - still working out the basics and seeking credible peer reviews. The current priorities are:
+VoteTracker+ is currently in the early design phase with a downloadable CLI demo. The current priorities are:
 * Technical peer reviews
-* Recruiting contributing developers and UX designers, specifically a javascript engineer to provide a GUI around the current command line based demo
-* Developing a crowdfunding campaign
+* Recruiting contributing developers and UX designers, specifically a javascript engineer to provide a GUI demo support
+* Funding
 
-The crowdfunding project is getting closer to launch.  A preliminary project video is available at [https://www.youtube.com/watch?v=V0EuZHNHZ6A](https://www.youtube.com/watch?v=V0EuZHNHZ6A).  The launch is contigent on receiving meaningful peer reviews to independently establish the efficacy and viability of the VoteTracker+ solution and on creating an adequate GUI based demo.
+Crowdfunding is also possible - a preliminary project video is available at [https://www.youtube.com/watch?v=V0EuZHNHZ6A](https://www.youtube.com/watch?v=V0EuZHNHZ6A)
 
-VoteTracker+ is currently using GitHub's beta [project planning for developers](https://github.com/features/issues) for the [VoteTracker+ Project Plan](https://github.com/orgs/TrustTheVote-Project/projects/2/views/1).  It is currently non-public - get involved or join the team to gain access to it.  :-)
+VoteTracker+ is currently using GitHub's beta [project planning for developers](https://github.com/features/issues) for the [VoteTracker+ Project Plan](https://github.com/orgs/TrustTheVote-Project/projects/2/views/1).  The project pages are currently private - get involved or join the team to gain access to it.  :-)

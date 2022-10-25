@@ -17,13 +17,15 @@
 
 """How to manage a VTP Ballot"""
 
-import os
-import json
 import csv
-from logging import debug
+import json
+import os
+import logging
+
 # Local imports
-from common import Globals
-from contest import Contest
+from .common import Globals
+from .contest import Contest
+
 
 class Contests:
     """An iteratable object for the contests in a ballot"""
@@ -250,7 +252,7 @@ class Ballot:
         """
         if not ballot_file:
             ballot_file = Ballot.gen_cast_ballot_location(config, address.get('ballot_subdir'))
-        debug(f"Reading {ballot_file}")
+        logging.debug("Reading %s", ballot_file)
         with open(ballot_file, 'r', encoding="utf8") as file:
             json_doc = json.load(file)
             self.contests = json_doc['contests']
@@ -404,7 +406,7 @@ class BlankBallot(Ballot):
             ballot_file = config.gen_blank_ballot_location(
                 self.active_ggos, self.ballot_subdir, style)
         if style == 'json':
-            debug(f"Reading {ballot_file}")
+            logging.debug("Reading %s", ballot_file)
             with open(ballot_file, 'r', encoding="utf8") as file:
                 json_doc = json.load(file)
                 self.contests = json_doc['contests']

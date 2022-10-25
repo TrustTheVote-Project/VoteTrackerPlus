@@ -23,24 +23,24 @@ voters ballot receipt.
 
 See './verify_ballot_receipt.py -h' for usage information.
 
-See ../docs/tech/*.md for the context in which this file was created.
+See ../../docs/tech/*.md for the context in which this file was created.
 """
 
 # Standard imports
 # pylint: disable=wrong-import-position   # import statements not top of file
-import sys
-import os
 import argparse
-import logging
-import re
 import json
-from logging import error, debug
+import logging
+import os
+import re
+import sys
 
 # Local import
-from address import Address
-from ballot import Ballot
-from common import Shellout, Globals
-from election_config import ElectionConfig
+from utils.address import Address
+from utils.ballot import Ballot
+from utils.common import Globals, Shellout
+from utils.election_config import ElectionConfig
+
 
 # Functions
 def validate_ballot_lines(lines, headers, uids, e_config, error_digests):
@@ -67,14 +67,14 @@ def validate_ballot_lines(lines, headers, uids, e_config, error_digests):
     for line in results:
         digest, commit_type = line.split()
         if commit_type == 'missing':
-            error(
-                f"[ERROR]: missing digest: row {row} column {column} "
-                f"contest='{headers[column-1]}' digest={digest}")
+            logging.error(
+                "[ERROR]: missing digest: row %s column %s contest=%s digest=%s",
+                row, column, headers[column-1], digest)
             error_digests.add(digest)
         elif commit_type != 'commit':
-            error(
-                f"[ERROR]: invalid digest type: row {row} column {column} "
-                f"contest='{headers[column-1]}' digest={digest} type={commit_type}")
+            logging.error(
+                "[ERROR]: invalid digest type: row %s column %s contest=%s digest=%s type=%s",
+                row, column, headers[column-1], digest, commit_type)
             error_digests.add(digest)
         column += 1
         if column > row_length:
@@ -118,15 +118,15 @@ def vet_rows(lines, headers, uids, e_config, error_digests):
                 # keep incrementing column regardless
                 continue
             if digest not in cvrs:
-                error(
-                    f"[ERROR]: missing digest in master branch: row {index} "
-                    f"contest='{headers[column]}' digest={digest}")
+                logging.error(
+                    "[ERROR]: missing digest in master branch: row %s contest=%s digest=%s",
+                    index, headers[column], digest)
                 error_digests.add(digest)
                 continue
             if cvrs[digest]['CVR']['uid'] != uids[column]:
-                error(
-                    f"[ERROR]: bad contest uid: row {row} column {column} "
-                    f"contest {headers[column]} != {cvrs[digest]['CVR']['uid']} digest={digest}")
+                logging.error(
+                    "[ERROR]: bad contest uid: row %s column %s contest %s != %s digest=%s",
+                    row, column, headers[column], cvrs[digest]['CVR']['uid'], digest)
                 error_digests.add(digest)
                 continue
     return(requested_row, requested_digests)
@@ -200,17 +200,19 @@ def verify_ballot_receipt(receipt_file, e_config):
     if args.row:
         for digest in lines[int(args.row) - 1]:
             if digest in error_digests:
-                error(f"[ERROR]: cannot print CVR for {digest} (row {args.row}) - it is invalid")
+                logging.error(
+                    "[ERROR]: cannot print CVR for %s (row %s) - it is invalid",
+                    digest, args.row)
                 continue
-            debug(f"{json.dumps(requested_row[digest], indent=5, sort_keys=True)}")
+            logging.debug("%s", json.dumps(requested_row[digest], indent=5, sort_keys=True))
         vet_a_row()
 
     # Summerize
     if error_digests:
-        error(
+        logging.error(
             "############\n"
             "[ERROR]: ballot receipt INVALID - the supplied ballot receipt has "
-            f"{len(error_digests)} errors.{os.linesep}############")
+            "%s errors.\n############", len(error_digests))
     else:
         print(
             "############\n"

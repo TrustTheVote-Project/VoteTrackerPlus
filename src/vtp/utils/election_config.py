@@ -17,17 +17,18 @@
 
 """The VTP ElectionConfig class - everything needed to parse the config.yaml tree."""
 
-# statndard imports
+# standard imports
 import os
-import posixpath
+import os.path
 import re
-from logging import debug
-import yaml
+import logging
 import networkx
+import yaml
 
 # local imports
-from contest import Contest
-from common import Globals, Shellout
+from .common import Globals, Shellout
+from .contest import Contest
+
 
 class ElectionConfig:
     """A class to parse all the VTP election config.yaml files and
@@ -152,7 +153,7 @@ class ElectionConfig:
         only if the file exists.  Check the syntax.
         """
         if os.path.isfile(filename):
-            debug(f"Reading {filename}")
+            logging.debug("Reading %s", filename)
             with open(filename, 'r', encoding="utf8") as map_file:
                 this_address_map = yaml.load(map_file, Loader=yaml.FullLoader)
             # sanity-check it
@@ -165,7 +166,7 @@ class ElectionConfig:
         """
         Read the confgi yaml file return the dictionary and check the syntax.
         """
-        debug(f"Reading {filename}")
+        logging.debug("Reading %s", filename)
         with open(filename, 'r', encoding="utf8") as config_file:
             config = yaml.load(config_file, Loader=yaml.FullLoader)
         # sanity-check it
@@ -336,7 +337,7 @@ class ElectionConfig:
                         # Now add this ggo_kind and ggo to the DAG.
                         # Always use '/' - nodes in the digraph always
                         # use forward slash, but subdir are os.path.sep
-                        this_dag_node = posixpath.join(subdir.replace('\\','/'),
+                        this_dag_node = os.path.join(subdir.replace('\\','/'),
                                                            ggo_kind, ggo)
                         if this_dag_node in self.digraph.nodes:
                             raise LookupError(("Attempting to re-add the same node "
