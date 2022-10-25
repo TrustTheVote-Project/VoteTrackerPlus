@@ -81,7 +81,7 @@ $ conda install pylint pytest pyyaml networkx
 $ pip install pyinputplus
 ```
 
-### 4.2) Clone this repo and an ElectionData repo
+### 4.2) Clone this repo and the mock Election Data repo  [VTP-mock-election.US.10](https://github.com/TrustTheVote-Project/VTP-mock-election.US.10)
 
 ```bash
 # pull the Votetracker+ project - clone both repositories - and create an ElectionData symlink

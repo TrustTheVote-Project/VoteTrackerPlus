@@ -6,7 +6,7 @@ VoteTracker+ (VTP or VoteTrackerPlus) is a 100% open software ballot tracking sy
 
 Read the [pitch](docs/pitch.md), ask for a live demo, or run your own live demo on your own Apple or Linux desktop.
 
-To run your own [CLI](https://en.wikipedia.org/wiki/Command-line_interface) based demo, clone a [mock election](https://github.com/TrustTheVote-Project/VTP-mock-election.US.10) git repository.  And then run your own election, manually casting ballots in parallel with N simulated in-person voting center VTP ballot scanners and one VTP ballot server.  See the [src/vtp/README.md](src/vtp/README.md) file for more details.  Note - the live demo actually includes a complete election, from limited JSON _data only_ blank ballots (no description, language, or printing) to full tallies of the contests.
+To run your own [CLI](https://en.wikipedia.org/wiki/Command-line_interface) based demo, clone the [mock election](https://github.com/TrustTheVote-Project/VTP-mock-election.US.10) git repository including submodules (git clone --recurse-submodules https://github.com/TrustTheVote-Project/VTP-mock-election.US.10.git).  And then run your own election, manually casting ballots in parallel with N simulated in-person voting center VTP ballot scanners and one VTP ballot server.  See the [src/vtp/README.md](src/vtp/README.md) file for more details.  Note - the live demo actually includes a complete election, from limited JSON _data only_ blank ballots (no description, language, or printing) to full tallies of the contests.
 
 ## 1) Overview
 
