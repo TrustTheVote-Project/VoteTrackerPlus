@@ -66,9 +66,9 @@ So the root most GGO is that git repo _owned/authored_ by the VoteTracker+ root 
 
 Contains configuration data for this GGO in yaml form (unless it really needs to be xml or something else).  Yaml is more human readable and more (git) merge-able.  If so necessary it can be translated into xml when needed.
 
-#### ./bin
+#### ./src/vtp
 
-Contains executables directly associated with the VTP repos are located in this folder.  Includes the executables necessary to tally the various contests and leverages configuration data.  For example the tally scheme for a GGO or a contest within the GGO can be configured in ./config while the actual algorithms and tally code is implemented in ./bin.
+Contains executables directly associated with the VTP repos are located in this folder.  Includes the executables necessary to tally the various contests and leverages configuration data.  For example the tally scheme for a GGO or a contest within the GGO can be configured in ./config while the actual algorithms and tally code is implemented in ./src/vtp.
 
 For a US presidential election, due to the electorial college the states tally function will mirror/implement the states electorial tally function, which is basically a summation.  However different states do it differently, and in the case of the electoral college the electors actually must vote, so the tally function non binding and perfunctory only.
 
