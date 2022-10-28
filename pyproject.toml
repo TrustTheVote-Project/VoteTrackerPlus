@@ -1,3 +1,7 @@
+[build-system]
+requires = ["poetry-core>=1.1.0"]
+build-backend = "poetry.core.masonry.api"
+
 [tool.poetry]
 name = "votetrackerplus"
 version = "0.1.0"
@@ -12,13 +16,14 @@ packages = [
 
 [tool.poetry.dependencies]
 python = "^3.8"
-pylint = "^2.15.3"
-pytest = "^7.2.0"
-pyyaml = "^6.0"
+
 networkx = "^2.8.6"
 pyinputplus = "^0.2.12"
+pyyaml = "^6.0"
 
 [tool.poetry.dev-dependencies]
+pylint = "^2.15.3"
+pytest = "^7.2.0"
 sphinx = "^5.3.0"
 
 [tool.poetry.scripts]
@@ -33,7 +38,3 @@ show-contest = "vtp.show_contest:main"
 tally-contests = "vtp.tally_contests:main"
 verify-ballot-receipt = "vtp.verify_ballot_receipt:main"
 vote = "vtp.vote:main"
-
-[build-system]
-requires = ["poetry-core>=1.1.0"]
-build-backend = "poetry.core.masonry.api"
