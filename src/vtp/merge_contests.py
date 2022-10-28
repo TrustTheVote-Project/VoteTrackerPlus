@@ -184,10 +184,14 @@ def parse_arguments():
 ################
 # main
 ################
+
+args = None
+
 # pylint: disable=duplicate-code
 def main():
     """Main function - see -h for more info"""
-
+    global args
+    args = parse_arguments()
     # Create an VTP election config object
     the_election_config = ElectionConfig()
     the_election_config.parse_configs()
@@ -250,7 +254,6 @@ def main():
     logging.info("Merged %s contest branches", merged)
 
 if __name__ == '__main__':
-    args = parse_arguments()
     main()
 
 # EOF

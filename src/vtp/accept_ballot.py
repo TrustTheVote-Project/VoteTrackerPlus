@@ -269,8 +269,13 @@ def parse_arguments():
 # main
 ################
 # pylint: disable=duplicate-code
+
+args = None
+
 def main():
     """Main function - see -h for more info"""
+    global args
+    args = parse_arguments()
 
     # Create an VTP election config object
     the_election_config = ElectionConfig()
@@ -411,5 +416,4 @@ def main():
         create_ballot_receipt(a_ballot, contest_receipts, unmerged_cvrs, the_election_config)
 
 if __name__ == '__main__':
-    args = parse_arguments()
     main()

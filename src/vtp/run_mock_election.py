@@ -246,6 +246,9 @@ def server_mockup(election_data_dir, bin_dir):
 ################
 # main
 ################
+
+args = None
+
 # pylint: disable=duplicate-code
 def main():
     """Main function - see -h for more info
@@ -264,6 +267,9 @@ def main():
     Assumes that each supplied town already has the blank ballots
     generated and/or already committed.
     """
+
+    global args
+    args = parse_arguments()
 
     # Create an VTP election config object (this will perform an early
     # check on the ElectionData)
@@ -292,7 +298,6 @@ def main():
         server_mockup(election_data_dir, bin_dir)
 
 if __name__ == '__main__':
-    args = parse_arguments()
     main()
 
 # EOF

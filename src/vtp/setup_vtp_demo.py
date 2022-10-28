@@ -130,9 +130,14 @@ def parse_arguments():
 ################
 # main
 ################
+
+args = None
+
 # pylint: disable=duplicate-code
 def main():
     """Main function - see -h for more info"""
+    global args
+    args = parse_arguments()
 
     # Check the ElectionData before creating everything
     the_election_config = ElectionConfig()
@@ -218,7 +223,6 @@ def main():
             args.printonly, verbosity=args.verbosity)
 
 if __name__ == '__main__':
-    args = parse_arguments()
     main()
 
 # EOF

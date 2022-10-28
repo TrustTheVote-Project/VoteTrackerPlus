@@ -98,9 +98,14 @@ def parse_arguments():
 ################
 # main
 ################
+
+args = None
+
 # pylint: disable=duplicate-code
 def main():
     """Main function - see -h for more info"""
+    global args
+    args = parse_arguments()
 
     # Create an VTP election config object
     the_election_config = ElectionConfig()
@@ -153,7 +158,6 @@ def main():
             logging.error("[ERROR]: %s\nContinuing with other contests ...", tally_error)
 
 if __name__ == '__main__':
-    args = parse_arguments()
     main()
 
 # EOF
