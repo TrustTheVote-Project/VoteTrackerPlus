@@ -32,10 +32,10 @@ import os
 import sys
 
 # Local import
-from utils.address import Address
-from utils.ballot import Ballot
-from utils.common import Globals, Shellout
-from utils.election_config import ElectionConfig
+from vtp.utils.address import Address
+from vtp.utils.ballot import Ballot
+from vtp.utils.common import Globals, Shellout
+from vtp.utils.election_config import ElectionConfig
 
 # Functions
 

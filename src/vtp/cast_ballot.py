@@ -36,10 +36,10 @@ import traceback
 import pyinputplus
 
 # Local imports
-from utils.address import Address
-from utils.ballot import Ballot, BlankBallot, Contests
-from utils.common import Globals, Shellout
-from utils.election_config import ElectionConfig
+from vtp.utils.address import Address
+from vtp.utils.ballot import Ballot, BlankBallot, Contests
+from vtp.utils.common import Globals, Shellout
+from vtp.utils.election_config import ElectionConfig
 
 
 ################
