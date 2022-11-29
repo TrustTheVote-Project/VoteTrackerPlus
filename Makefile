@@ -14,6 +14,26 @@ DOC_DIR  := docs
 SRC_DIR  := src/vtp
 TEST_DIR := test
 
+TOOLS_BUILD_DIR := _tools/build
+
+# Setup of pyproject.toml for builds
+
+pyproject: pyproject_poetry
+
+# Set up to build with Poetry
+pyproject_poetry:
+	@ln -s $(TOOLS_BUILD_DIR)/poetry_pyproject.toml pyproject.toml
+	@ln -s $(TOOLS_BUILD_DIR)/poetry_poetry.lock poetry.lock
+
+# Set up to build with modern Setuptools
+pyproject_setuptools:
+	@ln -s _tools/build/setuptools_pyproject.toml pyproject.toml
+
+# Set up to build with legacy Setuptools
+pyproject_setuptools_legacy:
+	@ln -s _tools/build/setuptools_legacy_pyproject.toml pyproject.toml
+	@ln -s _tools/build/setuptools_legacy_setup.cfg setup.cfg
+
 # Create the python environment files
 .PHONY: export
 export:
