@@ -72,13 +72,15 @@ def parse_arguments():
 # main
 ################
 
-args = None
+ARGS = None
 
 # pylint: disable=duplicate-code
 def main():
     """Main function - see -h for more info"""
-    global args
-    args = parse_arguments()
+
+    # pylint: disable=global-statement
+    global ARGS
+    ARGS = parse_arguments()
 
     # Create an VTP election config object
     the_election_config = ElectionConfig()
@@ -109,7 +111,7 @@ def main():
                     "And the blank ballot looks like:\n%s",
                     pprint.pformat(generic_ballot.dict()))
                 # Write it out
-                if args.printonly:
+                if ARGS.printonly:
                     ballot_file = the_election_config.gen_blank_ballot_location(
                         generic_address.active_ggos, generic_address.ballot_subdir, 'json')
                 else:

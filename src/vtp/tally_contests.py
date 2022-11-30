@@ -99,13 +99,15 @@ def parse_arguments():
 # main
 ################
 
-args = None
+ARGS = None
 
 # pylint: disable=duplicate-code
 def main():
     """Main function - see -h for more info"""
-    global args
-    args = parse_arguments()
+
+    # pylint: disable=global-statement
+    global ARGS
+    ARGS = parse_arguments()
 
     # Create an VTP election config object
     the_election_config = ElectionConfig()
@@ -117,7 +119,7 @@ def main():
     with Shellout.changed_cwd(a_ballot.get_cvr_parent_dir(the_election_config)):
         Shellout.run(
             ["git", "pull"],
-            verbosity=args.verbosity,
+            verbosity=ARGS.verbosity,
             check=True)
 
     # Will process all the CVR commits on the master branch and tally
@@ -135,8 +137,8 @@ def main():
     # everything in a separate loop.
     for contest_batch in sorted(contest_batches):
         # Maybe skip
-        if args.contest_uid != '':
-            if contest_batches[contest_batch][0]['CVR']['uid'] != args.contest_uid:
+        if ARGS.contest_uid != '':
+            if contest_batches[contest_batch][0]['CVR']['uid'] != ARGS.contest_uid:
                 continue
         # Create a Tally object for this specific contest
         the_tally = Tally(contest_batches[contest_batch][0])
@@ -151,7 +153,7 @@ def main():
         # Tally all the contests for this contest
 #        import pdb; pdb.set_trace()
         try:
-            the_tally.tallyho(contest_batches[contest_batch], args.track_contests)
+            the_tally.tallyho(contest_batches[contest_batch], ARGS.track_contests)
             # Print stuff
             the_tally.print_results()
         except TallyException as tally_error:

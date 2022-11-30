@@ -11,5 +11,7 @@ TAGS
 __pycache__
 .pytest_cache
 
-# ignore manual mock election data until it becomes a real submodule
-ElectionData
+# Ignore python local install build symlinks et al
+pyproject.toml
+poetry.lock
+.venv

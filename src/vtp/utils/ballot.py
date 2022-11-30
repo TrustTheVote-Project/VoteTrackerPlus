@@ -19,8 +19,8 @@
 
 import csv
 import json
-import os
 import logging
+import os
 
 # Local imports
 from .common import Globals

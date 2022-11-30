@@ -33,6 +33,7 @@ import pprint
 import random
 import sys
 import traceback
+
 import pyinputplus
 
 # Local imports
@@ -162,7 +163,7 @@ def loop_over_contests(a_ballot):
     contest_uids = []
     for contest in contests:
         contest_uids.append(contest.get('uid'))
-        if args.demo_mode:
+        if ARGS.demo_mode:
             make_random_selection(a_ballot, contest)
         else:
             # Display the tally type and choices and allow the user to manually
@@ -170,7 +171,7 @@ def loop_over_contests(a_ballot):
             # this demo) as that is the long-term VTP vision.
             count += 1
             get_user_selection(a_ballot, contest, count, total_contests)
-    if not args.demo_mode:
+    if not ARGS.demo_mode:
         # UX wise replicate the self adjudication experince.  This is
         # basically another endless loop until done
         while True:
@@ -235,13 +236,15 @@ def parse_arguments():
 # main
 ################
 
-args = None
+ARGS = None
 
 # pylint: disable=duplicate-code
 def main():
     """Main function - see -h for more info"""
-    global args
-    args = parse_arguments()
+
+    # pylint: disable=global-statement
+    global ARGS
+    ARGS = parse_arguments()
 
     # Create an VTP election config object
     the_election_config = ElectionConfig()
@@ -251,14 +254,14 @@ def main():
     a_ballot = BlankBallot()
 
     # process the provided address
-    if args.blank_ballot:
+    if ARGS.blank_ballot:
         # Read the specified blank_ballot
         with Shellout.changed_cwd(os.path.join(
             the_election_config.get('git_rootdir'), Globals.get('ROOT_ELECTION_DATA_SUBDIR'))):
-            a_ballot.read_a_blank_ballot('', the_election_config, args.blank_ballot)
+            a_ballot.read_a_blank_ballot('', the_election_config, ARGS.blank_ballot)
     else:
         # Use the specified address
-        the_address = Address.create_address_from_args(args,
+        the_address = Address.create_address_from_args(ARGS,
                         ['verbosity', 'printonly', 'blank_ballot', 'demo_mode'])
         the_address.map_ggos(the_election_config)
         # get the ballot for the specified address
@@ -271,7 +274,7 @@ def main():
     # verify that the ballot has been filled out correctly and offer
     # to the voter a chance to redo it.
 
-    if args.printonly:
+    if ARGS.printonly:
         ballot_file = Ballot.gen_cast_ballot_location(the_election_config,
                                                           a_ballot.get('ballot_subdir'))
     else:

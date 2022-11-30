@@ -49,7 +49,7 @@ def create_client_repos(clone_dirs, remote_path):
         with Shellout.changed_cwd(clone_dir):
             Shellout.run(
                 ['git', 'clone', '--recurse-submodules', remote_path],
-                args.printonly, verbosity=args.verbosity)
+                ARGS.printonly, verbosity=ARGS.verbosity)
             # Note - since the repo is not a bare, the ".git" suffix
             # needs to be stripped
             repo_dir_name = os.path.basename(remote_path).removesuffix('.git')
@@ -131,13 +131,15 @@ def parse_arguments():
 # main
 ################
 
-args = None
+ARGS = None
 
 # pylint: disable=duplicate-code
 def main():
     """Main function - see -h for more info"""
-    global args
-    args = parse_arguments()
+
+    # pylint: disable=global-statement
+    global ARGS
+    ARGS = parse_arguments()
 
     # Check the ElectionData before creating everything
     the_election_config = ElectionConfig()
@@ -147,30 +149,30 @@ def main():
 
     # The first subdirectory level
     for subdir in ['clients', 'local-remote-server']:
-        full_dir = os.path.join(args.location, subdir)
+        full_dir = os.path.join(ARGS.location, subdir)
         if not os.path.isdir(full_dir):
             logging.debug("creating (%s)", full_dir)
-            if not args.printonly:
+            if not ARGS.printonly:
                 os.mkdir(full_dir)
     # The client side scanner app instances
     clone_dirs = []
-    for count in range(args.scanners):
-        full_dir = os.path.join(args.location, 'clients', 'scanner.' + f"{count:02d}")
+    for count in range(ARGS.scanners):
+        full_dir = os.path.join(ARGS.location, 'clients', 'scanner.' + f"{count:02d}")
         clone_dirs.append(full_dir)
         if not os.path.isdir(full_dir):
             logging.debug("creating (%s)", full_dir)
-            if not args.printonly:
+            if not ARGS.printonly:
                 os.mkdir(full_dir)
     # The client side app server instance
-    full_dir = os.path.join(args.location, 'clients', 'server')
+    full_dir = os.path.join(ARGS.location, 'clients', 'server')
     clone_dirs.append(full_dir)
     if not os.path.isdir(full_dir):
         logging.debug("creating (%s)", full_dir)
-        if not args.printonly:
+        if not ARGS.printonly:
             os.mkdir(full_dir)
 
     # Clone the two local-remotes
-    full_dir = os.path.join(args.location, 'local-remote-server')
+    full_dir = os.path.join(ARGS.location, 'local-remote-server')
     # Get the two remotes
     with Shellout.changed_cwd(election_data_dir):
         remote_1 = Shellout.run(
@@ -183,13 +185,13 @@ def main():
     with Shellout.changed_cwd(full_dir):
         Shellout.run(
             ['git', 'clone', '--bare', remote_1],
-            args.printonly, verbosity=args.verbosity)
+            ARGS.printonly, verbosity=ARGS.verbosity)
         # Note - since the repo is a bare it has the same ".git"
         # suffix as the remote
         remote_1_path = os.path.join(full_dir, os.path.basename(remote_1))
         Shellout.run(
             ['git', 'clone', '--bare', remote_2],
-            args.printonly, verbosity=args.verbosity)
+            ARGS.printonly, verbosity=ARGS.verbosity)
 
     # Create the client repos via the outer/root repo leveraging submodules
     cloned_repos = create_client_repos(clone_dirs, remote_1_path)
@@ -202,25 +204,25 @@ def main():
     # it there as an example.
 
     # Now create a super git project to rule them all
-    with Shellout.changed_cwd(args.location):
+    with Shellout.changed_cwd(ARGS.location):
         # init it
         Shellout.run(
             ['git', 'init'],
-            args.printonly, verbosity=args.verbosity)
+            ARGS.printonly, verbosity=ARGS.verbosity)
         # add in all the created submodules
         for clone in cloned_repos:
             Shellout.run(
                 ['git', 'submodule', 'add', clone[0], clone[1]],
-                args.printonly, verbosity=args.verbosity)
+                ARGS.printonly, verbosity=ARGS.verbosity)
         # Ignore the local remote repos directory
         logging.info('Adding a .gitignore')
-        if not args.printonly:
+        if not ARGS.printonly:
             with open('.gitignore', 'w', encoding="utf8") as outfile:
                 outfile.write('# Ignore the local remote repos\n')
                 outfile.write('local-remote-server\n')
         Shellout.run(
             ['git', 'add', '.gitignore'],
-            args.printonly, verbosity=args.verbosity)
+            ARGS.printonly, verbosity=ARGS.verbosity)
 
 if __name__ == '__main__':
     main()

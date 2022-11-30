@@ -18,10 +18,10 @@
 """How to manage a VTP specific contest"""
 
 import json
+import logging
 import operator
 import re
 from fractions import Fraction
-import logging
 
 # local
 from .exceptions import TallyException

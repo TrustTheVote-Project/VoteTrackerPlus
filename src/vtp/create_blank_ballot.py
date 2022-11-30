@@ -74,13 +74,15 @@ def parse_arguments():
 # main
 ################
 
-args = None
+ARGS = None
 
 # pylint: disable=duplicate-code
 def main():
     """Main function - see -h for more info"""
-    global args
-    args = parse_arguments()
+
+    # pylint: disable=global-statement
+    global ARGS
+    ARGS = parse_arguments()
 
     # Create an VTP election config object
     the_election_config = ElectionConfig()
@@ -95,7 +97,7 @@ def main():
     # imported somehow and that each GGO for the address will also be
     # imported somehow. And all that comes later - for now just map an
     # address to a town.
-    the_address = Address.create_address_from_args(args,
+    the_address = Address.create_address_from_args(ARGS,
                     ['verbosity', 'printonly', 'language'])
     the_address.map_ggos(the_election_config)
 
@@ -116,7 +118,7 @@ def main():
     logging.debug("And the blank ballot looks like:\n%s", pprint.pformat(the_ballot.dict()))
 
     # Write it out
-    if not args.printonly:
+    if not ARGS.printonly:
         ballot_file = the_ballot.write_blank_ballot(the_election_config)
         logging.info("Blank ballot file: %s", ballot_file)
 

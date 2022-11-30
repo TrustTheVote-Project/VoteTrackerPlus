@@ -49,7 +49,7 @@ def validate_digests(digests, election_data_dir, error_digests):
     with Shellout.changed_cwd(election_data_dir):
         output_lines = Shellout.run(
             ['git', 'cat-file', '--buffer', '--batch-check=%(objectname) %(objecttype)'],
-            verbosity=args.verbosity,
+            verbosity=ARGS.verbosity,
             input=input_data,
             text=True,
             check=True,
@@ -105,13 +105,15 @@ def parse_arguments():
 # main
 ################
 
-args = None
+ARGS = None
 
 # pylint: disable=duplicate-code
 def main():
     """Main function - see -h for more info"""
-    global args
-    args = parse_arguments()
+
+    # pylint: disable=global-statement
+    global ARGS
+    ARGS = parse_arguments()
 
     # Check the ElectionData
     the_election_config = ElectionConfig()
@@ -121,26 +123,26 @@ def main():
 
     # First validate the digests
     error_digests = set()
-    validate_digests(args.contest_check, election_data_dir, error_digests)
-    valid_digests = [digest for digest in args.contest_check.split(',')
+    validate_digests(ARGS.contest_check, election_data_dir, error_digests)
+    valid_digests = [digest for digest in ARGS.contest_check.split(',')
                          if digest not in error_digests]
     # show/log the digests
     with Shellout.changed_cwd(election_data_dir):
         Shellout.run(['git', 'show', '-s'] + valid_digests, check=True)
 
 # this is a loop of shell commands
-#        for digest in args.contest_check.split(','):
+#        for digest in ARGS.contest_check.split(','):
 #            if digest not in error_digests:
 #                Shellout.run(['git', 'log', '-1', digest], check=True)
 
 # this does not work well enough either
-#        input_data = '\n'.join(args.contest_check.split(',')) + '\n'
+#        input_data = '\n'.join(ARGS.contest_check.split(',')) + '\n'
 #        Shellout.run(
 #            ['git', 'cat-file', '--batch=%(objectname)'],
 #            input=input_data,
 #            text=True,
 #            check=True,
-#            verbosity=args.verbosity)
+#            verbosity=ARGS.verbosity)
 
 if __name__ == '__main__':
     main()

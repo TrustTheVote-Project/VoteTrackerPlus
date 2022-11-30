@@ -19,12 +19,12 @@
 
 # pylint: disable=too-few-public-methods
 import json
+#  Other imports:  critical, error, warning, info, debug
+import logging
 import os
 import re
 import subprocess
 from contextlib import contextmanager
-#  Other imports:  critical, error, warning, info, debug
-import logging
 
 
 class Globals:

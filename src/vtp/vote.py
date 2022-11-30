@@ -77,13 +77,15 @@ def parse_arguments():
 # main
 ################
 
-args = None
+ARGS = None
 
 # pylint: disable=duplicate-code
 def main():
     """Main function - see -h for more info"""
-    global args
-    args = parse_arguments()
+
+    # pylint: disable=global-statement
+    global ARGS
+    ARGS = parse_arguments()
 
     # Create an VTP election config object
     the_election_config = ElectionConfig()
@@ -95,40 +97,40 @@ def main():
     with Shellout.changed_cwd(a_ballot.get_cvr_parent_dir(the_election_config)):
         Shellout.run(
             ["git", "pull"],
-            printonly=args.printonly, verbosity=args.verbosity,
+            printonly=ARGS.printonly, verbosity=ARGS.verbosity,
             check=True)
 
     # If an address was used, use that
     cast_address_args = []
     accept_address_args = []
-    if not args.blank_ballot:
-        if args.state:
-            cast_address_args += ['-s', args.state]
-            accept_address_args += ['-s', args.state]
-        if args.town:
-            cast_address_args += ['-t', args.town]
-            accept_address_args += ['-t', args.town]
-        if args.substreet:
-            cast_address_args += ['-b', args.substreet]
-        if args.address:
-            cast_address_args += ['-a', args.address]
+    if not ARGS.blank_ballot:
+        if ARGS.state:
+            cast_address_args += ['-s', ARGS.state]
+            accept_address_args += ['-s', ARGS.state]
+        if ARGS.town:
+            cast_address_args += ['-t', ARGS.town]
+            accept_address_args += ['-t', ARGS.town]
+        if ARGS.substreet:
+            cast_address_args += ['-b', ARGS.substreet]
+        if ARGS.address:
+            cast_address_args += ['-a', ARGS.address]
     else:
-        cast_address_args += ['--blank_ballot', args.blank_ballot]
-        accept_address_args += ['--blank_ballot', args.blank_ballot]
+        cast_address_args += ['--blank_ballot', ARGS.blank_ballot]
+        accept_address_args += ['--blank_ballot', ARGS.blank_ballot]
 
     # Basically only do as little as necessary to call cast_ballot.py
     # followed by accept_ballot.py
     bin_dir = os.path.join(the_election_config.get('git_rootdir'), Globals.get('BIN_DIR'))
     # Cast a ballot
     Shellout.run(
-        [os.path.join(bin_dir, 'cast_ballot.py'), '-v', args.verbosity]
-        + cast_address_args + (['-n'] if args.printonly else []),
+        [os.path.join(bin_dir, 'cast_ballot.py'), '-v', ARGS.verbosity]
+        + cast_address_args + (['-n'] if ARGS.printonly else []),
         check=True, no_touch_stds=True, timeout=None)
     # Accept the ballot
     Shellout.run(
-        [os.path.join(bin_dir, 'accept_ballot.py'), '-v', args.verbosity]
-        + accept_address_args + (['-n'] if args.printonly else [])
-        + (['-m'] if args.merge_contests else []),
+        [os.path.join(bin_dir, 'accept_ballot.py'), '-v', ARGS.verbosity]
+        + accept_address_args + (['-n'] if ARGS.printonly else [])
+        + (['-m'] if ARGS.merge_contests else []),
         check=True, no_touch_stds=True, timeout=None)
 
 if __name__ == '__main__':
