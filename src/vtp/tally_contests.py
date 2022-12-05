@@ -34,11 +34,11 @@ import re
 import sys
 
 # Local import
-from utils.ballot import Ballot
-from utils.common import Shellout
-from utils.contest import Tally
-from utils.election_config import ElectionConfig
-from utils.exceptions import TallyException
+from vtp.utils.ballot import Ballot
+from vtp.utils.common import Shellout
+from vtp.utils.contest import Tally
+from vtp.utils.election_config import ElectionConfig
+from vtp.utils.exceptions import TallyException
 
 # Functions
 
@@ -98,9 +98,16 @@ def parse_arguments():
 ################
 # main
 ################
+
+ARGS = None
+
 # pylint: disable=duplicate-code
 def main():
     """Main function - see -h for more info"""
+
+    # pylint: disable=global-statement
+    global ARGS
+    ARGS = parse_arguments()
 
     # Create an VTP election config object
     the_election_config = ElectionConfig()
@@ -112,7 +119,7 @@ def main():
     with Shellout.changed_cwd(a_ballot.get_cvr_parent_dir(the_election_config)):
         Shellout.run(
             ["git", "pull"],
-            verbosity=args.verbosity,
+            verbosity=ARGS.verbosity,
             check=True)
 
     # Will process all the CVR commits on the master branch and tally
@@ -130,8 +137,8 @@ def main():
     # everything in a separate loop.
     for contest_batch in sorted(contest_batches):
         # Maybe skip
-        if args.contest_uid != '':
-            if contest_batches[contest_batch][0]['CVR']['uid'] != args.contest_uid:
+        if ARGS.contest_uid != '':
+            if contest_batches[contest_batch][0]['CVR']['uid'] != ARGS.contest_uid:
                 continue
         # Create a Tally object for this specific contest
         the_tally = Tally(contest_batches[contest_batch][0])
@@ -146,14 +153,13 @@ def main():
         # Tally all the contests for this contest
 #        import pdb; pdb.set_trace()
         try:
-            the_tally.tallyho(contest_batches[contest_batch], args.track_contests)
+            the_tally.tallyho(contest_batches[contest_batch], ARGS.track_contests)
             # Print stuff
             the_tally.print_results()
         except TallyException as tally_error:
             logging.error("[ERROR]: %s\nContinuing with other contests ...", tally_error)
 
 if __name__ == '__main__':
-    args = parse_arguments()
     main()
 
 # EOF

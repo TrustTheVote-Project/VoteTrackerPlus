@@ -36,10 +36,10 @@ import sys
 import time
 
 # Local import
-from utils.address import Address
-from utils.ballot import Ballot
-from utils.common import Globals, Shellout
-from utils.election_config import ElectionConfig
+from vtp.utils.address import Address
+from vtp.utils.ballot import Ballot
+from vtp.utils.common import Globals, Shellout
+from vtp.utils.election_config import ElectionConfig
 
 # Functions
 
@@ -134,66 +134,66 @@ def scanner_mockup(election_data_dir, bin_dir, ballot):
     if not blank_ballots:
         raise ValueError("found no blank ballots to cast")
     merge_contests = os.path.join(bin_dir, 'merge_contests.py')
-    for count in range(args.iterations):
+    for count in range(ARGS.iterations):
         for blank_ballot in blank_ballots:
             logging.debug(
                 "Iteration %s of %s - processing %s",
-                count, args.iterations, blank_ballot)
+                count, ARGS.iterations, blank_ballot)
             # - cast a ballot
 #            import pdb; pdb.set_trace()
             with Shellout.changed_cwd(election_data_dir):
                 Shellout.run(
                     ['git', 'pull'],
-                    printonly=args.printonly, verbosity=args.verbosity,
+                    printonly=ARGS.printonly, verbosity=ARGS.verbosity,
                     no_touch_stds=True, timeout=None, check=True)
             Shellout.run(
                 [os.path.join(bin_dir, 'cast_ballot.py'), '--blank_ballot=' + blank_ballot,
-                     '--demo_mode', '-v', args.verbosity],
-                printonly=args.printonly, no_touch_stds=True,
+                     '--demo_mode', '-v', ARGS.verbosity],
+                printonly=ARGS.printonly, no_touch_stds=True,
                 timeout=None, check=True)
             # - accept the ballot
             Shellout.run(
                 [os.path.join(bin_dir, 'accept_ballot.py'),
                      '--cast_ballot=' + Ballot.get_cast_from_blank(blank_ballot),
-                     '-v', args.verbosity],
-                printonly=args.printonly, no_touch_stds=True, timeout=None, check=True)
-            if args.device == 'both':
+                     '-v', ARGS.verbosity],
+                printonly=ARGS.printonly, no_touch_stds=True, timeout=None, check=True)
+            if ARGS.device == 'both':
                 # - merge the ballot's contests
-                if args.flush_mode == 2:
+                if ARGS.flush_mode == 2:
                     # Since casting and merging is basically
                     # synchronous, no need for an extra large timeout
                     Shellout.run(
-                        [merge_contests, '-f', '-v', args.verbosity],
-                        printonly=args.printonly,
+                        [merge_contests, '-f', '-v', ARGS.verbosity],
+                        printonly=ARGS.printonly,
                         no_touch_stds=True, timeout=None, check=True)
                 else:
                     # Should only need to merge one ballot worth of
                     # contests - also no need for an extra large
                     # timeout
                     Shellout.run(
-                        [merge_contests, '-m', args.minimum_cast_cache,
-                             '-v', args.verbosity],
-                        printonly=args.printonly,
+                        [merge_contests, '-m', ARGS.minimum_cast_cache,
+                             '-v', ARGS.verbosity],
+                        printonly=ARGS.printonly,
                         no_touch_stds=True, timeout=None, check=True)
                 # don't let too much garbage build up
                 if count % 10 == 9:
                     Shellout.run(
-                        ['git', 'gc'], printonly=args.printonly,
-                        verbosity=args.verbosity, no_touch_stds=True, timeout=None,
+                        ['git', 'gc'], printonly=ARGS.printonly,
+                        verbosity=ARGS.verbosity, no_touch_stds=True, timeout=None,
                         check=True)
-    if args.device == 'both':
+    if ARGS.device == 'both':
         # merge the remaining contests
         # Note - this needs a longer timeout as it can take many seconds
         Shellout.run(
-            [merge_contests, '-f', '-v', args.verbosity], printonly=args.printonly,
+            [merge_contests, '-f', '-v', ARGS.verbosity], printonly=ARGS.printonly,
             no_touch_stds=True, timeout=None, check=True)
         # tally the contests
         Shellout.run(
-            [os.path.join(bin_dir, 'tally_contests.py'), '-v', args.verbosity],
-            printonly=args.printonly, no_touch_stds=True, timeout=None, check=True)
+            [os.path.join(bin_dir, 'tally_contests.py'), '-v', ARGS.verbosity],
+            printonly=ARGS.printonly, no_touch_stds=True, timeout=None, check=True)
     # clean up git just in case
     Shellout.run(
-        ['git', 'gc'], printonly=args.printonly, verbosity=args.verbosity,
+        ['git', 'gc'], printonly=ARGS.printonly, verbosity=ARGS.verbosity,
         no_touch_stds=True, timeout=None, check=True)
 
 def server_mockup(election_data_dir, bin_dir):
@@ -209,43 +209,46 @@ def server_mockup(election_data_dir, bin_dir):
     tally_contests = os.path.join(bin_dir, 'tally_contests.py')
     while True:
         with Shellout.changed_cwd(election_data_dir):
-            Shellout.run(['git', 'pull'], args.printonly,
-            args.verbosity, no_touch_stds=True, timeout=None, check=True)
-        if args.flush_mode == 2:
+            Shellout.run(['git', 'pull'], ARGS.printonly,
+            ARGS.verbosity, no_touch_stds=True, timeout=None, check=True)
+        if ARGS.flush_mode == 2:
             Shellout.run(
-                [merge_contests, '-r', '-f', '-v', args.verbosity],
-                printonly=args.printonly,
+                [merge_contests, '-r', '-f', '-v', ARGS.verbosity],
+                printonly=ARGS.printonly,
                 no_touch_stds=True, timeout=None, check=True)
             Shellout.run(
-                [tally_contests, '-v', args.verbosity],
-                printonly=args.printonly,
+                [tally_contests, '-v', ARGS.verbosity],
+                printonly=ARGS.printonly,
                 no_touch_stds=True, timeout=None, check=True)
             return
         Shellout.run(
-            [merge_contests, '-r', '-m', args.minimum_cast_cache, '-v',
-                 args.verbosity], printonly=args.printonly,
+            [merge_contests, '-r', '-m', ARGS.minimum_cast_cache, '-v',
+                 ARGS.verbosity], printonly=ARGS.printonly,
             no_touch_stds=True, timeout=None, check=True)
         logging.info("Sleeping for 10")
         time.sleep(10)
         elapsed_time = time.time() - start_time
         if elapsed_time > seconds:
             break
-    if args.flush_mode in [1, 2]:
+    if ARGS.flush_mode in [1, 2]:
         print("Cleaning up remaining unmerged ballots")
         Shellout.run(
-            [merge_contests, '-r', '-f', '-v', args.verbosity],
-            printonly=args.printonly,
+            [merge_contests, '-r', '-f', '-v', ARGS.verbosity],
+            printonly=ARGS.printonly,
             no_touch_stds=True, timeout=None, check=True)
     # tally the contests
     Shellout.run(
-        [tally_contests, '-v', args.verbosity],
-        printonly=args.printonly,
+        [tally_contests, '-v', ARGS.verbosity],
+        printonly=ARGS.printonly,
         no_touch_stds=True, timeout=None, check=True)
 
 
 ################
 # main
 ################
+
+ARGS = None
+
 # pylint: disable=duplicate-code
 def main():
     """Main function - see -h for more info
@@ -265,6 +268,10 @@ def main():
     generated and/or already committed.
     """
 
+    # pylint: disable=global-statement
+    global ARGS
+    ARGS = parse_arguments()
+
     # Create an VTP election config object (this will perform an early
     # check on the ElectionData)
     the_election_config = ElectionConfig()
@@ -273,26 +280,25 @@ def main():
         the_election_config.get('git_rootdir'), Globals.get('ROOT_ELECTION_DATA_SUBDIR'))
 
     # If an address was used, use that
-    if args.address or args.state or args.town or args.substreet:
+    if ARGS.address or ARGS.state or ARGS.town or ARGS.substreet:
         the_address = Address.create_address_from_args(
-            args, ['blank_ballot', 'device', 'minimum_cast_cache', 'flush_mode',
+            ARGS, ['blank_ballot', 'device', 'minimum_cast_cache', 'flush_mode',
                        'iterations', 'verbosity', 'printonly'])
         the_address.map_ggos(the_election_config)
         blank_ballot = the_election_config.gen_blank_ballot_location(
             the_address.active_ggos, the_address.ballot_subdir)
-    elif args.blank_ballot:
-        blank_ballot = args.blank_ballot
+    elif ARGS.blank_ballot:
+        blank_ballot = ARGS.blank_ballot
 
     # Eventually need the bin dir as well
     bin_dir = os.path.join(the_election_config.get('git_rootdir'), Globals.get('BIN_DIR'))
     # the VTP scanner mock simulation
-    if args.device in ['scanner', 'both']:
+    if ARGS.device in ['scanner', 'both']:
         scanner_mockup(election_data_dir, bin_dir, blank_ballot)
     else:
         server_mockup(election_data_dir, bin_dir)
 
 if __name__ == '__main__':
-    args = parse_arguments()
     main()
 
 # EOF

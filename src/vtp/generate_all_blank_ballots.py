@@ -34,9 +34,9 @@ import pprint
 import sys
 
 # Local import
-from utils.address import Address
-from utils.ballot import BlankBallot
-from utils.election_config import ElectionConfig
+from vtp.utils.address import Address
+from vtp.utils.ballot import BlankBallot
+from vtp.utils.election_config import ElectionConfig
 
 # Functions
 
@@ -71,9 +71,16 @@ def parse_arguments():
 ################
 # main
 ################
+
+ARGS = None
+
 # pylint: disable=duplicate-code
 def main():
     """Main function - see -h for more info"""
+
+    # pylint: disable=global-statement
+    global ARGS
+    ARGS = parse_arguments()
 
     # Create an VTP election config object
     the_election_config = ElectionConfig()
@@ -104,7 +111,7 @@ def main():
                     "And the blank ballot looks like:\n%s",
                     pprint.pformat(generic_ballot.dict()))
                 # Write it out
-                if args.printonly:
+                if ARGS.printonly:
                     ballot_file = the_election_config.gen_blank_ballot_location(
                         generic_address.active_ggos, generic_address.ballot_subdir, 'json')
                 else:
@@ -113,5 +120,4 @@ def main():
 #                import pdb; pdb.set_trace()
 
 if __name__ == '__main__':
-    args = parse_arguments()
     main()

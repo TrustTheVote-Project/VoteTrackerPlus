@@ -37,8 +37,8 @@ import re
 import sys
 
 # Local import
-from utils.common import Globals, Shellout
-from utils.election_config import ElectionConfig
+from vtp.utils.common import Globals, Shellout
+from vtp.utils.election_config import ElectionConfig
 
 
 # Functions
@@ -49,7 +49,7 @@ def merge_contest_branch(branch):
     # locations on different branches.
     contest_file = Shellout.run(
         ['git', 'diff-tree', '--no-commit-id', '-r', '--name-only', branch],
-        verbosity=args.verbosity,
+        verbosity=ARGS.verbosity,
         capture_output=True, text=True, check=True).stdout.strip()
     # 2022/06/09: witnessed the above line returning no files several
     # times in an ElectionData repo where I was debugging things. So
@@ -65,7 +65,7 @@ def merge_contest_branch(branch):
     # so this command will always return non zero
     Shellout.run(
         ['git', 'merge', '--no-ff', '--no-commit', branch],
-        printonly=args.printonly, verbosity=args.verbosity)
+        printonly=ARGS.printonly, verbosity=ARGS.verbosity)
     # ZZZ - replace this with an run-time cryptographic value
     # derived from the run-time election private key (diffent from
     # the git commit run-time value).  This will basically slam
@@ -73,11 +73,11 @@ def merge_contest_branch(branch):
     # (the first one being contained in the commit itself).
     result = Shellout.run(
         ['openssl',  'rand', '-base64',  '48'],
-        verbosity=args.verbosity,
+        verbosity=ARGS.verbosity,
         capture_output=True, text=True, check=True)
     if result.stdout == '':
         raise ValueError("'openssl rand' should never return an empty string")
-    if not args.printonly:
+    if not ARGS.printonly:
         # ZZZ need to convert the digest to json format ...
         with open(contest_file, 'w', encoding="utf8") as outfile:
             # Write a runtime digest as the actual contents of the
@@ -86,25 +86,25 @@ def merge_contest_branch(branch):
     # Force the git add just in case
     Shellout.run(
         ['git', 'add', contest_file],
-        printonly=args.printonly, verbosity=args.verbosity, check=True)
+        printonly=ARGS.printonly, verbosity=ARGS.verbosity, check=True)
     # Note - apparently git place the commit msg on STDERR - hide it
     Shellout.run(
         ['git', 'commit', '-m', 'auto commit - thank you for voting'],
-        printonly=args.printonly, verbosity=1, check=True)
-    Shellout.run(['git', 'push', 'origin', 'master'], args.printonly, check=True)
+        printonly=ARGS.printonly, verbosity=1, check=True)
+    Shellout.run(['git', 'push', 'origin', 'master'], ARGS.printonly, check=True)
     # Delete the local and remote branch if this is a local branch
-    if not args.remote:
+    if not ARGS.remote:
         Shellout.run(
             ['git', 'push', 'origin', '-d', branch],
-            printonly=args.printonly, verbosity=args.verbosity, check=True)
+            printonly=ARGS.printonly, verbosity=ARGS.verbosity, check=True)
         Shellout.run(
             ['git', 'branch', '-d', branch],
-            printonly=args.printonly, verbosity=args.verbosity, check=True)
+            printonly=ARGS.printonly, verbosity=ARGS.verbosity, check=True)
     else:
         # otherwise just delete the remote
         Shellout.run(
             ['git', 'push', 'origin', '-d', branch.removeprefix('origin/')],
-            printonly=args.printonly, verbosity=args.verbosity, check=True)
+            printonly=ARGS.printonly, verbosity=ARGS.verbosity, check=True)
 
 def randomly_merge_contests(uid, batch):
     """
@@ -114,14 +114,14 @@ def randomly_merge_contests(uid, batch):
 
     This is the git merge-to-master sequence.
     """
-    if len(batch) <= args.minimum_cast_cache:
-        if args.flush:
+    if len(batch) <= ARGS.minimum_cast_cache:
+        if ARGS.flush:
             count = len(batch)
         else:
             logging.info("Contest %s not merged - only %s available", uid, len(batch))
             return 0
     else:
-        count = len(batch) - args.minimum_cast_cache
+        count = len(batch) - ARGS.minimum_cast_cache
     loop = count
     logging.info("Merging %s contests for contest %s", count, uid)
     while loop:
@@ -184,10 +184,16 @@ def parse_arguments():
 ################
 # main
 ################
+
+ARGS = None
+
 # pylint: disable=duplicate-code
 def main():
     """Main function - see -h for more info"""
 
+    # pylint: disable=global-statement
+    global ARGS
+    ARGS = parse_arguments()
     # Create an VTP election config object
     the_election_config = ElectionConfig()
     the_election_config.parse_configs()
@@ -208,22 +214,22 @@ def main():
         # Pull the remote
         Shellout.run(
             ["git", "pull"],
-            printonly=args.printonly, verbosity=args.verbosity, check=True)
-        if args.branch:
-            merge_contest_branch(args.branch)
-            logging.info("Merged '%s'", args.branch)
+            printonly=ARGS.printonly, verbosity=ARGS.verbosity, check=True)
+        if ARGS.branch:
+            merge_contest_branch(ARGS.branch)
+            logging.info("Merged '%s'", ARGS.branch)
             return
         # Get the pending CVR branches
         cmds = ['git', 'branch']
         cvr_regex = f"{Globals.get('CONTEST_FILE_SUBDIR')}/([^/]+?)/"
-        if args.remote:
+        if ARGS.remote:
             cmds.append('-r')
             cvr_regex = "^origin/" + cvr_regex
         else:
             cvr_regex = "^" + cvr_regex
         # Note - the re.search will strip non CVRs lines
         cvr_branches = [branch.strip() for branch in Shellout.run(
-            cmds, verbosity=args.verbosity, check=True, capture_output=True,
+            cmds, verbosity=ARGS.verbosity, check=True, capture_output=True,
             text=True).stdout.splitlines() if re.search(cvr_regex, branch.strip())]
         # Note - sorted alphanumerically on contest UID. Loop over
         # contests and randomly merge extras
@@ -250,7 +256,6 @@ def main():
     logging.info("Merged %s contest branches", merged)
 
 if __name__ == '__main__':
-    args = parse_arguments()
     main()
 
 # EOF

@@ -33,13 +33,15 @@ import os
 import random
 import secrets
 import sys
-#import uuid
 
 # Local import
-from utils.address import Address
-from utils.ballot import Ballot, Contests
-from utils.common import Globals, Shellout
-from utils.election_config import ElectionConfig
+from vtp.utils.address import Address
+from vtp.utils.ballot import Ballot, Contests
+from vtp.utils.common import Globals, Shellout
+from vtp.utils.election_config import ElectionConfig
+
+#import uuid
+
 
 
 # Functions
@@ -79,14 +81,14 @@ def checkout_new_contest_branch(contest, ref_branch):
     for _ in [0, 1, 2]:
         cmd1 = Shellout.run(
             ["git", "checkout", "-b", branch, branchpoint],
-            printonly=args.printonly,
-            verbosity=args.verbosity)
+            printonly=ARGS.printonly,
+            verbosity=ARGS.verbosity)
         if cmd1.returncode == 0:
             # Created the local branch - see if it is push-able
             cmd2 = Shellout.run(
                 ["git", "push", "-u", "origin", branch],
-                printonly=args.printonly,
-                verbosity=args.verbosity)
+                printonly=ARGS.printonly,
+                verbosity=ARGS.verbosity)
             if cmd2.returncode == 0:
                 # success
                 return branch
@@ -94,10 +96,10 @@ def checkout_new_contest_branch(contest, ref_branch):
             # local branch and try again
             Shellout.run(
                 ["git", "checkout", current_branch],
-                check=True, printonly=args.printonly, verbosity=args.verbosity)
+                check=True, printonly=ARGS.printonly, verbosity=ARGS.verbosity)
             Shellout.run(
                 ["git", "branch", "-D", branch],
-                check=True, printonly=args.printonly, verbosity=args.verbosity)
+                check=True, printonly=ARGS.printonly, verbosity=ARGS.verbosity)
         # At this point the local did not get created - try again
         branch = contest.get('uid') + "/" + secrets.token_hex(5)
 
@@ -124,7 +126,7 @@ def get_unmerged_contests(config):
     return Shellout.cvr_parse_git_log_output(
         ['git', 'log', '--no-walk', '--pretty=format:%H%B'] + head_commits,
         config,
-        verbosity=args.verbosity - 1)
+        verbosity=ARGS.verbosity - 1)
 
 def get_cloaked_contests(contest, branch):
     """Return a list of N cloaked cast CVRs for the specified contest.
@@ -151,15 +153,15 @@ def contest_add_and_commit(branch):
     contest_file = os.path.join(
         Globals.get('CONTEST_FILE_SUBDIR'), Globals.get('CONTEST_FILE'))
     Shellout.run(
-        ['git', 'add', contest_file], printonly=args.printonly,
-        verbosity=args.verbosity)
+        ['git', 'add', contest_file], printonly=ARGS.printonly,
+        verbosity=ARGS.verbosity)
     # Note - apparently git place the commit msg on STDERR - hide it
     Shellout.run(
         ['git', 'commit', '-F', contest_file],
-        printonly=args.printonly, verbosity=1)
+        printonly=ARGS.printonly, verbosity=1)
     # Capture the digest
     digest = Shellout.run(['git', 'log', branch, '-1', '--pretty=format:%H'],
-                     printonly=args.printonly,
+                     printonly=ARGS.printonly,
                      check=True, capture_output=True, text=True).stdout.strip()
     return digest
 
@@ -269,8 +271,15 @@ def parse_arguments():
 # main
 ################
 # pylint: disable=duplicate-code
+
+ARGS = None
+
 def main():
     """Main function - see -h for more info"""
+
+    # pylint: disable=global-statement
+    global ARGS
+    ARGS = parse_arguments()
 
     # Create an VTP election config object
     the_election_config = ElectionConfig()
@@ -282,15 +291,15 @@ def main():
     # Note - accept_ballot.py currently only deals with generic
     # addresses since all cast ballots, regardless of active ggos, end
     # up in the same spot, nominally in the town subfolder.
-    if args.cast_ballot:
+    if ARGS.cast_ballot:
         # Read the specified cast_ballot
         with Shellout.changed_cwd(os.path.join(
             the_election_config.get('git_rootdir'), Globals.get('ROOT_ELECTION_DATA_SUBDIR'))):
-            a_ballot.read_a_cast_ballot('', the_election_config, args.cast_ballot)
+            a_ballot.read_a_cast_ballot('', the_election_config, ARGS.cast_ballot)
     else:
         # Use the specified address
         the_address = Address.create_address_from_args(
-            args,
+            ARGS,
             ['verbosity', 'printonly', 'cast_ballot', 'merge_contests'],
             generic_address=True)
         the_address.map_ggos(the_election_config, skip_ggos=True)
@@ -366,15 +375,15 @@ def main():
         for branch in branches:
             Shellout.run(
                 ['git', 'push', 'origin', branch],
-                printonly=args.printonly, verbosity=args.verbosity)
+                printonly=ARGS.printonly, verbosity=ARGS.verbosity)
             # Delete the local as they build up too much.  The local
             # reflog keeps track of the local branches
             Shellout.run(
                 ['git', 'branch', '-d', branch],
-                printonly=args.printonly, verbosity=args.verbosity)
+                printonly=ARGS.printonly, verbosity=ARGS.verbosity)
 
     # If in demo mode, optionally merge the branches
-    if args.merge_contests:
+    if ARGS.merge_contests:
         bin_dir = os.path.join(the_election_config.get('git_rootdir'), Globals.get('BIN_DIR'))
         for branch in branches:
             # Merge the branch (but since the local branch should be
@@ -382,9 +391,9 @@ def main():
             # 'origin' is already hardcoded in several places and
             # 'remotes' is enough of a constant for this.
             Shellout.run(
-                [os.path.join(bin_dir, 'merge_contests.py'), '-v', args.verbosity,
+                [os.path.join(bin_dir, 'merge_contests.py'), '-v', ARGS.verbosity,
                      '-b', 'remotes/origin/' + branch, '-r']
-                + (['-n'] if args.printonly else []),
+                + (['-n'] if ARGS.printonly else []),
                 check=True, no_touch_stds=True, timeout=None)
 
     logging.debug("Ballot's digests:\n%s", contest_receipts)
@@ -411,5 +420,4 @@ def main():
         create_ballot_receipt(a_ballot, contest_receipts, unmerged_cvrs, the_election_config)
 
 if __name__ == '__main__':
-    args = parse_arguments()
     main()
