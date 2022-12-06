@@ -57,6 +57,12 @@ Then build VTP as follows:
     $ poetry install
 ```
 
+There is a makefile rule for this step if you know what that is and can run it:
+
+```
+    $ make poetry-build
+```
+
 ### 2.2) Build with Setuptools
 
 If you are running on older systems installed since 2019 (including Ubuntu 20.04 without upgrades) or are otherwise limited to Setuptools, after activating the virtual environment use Pip to see if you have Setuptools:
@@ -86,6 +92,12 @@ Then build VTP as follows:
     $ pip install --editable .
 ```
 
+Note - there is a makefile rule for this step if you know what that is and can run it:
+
+```
+    $ make setuptools-build
+```
+
 _Note_: Don't leave the `.` off of the `pip install .`
 
 If you can't upgrade Setuptools for any reason, then you should build as follows:
@@ -98,11 +110,16 @@ If you can't upgrade Setuptools for any reason, then you should build as follows
     $ pip install --editable .
 ```
 
+Note - there is a makefile rule for this step if you know what that is and can run it:
+
+```
+    $ make setuptools-legacy-build
+```
 ## 3) Concepts
 
 - **Editable installs**
 
-    Python editable installs ensure that all import statements, both inside the project and in external packages point to the same python files, and make it so that all paths and scripts just work.
+    Python editable installs ensure that all import statements, both inside the project and in external packages point to the same python files, and make it so that all paths and scripts just work.  Note that is all per python environment.  Multiple python environments work as expected but that level of sophistication is not described here.
 
     Editable installs are usually run with Pip:
 
