@@ -436,6 +436,8 @@ class Tally:
         selection choice (if there is one)
         """
         logging.info("RCV: round %s", this_round)
+        # ZZZ - VTP is not yet defining a logger and still using RootLogger
+        loglevel = re.search(r'\((.+)\)', str(logging.getLogger())).group(1)
         # Safety check
         if this_round > 64:
             raise TallyException("RCV rounds exceeded safety limit of 64 rounds")
@@ -468,12 +470,13 @@ class Tally:
                     # set-in-stone ordering w.r.t. selection
                     new_choice_name = self.select_name_from_choices(new_selection)
                     self.selection_counts[new_choice_name] += 1
-                    if digest in checks:
+#                    import pdb; pdb.set_trace()
+                    if digest in checks or loglevel == 'DEBUG':
                         logging.info(
                             "RCV: %s (contest=%s) last place pop and count (%s -> %s)",
                             digest, contest['name'], last_place_name, new_choice_name)
                 else:
-                    if digest in checks:
+                    if digest in checks or loglevel == 'DEBUG':
                         logging.info(
                             "RCV: %s (contest=%s) last place pop and drop (%s -> BLANK)",
                             digest, contest['name'], last_place_name)
