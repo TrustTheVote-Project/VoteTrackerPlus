@@ -94,11 +94,25 @@ $ cd VTP-mock-election.US.10/VoteTrackerPlus
 
 Each VTP election data repository, mock or otherwise, represents a different election.  An election data repo may be already configured, or may be of a past election, or may be a test/mock election.  The VTP-mock-election.US.10 election data repo is a test/mock election.
 
-### 4.3) Activate the python environment
+### 4.3) Create a python environment in which to run VTP
 
-See [_tools/build/README.md](_tools/build/README.md) for directions of how to set up a python environment and perform a local install so that the VoteTrackerPlus scripts contained in the repo can properly when the python environment is activated.
+See [_tools/build/README.md](../../_tools/build/README.md) for directions of how to set up a python environment and perform a local install so that the VoteTrackerPlus scripts contained in the repo can properly when the python environment is activated.
 
-### 4.4) Running a mock election
+### 4.4) Activate the python environment
+
+If using poetry, from the same root of the VoteTrackerPlus git repo:
+
+```bash
+$ poetry shell
+```
+
+If using conda:
+
+```bash
+$ conda activate vtp.01
+```
+
+### 4.5) Running a mock election
 
 To run a mock election, run the setup_vtp_demo.py script (which per python's local install described above is installed in the python environment as _setup-vtp-demo_).  This script will nominally create a mock election with four VTP scanner _apps_ and one VTP local-remote server _app_ as if all ballots were being cast in a single voting center with four separate and independent ballot scanners.  By default it will place the git repos in /opt/VotetrackerPlus with the 5 clients (the four scanner apps and one server app) in the _clients_ folder with the two local git upstream bare repositories in the _local-remote-server_ folder.
 
@@ -260,7 +274,7 @@ Contest US president (uid=0000):
 ```
 FYI - with -v4 and RCV contests, how each specific voter's ranked choice selection gets re-directed from their last place loosing candidate to their next choice candidate is printed, offering full transparency to RVC contests.  See [../../docs/E2EV.md][E2EV.md] for more details.
 
-### 4.5) Development cycle
+### 4.6) Development cycle
 
 New development should use a feature branch directly in this repo.  New ElectionData repositories can be created at will.  Signed commits are required in both repos.
 

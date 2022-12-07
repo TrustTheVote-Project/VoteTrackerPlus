@@ -57,7 +57,7 @@ Then build VTP as follows:
     $ poetry install
 ```
 
-There is a makefile rule for this step if you know what that is and can run it:
+There is a makefile at the root of the git repo that can run this local install build:
 
 ```
     $ make poetry-build
@@ -83,6 +83,8 @@ If Setuptools is present but not >= 64.0.0, use Pip to upgrade it:
     $ pip install --upgrade setuptools
 ```
 
+#### 2.2a) Build with Current/Recent Setuptools
+
 Then build VTP as follows:
 
 ```
@@ -92,13 +94,13 @@ Then build VTP as follows:
     $ pip install --editable .
 ```
 
-Note - there is a makefile rule for this step if you know what that is and can run it:
+__Note__: Don't leave the `.` off of the `pip install .`  There is also a makefile at the root of the git repo that can run this local install build:
 
 ```
     $ make setuptools-build
 ```
 
-_Note_: Don't leave the `.` off of the `pip install .`
+#### 2.2b) Build with Legacy Setuptools
 
 If you can't upgrade Setuptools for any reason, then you should build as follows:
 
@@ -110,8 +112,8 @@ If you can't upgrade Setuptools for any reason, then you should build as follows
     $ pip install --editable .
 ```
 
-Note - there is a makefile rule for this step if you know what that is and can run it:
-
+There is a makefile at the root of the git repo that can run this local install build:
+ 
 ```
     $ make setuptools-legacy-build
 ```
