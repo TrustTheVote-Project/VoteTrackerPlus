@@ -4,17 +4,23 @@ A Summary of VoteTracker+ from the point of view of a typical voter
  
 ## 1) Background - Understanding Two Things First
 
-To understand VoteTracker+ the voter needs to understand two (only two) fundamental aspects of election systems, namely [Cast Vote Records][Cast Vote Record] (CVRs) and End-to-End-Verification (E2EV).  A Cast Vote Record is an electronic record of a voter's ballot selections.  It is typically generated when the voter places their ballot in the ballot scanner and can be thought of the automatic/optical interpretation of the voter's choices for each contest on the ballot.  If the ballot contains 10 contests, then depending on the scanner manufacturer there could be one CVR per ballot with each CVR containing 10 contest selections.  Or, depending on the manufacturer the scanner could generate 10 separate CVRs per ballot each representing one contest.  The primary purpose of the CVR is to provide a record of voter selections that can be counted in an efficient manner to produce election results.  An important and additional use of the CVRs is to provide a audit check on the paper ballots and vice versa.
+To understand VoteTracker+ the voter needs to understand two (only two) fundamental aspects of election systems, namely [Cast Vote Records][Cast Vote Record] and End-to-End-Verification.
+
+### 1.1) Cast Vote Records (CVRs)
+
+A Cast Vote Record is an electronic record of a voter's ballot selections.  It is typically generated when the voter places their ballot in the ballot scanner and can be thought of the automatic/optical interpretation of the voter's choices for each contest on the ballot.  If the ballot contains 10 contests, then depending on the scanner manufacturer there could be one CVR per ballot with each CVR containing 10 contest selections.  Or, depending on the manufacturer the scanner could generate 10 separate CVRs per ballot each representing one contest.  The primary purpose of the CVR is to provide a record of voter selections that can be counted in an efficient manner to produce election results.  An important and additional use of the CVRs is to provide a audit check on the paper ballots and vice versa.
 
 All modern and approved paper based ballot scanners basically perform this function - they optically scan the voter's paper ballot creating a CVR for each contest which can then be automatically tallied.  This step is at the heart of current paper based voting systems and to understand VoteTracker+, one needs to understand this.
 
-The second concept is End-to-End-Verification (E2EV).  This is the capability of the election system to provide back to the voter themselves the following three proofs or properties:
+### 1.2) End-to-End-Verification (E2EV)
 
-- Cast as Intended: Allow voters to confirm the voting system correctly interpreted their ballot selections while in the polling place via a receipt and provide evidence such that if there is an error or flaw in the interpretation of the voters’ selections.
-- Recorded as Cast: Allow voters to verify that their cast ballots were accurately recorded by the voting system and included in the public records of encoded ballots.
-- Tallied as Recorded: Provide a publicly verifiable tabulation process from the public records of encoded ballots.
+The second concept is E2EV - this is the capability of the election system to provide back to the voter themselves the following three proofs or properties:
 
-The conflict between the fact that the CVR content needs to remain anonymous while also needing to be correctly identified back to the specific voter has made supplying E2EV challenging.  There have only been a few solutions so far, all requiring the CVR contents to be encrypted.
+- __Cast as Intended__: Allow voters to confirm the voting system correctly interpreted their ballot selections while in the polling place via a receipt and provide evidence such that if there is an error or flaw in the interpretation of the voters’ selections.
+- __Recorded as Cast__: Allow voters to verify that their cast ballots were accurately recorded by the voting system and included in the public records of encoded ballots.
+- __Tallied as Recorded__: Provide a publicly verifiable tabulation process from the public records of encoded ballots.
+
+The conflict between the fact that the CVR content needs to remain anonymous while also needing to be correctly identified back to the specific voter has made supplying E2EV historically challenging.  There have only been a few solutions so far, all requiring the CVR contents to be encrypted.
 
 Up until VoteTracker+ that is ...
 
