@@ -194,6 +194,19 @@ Read about editable installs:
 
     Defines the API providing portable editable installs between build backends.
 
+As one additional TL;DR note - though the [PEP 660][pep-660] describes the VoteTracker+ poetry local install, in the case of a generic MacOS install, assuming a default installation of just about everything, the poetry local install ends up placing the local install files in the following location:
+
+```
+/Users/<USER>/Library/Caches/pypoetry/virtualenvs/votetrackerplus-<UID>-py3.9/lib/
+    python3.x/site-packages/votetrackerplus.pth
+                            votetrackerplus-0.x.y-distinfo/entry_points.txt
+                                                           INSTALLER
+                                                           METADATA
+                                                           RECORD 
+```
+
+The above includes SHA-256 digests of the install files beyond/outside of what git/GitHub is tracking.
+
 
 [packaging-user-guide]: https://packaging.python.org
 [pyproject-build-system]: https://peps.python.org/pep-0517#build-backend-interface
