@@ -77,3 +77,7 @@ ETAG_SRCS := $(shell find * -type f -name '*.py' -o -name '*.md' | grep -v defun
 .PHONY: etags
 etags: ${ETAG_SRCS}
 	etags ${ETAG_SRCS}
+
+# Generate a requirements.txt for dependabot
+requirements.txt: pyproject.toml poetry.lock
+	poetry export --dev -f requirements.txt --output requirements.txt
