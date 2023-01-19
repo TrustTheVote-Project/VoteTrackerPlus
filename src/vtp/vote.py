@@ -46,32 +46,55 @@ from vtp.utils.election_config import ElectionConfig
 def parse_arguments():
     """Parse arguments from a command line"""
 
-    parser = argparse.ArgumentParser(description=
-    """vote.py will interactively allow a voter to vote.  Internally
+    parser = argparse.ArgumentParser(
+        description="""vote.py will interactively allow a voter to vote.  Internally
     it first calls cast_balloy.py followed by accept_ballot.py.  If a
     specific election address or a specific blank ballot is not
     specified, a random blank ballot is chosen.
     """,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
 
     Address.add_address_args(parser)
-    parser.add_argument("-m", "--merge_contests", action="store_true",
-                            help="Will immediately merge the ballot contests (to master)")
-    parser.add_argument("--blank_ballot",
-                            help="overrides an address - specifies the specific blank ballot")
-    parser.add_argument("-v", "--verbosity", type=int, default=3,
-                            help="0 critical, 1 error, 2 warning, 3 info, 4 debug (def=3)")
-    parser.add_argument("-n", "--printonly", action="store_true",
-                            help="will printonly and not write to disk (def=True)")
+    parser.add_argument(
+        "-m",
+        "--merge_contests",
+        action="store_true",
+        help="Will immediately merge the ballot contests (to master)",
+    )
+    parser.add_argument(
+        "--blank_ballot",
+        help="overrides an address - specifies the specific blank ballot",
+    )
+    parser.add_argument(
+        "-v",
+        "--verbosity",
+        type=int,
+        default=3,
+        help="0 critical, 1 error, 2 warning, 3 info, 4 debug (def=3)",
+    )
+    parser.add_argument(
+        "-n",
+        "--printonly",
+        action="store_true",
+        help="will printonly and not write to disk (def=True)",
+    )
 
     parsed_args = parser.parse_args()
-    verbose = {0: logging.CRITICAL, 1: logging.ERROR, 2: logging.WARNING,
-                   3: logging.INFO, 4: logging.DEBUG}
-    logging.basicConfig(format="%(message)s", level=verbose[parsed_args.verbosity],
-                            stream=sys.stdout)
+    verbose = {
+        0: logging.CRITICAL,
+        1: logging.ERROR,
+        2: logging.WARNING,
+        3: logging.INFO,
+        4: logging.DEBUG,
+    }
+    logging.basicConfig(
+        format="%(message)s", level=verbose[parsed_args.verbosity], stream=sys.stdout
+    )
 
     # Validate required args
     return parsed_args
+
 
 ################
 # main
@@ -97,43 +120,56 @@ def main():
     with Shellout.changed_cwd(a_ballot.get_cvr_parent_dir(the_election_config)):
         Shellout.run(
             ["git", "pull"],
-            printonly=ARGS.printonly, verbosity=ARGS.verbosity,
-            check=True)
+            printonly=ARGS.printonly,
+            verbosity=ARGS.verbosity,
+            check=True,
+        )
 
     # If an address was used, use that
     cast_address_args = []
     accept_address_args = []
     if not ARGS.blank_ballot:
         if ARGS.state:
-            cast_address_args += ['-s', ARGS.state]
-            accept_address_args += ['-s', ARGS.state]
+            cast_address_args += ["-s", ARGS.state]
+            accept_address_args += ["-s", ARGS.state]
         if ARGS.town:
-            cast_address_args += ['-t', ARGS.town]
-            accept_address_args += ['-t', ARGS.town]
+            cast_address_args += ["-t", ARGS.town]
+            accept_address_args += ["-t", ARGS.town]
         if ARGS.substreet:
-            cast_address_args += ['-b', ARGS.substreet]
+            cast_address_args += ["-b", ARGS.substreet]
         if ARGS.address:
-            cast_address_args += ['-a', ARGS.address]
+            cast_address_args += ["-a", ARGS.address]
     else:
-        cast_address_args += ['--blank_ballot', ARGS.blank_ballot]
-        accept_address_args += ['--blank_ballot', ARGS.blank_ballot]
+        cast_address_args += ["--blank_ballot", ARGS.blank_ballot]
+        accept_address_args += ["--blank_ballot", ARGS.blank_ballot]
 
     # Basically only do as little as necessary to call cast_ballot.py
     # followed by accept_ballot.py
-    bin_dir = os.path.join(the_election_config.get('git_rootdir'), Globals.get('BIN_DIR'))
+    bin_dir = os.path.join(
+        the_election_config.get("git_rootdir"), Globals.get("BIN_DIR")
+    )
     # Cast a ballot
     Shellout.run(
-        [os.path.join(bin_dir, 'cast_ballot.py'), '-v', ARGS.verbosity]
-        + cast_address_args + (['-n'] if ARGS.printonly else []),
-        check=True, no_touch_stds=True, timeout=None)
+        [os.path.join(bin_dir, "cast_ballot.py"), "-v", ARGS.verbosity]
+        + cast_address_args
+        + (["-n"] if ARGS.printonly else []),
+        check=True,
+        no_touch_stds=True,
+        timeout=None,
+    )
     # Accept the ballot
     Shellout.run(
-        [os.path.join(bin_dir, 'accept_ballot.py'), '-v', ARGS.verbosity]
-        + accept_address_args + (['-n'] if ARGS.printonly else [])
-        + (['-m'] if ARGS.merge_contests else []),
-        check=True, no_touch_stds=True, timeout=None)
+        [os.path.join(bin_dir, "accept_ballot.py"), "-v", ARGS.verbosity]
+        + accept_address_args
+        + (["-n"] if ARGS.printonly else [])
+        + (["-m"] if ARGS.merge_contests else []),
+        check=True,
+        no_touch_stds=True,
+        timeout=None,
+    )
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     main()
 
 # EOF

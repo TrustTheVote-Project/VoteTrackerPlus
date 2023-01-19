@@ -48,9 +48,12 @@ def merge_contest_branch(branch):
     # voting centers, then the contest.json could be in different
     # locations on different branches.
     contest_file = Shellout.run(
-        ['git', 'diff-tree', '--no-commit-id', '-r', '--name-only', branch],
+        ["git", "diff-tree", "--no-commit-id", "-r", "--name-only", branch],
         verbosity=ARGS.verbosity,
-        capture_output=True, text=True, check=True).stdout.strip()
+        capture_output=True,
+        text=True,
+        check=True,
+    ).stdout.strip()
     # 2022/06/09: witnessed the above line returning no files several
     # times in an ElectionData repo where I was debugging things. So
     # it could be real or perhaps a false one. Regardless adding an
@@ -59,52 +62,74 @@ def merge_contest_branch(branch):
     if not contest_file:
         logging.error(
             "Error - 'git diff-tree --no-commit-d -r --name-only %s' returned no files.  Skipping",
-            branch)
+            branch,
+        )
         return
     # Merge the branch / file.  Note - there will always be a conflict
     # so this command will always return non zero
     Shellout.run(
-        ['git', 'merge', '--no-ff', '--no-commit', branch],
-        printonly=ARGS.printonly, verbosity=ARGS.verbosity)
+        ["git", "merge", "--no-ff", "--no-commit", branch],
+        printonly=ARGS.printonly,
+        verbosity=ARGS.verbosity,
+    )
     # ZZZ - replace this with an run-time cryptographic value
     # derived from the run-time election private key (diffent from
     # the git commit run-time value).  This will basically slam
     # the contents of the contest file to a second runtime digest
     # (the first one being contained in the commit itself).
     result = Shellout.run(
-        ['openssl',  'rand', '-base64',  '48'],
+        ["openssl", "rand", "-base64", "48"],
         verbosity=ARGS.verbosity,
-        capture_output=True, text=True, check=True)
-    if result.stdout == '':
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    if result.stdout == "":
         raise ValueError("'openssl rand' should never return an empty string")
     if not ARGS.printonly:
         # ZZZ need to convert the digest to json format ...
-        with open(contest_file, 'w', encoding="utf8") as outfile:
+        with open(contest_file, "w", encoding="utf8") as outfile:
             # Write a runtime digest as the actual contents of the
             # merge
             outfile.write(str(result.stdout))
     # Force the git add just in case
     Shellout.run(
-        ['git', 'add', contest_file],
-        printonly=ARGS.printonly, verbosity=ARGS.verbosity, check=True)
+        ["git", "add", contest_file],
+        printonly=ARGS.printonly,
+        verbosity=ARGS.verbosity,
+        check=True,
+    )
     # Note - apparently git place the commit msg on STDERR - hide it
     Shellout.run(
-        ['git', 'commit', '-m', 'auto commit - thank you for voting'],
-        printonly=ARGS.printonly, verbosity=1, check=True)
-    Shellout.run(['git', 'push', 'origin', 'master'], ARGS.printonly, check=True)
+        ["git", "commit", "-m", "auto commit - thank you for voting"],
+        printonly=ARGS.printonly,
+        verbosity=1,
+        check=True,
+    )
+    Shellout.run(["git", "push", "origin", "master"], ARGS.printonly, check=True)
     # Delete the local and remote branch if this is a local branch
     if not ARGS.remote:
         Shellout.run(
-            ['git', 'push', 'origin', '-d', branch],
-            printonly=ARGS.printonly, verbosity=ARGS.verbosity, check=True)
+            ["git", "push", "origin", "-d", branch],
+            printonly=ARGS.printonly,
+            verbosity=ARGS.verbosity,
+            check=True,
+        )
         Shellout.run(
-            ['git', 'branch', '-d', branch],
-            printonly=ARGS.printonly, verbosity=ARGS.verbosity, check=True)
+            ["git", "branch", "-d", branch],
+            printonly=ARGS.printonly,
+            verbosity=ARGS.verbosity,
+            check=True,
+        )
     else:
         # otherwise just delete the remote
         Shellout.run(
-            ['git', 'push', 'origin', '-d', branch.removeprefix('origin/')],
-            printonly=ARGS.printonly, verbosity=ARGS.verbosity, check=True)
+            ["git", "push", "origin", "-d", branch.removeprefix("origin/")],
+            printonly=ARGS.printonly,
+            verbosity=ARGS.verbosity,
+            check=True,
+        )
+
 
 def randomly_merge_contests(uid, batch):
     """
@@ -134,6 +159,7 @@ def randomly_merge_contests(uid, batch):
     logging.debug("Merged %s %s contests", count, uid)
     return count
 
+
 ################
 # arg parsing
 ################
@@ -141,8 +167,8 @@ def randomly_merge_contests(uid, batch):
 def parse_arguments():
     """Parse arguments from a command line"""
 
-    parser = argparse.ArgumentParser(description=
-    """merge_contests.py will run the git based workflow on a VTP
+    parser = argparse.ArgumentParser(
+        description="""merge_contests.py will run the git based workflow on a VTP
     server node so to merge pending CVR contest branches into the
     master git branch.
 
@@ -151,35 +177,60 @@ def parse_arguments():
     raised.  Supplying -f will flush all remaining contests to the
     master branch.
     """,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
 
     parser.add_argument(
-        "-b", "--branch", default='',
-        help="specify a specific branch to merge")
+        "-b", "--branch", default="", help="specify a specific branch to merge"
+    )
     parser.add_argument(
-        "-m", "--minimum_cast_cache", type=int, default=100,
-        help="the minimum number of cast ballots required prior to merging (def=100)")
+        "-m",
+        "--minimum_cast_cache",
+        type=int,
+        default=100,
+        help="the minimum number of cast ballots required prior to merging (def=100)",
+    )
     parser.add_argument(
-        "-f", "--flush", action='store_true',
-        help="will flush the remaining unmerged contest branches")
+        "-f",
+        "--flush",
+        action="store_true",
+        help="will flush the remaining unmerged contest branches",
+    )
     parser.add_argument(
-        "-r", "--remote", action='store_true',
-        help="will merge remote branches instead of local branches")
+        "-r",
+        "--remote",
+        action="store_true",
+        help="will merge remote branches instead of local branches",
+    )
     parser.add_argument(
-        "-v", "--verbosity", type=int, default=3,
-        help="0 critical, 1 error, 2 warning, 3 info, 4 debug (def=3)")
+        "-v",
+        "--verbosity",
+        type=int,
+        default=3,
+        help="0 critical, 1 error, 2 warning, 3 info, 4 debug (def=3)",
+    )
     parser.add_argument(
-        "-n", "--printonly", action="store_true",
-        help="will printonly and not write to disk (def=True)")
+        "-n",
+        "--printonly",
+        action="store_true",
+        help="will printonly and not write to disk (def=True)",
+    )
 
     parsed_args = parser.parse_args()
-    verbose = {0: logging.CRITICAL, 1: logging.ERROR, 2: logging.WARNING,
-                   3: logging.INFO, 4: logging.DEBUG}
-    logging.basicConfig(format="%(message)s", level=verbose[parsed_args.verbosity],
-                            stream=sys.stdout)
+    verbose = {
+        0: logging.CRITICAL,
+        1: logging.ERROR,
+        2: logging.WARNING,
+        3: logging.INFO,
+        4: logging.DEBUG,
+    }
+    logging.basicConfig(
+        format="%(message)s", level=verbose[parsed_args.verbosity], stream=sys.stdout
+    )
 
     # Validate required args
     return parsed_args
+
 
 ################
 # main
@@ -199,41 +250,55 @@ def main():
     the_election_config.parse_configs()
 
     # Set the three EV's
-    os.environ['GIT_AUTHOR_DATE'] = '2022-01-01T12:00:00'
-    os.environ['GIT_COMMITTER_DATE'] = '2022-01-01T12:00:00'
-    os.environ['GIT_EDITOR'] = 'true'
+    os.environ["GIT_AUTHOR_DATE"] = "2022-01-01T12:00:00"
+    os.environ["GIT_COMMITTER_DATE"] = "2022-01-01T12:00:00"
+    os.environ["GIT_EDITOR"] = "true"
 
     # For best results (so to use the 'correct' git submodule or
     # tranverse the correct symlink or not), use the CWD as when
     # accepting the ballot (accept_ballot.py).
     merged = 0
-    with Shellout.changed_cwd(os.path.join(
-        the_election_config.get('git_rootdir'),
-        Globals.get('ROOT_ELECTION_DATA_SUBDIR'))):
+    with Shellout.changed_cwd(
+        os.path.join(
+            the_election_config.get("git_rootdir"),
+            Globals.get("ROOT_ELECTION_DATA_SUBDIR"),
+        )
+    ):
         # So, the CWD in this block is the state/town subfolder
         # Pull the remote
         Shellout.run(
             ["git", "pull"],
-            printonly=ARGS.printonly, verbosity=ARGS.verbosity, check=True)
+            printonly=ARGS.printonly,
+            verbosity=ARGS.verbosity,
+            check=True,
+        )
         if ARGS.branch:
             merge_contest_branch(ARGS.branch)
             logging.info("Merged '%s'", ARGS.branch)
             return
         # Get the pending CVR branches
-        cmds = ['git', 'branch']
+        cmds = ["git", "branch"]
         cvr_regex = f"{Globals.get('CONTEST_FILE_SUBDIR')}/([^/]+?)/"
         if ARGS.remote:
-            cmds.append('-r')
+            cmds.append("-r")
             cvr_regex = "^origin/" + cvr_regex
         else:
             cvr_regex = "^" + cvr_regex
         # Note - the re.search will strip non CVRs lines
-        cvr_branches = [branch.strip() for branch in Shellout.run(
-            cmds, verbosity=ARGS.verbosity, check=True, capture_output=True,
-            text=True).stdout.splitlines() if re.search(cvr_regex, branch.strip())]
+        cvr_branches = [
+            branch.strip()
+            for branch in Shellout.run(
+                cmds,
+                verbosity=ARGS.verbosity,
+                check=True,
+                capture_output=True,
+                text=True,
+            ).stdout.splitlines()
+            if re.search(cvr_regex, branch.strip())
+        ]
         # Note - sorted alphanumerically on contest UID. Loop over
         # contests and randomly merge extras
-        batch = []   # if ordered_set was native would probably use that
+        batch = []  # if ordered_set was native would probably use that
         current_uid = None
         for branch in cvr_branches:
             uid = re.search(cvr_regex, branch).group(1)
@@ -255,7 +320,8 @@ def main():
             merged += randomly_merge_contests(current_uid, batch)
     logging.info("Merged %s contest branches", merged)
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     main()
 
 # EOF

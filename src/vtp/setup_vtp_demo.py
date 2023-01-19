@@ -39,26 +39,33 @@ from vtp.utils.election_config import ElectionConfig
 
 # Functions
 
+
 def create_client_repos(clone_dirs, remote_path):
     """create demo clients workspaces"""
     # Now locally clone those as needed.  With the use of submodules
     # there is no longer an ElectionData symlink to manage.  Record
     # the repos to add them to the superproject later.
-    cloned_repos = [] # a list of tuple pairs
+    cloned_repos = []  # a list of tuple pairs
     for clone_dir in clone_dirs:
         with Shellout.changed_cwd(clone_dir):
             Shellout.run(
-                ['git', 'clone', '--recurse-submodules', remote_path],
-                ARGS.printonly, verbosity=ARGS.verbosity)
+                ["git", "clone", "--recurse-submodules", remote_path],
+                ARGS.printonly,
+                verbosity=ARGS.verbosity,
+            )
             # Note - since the repo is not a bare, the ".git" suffix
             # needs to be stripped
-            repo_dir_name = os.path.basename(remote_path).removesuffix('.git')
-            cloned_repos.append((
-                remote_path,
-                os.path.join(
-                    os.path.basename(os.path.dirname(clone_dir)),
-                    os.path.basename(clone_dir),
-                    repo_dir_name)))
+            repo_dir_name = os.path.basename(remote_path).removesuffix(".git")
+            cloned_repos.append(
+                (
+                    remote_path,
+                    os.path.join(
+                        os.path.basename(os.path.dirname(clone_dir)),
+                        os.path.basename(clone_dir),
+                        repo_dir_name,
+                    ),
+                )
+            )
     return cloned_repos
 
 
@@ -69,8 +76,8 @@ def create_client_repos(clone_dirs, remote_path):
 def parse_arguments():
     """Parse arguments from a command line"""
 
-    parser = argparse.ArgumentParser(description=
-    """setup_vtp_demo.py will leverage this current git repository
+    parser = argparse.ArgumentParser(
+        description="""setup_vtp_demo.py will leverage this current git repository
     (VoteTrackerPlus) and the associated ElectionData repos
     nominally create in /opt/VoteTrackerPlus (the default) a demo
     election mock up of 4 ballot scanner apps and one voting center
@@ -94,36 +101,60 @@ def parse_arguments():
     repos configured as git submodules.  The superprject can be
     ignored or leveraged at will.
     """,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
 
     parser.add_argument(
-        "-s", "--scanners", type=int, default=4,
-        help="specify a number of scanner app instances (def=4)")
+        "-s",
+        "--scanners",
+        type=int,
+        default=4,
+        help="specify a number of scanner app instances (def=4)",
+    )
     parser.add_argument(
-        "-l", "--location", default="/opt/VoteTrackerPlus/demo.01",
-        help="specify the location of VTP demo (def=/opt/VoteTrackerPlus/demo.01)")
+        "-l",
+        "--location",
+        default="/opt/VoteTrackerPlus/demo.01",
+        help="specify the location of VTP demo (def=/opt/VoteTrackerPlus/demo.01)",
+    )
     parser.add_argument(
-        "-v", "--verbosity", type=int, default=3,
-        help="0 critical, 1 error, 2 warning, 3 info, 4 debug (def=3)")
+        "-v",
+        "--verbosity",
+        type=int,
+        default=3,
+        help="0 critical, 1 error, 2 warning, 3 info, 4 debug (def=3)",
+    )
     parser.add_argument(
-        "-n", "--printonly", action="store_true",
-        help="will printonly and not write to disk (def=True)")
+        "-n",
+        "--printonly",
+        action="store_true",
+        help="will printonly and not write to disk (def=True)",
+    )
 
     parsed_args = parser.parse_args()
-    verbose = {0: logging.CRITICAL, 1: logging.ERROR, 2: logging.WARNING,
-                   3: logging.INFO, 4: logging.DEBUG}
-    logging.basicConfig(format="%(message)s", level=verbose[parsed_args.verbosity],
-                            stream=sys.stdout)
+    verbose = {
+        0: logging.CRITICAL,
+        1: logging.ERROR,
+        2: logging.WARNING,
+        3: logging.INFO,
+        4: logging.DEBUG,
+    }
+    logging.basicConfig(
+        format="%(message)s", level=verbose[parsed_args.verbosity], stream=sys.stdout
+    )
 
     # Validate required args
     if parsed_args.scanners < 1 or parsed_args.scanners > 16:
-        raise ValueError("The demo needs at least one TVP scanner app "
-                         "and arbitrarily limits a demo to 16.")
+        raise ValueError(
+            "The demo needs at least one TVP scanner app "
+            "and arbitrarily limits a demo to 16."
+        )
     # Check the root of the demo
     if not os.path.isdir(parsed_args.location):
         raise FileNotFoundError(
             f"The root demo folder, {parsed_args.location}, does not exit.  "
-            "It needs to pre-exist - please manually create it.")
+            "It needs to pre-exist - please manually create it."
+        )
     return parsed_args
 
 
@@ -145,10 +176,11 @@ def main():
     the_election_config = ElectionConfig()
     the_election_config.parse_configs()
     election_data_dir = os.path.join(
-        the_election_config.get('git_rootdir'), Globals.get('ROOT_ELECTION_DATA_SUBDIR'))
+        the_election_config.get("git_rootdir"), Globals.get("ROOT_ELECTION_DATA_SUBDIR")
+    )
 
     # The first subdirectory level
-    for subdir in ['clients', 'local-remote-server']:
+    for subdir in ["clients", "local-remote-server"]:
         full_dir = os.path.join(ARGS.location, subdir)
         if not os.path.isdir(full_dir):
             logging.debug("creating (%s)", full_dir)
@@ -157,14 +189,14 @@ def main():
     # The client side scanner app instances
     clone_dirs = []
     for count in range(ARGS.scanners):
-        full_dir = os.path.join(ARGS.location, 'clients', 'scanner.' + f"{count:02d}")
+        full_dir = os.path.join(ARGS.location, "clients", "scanner." + f"{count:02d}")
         clone_dirs.append(full_dir)
         if not os.path.isdir(full_dir):
             logging.debug("creating (%s)", full_dir)
             if not ARGS.printonly:
                 os.mkdir(full_dir)
     # The client side app server instance
-    full_dir = os.path.join(ARGS.location, 'clients', 'server')
+    full_dir = os.path.join(ARGS.location, "clients", "server")
     clone_dirs.append(full_dir)
     if not os.path.isdir(full_dir):
         logging.debug("creating (%s)", full_dir)
@@ -172,26 +204,36 @@ def main():
             os.mkdir(full_dir)
 
     # Clone the two local-remotes
-    full_dir = os.path.join(ARGS.location, 'local-remote-server')
+    full_dir = os.path.join(ARGS.location, "local-remote-server")
     # Get the two remotes
     with Shellout.changed_cwd(election_data_dir):
         remote_1 = Shellout.run(
-            ['git', 'config', '--get', 'remote.origin.url'],
-            check=True, capture_output=True, text=True).stdout.strip()
+            ["git", "config", "--get", "remote.origin.url"],
+            check=True,
+            capture_output=True,
+            text=True,
+        ).stdout.strip()
     remote_2 = Shellout.run(
-        ['git', 'config', '--get', 'remote.origin.url'],
-        check=True, capture_output=True, text=True).stdout.strip()
+        ["git", "config", "--get", "remote.origin.url"],
+        check=True,
+        capture_output=True,
+        text=True,
+    ).stdout.strip()
     # Bare clone them
     with Shellout.changed_cwd(full_dir):
         Shellout.run(
-            ['git', 'clone', '--bare', remote_1],
-            ARGS.printonly, verbosity=ARGS.verbosity)
+            ["git", "clone", "--bare", remote_1],
+            ARGS.printonly,
+            verbosity=ARGS.verbosity,
+        )
         # Note - since the repo is a bare it has the same ".git"
         # suffix as the remote
         remote_1_path = os.path.join(full_dir, os.path.basename(remote_1))
         Shellout.run(
-            ['git', 'clone', '--bare', remote_2],
-            ARGS.printonly, verbosity=ARGS.verbosity)
+            ["git", "clone", "--bare", remote_2],
+            ARGS.printonly,
+            verbosity=ARGS.verbosity,
+        )
 
     # Create the client repos via the outer/root repo leveraging submodules
     cloned_repos = create_client_repos(clone_dirs, remote_1_path)
@@ -206,25 +248,26 @@ def main():
     # Now create a super git project to rule them all
     with Shellout.changed_cwd(ARGS.location):
         # init it
-        Shellout.run(
-            ['git', 'init'],
-            ARGS.printonly, verbosity=ARGS.verbosity)
+        Shellout.run(["git", "init"], ARGS.printonly, verbosity=ARGS.verbosity)
         # add in all the created submodules
         for clone in cloned_repos:
             Shellout.run(
-                ['git', 'submodule', 'add', clone[0], clone[1]],
-                ARGS.printonly, verbosity=ARGS.verbosity)
+                ["git", "submodule", "add", clone[0], clone[1]],
+                ARGS.printonly,
+                verbosity=ARGS.verbosity,
+            )
         # Ignore the local remote repos directory
-        logging.info('Adding a .gitignore')
+        logging.info("Adding a .gitignore")
         if not ARGS.printonly:
-            with open('.gitignore', 'w', encoding="utf8") as outfile:
-                outfile.write('# Ignore the local remote repos\n')
-                outfile.write('local-remote-server\n')
+            with open(".gitignore", "w", encoding="utf8") as outfile:
+                outfile.write("# Ignore the local remote repos\n")
+                outfile.write("local-remote-server\n")
         Shellout.run(
-            ['git', 'add', '.gitignore'],
-            ARGS.printonly, verbosity=ARGS.verbosity)
+            ["git", "add", ".gitignore"], ARGS.printonly, verbosity=ARGS.verbosity
+        )
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     main()
 
 # EOF

@@ -65,6 +65,7 @@ pylint:
 # As there are multiple commands with the same boilerplate scaffolding, when
 # pylinting from the top ignore R0801
 	isort ${SRC_DIR} ${TEST_DIR}
+	black ${SRC_DIR} ${TEST_DIR}
 	pylint --recursive y ${SRC_DIR} ${TEST_DIR}
 
 # Run tests

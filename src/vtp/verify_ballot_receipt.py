@@ -47,18 +47,31 @@ def validate_ballot_lines(lines, headers, uids, e_config, error_digests):
     """Will scan the supplied ballot lines for invalid digests.  Will
     print and return the invalid digests.
     """
-    input_data = ''
+    input_data = ""
     for line in lines:
-        input_data += '\n'.join(line) + '\n'
-    with Shellout.changed_cwd(os.path.join(
-        e_config.get('git_rootdir'), Globals.get('ROOT_ELECTION_DATA_SUBDIR'))):
-        results = Shellout.run(
-            ['git', 'cat-file', '--buffer', '--batch-check=%(objectname) %(objecttype)'],
-            input=input_data,
-            text=True,
-            check=True,
-            verbosity=ARGS.verbosity,
-            capture_output=True).stdout.strip().splitlines()
+        input_data += "\n".join(line) + "\n"
+    with Shellout.changed_cwd(
+        os.path.join(
+            e_config.get("git_rootdir"), Globals.get("ROOT_ELECTION_DATA_SUBDIR")
+        )
+    ):
+        results = (
+            Shellout.run(
+                [
+                    "git",
+                    "cat-file",
+                    "--buffer",
+                    "--batch-check=%(objectname) %(objecttype)",
+                ],
+                input=input_data,
+                text=True,
+                check=True,
+                verbosity=ARGS.verbosity,
+                capture_output=True,
+            )
+            .stdout.strip()
+            .splitlines()
+        )
     # Print any invalid digest info
     row_length = len(uids)
     # Mmm - 1 based?
@@ -66,20 +79,30 @@ def validate_ballot_lines(lines, headers, uids, e_config, error_digests):
     column = 1
     for line in results:
         digest, commit_type = line.split()
-        if commit_type == 'missing':
+        if commit_type == "missing":
             logging.error(
                 "[ERROR]: missing digest: row %s column %s contest=%s digest=%s",
-                row, column, headers[column-1], digest)
+                row,
+                column,
+                headers[column - 1],
+                digest,
+            )
             error_digests.add(digest)
-        elif commit_type != 'commit':
+        elif commit_type != "commit":
             logging.error(
                 "[ERROR]: invalid digest type: row %s column %s contest=%s digest=%s type=%s",
-                row, column, headers[column-1], digest, commit_type)
+                row,
+                column,
+                headers[column - 1],
+                digest,
+                commit_type,
+            )
             error_digests.add(digest)
         column += 1
         if column > row_length:
             column = 1
             row += 1
+
 
 def vet_rows(lines, headers, uids, e_config, error_digests):
     """
@@ -97,17 +120,23 @@ def vet_rows(lines, headers, uids, e_config, error_digests):
         if len(legit_row) == len(row):
             # all the digests are legit
             cvrs = Shellout.cvr_parse_git_log_output(
-                ['git', 'log', '--no-walk', '--pretty=format:%H%B'] + row,
-                e_config, grouped_by_uid=False, verbosity=ARGS.verbosity - 1)
+                ["git", "log", "--no-walk", "--pretty=format:%H%B"] + row,
+                e_config,
+                grouped_by_uid=False,
+                verbosity=ARGS.verbosity - 1,
+            )
         elif len(legit_row) > 0:
             # Only some are legitimate
             cvrs = Shellout.cvr_parse_git_log_output(
-                ['git', 'log', '--no-walk', '--pretty=format:%H%B'] + legit_row,
-                e_config, grouped_by_uid=False, verbosity=ARGS.verbosity - 1)
+                ["git", "log", "--no-walk", "--pretty=format:%H%B"] + legit_row,
+                e_config,
+                grouped_by_uid=False,
+                verbosity=ARGS.verbosity - 1,
+            )
         else:
             # skip the row - it has no legitimate digests
             continue
-        if ARGS.row != '' and int(ARGS.row) - 1 == index:
+        if ARGS.row != "" and int(ARGS.row) - 1 == index:
             requested_row = cvrs
             requested_digests = row
         column = -1
@@ -120,16 +149,25 @@ def vet_rows(lines, headers, uids, e_config, error_digests):
             if digest not in cvrs:
                 logging.error(
                     "[ERROR]: missing digest in master branch: row %s contest=%s digest=%s",
-                    index, headers[column], digest)
+                    index,
+                    headers[column],
+                    digest,
+                )
                 error_digests.add(digest)
                 continue
-            if cvrs[digest]['CVR']['uid'] != uids[column]:
+            if cvrs[digest]["CVR"]["uid"] != uids[column]:
                 logging.error(
                     "[ERROR]: bad contest uid: row %s column %s contest %s != %s digest=%s",
-                    row, column, headers[column], cvrs[digest]['CVR']['uid'], digest)
+                    row,
+                    column,
+                    headers[column],
+                    cvrs[digest]["CVR"]["uid"],
+                    digest,
+                )
                 error_digests.add(digest)
                 continue
-    return(requested_row, requested_digests)
+    return (requested_row, requested_digests)
+
 
 def verify_ballot_receipt(receipt_file, e_config):
     """Will verify all the rows in a ballot receipt"""
@@ -145,12 +183,12 @@ def verify_ballot_receipt(receipt_file, e_config):
     # does it have a valid election uid beyond a valid digest and
     # contest uid (TBD - not implemented yet)
 
-#    import pdb; pdb.set_trace()
+    #    import pdb; pdb.set_trace()
     # Create a ballot to read the receipt file
     a_ballot = Ballot()
     lines = a_ballot.read_receipt_csv(e_config, receipt_file=receipt_file)
     headers = lines.pop(0)
-    uids = [ re.match(r'([0-9]+)', column).group(0) for column in headers ]
+    uids = [re.match(r"([0-9]+)", column).group(0) for column in headers]
     error_digests = set()
 
     # Now scan all lines (minus the header) for valid digests
@@ -158,7 +196,9 @@ def verify_ballot_receipt(receipt_file, e_config):
 
     # Next, make sure the digest are in the correct branch and have a
     # valid CVR content w.r.t. the uid, etc.
-    requested_row, requested_digests = vet_rows(lines, headers, uids, e_config, error_digests)
+    requested_row, requested_digests = vet_rows(
+        lines, headers, uids, e_config, error_digests
+    )
 
     def vet_a_row():
         """
@@ -169,9 +209,10 @@ def verify_ballot_receipt(receipt_file, e_config):
         git grep query syntax to just pull the uids of interest).
         """
         contest_batches = Shellout.cvr_parse_git_log_output(
-            ['git', 'log', '--topo-order', '--no-merges', '--pretty=format:%H%B'],
+            ["git", "log", "--topo-order", "--no-merges", "--pretty=format:%H%B"],
             e_config,
-            verbosity=ARGS.verbosity - 1)
+            verbosity=ARGS.verbosity - 1,
+        )
         unmerged_uids = {}
         for u_count, uid in enumerate(uids):
             # For this contest loop over the reverse ordered CVRs (since it
@@ -180,18 +221,19 @@ def verify_ballot_receipt(receipt_file, e_config):
             contest_votes = len(contest_batches[uid])
             found = False
             for c_count, contest in enumerate(contest_batches[uid]):
-                if contest['digest'] in requested_row:
+                if contest["digest"] in requested_row:
                     print(
                         f"Contest '{contest['CVR']['uid']} - {contest['CVR']['name']}' "
                         f"({contest['digest']}) is vote {contest_votes - c_count} out "
-                        f"of {contest_votes} votes")
+                        f"of {contest_votes} votes"
+                    )
                     found = True
                     break
             if found is False:
                 unmerged_uids[uid] = u_count
         if unmerged_uids:
             print("The following contests are not merged to master yet:")
-            for uid,offset in unmerged_uids.items():
+            for uid, offset in unmerged_uids.items():
                 print(f"{headers[offset]} ({requested_digests[offset]})")
 
     # If a row is specified, will print the context index in the
@@ -202,9 +244,13 @@ def verify_ballot_receipt(receipt_file, e_config):
             if digest in error_digests:
                 logging.error(
                     "[ERROR]: cannot print CVR for %s (row %s) - it is invalid",
-                    digest, ARGS.row)
+                    digest,
+                    ARGS.row,
+                )
                 continue
-            logging.debug("%s", json.dumps(requested_row[digest], indent=5, sort_keys=True))
+            logging.debug(
+                "%s", json.dumps(requested_row[digest], indent=5, sort_keys=True)
+            )
         vet_a_row()
 
     # Summerize
@@ -212,11 +258,15 @@ def verify_ballot_receipt(receipt_file, e_config):
         logging.error(
             "############\n"
             "[ERROR]: ballot receipt INVALID - the supplied ballot receipt has "
-            "%s errors.\n############", len(error_digests))
+            "%s errors.\n############",
+            len(error_digests),
+        )
     else:
         print(
             "############\n"
-            "[GOOD]: ballot receipt VALID - no digest errors found\n############")
+            "[GOOD]: ballot receipt VALID - no digest errors found\n############"
+        )
+
 
 ################
 # arg parsing
@@ -225,8 +275,8 @@ def verify_ballot_receipt(receipt_file, e_config):
 def parse_arguments():
     """Parse arguments from a command line"""
 
-    parser = argparse.ArgumentParser(description=
-    """verify_ballot_receipt.py will read a voter's ballot receipt and
+    parser = argparse.ArgumentParser(
+        description="""verify_ballot_receipt.py will read a voter's ballot receipt and
     validate all the digests contained therein.  If a contest has been
     merged to the master branch, will report the current ballot tally
     number (which ballot in the actula tally cound is the voter's).
@@ -235,31 +285,57 @@ def parse_arguments():
     ballot check is read from the default location for the specified
     address.
     """,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
 
     Address.add_address_args(parser, True)
-    parser.add_argument("-f", "--receipt_file", default='',
-                            help="specify the ballot receipt location - overrides an address")
-    parser.add_argument("-r", "--row", default='',
-                            help="specify a row to further inspect and show (1 based, not 0)")
-    parser.add_argument("-x", "--do_not_pull", action="store_true",
-                            help="Before tallying the votes, pull the ElectionData repo")
-    parser.add_argument("-v", "--verbosity", type=int, default=3,
-                            help="0 critical, 1 error, 2 warning, 3 info, 4 debug (def=3)")
-#    parser.add_argument("-n", "--printonly", action="store_true",
-#                            help="will printonly and not write to disk (def=True)")
+    parser.add_argument(
+        "-f",
+        "--receipt_file",
+        default="",
+        help="specify the ballot receipt location - overrides an address",
+    )
+    parser.add_argument(
+        "-r",
+        "--row",
+        default="",
+        help="specify a row to further inspect and show (1 based, not 0)",
+    )
+    parser.add_argument(
+        "-x",
+        "--do_not_pull",
+        action="store_true",
+        help="Before tallying the votes, pull the ElectionData repo",
+    )
+    parser.add_argument(
+        "-v",
+        "--verbosity",
+        type=int,
+        default=3,
+        help="0 critical, 1 error, 2 warning, 3 info, 4 debug (def=3)",
+    )
+    #    parser.add_argument("-n", "--printonly", action="store_true",
+    #                            help="will printonly and not write to disk (def=True)")
 
     parsed_args = parser.parse_args()
-    verbose = {0: logging.CRITICAL, 1: logging.ERROR, 2: logging.WARNING,
-                   3: logging.INFO, 4: logging.DEBUG}
-    logging.basicConfig(format="%(message)s", level=verbose[parsed_args.verbosity],
-                            stream=sys.stdout)
+    verbose = {
+        0: logging.CRITICAL,
+        1: logging.ERROR,
+        2: logging.WARNING,
+        3: logging.INFO,
+        4: logging.DEBUG,
+    }
+    logging.basicConfig(
+        format="%(message)s", level=verbose[parsed_args.verbosity], stream=sys.stdout
+    )
 
     # Validate required args
     if not (parsed_args.receipt_file or (parsed_args.state and parsed_args.town)):
         raise ValueError(
-            "Either an explicit or implicit (via an address) receipt file must be provided")
+            "Either an explicit or implicit (via an address) receipt file must be provided"
+        )
     return parsed_args
+
 
 ################
 # main
@@ -283,26 +359,27 @@ def main():
     # remote CVRs branches
     a_ballot = Ballot()
     with Shellout.changed_cwd(a_ballot.get_cvr_parent_dir(the_election_config)):
-        Shellout.run(
-            ["git", "pull"],
-            verbosity=ARGS.verbosity,
-            check=True)
+        Shellout.run(["git", "pull"], verbosity=ARGS.verbosity, check=True)
 
-#    import pdb; pdb.set_trace()
+    #    import pdb; pdb.set_trace()
     if ARGS.receipt_file:
         # Can read the receipt file directly without any Ballot info
         verify_ballot_receipt(ARGS.receipt_file, the_election_config)
     else:
         # Need to use the address to locate the last created receipt file
         the_address = Address.create_address_from_args(
-            ARGS, ['do_not_pull', 'verbosity', 'receipt_file', 'row'], generic_address=True)
+            ARGS,
+            ["do_not_pull", "verbosity", "receipt_file", "row"],
+            generic_address=True,
+        )
         the_address.map_ggos(the_election_config, skip_ggos=True)
         receipt_file = Ballot.gen_receipt_location(
-            the_election_config,
-            the_address.get('ballot_subdir'))
+            the_election_config, the_address.get("ballot_subdir")
+        )
         verify_ballot_receipt(receipt_file, the_election_config)
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     main()
 
 # EOF
