@@ -70,8 +70,11 @@ class Globals:
         # for the scripts placed there.  Independent of the python
         # sys.path gyrations, this repo is still one level below the
         # outer most root/parent election repo.  Hence, one set of
-        # '..' here since git commands are using this.
-        "ROOT_ELECTION_DATA_SUBDIR": "..",
+        # '..' here since git commands are using this.  As of
+        # 2023/01/19 and post the local install idiom, one can be
+        # anywhere to run VTP commands, so might as well be at the
+        # root of the ElectionData repo ...
+        "ROOT_ELECTION_DATA_SUBDIR": ".",
         # Where the bin directory is relative from the root of _this_ repo
         "BIN_DIR": "src/vtp",
         # How long to wait for a git shell command to complete - maybe a bad idea
