@@ -152,8 +152,16 @@ def parse_arguments():
     return parsed_args
 
 
-def scanner_mockup(election_data_dir, bin_dir, ballot):
+def scanner_mockup(the_election_config, ballot):
     """Simulate a VTP scanner"""
+
+    election_data_dir = os.path.join(
+        the_election_config.get("git_rootdir"), Globals.get("ROOT_ELECTION_DATA_SUBDIR")
+    )
+    merge_contests = Shellout.get_script_name("merge_contests.py", the_election_config)
+    tally_contests = Shellout.get_script_name("tally_contests.py", the_election_config)
+    cast_ballot = Shellout.get_script_name("cast_ballot.py", the_election_config)
+    accept_ballot = Shellout.get_script_name("accept_ballot.py", the_election_config)
 
     # Get list of available blank ballots
     blank_ballots = []
@@ -173,7 +181,7 @@ def scanner_mockup(election_data_dir, bin_dir, ballot):
     # Loop over the list N times
     if not blank_ballots:
         raise ValueError("found no blank ballots to cast")
-    merge_contests = os.path.join(bin_dir, "merge_contests.py")
+
     for count in range(ARGS.iterations):
         for blank_ballot in blank_ballots:
             logging.debug(
@@ -195,7 +203,7 @@ def scanner_mockup(election_data_dir, bin_dir, ballot):
                 )
             Shellout.run(
                 [
-                    os.path.join(bin_dir, "cast_ballot.py"),
+                    cast_ballot,
                     "--blank_ballot=" + blank_ballot,
                     "--demo_mode",
                     "-v",
@@ -209,7 +217,7 @@ def scanner_mockup(election_data_dir, bin_dir, ballot):
             # - accept the ballot
             Shellout.run(
                 [
-                    os.path.join(bin_dir, "accept_ballot.py"),
+                    accept_ballot,
                     "--cast_ballot=" + Ballot.get_cast_from_blank(blank_ballot),
                     "-v",
                     ARGS.verbosity,
@@ -270,7 +278,7 @@ def scanner_mockup(election_data_dir, bin_dir, ballot):
         )
         # tally the contests
         Shellout.run(
-            [os.path.join(bin_dir, "tally_contests.py"), "-v", ARGS.verbosity],
+            [tally_contests, "-v", ARGS.verbosity],
             printonly=ARGS.printonly,
             no_touch_stds=True,
             timeout=None,
@@ -287,7 +295,7 @@ def scanner_mockup(election_data_dir, bin_dir, ballot):
     )
 
 
-def server_mockup(election_data_dir, bin_dir):
+def server_mockup(the_election_config):
     """Simulate a VTP server"""
     # This is the VTP server simulation code.  In this case, the VTP
     # scanners are pushing to an ElectionData remote and this (server)
@@ -296,8 +304,12 @@ def server_mockup(election_data_dir, bin_dir):
     start_time = time.time()
     # Loop for a day and sleep for 10 seconds
     seconds = 3600 * 24
-    merge_contests = os.path.join(bin_dir, "merge_contests.py")
-    tally_contests = os.path.join(bin_dir, "tally_contests.py")
+    election_data_dir = os.path.join(
+        the_election_config.get("git_rootdir"), Globals.get("ROOT_ELECTION_DATA_SUBDIR")
+    )
+
+    merge_contests = Shellout.get_script_name("merge_contests.py", the_election_config)
+    tally_contests = Shellout.get_script_name("tally_contests.py", the_election_config)
     while True:
         with Shellout.changed_cwd(election_data_dir):
             Shellout.run(
@@ -388,9 +400,6 @@ def main():
     # check on the ElectionData)
     the_election_config = ElectionConfig()
     the_election_config.parse_configs()
-    election_data_dir = os.path.join(
-        the_election_config.get("git_rootdir"), Globals.get("ROOT_ELECTION_DATA_SUBDIR")
-    )
 
     # If an address was used, use that
     if ARGS.address or ARGS.state or ARGS.town or ARGS.substreet:
@@ -413,15 +422,11 @@ def main():
     elif ARGS.blank_ballot:
         blank_ballot = ARGS.blank_ballot
 
-    # Eventually need the bin dir as well
-    bin_dir = os.path.join(
-        the_election_config.get("git_rootdir"), Globals.get("BIN_DIR")
-    )
     # the VTP scanner mock simulation
     if ARGS.device in ["scanner", "both"]:
-        scanner_mockup(election_data_dir, bin_dir, blank_ballot)
+        scanner_mockup(the_election_config, blank_ballot)
     else:
-        server_mockup(election_data_dir, bin_dir)
+        server_mockup(the_election_config)
 
 
 if __name__ == "__main__":

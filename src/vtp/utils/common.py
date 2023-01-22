@@ -63,6 +63,8 @@ class Globals:
         # is where the CVR and blank ballots are placed.
         "REQUIRED_GGO_ADDRESS_FIELDS": ["state", "town"],
         "REQUIRED_NG_ADDRESS_FIELDS": ["street", "number"],
+        # Whether or not VTP has been locally installed
+        "VTP_LOCAL_INSTALL": True,
         # The Root/Parent Election Data directory.  As of 2022/10/17
         # this repo is a submodule of the root election repo (which
         # used to be a sibling symlink named ElectionData) with
@@ -114,6 +116,19 @@ class Shellout:
     A class to wrap the control & management of shell subprocesses,
     nominally git commands.
     """
+
+    @staticmethod
+    def get_script_name(script, the_election_config):
+        """
+        Given a python script name, either return the poetry local
+        install name or the relative path from the default execution
+        CWD.
+        """
+        if Globals.get("VTP_LOCAL_INSTALL"):
+            return re.sub("_", "-", script).rstrip(".py")
+        return os.path.join(
+            the_election_config.get("git_rootdir"), Globals.get("BIN_DIR"), script
+        )
 
     @staticmethod
     def run(argv, printonly=False, verbosity=3, no_touch_stds=False, **kwargs):

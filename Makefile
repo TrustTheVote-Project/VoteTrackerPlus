@@ -62,8 +62,7 @@ setuptools-legacy-build:
 # Run pylint
 .PHONY: pylint
 pylint:
-# As there are multiple commands with the same boilerplate scaffolding, when
-# pylinting from the top ignore R0801
+	@echo "NOTE - isort and black disagree on 3 files - let black win"
 	isort ${SRC_DIR} ${TEST_DIR}
 	black ${SRC_DIR} ${TEST_DIR}
 	pylint --recursive y ${SRC_DIR} ${TEST_DIR}

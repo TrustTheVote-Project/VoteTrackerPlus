@@ -28,13 +28,12 @@ See './vote.py -h' for usage information.
 # Standard imports
 import argparse
 import logging
-import os
 import sys
 
 # Local import
 from vtp.utils.address import Address
 from vtp.utils.ballot import Ballot
-from vtp.utils.common import Globals, Shellout
+from vtp.utils.common import Shellout
 from vtp.utils.election_config import ElectionConfig
 
 # Functions
@@ -113,6 +112,8 @@ def main():
     # Create an VTP election config object
     the_election_config = ElectionConfig()
     the_election_config.parse_configs()
+    accept_ballot = Shellout.get_script_name("accept_ballot.py", the_election_config)
+    cast_ballot = Shellout.get_script_name("cast_ballot.py", the_election_config)
 
     # git pull the ElectionData repo so to get the latest set of
     # remote CVRs branches
@@ -145,12 +146,9 @@ def main():
 
     # Basically only do as little as necessary to call cast_ballot.py
     # followed by accept_ballot.py
-    bin_dir = os.path.join(
-        the_election_config.get("git_rootdir"), Globals.get("BIN_DIR")
-    )
     # Cast a ballot
     Shellout.run(
-        [os.path.join(bin_dir, "cast_ballot.py"), "-v", ARGS.verbosity]
+        [cast_ballot, "-v", ARGS.verbosity]
         + cast_address_args
         + (["-n"] if ARGS.printonly else []),
         check=True,
@@ -159,7 +157,7 @@ def main():
     )
     # Accept the ballot
     Shellout.run(
-        [os.path.join(bin_dir, "accept_ballot.py"), "-v", ARGS.verbosity]
+        [accept_ballot, "-v", ARGS.verbosity]
         + accept_address_args
         + (["-n"] if ARGS.printonly else [])
         + (["-m"] if ARGS.merge_contests else []),
