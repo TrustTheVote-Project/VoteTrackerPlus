@@ -302,19 +302,20 @@ def parse_arguments():
     """Parse arguments from a command line"""
 
     parser = argparse.ArgumentParser(
-        description="""accept_ballot.py will run the git based workflow on a VTP
-    scanner node to accept the json rendering of the cast vote record
-    of a voter's ballot.  The json file is read, the contests are
-    extraced and submitted to separate git branches, one per contest,
-    and pushed back to the Voter Center's VTP remote.
+        description="""Will run the git based workflow on a VTP
+                    scanner node to accept the json rendering of the
+                    cast vote record of a voter's ballot.  The json
+                    file is read, the contests are extraced and
+                    submitted to separate git branches, one per
+                    contest, and pushed back to the Voter Center's VTP
+                    remote.
 
-    In addition a voter's ballot receipt and offset are optionally
-    printed.
+                    In addition a voter's ballot receipt and offset
+                    are optionally printed.
 
-    Either the location of the ballot_file or the associated address
-    is required.
-    """,
-        formatter_class=argparse.RawDescriptionHelpFormatter,
+                    Either the location of the ballot_file or the
+                    associated address is required.
+                    """
     )
 
     Address.add_address_args(parser, True)

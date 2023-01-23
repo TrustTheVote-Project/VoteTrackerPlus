@@ -77,7 +77,7 @@ def parse_arguments():
     """Parse arguments from a command line"""
 
     parser = argparse.ArgumentParser(
-        description="""setup_vtp_demo.py will leverage this current git repository
+        description="""Will leverage this current git repository
     (VoteTrackerPlus) and the associated ElectionData repos
     nominally create in /opt/VoteTrackerPlus (the default) a demo
     election mock up of 4 ballot scanner apps and one voting center
@@ -100,8 +100,7 @@ def parse_arguments():
     /opt/VoteTrackerPlus directory with all the app and local-remote
     repos configured as git submodules.  The superprject can be
     ignored or leveraged at will.
-    """,
-        formatter_class=argparse.RawDescriptionHelpFormatter,
+    """
     )
 
     parser.add_argument(

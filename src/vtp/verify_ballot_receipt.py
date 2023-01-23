@@ -240,6 +240,7 @@ def verify_ballot_receipt(receipt_file, e_config):
     # actual contest tally - which basically tells the voter 'your
     # contest is in the tally at index N'
     if ARGS.row:
+        valid_digests = []
         for digest in lines[int(ARGS.row) - 1]:
             if digest in error_digests:
                 logging.error(
@@ -248,10 +249,20 @@ def verify_ballot_receipt(receipt_file, e_config):
                     ARGS.row,
                 )
                 continue
+            valid_digests.append(digest)
             logging.debug(
                 "%s", json.dumps(requested_row[digest], indent=5, sort_keys=True)
             )
-        vet_a_row()
+        if ARGS.cvr:
+            # Show the CVRs of the row
+            election_data_dir = os.path.join(
+                e_config.get("git_rootdir"), Globals.get("ROOT_ELECTION_DATA_SUBDIR")
+            )
+            with Shellout.changed_cwd(election_data_dir):
+                Shellout.run(["git", "show", "-s"] + valid_digests, check=True)
+        else:
+            # Just show the summary validation of the row
+            vet_a_row()
 
     # Summerize
     if error_digests:
@@ -276,16 +287,19 @@ def parse_arguments():
     """Parse arguments from a command line"""
 
     parser = argparse.ArgumentParser(
-        description="""verify_ballot_receipt.py will read a voter's ballot receipt and
-    validate all the digests contained therein.  If a contest has been
-    merged to the master branch, will report the current ballot tally
-    number (which ballot in the actula tally cound is the voter's).
+        description="""Will read a voter's ballot receipt and validate
+                    all the digests contained therein.  If a contest
+                    has been merged to the master branch, will report
+                    the current ballot tally number (which ballot in
+                    the actula tally cound is the voter's).
 
-    An address is also supported as an argument in which case the last
-    ballot check is read from the default location for the specified
-    address.
-    """,
-        formatter_class=argparse.RawDescriptionHelpFormatter,
+                    An address is also supported as an argument in
+                    which case the last ballot check is read from the
+                    default location for the specified address.
+
+                    Can also optionally print the ballot's CVRs when a
+                    specific ballot check row is provided.
+                    """
     )
 
     Address.add_address_args(parser, True)
@@ -299,7 +313,13 @@ def parse_arguments():
         "-r",
         "--row",
         default="",
-        help="specify a row to further inspect and show (1 based, not 0)",
+        help="specify a row to inspect that row (the first row is 1, not 0)",
+    )
+    parser.add_argument(
+        "-c",
+        "--cvr",
+        action="store_true",
+        help="display the contents of the content CVRs specifying a row",
     )
     parser.add_argument(
         "-x",
@@ -334,6 +354,7 @@ def parse_arguments():
         raise ValueError(
             "Either an explicit or implicit (via an address) receipt file must be provided"
         )
+
     return parsed_args
 
 
@@ -369,7 +390,7 @@ def main():
         # Need to use the address to locate the last created receipt file
         the_address = Address.create_address_from_args(
             ARGS,
-            ["do_not_pull", "verbosity", "receipt_file", "row"],
+            ["do_not_pull", "verbosity", "receipt_file", "row", "show_ballot"],
             generic_address=True,
         )
         the_address.map_ggos(the_election_config, skip_ggos=True)

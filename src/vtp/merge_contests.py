@@ -168,7 +168,7 @@ def parse_arguments():
     """Parse arguments from a command line"""
 
     parser = argparse.ArgumentParser(
-        description="""merge_contests.py will run the git based workflow on a VTP
+        description="""Will run the git based workflow on a VTP
     server node so to merge pending CVR contest branches into the
     master git branch.
 
@@ -176,8 +176,7 @@ def parse_arguments():
     contests, a warning will be printed/logged but no error will be
     raised.  Supplying -f will flush all remaining contests to the
     master branch.
-    """,
-        formatter_class=argparse.RawDescriptionHelpFormatter,
+    """
     )
 
     parser.add_argument(

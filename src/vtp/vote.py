@@ -46,12 +46,11 @@ def parse_arguments():
     """Parse arguments from a command line"""
 
     parser = argparse.ArgumentParser(
-        description="""vote.py will interactively allow a voter to vote.  Internally
+        description="""Will interactively allow a voter to vote.  Internally
     it first calls cast_balloy.py followed by accept_ballot.py.  If a
     specific election address or a specific blank ballot is not
     specified, a random blank ballot is chosen.
-    """,
-        formatter_class=argparse.RawDescriptionHelpFormatter,
+    """
     )
 
     Address.add_address_args(parser)

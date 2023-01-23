@@ -217,7 +217,7 @@ def parse_arguments():
     """Parse command line arguments"""
 
     parser = argparse.ArgumentParser(
-        description="""cast_ballot.py can either read a blank ballot and allow a user
+        description="""Can either read a blank ballot and allow a user
     to manually select choices or when in demo mode, cast_ballot.py
     will randominly select choices.
     """

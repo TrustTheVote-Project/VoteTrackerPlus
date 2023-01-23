@@ -51,7 +51,7 @@ def parse_arguments():
     """Parse arguments from a command line"""
 
     parser = argparse.ArgumentParser(
-        description="""run_mock_election.py will run a mock election with N ballots
+        description="""Will run a mock election with N ballots
     across the available blank ballots found in the ElectionData.
 
     One basic idea is to run this in different windows, one per VTP
@@ -76,8 +76,7 @@ def parse_arguments():
     ballots found withint the ElectionData tree.  However, either a
     specific blank ballot or an address can be specified to limit the
     mock to a single ballot N times.
-    """,
-        formatter_class=argparse.RawDescriptionHelpFormatter,
+    """
     )
 
     Address.add_address_args(parser)

@@ -48,11 +48,10 @@ def parse_arguments():
     """Parse arguments from a command line"""
 
     parser = argparse.ArgumentParser(
-        description="""generate_all_blank_ballots.py will crawl the ElectionData tree
+        description="""Will crawl the ElectionData tree
     and determine all possible blank ballots and generate them.  They
     will be placed in the town's blank-ballots subdir.
-    """,
-        formatter_class=argparse.RawDescriptionHelpFormatter,
+    """
     )
 
     parser.add_argument(

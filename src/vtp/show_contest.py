@@ -93,8 +93,9 @@ def parse_arguments():
     """Parse command line arguments"""
 
     parser = argparse.ArgumentParser(
-        description="""show_contest.py simply prints the contest from the VTP repos
-    """
+        description="""will print the CVRs (Cast Vote Records) for the
+                    supplied contest(s)
+                    """
     )
 
     parser.add_argument(

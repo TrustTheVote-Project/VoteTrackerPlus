@@ -51,7 +51,7 @@ def parse_arguments():
     """Parse arguments from a command line"""
 
     parser = argparse.ArgumentParser(
-        description="""tally_contests.py will tally all the contests so far merged to
+        description="""Will tally all the contests so far merged to
     the master branch and report the results.  The results are
     computed on a voting center basis (git submodule) basis.
 
@@ -64,8 +64,7 @@ def parse_arguments():
 
     Also note that the current implementation does not yet support
     tallying across git submodules/repos.
-    """,
-        formatter_class=argparse.RawDescriptionHelpFormatter,
+    """
     )
 
     parser.add_argument(

@@ -61,7 +61,7 @@ setuptools-legacy-build:
 
 # Run pylint
 .PHONY: pylint
-pylint:
+pylint: requirements.txt
 	@echo "NOTE - isort and black disagree on 3 files - let black win"
 	isort ${SRC_DIR} ${TEST_DIR}
 	black ${SRC_DIR} ${TEST_DIR}
