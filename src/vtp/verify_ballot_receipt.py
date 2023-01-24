@@ -390,7 +390,7 @@ def main():
         # Need to use the address to locate the last created receipt file
         the_address = Address.create_address_from_args(
             ARGS,
-            ["do_not_pull", "verbosity", "receipt_file", "row", "show_ballot"],
+            ["do_not_pull", "verbosity", "receipt_file", "row", "cvr"],
             generic_address=True,
         )
         the_address.map_ggos(the_election_config, skip_ggos=True)
