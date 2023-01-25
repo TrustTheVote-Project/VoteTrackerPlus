@@ -61,10 +61,10 @@ setuptools-legacy-build:
 
 # Run pylint
 .PHONY: pylint
-pylint:
-# As there are multiple commands with the same boilerplate scaffolding, when
-# pylinting from the top ignore R0801
+pylint: requirements.txt
+	@echo "NOTE - isort and black disagree on 3 files - let black win"
 	isort ${SRC_DIR} ${TEST_DIR}
+	black ${SRC_DIR} ${TEST_DIR}
 	pylint --recursive y ${SRC_DIR} ${TEST_DIR}
 
 # Run tests
@@ -77,3 +77,7 @@ ETAG_SRCS := $(shell find * -type f -name '*.py' -o -name '*.md' | grep -v defun
 .PHONY: etags
 etags: ${ETAG_SRCS}
 	etags ${ETAG_SRCS}
+
+# Generate a requirements.txt for dependabot
+requirements.txt: pyproject.toml poetry.lock
+	poetry export --dev -f requirements.txt --output requirements.txt

@@ -50,8 +50,8 @@ from vtp.utils.exceptions import TallyException
 def parse_arguments():
     """Parse arguments from a command line"""
 
-    parser = argparse.ArgumentParser(description=
-    """tally_contests.py will tally all the contests so far merged to
+    parser = argparse.ArgumentParser(
+        description="""Will tally all the contests so far merged to
     the master branch and report the results.  The results are
     computed on a voting center basis (git submodule) basis.
 
@@ -64,36 +64,61 @@ def parse_arguments():
 
     Also note that the current implementation does not yet support
     tallying across git submodules/repos.
-    """,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
+    """
+    )
 
-    parser.add_argument("-c", "--contest_uid", default="",
-                            help="limit the tally to a specific contest uid")
-    parser.add_argument("-t", "--track_contests", default="",
-                            help="a comma separated list of contests checks to track")
-    parser.add_argument("-x", "--do_not_pull", action="store_true",
-                            help="Before tallying the votes, pull the ElectionData repo")
-    parser.add_argument("-v", "--verbosity", type=int, default=3,
-                            help="0 critical, 1 error, 2 warning, 3 info, 4 debug (def=3)")
-#    parser.add_argument("-n", "--printonly", action="store_true",
-#                            help="will printonly and not write to disk (def=True)")
+    parser.add_argument(
+        "-c",
+        "--contest_uid",
+        default="",
+        help="limit the tally to a specific contest uid",
+    )
+    parser.add_argument(
+        "-t",
+        "--track_contests",
+        default="",
+        help="a comma separated list of contests checks to track",
+    )
+    parser.add_argument(
+        "-x",
+        "--do_not_pull",
+        action="store_true",
+        help="Before tallying the votes, pull the ElectionData repo",
+    )
+    parser.add_argument(
+        "-v",
+        "--verbosity",
+        type=int,
+        default=3,
+        help="0 critical, 1 error, 2 warning, 3 info, 4 debug (def=3)",
+    )
+    #    parser.add_argument("-n", "--printonly", action="store_true",
+    #                            help="will printonly and not write to disk (def=True)")
 
     parsed_args = parser.parse_args()
-    verbose = {0: logging.CRITICAL, 1: logging.ERROR, 2: logging.WARNING,
-                   3: logging.INFO, 4: logging.DEBUG}
-    logging.basicConfig(format="%(message)s", level=verbose[parsed_args.verbosity],
-                            stream=sys.stdout)
+    verbose = {
+        0: logging.CRITICAL,
+        1: logging.ERROR,
+        2: logging.WARNING,
+        3: logging.INFO,
+        4: logging.DEBUG,
+    }
+    logging.basicConfig(
+        format="%(message)s", level=verbose[parsed_args.verbosity], stream=sys.stdout
+    )
 
     # Validate required args
     if parsed_args.track_contests:
-        if not bool(re.match('^[0-9a-f,]', parsed_args.track_contests)):
+        if not bool(re.match("^[0-9a-f,]", parsed_args.track_contests)):
             raise ValueError(
                 "The track_contests parameter only accepts a comma separated (no spaces) "
-                "list of contest checks/digests to track.")
-        parsed_args.track_contests = parsed_args.track_contests.split(',')
+                "list of contest checks/digests to track."
+            )
+        parsed_args.track_contests = parsed_args.track_contests.split(",")
     else:
         parsed_args.track_contests = []
     return parsed_args
+
 
 ################
 # main
@@ -117,10 +142,7 @@ def main():
     # remote CVRs branches
     a_ballot = Ballot()
     with Shellout.changed_cwd(a_ballot.get_cvr_parent_dir(the_election_config)):
-        Shellout.run(
-            ["git", "pull"],
-            verbosity=ARGS.verbosity,
-            check=True)
+        Shellout.run(["git", "pull"], verbosity=ARGS.verbosity, check=True)
 
     # Will process all the CVR commits on the master branch and tally
     # all the contests found.  Note - even if a contest is specified,
@@ -129,37 +151,42 @@ def main():
     # interest than to try to create a git grep query against the CVR
     # payload.
     contest_batches = Shellout.cvr_parse_git_log_output(
-        ['git', 'log', '--topo-order', '--no-merges', '--pretty=format:%H%B'],
-        the_election_config)
+        ["git", "log", "--topo-order", "--no-merges", "--pretty=format:%H%B"],
+        the_election_config,
+    )
 
     # Note - though plurality voting can be counted within the above
     # loop, tallies such as rcv cannot.  So far now, just count
     # everything in a separate loop.
     for contest_batch in sorted(contest_batches):
         # Maybe skip
-        if ARGS.contest_uid != '':
-            if contest_batches[contest_batch][0]['CVR']['uid'] != ARGS.contest_uid:
+        if ARGS.contest_uid != "":
+            if contest_batches[contest_batch][0]["CVR"]["uid"] != ARGS.contest_uid:
                 continue
         # Create a Tally object for this specific contest
         the_tally = Tally(contest_batches[contest_batch][0])
         logging.info(
             "Scanned %s contests for contest (%s) uid=%s, tally=%s, max=%s, win-by>%s",
             len(contest_batches[contest_batch]),
-            contest_batches[contest_batch][0]['CVR']['name'],
-            contest_batches[contest_batch][0]['CVR']['uid'],
-            contest_batches[contest_batch][0]['CVR']['tally'],
-            the_tally.get('max'),
-            the_tally.get('win-by'))
+            contest_batches[contest_batch][0]["CVR"]["name"],
+            contest_batches[contest_batch][0]["CVR"]["uid"],
+            contest_batches[contest_batch][0]["CVR"]["tally"],
+            the_tally.get("max"),
+            the_tally.get("win-by"),
+        )
         # Tally all the contests for this contest
-#        import pdb; pdb.set_trace()
+        #        import pdb; pdb.set_trace()
         try:
             the_tally.tallyho(contest_batches[contest_batch], ARGS.track_contests)
             # Print stuff
             the_tally.print_results()
         except TallyException as tally_error:
-            logging.error("[ERROR]: %s\nContinuing with other contests ...", tally_error)
+            logging.error(
+                "[ERROR]: %s\nContinuing with other contests ...", tally_error
+            )
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     main()
 
 # EOF

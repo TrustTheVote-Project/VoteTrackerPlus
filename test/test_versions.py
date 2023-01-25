@@ -30,6 +30,10 @@ def test_python_version():
     """Test python version - needs to run in older versions ..."""
     if not sys.version_info.major == 3 and sys.version_info.minor >= 9:
         print("Python 3.9 or higher is required.")
-        print("You are using Python " + str(sys.version_info.major) +
-                  "." + str(sys.version_info.minor))
+        print(
+            "You are using Python "
+            + str(sys.version_info.major)
+            + "."
+            + str(sys.version_info.minor)
+        )
         sys.exit(1)
