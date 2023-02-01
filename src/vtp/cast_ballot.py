@@ -128,7 +128,7 @@ def get_user_selection(the_ballot, the_contest, count, total_contests):
             validated_selections.append(num)
         if errors:
             err_string = "\n".join(errors)
-            raise Exception(
+            raise ValueError(
                 "Warning - you selections have the following errors\n" f"{err_string}"
             )
         # if still here, set the selection

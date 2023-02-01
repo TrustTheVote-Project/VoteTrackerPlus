@@ -129,7 +129,7 @@ def checkout_new_contest_branch(contest, ref_branch):
 
     # At this point the remote branch was never created and in theory the local
     # tries have also deleted(?)
-    raise Exception(f"could not create git branch {branch} on the third attempt")
+    raise RuntimeError(f"could not create git branch {branch} on the third attempt")
 
 
 def get_unmerged_contests(config):
