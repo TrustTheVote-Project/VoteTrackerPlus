@@ -114,7 +114,7 @@ $ conda activate vtp.01
 
 ### 4.5) Running a mock election
 
-To run a mock election, run the setup_vtp_demo.py script (which per python's local install described above is installed in the python environment as _setup-vtp-demo_).  This script will nominally create a mock election with four VTP scanner _apps_ and one VTP local-remote server _app_ as if all ballots were being cast in a single voting center with four separate and independent ballot scanners.  By default it will place the git repos in /opt/VotetrackerPlus with the 5 clients (the four scanner apps and one server app) in the _clients_ folder with the two local git upstream bare repositories in the _local-remote-server_ folder.
+To run a mock election, run the setup_vtp_demo.py script (which per python's local install described above is installed in the python environment as _setup-vtp-demo_).  This script will nominally create a mock election with four VTP scanner _apps_ and one VTP tabulation server _app_ as if all ballots were being cast in a single voting center with four separate and independent ballot scanners.  By default it will place the git repos in /opt/VotetrackerPlus with the 5 clients (the four scanner apps and one server app) in the _clients_ folder with the two local git upstream bare repositories in the _tabulation-server_ folder.
 
 ```
 % setup-vtp-demo -l /opt/VoteTrackerPlus/demo.10   
@@ -123,27 +123,27 @@ Running "git config --get remote.origin.url"
 Running "git config --get remote.origin.url"
 Running "git clone --bare git@github.com:TrustTheVote-Project/VTP-mock-election.US.10.git"
 Running "git clone --bare git@github.com:TrustTheVote-Project/VTP-root-repo.git"
-Running "git clone --recurse-submodules /opt/VoteTrackerPlus/demo.10/local-remote-server/VTP-mock-election.US.10.git"
+Running "git clone --recurse-submodules /opt/VoteTrackerPlus/demo.10/tabulation-server/VTP-mock-election.US.10.git"
 Submodule path 'VoteTrackerPlus': checked out 'bfa814d1577b77d2bb4e5d685823333fdc4a0b38'
-Running "git clone --recurse-submodules /opt/VoteTrackerPlus/demo.10/local-remote-server/VTP-mock-election.US.10.git"
+Running "git clone --recurse-submodules /opt/VoteTrackerPlus/demo.10/tabulation-server/VTP-mock-election.US.10.git"
 Submodule path 'VoteTrackerPlus': checked out 'bfa814d1577b77d2bb4e5d685823333fdc4a0b38'
-Running "git clone --recurse-submodules /opt/VoteTrackerPlus/demo.10/local-remote-server/VTP-mock-election.US.10.git"
+Running "git clone --recurse-submodules /opt/VoteTrackerPlus/demo.10/tabulation-server/VTP-mock-election.US.10.git"
 Submodule path 'VoteTrackerPlus': checked out 'bfa814d1577b77d2bb4e5d685823333fdc4a0b38'
-Running "git clone --recurse-submodules /opt/VoteTrackerPlus/demo.10/local-remote-server/VTP-mock-election.US.10.git"
+Running "git clone --recurse-submodules /opt/VoteTrackerPlus/demo.10/tabulation-server/VTP-mock-election.US.10.git"
 Submodule path 'VoteTrackerPlus': checked out 'bfa814d1577b77d2bb4e5d685823333fdc4a0b38'
-Running "git clone --recurse-submodules /opt/VoteTrackerPlus/demo.10/local-remote-server/VTP-mock-election.US.10.git"
+Running "git clone --recurse-submodules /opt/VoteTrackerPlus/demo.10/tabulation-server/VTP-mock-election.US.10.git"
 Submodule path 'VoteTrackerPlus': checked out 'bfa814d1577b77d2bb4e5d685823333fdc4a0b38'
 Running "git init"
 Initialized empty Git repository in /opt/VoteTrackerPlus/demo.10/.git/
-Running "git submodule add /opt/VoteTrackerPlus/demo.10/local-remote-server/VTP-mock-election.US.10.git clients/scanner.00/VTP-mock-election.US.10"
+Running "git submodule add /opt/VoteTrackerPlus/demo.10/tabulation-server/VTP-mock-election.US.10.git clients/scanner.00/VTP-mock-election.US.10"
 Adding existing repo at 'clients/scanner.00/VTP-mock-election.US.10' to the index
-Running "git submodule add /opt/VoteTrackerPlus/demo.10/local-remote-server/VTP-mock-election.US.10.git clients/scanner.01/VTP-mock-election.US.10"
+Running "git submodule add /opt/VoteTrackerPlus/demo.10/tabulation-server/VTP-mock-election.US.10.git clients/scanner.01/VTP-mock-election.US.10"
 Adding existing repo at 'clients/scanner.01/VTP-mock-election.US.10' to the index
-Running "git submodule add /opt/VoteTrackerPlus/demo.10/local-remote-server/VTP-mock-election.US.10.git clients/scanner.02/VTP-mock-election.US.10"
+Running "git submodule add /opt/VoteTrackerPlus/demo.10/tabulation-server/VTP-mock-election.US.10.git clients/scanner.02/VTP-mock-election.US.10"
 Adding existing repo at 'clients/scanner.02/VTP-mock-election.US.10' to the index
-Running "git submodule add /opt/VoteTrackerPlus/demo.10/local-remote-server/VTP-mock-election.US.10.git clients/scanner.03/VTP-mock-election.US.10"
+Running "git submodule add /opt/VoteTrackerPlus/demo.10/tabulation-server/VTP-mock-election.US.10.git clients/scanner.03/VTP-mock-election.US.10"
 Adding existing repo at 'clients/scanner.03/VTP-mock-election.US.10' to the index
-Running "git submodule add /opt/VoteTrackerPlus/demo.10/local-remote-server/VTP-mock-election.US.10.git clients/server/VTP-mock-election.US.10"
+Running "git submodule add /opt/VoteTrackerPlus/demo.10/tabulation-server/VTP-mock-election.US.10.git clients/server/VTP-mock-election.US.10"
 Adding existing repo at 'clients/server/VTP-mock-election.US.10' to the index
 Adding a .gitignore
 Running "git add .gitignore"
@@ -158,18 +158,18 @@ The resulting directory tree looks like this:
                                      scanner.02/VTP-mock-election.US.<nn>/VoteTrackerPlus
                                      scanner.03/VTP-mock-election.US.<nn>/VoteTrackerPlus
                                      server/VTP-mock-election.US.<nn>/VoteTrackerPlus
-/opt/VotetrackerPlus/demo.01/local-remote-server/VTP-mock-election.US.<nn>.git
+/opt/VotetrackerPlus/demo.01/tabulation-server/VTP-mock-election.US.<nn>.git
                                                  VoteTrackerPlus.git
 ```
 
-The git repositories in the _clients_ subfolder all have workspaces as that is where the various commands run to simulate an individual ballot scanner application.  The two bare repostitories in local-remote-server mimick the actual voting center local (bare) git remote repositories for both the VTP scanner and server apps.
+The git repositories in the _clients_ subfolder all have workspaces as that is where the various commands run to simulate an individual ballot scanner application.  The two bare repostitories in tabulation-server mimick the actual voting center local (bare) git remote repositories for both the VTP scanner and server apps.
 
 The basic demo idea is to start a separate __run-mock-election -d scanner__ instance in the first three scanner subfolders.  And then in the fourth scanner.04 subfolder manually and interactively cast ballots.  This will simulate a voter at an active voting center.  A VTP server app should be run in the server subfolder.
 
 Here is an example of running a 4 VTP scanner and 1 VTP server app mock demo election.  This simulates an in-person voting center with 4 ballot scanners producing the anonymized ballot checks for the voters.  The first three are submitting random ballots while the fourth someone at the keyboard can manually submit one ballot at a time.
 
 ```bash
-# In terminal window #1, run a VTP remote-local server
+# In terminal window #1, run a VTP tabulation server
 # Note - this assumes the explicit setup steps above - note the poetry pyproject.toml location
 $ cd repos/VTP-mock-election.US.10/VoteTrackerPlus
 $ poetry shell
@@ -238,9 +238,9 @@ Note that five of the seven contests have been merged to master and as such now 
 
 Two of the contests above remain in the ballot cache and can still be randomly included in some other anonymized ballot check.  They will be merged to master by the VTP server at some point, either randomly during the voting or once the voting ceases at the polling location.
 
-Running the above demo does not modify the VoteTrackerPlus repo and does not push any changes in the VTP-mock-election.US.nn repository back to the upstream GitHub repositories.  This is because by design the VTP scanner and server app repo pairs have the git origin pointing to the local bare repositories found in the local-remote-server folder in the demo.nn directory.
+Running the above demo does not modify the VoteTrackerPlus repo and does not push any changes in the VTP-mock-election.US.nn repository back to the upstream GitHub repositories.  This is because by design the VTP scanner and server app repo pairs have the git origin pointing to the local bare repositories found in the tabulation-server folder in the demo.nn directory.
 
-At any time and in any repository cloned from the local-remote-server VTP-mock-election.US.nn.git repository (that is not running something else) one can run inspect the current tally by:
+At any time and in any repository cloned from the tabulation-server VTP-mock-election.US.nn.git repository (that is not running something else) one can run inspect the current tally by:
 
 ```bash
 $ tally-contests
