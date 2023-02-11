@@ -15,11 +15,18 @@ SRC_DIR     := src/vtp
 TEST_DIR    := test
 BUILD_DIR   := _tools/build
 BUILD_FILES := pyproject.toml poetry.lock setup.cfg 
+ifeq ($(shell test -t & echo $$?), 0)
+    RED	:= \033[0;31m
+    END	:= \033[0m
+else
+    RED	:=
+    END	:=
+endif
 
 # Let there be no default target
 .PHONY: default
 default:
-	@echo "There is no default make target.  Specify one of:"
+	@echo "${RED}There is no default make target.  Specify one of:${END}"
 	@echo "poetry-build            - performs a poetry local install"
 	@echo "setuptools-build        - performs a setuptools local install"
 	@echo "setuptools-legacy-build - performs a legacy setuptools local install"
@@ -62,7 +69,7 @@ setuptools-legacy-build:
 # Run pylint
 .PHONY: pylint
 pylint: requirements.txt
-	@echo "NOTE - isort and black disagree on 3 files - let black win"
+	@echo "${RED}NOTE - isort and black disagree on 3 files - let black win${END}"
 	isort ${SRC_DIR} ${TEST_DIR}
 	black ${SRC_DIR} ${TEST_DIR}
 	pylint --recursive y ${SRC_DIR} ${TEST_DIR}
