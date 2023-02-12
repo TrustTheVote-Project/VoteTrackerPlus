@@ -25,16 +25,19 @@ See './accept_ballot.py -h' for usage information.
 
 # pylint: disable=wrong-import-position   # import statements not top of file
 import sys
+
 from vtp.script_libs.accept_ballot_lib import AcceptBallotLib
+
 
 def main():
     """If called via a python local install entrypoint"""
-    an_acceptballotlib = AcceptBallotLib(sys.argv)
-    an_acceptballotlib.main()
+    main_acceptballotlib = AcceptBallotLib(sys.argv)
+    main_acceptballotlib.main()
+
 
 # If called as a script entrypoint
 if __name__ == "__main__":
-    an_acceptballotlib = AcceptBallotLib(sys.argv)
-    an_acceptballotlib.main()
+    _main_acceptballotlib = AcceptBallotLib(sys.argv)
+    _main_acceptballotlib.main()
 
 # EOF

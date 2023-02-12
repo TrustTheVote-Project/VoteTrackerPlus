@@ -26,16 +26,19 @@ See './vote.py -h' for usage information.
 
 # pylint: disable=wrong-import-position   # import statements not top of file
 import sys
+
 from vtp.script_libs.vote_lib import VoteLib
+
 
 def main():
     """If called via a python local install entrypoint"""
-    a_votelib = VoteLib(sys.argv)
-    a_votelib.main()
+    main_votelib = VoteLib(sys.argv)
+    main_votelib.main()
+
 
 # If called as a script entrypoint
 if __name__ == "__main__":
-    a_votelib = VoteLib(sys.argv)
-    a_votelib.main()
+    _main_votelib = VoteLib(sys.argv)
+    _main_votelib.main()
 
 # EOF
