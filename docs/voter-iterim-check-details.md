@@ -37,7 +37,7 @@ When a interim ballot check is scanned:
 
 Note that the CVR digests may or may not already be merged to master as that is a different workflow independent of this one.  This workflow only concerns delivering to the first 100 voters a real after-the-fact ballot check and index.
 
-Note that tags are never pushed upstream of the local-remote got server - they only remain local to the local-remote git server. 
+Note that tags are never pushed upstream of the tabulation git server - they only remain local to the tabulation git server. 
 
 ## 4) Implementation Notes
 

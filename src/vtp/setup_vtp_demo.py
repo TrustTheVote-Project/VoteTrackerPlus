@@ -88,16 +88,16 @@ def parse_arguments():
     All five apps run in a pair of separate git repos that are clones
     of the same ElectionData repos as this one and are contained in a
     subfolder called 'clients'.  All the client apps' git repos have
-    had the remote origin configured to point to two local-remote bare
+    had the remote origin configured to point to two tabulation bare
     clones of the GitHub remotes located in the subfolder
-    'local-remote-server'.
+    'tabulation-server'.
 
     Normally no demo git commits are pushed back to GiHub, but to do
     so one would normally use the bare repos and not the client repos.
 
     To facilitate the management of all the git repos (8 client and 2
-    local-remote), a git superproject repo is initiated at the
-    /opt/VoteTrackerPlus directory with all the app and local-remote
+    tabulation), a git superproject repo is initiated at the
+    /opt/VoteTrackerPlus directory with all the app and tabulation
     repos configured as git submodules.  The superprject can be
     ignored or leveraged at will.
     """
@@ -179,7 +179,7 @@ def main():
     )
 
     # The first subdirectory level
-    for subdir in ["clients", "local-remote-server"]:
+    for subdir in ["clients", "tabulation-server"]:
         full_dir = os.path.join(ARGS.location, subdir)
         if not os.path.isdir(full_dir):
             logging.debug("creating (%s)", full_dir)
@@ -202,8 +202,8 @@ def main():
         if not ARGS.printonly:
             os.mkdir(full_dir)
 
-    # Clone the two local-remotes
-    full_dir = os.path.join(ARGS.location, "local-remote-server")
+    # Clone the tabulation repos
+    full_dir = os.path.join(ARGS.location, "tabulation-server")
     # Get the two remotes
     with Shellout.changed_cwd(election_data_dir):
         remote_1 = Shellout.run(
@@ -260,7 +260,7 @@ def main():
         if not ARGS.printonly:
             with open(".gitignore", "w", encoding="utf8") as outfile:
                 outfile.write("# Ignore the local remote repos\n")
-                outfile.write("local-remote-server\n")
+                outfile.write("tabulation-server\n")
         Shellout.run(
             ["git", "add", ".gitignore"], ARGS.printonly, verbosity=ARGS.verbosity
         )
