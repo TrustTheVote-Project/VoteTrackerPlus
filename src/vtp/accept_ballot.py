@@ -44,12 +44,12 @@ from vtp.utils.election_config import ElectionConfig
 class AcceptBallotLib:
     """A class to wrap the accept_ballot.py script."""
 
-    # Class variables
-    parsed_args = None
+    def __init__(self, argv):
+        """Only to module-ize the scripts and keep things simple and idiomatic."""
+        self.argv = argv
+        self.parsed_args = None
 
-    # Functions
-    @staticmethod
-    def get_random_branchpoint(branch):
+    def get_random_branchpoint(self, branch):
         """Return a random branchpoint on the supplied branch
 
         Requires the CWD to be the parent of the CVRs directory.
@@ -71,8 +71,7 @@ class AcceptBallotLib:
         # ZZZ - need to deal with a rolling 100 window
         return random.choice(commits)
 
-    @staticmethod
-    def checkout_new_contest_branch(contest, ref_branch):
+    def checkout_new_contest_branch(self, contest, ref_branch):
         """Will checkout a new branch for a specific contest.  Since there
         is no code yet to coordinate the potentially multiple scanners
         pushing to the same VC VTP git remote, use a highly unlikely GUID
@@ -81,11 +80,8 @@ class AcceptBallotLib:
         Requires the CWD to be the parent of the CVRs directory.
         """
 
-        # the tangled web we weave
-        abldotpa = AcceptBallotLib.parsed_args
-
         # select a branchpoint
-        branchpoint = AcceptBallotLib.get_random_branchpoint(ref_branch)
+        branchpoint = self.get_random_branchpoint(ref_branch)
         # and attempt at a new unique branch
         branch = (
             Globals.get("CONTEST_FILE_SUBDIR")
@@ -105,15 +101,15 @@ class AcceptBallotLib:
         for _ in [0, 1, 2]:
             cmd1 = Shellout.run(
                 ["git", "checkout", "-b", branch, branchpoint],
-                printonly=abldotpa.printonly,
-                verbosity=abldotpa.verbosity,
+                printonly=self.parsed_args.printonly,
+                verbosity=self.parsed_args.verbosity,
             )
             if cmd1.returncode == 0:
                 # Created the local branch - see if it is push-able
                 cmd2 = Shellout.run(
                     ["git", "push", "-u", "origin", branch],
-                    printonly=abldotpa.printonly,
-                    verbosity=abldotpa.verbosity,
+                    printonly=self.parsed_args.printonly,
+                    verbosity=self.parsed_args.verbosity,
                 )
                 if cmd2.returncode == 0:
                     # success
@@ -123,14 +119,14 @@ class AcceptBallotLib:
                 Shellout.run(
                     ["git", "checkout", current_branch],
                     check=True,
-                    printonly=abldotpa.printonly,
-                    verbosity=abldotpa.verbosity,
+                    printonly=self.parsed_args.printonly,
+                    verbosity=self.parsed_args.verbosity,
                 )
                 Shellout.run(
                     ["git", "branch", "-D", branch],
                     check=True,
-                    printonly=abldotpa.printonly,
-                    verbosity=abldotpa.verbosity,
+                    printonly=self.parsed_args.printonly,
+                    verbosity=self.parsed_args.verbosity,
                 )
             # At this point the local did not get created - try again
             branch = contest.get("uid") + "/" + secrets.token_hex(5)
@@ -139,14 +135,11 @@ class AcceptBallotLib:
         # tries have also deleted(?)
         raise RuntimeError(f"could not create git branch {branch} on the third attempt")
 
-    @staticmethod
-    def get_unmerged_contests(config):
+    def get_unmerged_contests(self, config):
         """Queries git for the unmerged CVRs and returns the list.  See
         Shellout.cvr_parse_git_log_output for more info.  The returned
         list is still in git log order.
         """
-        # the tangled web we weave
-        abldotpa = AcceptBallotLib.parsed_args
         # Mmm, at the moment the thought is that we need all the unmerged
         # contests and ignore anything already merged.  So first get the
         # list of HEAD commits for all the unmerged branches.  Note that
@@ -176,11 +169,10 @@ class AcceptBallotLib:
         return Shellout.cvr_parse_git_log_output(
             ["git", "log", "--no-walk", "--pretty=format:%H%B"] + head_commits,
             config,
-            verbosity=abldotpa.verbosity - 1,
+            verbosity=self.parsed_args.verbosity - 1,
         )
 
-    @staticmethod
-    def get_cloaked_contests(contest, branch):
+    def get_cloaked_contests(self, contest, branch):
         """Return a list of N cloaked cast CVRs for the specified contest.
         ZZZ - cloaking actually is a difficult problem because a cloaked
         value should only ever be given out once and regardless whatever
@@ -208,41 +200,37 @@ class AcceptBallotLib:
             text=True,
         ).stdout.strip()
 
-    @staticmethod
-    def contest_add_and_commit(branch):
+    def contest_add_and_commit(self, branch):
         """Will git add and commit the new contest content.
         Requires the CWD to be the parent of the CVRs directory.
         """
-        # the tangled web we weave
-        abldotpa = AcceptBallotLib.parsed_args
         # If this fails a shell error will be raised
         contest_file = os.path.join(
             Globals.get("CONTEST_FILE_SUBDIR"), Globals.get("CONTEST_FILE")
         )
         Shellout.run(
             ["git", "add", contest_file],
-            printonly=abldotpa.printonly,
-            verbosity=abldotpa.verbosity,
+            printonly=self.parsed_args.printonly,
+            verbosity=self.parsed_args.verbosity,
         )
         # Note - apparently git place the commit msg on STDERR - hide it
         Shellout.run(
             ["git", "commit", "-F", contest_file],
-            printonly=abldotpa.printonly,
+            printonly=self.parsed_args.printonly,
             verbosity=1,
         )
         # Capture the digest
         digest = Shellout.run(
             ["git", "log", branch, "-1", "--pretty=format:%H"],
-            printonly=abldotpa.printonly,
+            printonly=self.parsed_args.printonly,
             check=True,
             capture_output=True,
             text=True,
         ).stdout.strip()
         return digest
 
-    @staticmethod
     def create_ballot_receipt(
-        the_ballot, contest_receipts, unmerged_cvrs, the_election_config
+        self, the_ballot, contest_receipts, unmerged_cvrs, the_election_config
     ):
         """
         Create the voter's receipt.  As of this writing this is basically
@@ -313,8 +301,7 @@ class AcceptBallotLib:
     # arg parsing
     ################
     # pylint: disable=duplicate-code
-    @staticmethod
-    def parse_arguments(argv):
+    def parse_arguments(self):
         """Parse arguments from a command line"""
 
         parser = argparse.ArgumentParser(
@@ -359,7 +346,7 @@ class AcceptBallotLib:
             help="will printonly and not write to disk (def=True)",
         )
 
-        parsed_args = parser.parse_args(argv)
+        self.parsed_args = parser.parse_args(self.argv)
         verbose = {
             0: logging.CRITICAL,
             1: logging.ERROR,
@@ -369,22 +356,18 @@ class AcceptBallotLib:
         }
         logging.basicConfig(
             format="%(message)s",
-            level=verbose[parsed_args.verbosity],
+            level=verbose[self.parsed_args.verbosity],
             stream=sys.stdout,
         )
-
-        # Validate required args
-        return parsed_args
 
     ################
     # main
     ################
     # pylint: disable=duplicate-code
-    @staticmethod
-    def main(argv):
+    def main(self):
         """Main function - see -h for more info"""
 
-        parsed_args = AcceptBallotLib.parse_arguments(argv)
+        self.parse_arguments()
 
         # Create an VTP election config object
         the_election_config = ElectionConfig()
@@ -396,7 +379,7 @@ class AcceptBallotLib:
         # Note - accept_ballot.py currently only deals with generic
         # addresses since all cast ballots, regardless of active ggos, end
         # up in the same spot, nominally in the town subfolder.
-        if parsed_args.cast_ballot:
+        if self.parsed_args.cast_ballot:
             # Read the specified cast_ballot
             with Shellout.changed_cwd(
                 os.path.join(
@@ -405,12 +388,12 @@ class AcceptBallotLib:
                 )
             ):
                 a_ballot.read_a_cast_ballot(
-                    "", the_election_config, parsed_args.cast_ballot
+                    "", the_election_config, self.parsed_args.cast_ballot
                 )
         else:
             # Use the specified address
             the_address = Address.create_address_from_args(
-                parsed_args,
+                self.parsed_args,
                 ["verbosity", "printonly", "cast_ballot", "merge_contests"],
                 generic_address=True,
             )
@@ -449,16 +432,14 @@ class AcceptBallotLib:
             # matching uid's of interest.  In the end this may be the
             # least expensive as the big reader is thus a stdout PIPE
             # loop.
-            unmerged_cvrs = AcceptBallotLib.get_unmerged_contests(the_election_config)
+            unmerged_cvrs = self.get_unmerged_contests(the_election_config)
 
             for contest in contests:
                 with Shellout.changed_branch("master"):
                     # get N other values for each contest for this ballot
                     uid = contest.get("uid")
                     # atomically create the branch locally and remotely
-                    branches.append(
-                        AcceptBallotLib.checkout_new_contest_branch(contest, "master")
-                    )
+                    branches.append(self.checkout_new_contest_branch(contest, "master"))
                     # Add the cast_branch to the contest json payload
                     contest.set("cast_branch", branches[-1])
 
@@ -479,12 +460,10 @@ class AcceptBallotLib:
                     # Write out the voter's contest to CVRs/contest.json
                     a_ballot.write_contest(contest, the_election_config)
                     # commit the voter's contest
-                    contest_receipts[uid] = AcceptBallotLib.contest_add_and_commit(
-                        branches[-1]
-                    )
+                    contest_receipts[uid] = self.contest_add_and_commit(branches[-1])
                     # if cloaking, get those as well
                     if "cloak" in contest.get("contest"):
-                        cloak_receipts[uid] = AcceptBallotLib.get_cloaked_contests(
+                        cloak_receipts[uid] = self.get_cloaked_contests(
                             contest, "master"
                         )
             # After all the contests digests have been generated as well
@@ -493,19 +472,19 @@ class AcceptBallotLib:
             for branch in branches:
                 Shellout.run(
                     ["git", "push", "origin", branch],
-                    printonly=parsed_args.printonly,
-                    verbosity=parsed_args.verbosity,
+                    printonly=self.parsed_args.printonly,
+                    verbosity=self.parsed_args.verbosity,
                 )
                 # Delete the local as they build up too much.  The local
                 # reflog keeps track of the local branches
                 Shellout.run(
                     ["git", "branch", "-d", branch],
-                    printonly=parsed_args.printonly,
-                    verbosity=parsed_args.verbosity,
+                    printonly=self.parsed_args.printonly,
+                    verbosity=self.parsed_args.verbosity,
                 )
 
         # If in demo mode, optionally merge the branches
-        if parsed_args.merge_contests:
+        if self.parsed_args.merge_contests:
             for branch in branches:
                 # Merge the branch (but since the local branch should be
                 # deleted at this point, merge the remote).  Note -
@@ -517,12 +496,12 @@ class AcceptBallotLib:
                             "merge_contests.py", the_election_config
                         ),
                         "-v",
-                        parsed_args.verbosity,
+                        self.parsed_args.verbosity,
                         "-b",
                         "remotes/origin/" + branch,
                         "-r",
                     ]
-                    + (["-n"] if parsed_args.printonly else []),
+                    + (["-n"] if self.parsed_args.printonly else []),
                     check=True,
                     no_touch_stds=True,
                     timeout=None,
@@ -551,7 +530,7 @@ class AcceptBallotLib:
         if skip_receipt:
             logging.warning("Skipping ballot receipt due to lack of unmerged CVRs")
         else:
-            AcceptBallotLib.create_ballot_receipt(
+            self.create_ballot_receipt(
                 a_ballot, contest_receipts, unmerged_cvrs, the_election_config
             )
 
@@ -560,4 +539,7 @@ class AcceptBallotLib:
 
 # If called as a script
 if __name__ == "__main__":
-    AcceptBallotLib.main(sys.argv)
+    an_acceptballotlib = AcceptBallotLib(sys.argv)
+    an_acceptballotlib.main()
+
+# EOF
