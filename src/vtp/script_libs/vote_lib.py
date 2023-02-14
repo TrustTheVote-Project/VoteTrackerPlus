@@ -30,12 +30,11 @@ import argparse
 import logging
 import sys
 
-from vtp.script_libs.accept_ballot_lib import AcceptBallotLib
-
 # Script modules
+from vtp.script_libs.accept_ballot_lib import AcceptBallotLib
 from vtp.script_libs.cast_ballot_lib import CastBallotLib
 
-# Local import
+# Local libraries
 from vtp.utils.address import Address
 from vtp.utils.ballot import Ballot
 from vtp.utils.common import Shellout

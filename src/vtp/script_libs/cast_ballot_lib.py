@@ -269,10 +269,9 @@ class CastBallotLib:
         }
         logging.basicConfig(
             format="%(message)s",
-            level=verbose[parsed_args.verbosity],
+            level=verbose[self.parsed_args.verbosity],
             stream=sys.stdout,
         )
-        return parsed_args
 
     ################
     # main

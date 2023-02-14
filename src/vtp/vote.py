@@ -32,8 +32,8 @@ from vtp.script_libs.vote_lib import VoteLib
 
 def main():
     """If called via a python local install entrypoint"""
-    main_votelib = VoteLib(sys.argv[1:])
-    main_votelib.main()
+    _main = VoteLib(sys.argv[1:])
+    _main.main()
 
 
 # If called as a script entrypoint

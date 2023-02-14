@@ -17,9 +17,9 @@
 #   with this program; if not, write to the Free Software Foundation, Inc.,
 #   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
-"""accept_ballot.py - command line level script to accept a ballot.
+"""Library backend to command line level script to accept a ballot.
 
-See './accept_ballot.py -h' for usage information.
+See 'accept_ballot.py -h' for usage information.
 
 """
 
@@ -32,7 +32,7 @@ import random
 import secrets
 import sys
 
-# Local import
+# Local imports
 from vtp.utils.address import Address
 from vtp.utils.ballot import Ballot, Contests
 from vtp.utils.common import Globals, Shellout
