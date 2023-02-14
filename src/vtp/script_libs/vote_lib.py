@@ -18,10 +18,10 @@
 #   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 """
-vote.py - command line level script to allow an end voter to vote - it
-simply wraps a call to cast_ballot.py and accept_ballot.py.
+Library backend to command line level script to allow an end voter to
+vote - it simply wraps a call to cast_ballot.py and accept_ballot.py.
 
-See './vote.py -h' for usage information.
+See 'vote.py -h' for usage information.
 """
 
 # pylint: disable=wrong-import-position   # import statements not top of file
@@ -29,6 +29,11 @@ See './vote.py -h' for usage information.
 import argparse
 import logging
 import sys
+
+from vtp.script_libs.accept_ballot_lib import AcceptBallotLib
+
+# Script modules
+from vtp.script_libs.cast_ballot_lib import CastBallotLib
 
 # Local import
 from vtp.utils.address import Address
@@ -45,10 +50,10 @@ class VoteLib:
         self.argv = argv
         self.parsed_args = None
 
-    ################
-    # arg parsing
-    ################
-    # pylint: disable=duplicate-code
+    def __str__(self):
+        """Boilerplate"""
+        return "argv=" + str(self.argv) + "\n" + "parsed_args=" + str(self.parsed_args)
+
     def parse_arguments(self):
         """Parse arguments from a command line"""
 
@@ -85,6 +90,7 @@ class VoteLib:
             help="will printonly and not write to disk (def=True)",
         )
 
+        #        import pdb; pdb.set_trace()
         self.parsed_args = parser.parse_args(self.argv)
         verbose = {
             0: logging.CRITICAL,
@@ -102,8 +108,6 @@ class VoteLib:
     ################
     # main
     ################
-
-    # pylint: disable=duplicate-code
     def main(self):
         """Main function - see -h for more info"""
 
@@ -112,10 +116,6 @@ class VoteLib:
         # Create an VTP election config object
         the_election_config = ElectionConfig()
         the_election_config.parse_configs()
-        accept_ballot = Shellout.get_script_name(
-            "accept_ballot.py", the_election_config
-        )
-        cast_ballot = Shellout.get_script_name("cast_ballot.py", the_election_config)
 
         # git pull the ElectionData repo so to get the latest set of
         # remote CVRs branches
@@ -149,24 +149,20 @@ class VoteLib:
         # Basically only do as little as necessary to call cast_ballot.py
         # followed by accept_ballot.py
         # Cast a ballot
-        Shellout.run(
-            [cast_ballot, "-v", self.parsed_args.verbosity]
+        a_cast_ballot_lib = CastBallotLib(
+            ["-v", str(self.parsed_args.verbosity)]
             + cast_address_args
             + (["-n"] if self.parsed_args.printonly else []),
-            check=True,
-            no_touch_stds=True,
-            timeout=None,
         )
+        a_cast_ballot_lib.main()
         # Accept the ballot
-        Shellout.run(
-            [accept_ballot, "-v", self.parsed_args.verbosity]
+        a_accept_ballot_lib = AcceptBallotLib(
+            ["-v", str(self.parsed_args.verbosity)]
             + accept_address_args
             + (["-n"] if self.parsed_args.printonly else [])
             + (["-m"] if self.parsed_args.merge_contests else []),
-            check=True,
-            no_touch_stds=True,
-            timeout=None,
         )
+        a_accept_ballot_lib.main()
 
     # End Of Class
 

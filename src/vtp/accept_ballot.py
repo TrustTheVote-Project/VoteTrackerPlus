@@ -31,13 +31,10 @@ from vtp.script_libs.accept_ballot_lib import AcceptBallotLib
 
 def main():
     """If called via a python local install entrypoint"""
-    main_acceptballotlib = AcceptBallotLib(sys.argv)
+    main_acceptballotlib = AcceptBallotLib(sys.argv[1:])
     main_acceptballotlib.main()
 
 
 # If called as a script entrypoint
 if __name__ == "__main__":
-    _main_acceptballotlib = AcceptBallotLib(sys.argv)
-    _main_acceptballotlib.main()
-
-# EOF
+    main()

@@ -47,6 +47,10 @@ class AcceptBallotLib:
         self.argv = argv
         self.parsed_args = None
 
+    def __str__(self):
+        """Boilerplate"""
+        return "argv=" + str(self.argv) + "\n" + "parsed_args=" + str(self.parsed_args)
+
     def get_random_branchpoint(self, branch):
         """Return a random branchpoint on the supplied branch
 
