@@ -36,7 +36,6 @@ import sys
 from vtp.utils.address import Address
 from vtp.utils.ballot import Ballot, Contests
 from vtp.utils.common import Globals, Shellout
-from vtp.utils.election_config import ElectionConfig
 
 
 class AcceptBallotLib:
@@ -366,14 +365,10 @@ class AcceptBallotLib:
     # main
     ################
     # pylint: disable=duplicate-code
-    def main(self):
+    def main(self, the_election_config):
         """Main function - see -h for more info"""
 
         self.parse_arguments()
-
-        # Create an VTP election config object
-        the_election_config = ElectionConfig()
-        the_election_config.parse_configs()
 
         # Create a ballot
         a_ballot = Ballot()

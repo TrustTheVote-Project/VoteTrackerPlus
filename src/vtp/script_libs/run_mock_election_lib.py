@@ -42,7 +42,6 @@ from vtp.script_libs.tally_contests_lib import TallyContestsLib
 from vtp.utils.address import Address
 from vtp.utils.ballot import Ballot
 from vtp.utils.common import Globals, Shellout
-from vtp.utils.election_config import ElectionConfig
 
 
 class RunMockElectionLib:
@@ -219,7 +218,7 @@ class RunMockElectionLib:
                         self.parsed_args.printonly,
                     ]
                 )
-                cast_ballot.main()
+                cast_ballot.main(the_election_config)
                 # - accept the ballot
                 accept_ballot = AcceptBallotLib(
                     [
@@ -229,7 +228,7 @@ class RunMockElectionLib:
                         self.parsed_args.printonly,
                     ]
                 )
-                accept_ballot.main()
+                accept_ballot.main(the_election_config)
                 if self.parsed_args.device == "both":
                     # - merge the ballot's contests
                     if self.parsed_args.flush_mode == 2:
@@ -385,7 +384,7 @@ class RunMockElectionLib:
     # main
     ################
     # pylint: disable=duplicate-code
-    def main(self):
+    def main(self, the_election_config):
         """Main function - see -h for more info
 
         Note - this is a serial synchronous mock election loop.  A
@@ -404,11 +403,6 @@ class RunMockElectionLib:
         """
 
         self.parse_arguments()
-
-        # Create an VTP election config object (this will perform an early
-        # check on the ElectionData)
-        the_election_config = ElectionConfig()
-        the_election_config.parse_configs()
 
         # If an address was used, use that
         if (

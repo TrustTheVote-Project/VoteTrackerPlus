@@ -27,12 +27,19 @@ See './accept_ballot.py -h' for usage information.
 import sys
 
 from vtp.script_libs.accept_ballot_lib import AcceptBallotLib
+from vtp.utils.election_config import ElectionConfig
 
 
 def main():
     """If called via a python local install entrypoint"""
+
+    # Create an VTP election config object
+    the_election_config = ElectionConfig()
+    the_election_config.parse_configs()
+
+    # do it
     _main = AcceptBallotLib(sys.argv[1:])
-    _main.main()
+    _main.main(the_election_config)
 
 
 # If called as a script entrypoint

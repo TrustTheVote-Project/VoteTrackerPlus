@@ -29,12 +29,19 @@ See ../../docs/tech/executable-overview.md for the context in which this file wa
 import sys
 
 from vtp.script_libs.cast_ballot_lib import CastBallotLib
+from vtp.utils.election_config import ElectionConfig
 
 
 def main():
     """If called via a python local install entrypoint"""
-    main_castballotlib = CastBallotLib(sys.argv[1:])
-    main_castballotlib.main()
+
+    # Create an VTP election config object
+    the_election_config = ElectionConfig()
+    the_election_config.parse_configs()
+
+    # do it
+    _main = CastBallotLib(sys.argv[1:])
+    _main.main(the_election_config)
 
 
 # If called as a script entrypoint

@@ -38,7 +38,6 @@ from vtp.script_libs.cast_ballot_lib import CastBallotLib
 from vtp.utils.address import Address
 from vtp.utils.ballot import Ballot
 from vtp.utils.common import Shellout
-from vtp.utils.election_config import ElectionConfig
 
 
 class VoteLib:
@@ -107,14 +106,10 @@ class VoteLib:
     ################
     # main
     ################
-    def main(self):
+    def main(self, the_election_config):
         """Main function - see -h for more info"""
 
         self.parse_arguments()
-
-        # Create an VTP election config object
-        the_election_config = ElectionConfig()
-        the_election_config.parse_configs()
 
         # git pull the ElectionData repo so to get the latest set of
         # remote CVRs branches
@@ -153,7 +148,7 @@ class VoteLib:
             + cast_address_args
             + (["-n"] if self.parsed_args.printonly else []),
         )
-        a_cast_ballot_lib.main()
+        a_cast_ballot_lib.main(the_election_config)
         # Accept the ballot
         a_accept_ballot_lib = AcceptBallotLib(
             ["-v", str(self.parsed_args.verbosity)]
@@ -161,7 +156,7 @@ class VoteLib:
             + (["-n"] if self.parsed_args.printonly else [])
             + (["-m"] if self.parsed_args.merge_contests else []),
         )
-        a_accept_ballot_lib.main()
+        a_accept_ballot_lib.main(the_election_config)
 
     # End Of Class
 
