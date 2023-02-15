@@ -242,7 +242,7 @@ class RunMockElectionLib:
                                 self.parsed_args.printonly,
                             ]
                         )
-                        merge_contests.main()
+                        merge_contests.main(the_election_config)
                     else:
                         # Should only need to merge one ballot worth of
                         # contests - also no need for an extra large
@@ -256,7 +256,7 @@ class RunMockElectionLib:
                                 self.parsed_args.printonly,
                             ]
                         )
-                        merge_contests.main()
+                        merge_contests.main(the_election_config)
                     # don't let too much garbage build up
                     if count % 10 == 9:
                         Shellout.run(
@@ -278,7 +278,7 @@ class RunMockElectionLib:
                     self.parsed_args.printonly,
                 ]
             )
-            merge_contests.main()
+            merge_contests.main(the_election_config)
             # tally the contests
             tally_contests = TallyContestsLib(
                 [
@@ -287,7 +287,7 @@ class RunMockElectionLib:
                     self.parsed_args.printonly,
                 ]
             )
-            tally_contests.main()
+            tally_contests.main(the_election_config)
         # clean up git just in case
         Shellout.run(
             ["git", "gc"],
@@ -332,7 +332,7 @@ class RunMockElectionLib:
                         self.parsed_args.printonly,
                     ]
                 )
-                merge_contests.main()
+                merge_contests.main(the_election_config)
                 tally_contests = TallyContestsLib(
                     [
                         "-v",
@@ -340,7 +340,7 @@ class RunMockElectionLib:
                         self.parsed_args.printonly,
                     ]
                 )
-                tally_contests.main()
+                tally_contests.main(the_election_config)
                 return
             merge_contests = MergeContestsLib(
                 [
@@ -352,7 +352,7 @@ class RunMockElectionLib:
                     self.parsed_args.printonly,
                 ]
             )
-            merge_contests.main()
+            merge_contests.main(the_election_config)
             logging.info("Sleeping for 10")
             time.sleep(10)
             elapsed_time = time.time() - start_time
@@ -369,7 +369,7 @@ class RunMockElectionLib:
                     self.parsed_args.printonly,
                 ]
             )
-            merge_contests.main()
+            merge_contests.main(the_election_config)
         # tally the contests
         tally_contests = TallyContestsLib(
             [
@@ -378,7 +378,7 @@ class RunMockElectionLib:
                 self.parsed_args.printonly,
             ]
         )
-        tally_contests.main()
+        tally_contests.main(the_election_config)
 
     ################
     # main
@@ -401,8 +401,6 @@ class RunMockElectionLib:
         Assumes that each supplied town already has the blank ballots
         generated and/or already committed.
         """
-
-        self.parse_arguments()
 
         # If an address was used, use that
         if (

@@ -32,7 +32,6 @@ import sys
 
 # Local libraries
 from vtp.utils.common import Globals, Shellout
-from vtp.utils.election_config import ElectionConfig
 
 
 class ShowContestsLib:
@@ -146,14 +145,10 @@ class ShowContestsLib:
     # main
     ################
     # pylint: disable=duplicate-code
-    def main(self):
+    def main(self, the_election_config):
         """Main function - see -h for more info"""
 
-        self.parse_arguments()
-
         # Check the ElectionData
-        the_election_config = ElectionConfig()
-        the_election_config.parse_configs()
         election_data_dir = os.path.join(
             the_election_config.get("git_rootdir"),
             Globals.get("ROOT_ELECTION_DATA_SUBDIR"),

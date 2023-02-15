@@ -35,7 +35,6 @@ import sys
 
 # Local import
 from vtp.utils.common import Globals, Shellout
-from vtp.utils.election_config import ElectionConfig
 
 
 class MergeContestsLib:
@@ -244,13 +243,8 @@ class MergeContestsLib:
     # main
     ################
     # pylint: disable=duplicate-code
-    def main(self):
+    def main(self, the_election_config):
         """Main function - see -h for more info"""
-
-        self.parse_arguments()
-        # Create an VTP election config object
-        the_election_config = ElectionConfig()
-        the_election_config.parse_configs()
 
         # Set the three EV's
         os.environ["GIT_AUTHOR_DATE"] = "2022-01-01T12:00:00"

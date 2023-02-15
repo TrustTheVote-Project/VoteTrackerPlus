@@ -21,19 +21,29 @@
 tally_contests.py - command line level script to tally the contests of
 a election.
 
-See './tally_contests.py -h' for usage information.
+See 'tally_contests.py -h' for usage information.
 """
 
 # pylint: disable=wrong-import-position   # import statements not top of file
 import sys
 
 from vtp.script_libs.tally_contests_lib import TallyContestsLib
+from vtp.utils.election_config import ElectionConfig
 
 
+# pylint: disable=duplicate-code
 def main():
     """If called via a python local install entrypoint"""
+
+    # Parse args first (ZZZ note logging interface)
     _main = TallyContestsLib(sys.argv[1:])
-    _main.main()
+
+    # Create an VTP election config object
+    the_election_config = ElectionConfig()
+    the_election_config.parse_configs()
+
+    # do it
+    _main.main(the_election_config)
 
 
 # If called as a script entrypoint

@@ -27,12 +27,22 @@ See 'show_contest.py -h' for usage information.
 import sys
 
 from vtp.script_libs.show_contests_lib import ShowContestsLib
+from vtp.utils.election_config import ElectionConfig
 
 
+# pylint: disable=duplicate-code
 def main():
     """If called via a python local install entrypoint"""
+
+    # Parse args first (ZZZ note logging interface)
     _main = ShowContestsLib(sys.argv[1:])
-    _main.main()
+
+    # Create an VTP election config object
+    the_election_config = ElectionConfig()
+    the_election_config.parse_configs()
+
+    # do it
+    _main.main(the_election_config)
 
 
 # If called as a script entrypoint

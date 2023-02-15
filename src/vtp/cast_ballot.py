@@ -19,10 +19,7 @@
 
 """cast_ballot.py - command line level test script to automatically cast a ballot.
 
-See './cast_ballot.py -h' for usage information.
-
-See ../../docs/tech/executable-overview.md for the context in which this file was created.
-
+See 'cast_ballot.py -h' for usage information.
 """
 
 # pylint: disable=wrong-import-position
@@ -32,15 +29,18 @@ from vtp.script_libs.cast_ballot_lib import CastBallotLib
 from vtp.utils.election_config import ElectionConfig
 
 
+# pylint: disable=duplicate-code
 def main():
     """If called via a python local install entrypoint"""
+
+    # Parse args first (ZZZ note logging interface)
+    _main = CastBallotLib(sys.argv[1:])
 
     # Create an VTP election config object
     the_election_config = ElectionConfig()
     the_election_config.parse_configs()
 
     # do it
-    _main = CastBallotLib(sys.argv[1:])
     _main.main(the_election_config)
 
 

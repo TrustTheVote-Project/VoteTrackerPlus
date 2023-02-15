@@ -21,7 +21,7 @@
 vote.py - command line level script to allow an end voter to vote - it
 simply wraps a call to cast_ballot.py and accept_ballot.py.
 
-See './vote.py -h' for usage information.
+See 'vote.py -h' for usage information.
 """
 
 # pylint: disable=wrong-import-position   # import statements not top of file
@@ -31,15 +31,18 @@ from vtp.script_libs.vote_lib import VoteLib
 from vtp.utils.election_config import ElectionConfig
 
 
+# pylint: disable=duplicate-code
 def main():
     """If called via a python local install entrypoint"""
+
+    # Parse args first (ZZZ note logging interface)
+    _main = VoteLib(sys.argv[1:])
 
     # Create an VTP election config object
     the_election_config = ElectionConfig()
     the_election_config.parse_configs()
 
     # do it
-    _main = VoteLib(sys.argv[1:])
     _main.main(the_election_config)
 
 

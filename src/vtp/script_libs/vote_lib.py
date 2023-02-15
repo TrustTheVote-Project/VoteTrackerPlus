@@ -109,8 +109,6 @@ class VoteLib:
     def main(self, the_election_config):
         """Main function - see -h for more info"""
 
-        self.parse_arguments()
-
         # git pull the ElectionData repo so to get the latest set of
         # remote CVRs branches
         a_ballot = Ballot()

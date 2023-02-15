@@ -35,7 +35,6 @@ import sys
 from vtp.utils.ballot import Ballot
 from vtp.utils.common import Shellout
 from vtp.utils.contest import Tally
-from vtp.utils.election_config import ElectionConfig
 from vtp.utils.exceptions import TallyException
 
 
@@ -45,7 +44,7 @@ class TallyContestsLib:
     def __init__(self, argv):
         """Only to module-ize the scripts and keep things simple and idiomatic."""
         self.argv = argv
-        self.parsed_args = None
+        self.parse_arguments()
 
     def __str__(self):
         """Boilerplate"""
@@ -129,14 +128,8 @@ class TallyContestsLib:
     # main
     ################
     # pylint: disable=duplicate-code
-    def main(self):
+    def main(self, the_election_config):
         """Main function - see -h for more info"""
-
-        self.parse_arguments()
-
-        # Create an VTP election config object
-        the_election_config = ElectionConfig()
-        the_election_config.parse_configs()
 
         # git pull the ElectionData repo so to get the latest set of
         # remote CVRs branches

@@ -28,12 +28,22 @@ See 'verify_ballot_receipt.py -h' for usage information.
 import sys
 
 from vtp.script_libs.verify_ballot_receipt_lib import VerifyBallotReceiptLib
+from vtp.utils.election_config import ElectionConfig
 
 
+# pylint: disable=duplicate-code
 def main():
     """If called via a python local install entrypoint"""
+
+    # Parse args first (ZZZ note logging interface)
     _main = VerifyBallotReceiptLib(sys.argv[1:])
-    _main.main()
+
+    # Create an VTP election config object
+    the_election_config = ElectionConfig()
+    the_election_config.parse_configs()
+
+    # do it
+    _main.main(the_election_config)
 
 
 # If called as a script entrypoint

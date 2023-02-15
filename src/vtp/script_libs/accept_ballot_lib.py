@@ -368,8 +368,6 @@ class AcceptBallotLib:
     def main(self, the_election_config):
         """Main function - see -h for more info"""
 
-        self.parse_arguments()
-
         # Create a ballot
         a_ballot = Ballot()
 

@@ -29,12 +29,22 @@ See 'merge_contests.py -h' for usage information.
 import sys
 
 from vtp.script_libs.merge_contests_lib import MergeContestsLib
+from vtp.utils.election_config import ElectionConfig
 
 
+# pylint: disable=duplicate-code
 def main():
     """If called via a python local install entrypoint"""
+
+    # Parse args first (ZZZ note logging interface)
     _main = MergeContestsLib(sys.argv[1:])
-    _main.main()
+
+    # Create an VTP election config object
+    the_election_config = ElectionConfig()
+    the_election_config.parse_configs()
+
+    # do it
+    _main.main(the_election_config)
 
 
 # If called as a script entrypoint
