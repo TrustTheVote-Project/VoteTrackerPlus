@@ -18,13 +18,10 @@
 #   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 """
-merge_contests.py - command line level script to merge CVR contest
+Command line level script to merge CVR contest
 branches into the master branch
 
-See './merge_contests.py -h' for usage information.
-
-See ../../docs/tech/merge_contests.md for the context in which this
-file was created.
+See 'merge_contests.py -h' for usage information.
 """
 
 # Standard imports
