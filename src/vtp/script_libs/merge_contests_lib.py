@@ -44,6 +44,7 @@ class MergeContestsLib:
         """Only to module-ize the scripts and keep things simple and idiomatic."""
         self.argv = argv
         self.parsed_args = None
+        self.parse_arguments()
 
     def __str__(self):
         """Boilerplate"""
@@ -225,7 +226,8 @@ class MergeContestsLib:
             help="will printonly and not write to disk (def=True)",
         )
 
-        self.parsed_args = parser.parse_args(self.argv)
+        # import pdb; pdb.set_trace()
+        self.parsed_args = parser.parse_args([str(x) for x in self.argv])
         verbose = {
             0: logging.CRITICAL,
             1: logging.ERROR,

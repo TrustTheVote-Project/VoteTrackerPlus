@@ -51,6 +51,7 @@ class RunMockElectionLib:
         """Only to module-ize the scripts and keep things simple and idiomatic."""
         self.argv = argv
         self.parsed_args = None
+        self.parse_arguments()
 
     def __str__(self):
         """Boilerplate"""
@@ -138,7 +139,7 @@ class RunMockElectionLib:
             help="will printonly and not write to disk (def=True)",
         )
 
-        self.parsed_args = parser.parse_args(self.argv)
+        self.parsed_args = parser.parse_args([str(x) for x in self.argv])
         verbose = {
             0: logging.CRITICAL,
             1: logging.ERROR,
@@ -210,23 +211,27 @@ class RunMockElectionLib:
                         check=True,
                     )
                 cast_ballot = CastBallotLib(
-                    [
-                        "--blank_ballot=" + blank_ballot,
-                        "--demo_mode",
-                        "-v",
-                        self.parsed_args.verbosity,
+                    Shellout.handle_printonly_switch(
+                        [
+                            "--blank_ballot=" + blank_ballot,
+                            "--demo_mode",
+                            "-v",
+                            self.parsed_args.verbosity,
+                        ],
                         self.parsed_args.printonly,
-                    ]
+                    )
                 )
                 cast_ballot.main(the_election_config)
                 # - accept the ballot
                 accept_ballot = AcceptBallotLib(
-                    [
-                        "--cast_ballot=" + Ballot.get_cast_from_blank(blank_ballot),
-                        "-v",
-                        self.parsed_args.verbosity,
+                    Shellout.handle_printonly_switch(
+                        [
+                            "--cast_ballot=" + Ballot.get_cast_from_blank(blank_ballot),
+                            "-v",
+                            self.parsed_args.verbosity,
+                        ],
                         self.parsed_args.printonly,
-                    ]
+                    )
                 )
                 accept_ballot.main(the_election_config)
                 if self.parsed_args.device == "both":
@@ -235,12 +240,14 @@ class RunMockElectionLib:
                         # Since casting and merging is basically
                         # synchronous, no need for an extra large timeout
                         merge_contests = MergeContestsLib(
-                            [
-                                "-f",
-                                "-v",
-                                self.parsed_args.verbosity,
+                            Shellout.handle_printonly_switch(
+                                [
+                                    "-f",
+                                    "-v",
+                                    self.parsed_args.verbosity,
+                                ],
                                 self.parsed_args.printonly,
-                            ]
+                            )
                         )
                         merge_contests.main(the_election_config)
                     else:
@@ -248,13 +255,15 @@ class RunMockElectionLib:
                         # contests - also no need for an extra large
                         # timeout
                         merge_contests = MergeContestsLib(
-                            [
-                                "-m",
-                                self.parsed_args.minimum_cast_cache,
-                                "-v",
-                                self.parsed_args.verbosity,
+                            Shellout.handle_printonly_switch(
+                                [
+                                    "-m",
+                                    self.parsed_args.minimum_cast_cache,
+                                    "-v",
+                                    self.parsed_args.verbosity,
+                                ],
                                 self.parsed_args.printonly,
-                            ]
+                            )
                         )
                         merge_contests.main(the_election_config)
                     # don't let too much garbage build up
@@ -271,21 +280,25 @@ class RunMockElectionLib:
             # merge the remaining contests
             # Note - this needs a longer timeout as it can take many seconds
             merge_contests = MergeContestsLib(
-                [
-                    "-f",
-                    "-v",
-                    self.parsed_args.verbosity,
+                Shellout.handle_printonly_switch(
+                    [
+                        "-f",
+                        "-v",
+                        self.parsed_args.verbosity,
+                    ],
                     self.parsed_args.printonly,
-                ]
+                )
             )
             merge_contests.main(the_election_config)
             # tally the contests
             tally_contests = TallyContestsLib(
-                [
-                    "-v",
-                    self.parsed_args.verbosity,
+                Shellout.handle_printonly_switch(
+                    [
+                        "-v",
+                        self.parsed_args.verbosity,
+                    ],
                     self.parsed_args.printonly,
-                ]
+                )
             )
             tally_contests.main(the_election_config)
         # clean up git just in case
@@ -324,33 +337,39 @@ class RunMockElectionLib:
                 )
             if self.parsed_args.flush_mode == 2:
                 merge_contests = MergeContestsLib(
-                    [
-                        "-r",
-                        "-f",
-                        "-v",
-                        self.parsed_args.verbosity,
+                    Shellout.handle_printonly_switch(
+                        [
+                            "-r",
+                            "-f",
+                            "-v",
+                            self.parsed_args.verbosity,
+                        ],
                         self.parsed_args.printonly,
-                    ]
+                    )
                 )
                 merge_contests.main(the_election_config)
                 tally_contests = TallyContestsLib(
-                    [
-                        "-v",
-                        self.parsed_args.verbosity,
+                    Shellout.handle_printonly_switch(
+                        [
+                            "-v",
+                            self.parsed_args.verbosity,
+                        ],
                         self.parsed_args.printonly,
-                    ]
+                    )
                 )
                 tally_contests.main(the_election_config)
                 return
             merge_contests = MergeContestsLib(
-                [
-                    "-r",
-                    "-m",
-                    self.parsed_args.minimum_cast_cache,
-                    "-v",
-                    self.parsed_args.verbosity,
+                Shellout.handle_printonly_switch(
+                    [
+                        "-r",
+                        "-m",
+                        self.parsed_args.minimum_cast_cache,
+                        "-v",
+                        self.parsed_args.verbosity,
+                    ],
                     self.parsed_args.printonly,
-                ]
+                )
             )
             merge_contests.main(the_election_config)
             logging.info("Sleeping for 10")
@@ -361,22 +380,26 @@ class RunMockElectionLib:
         if self.parsed_args.flush_mode in [1, 2]:
             print("Cleaning up remaining unmerged ballots")
             merge_contests = MergeContestsLib(
-                [
-                    "-r",
-                    "-f",
-                    "-v",
-                    self.parsed_args.verbosity,
+                Shellout.handle_printonly_switch(
+                    [
+                        "-r",
+                        "-f",
+                        "-v",
+                        self.parsed_args.verbosity,
+                    ],
                     self.parsed_args.printonly,
-                ]
+                )
             )
             merge_contests.main(the_election_config)
         # tally the contests
         tally_contests = TallyContestsLib(
-            [
-                "-v",
-                self.parsed_args.verbosity,
+            Shellout.handle_printonly_switch(
+                [
+                    "-v",
+                    self.parsed_args.verbosity,
+                ],
                 self.parsed_args.printonly,
-            ]
+            )
         )
         tally_contests.main(the_election_config)
 

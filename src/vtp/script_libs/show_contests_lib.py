@@ -41,6 +41,7 @@ class ShowContestsLib:
         """Only to module-ize the scripts and keep things simple and idiomatic."""
         self.argv = argv
         self.parsed_args = None
+        self.parse_arguments()
 
     def __str__(self):
         """Boilerplate"""
@@ -119,7 +120,7 @@ class ShowContestsLib:
             action="store_true",
             help="will printonly and not write to disk (def=True)",
         )
-        self.parsed_args = parser.parse_args(self.argv)
+        self.parsed_args = parser.parse_args([str(x) for x in self.argv])
         verbose = {
             0: logging.CRITICAL,
             1: logging.ERROR,
