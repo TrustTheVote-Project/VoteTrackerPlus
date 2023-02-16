@@ -116,14 +116,21 @@ class RunMockElectionLib:
             "--flush_mode",
             type=int,
             default=0,
-            help="will either not flush (0), flush on exit (1), or flush on each iteration (2)",
+            help="will either not flush (0 - default), flush on exit (1), or flush on each iteration (2)",
         )
         parser.add_argument(
             "-i",
             "--iterations",
             type=int,
             default=10,
-            help="the number of unique blank ballots to cast (def=10)",
+            help="the number of unique blank ballots for the scanner app to cast (def=10)",
+        )
+        parser.add_argument(
+            "-u",
+            "--duration",
+            type=int,
+            default=10,
+            help="the number of minutes for the server app to run (def=10)",
         )
         parser.add_argument(
             "-v",
@@ -319,7 +326,7 @@ class RunMockElectionLib:
         # the branches to be merged are remote and not local.
         start_time = time.time()
         # Loop for a day and sleep for 10 seconds
-        seconds = 3600 * 24
+        seconds = 60 * self.parsed_args.duration
         election_data_dir = os.path.join(
             the_election_config.get("git_rootdir"),
             Globals.get("ROOT_ELECTION_DATA_SUBDIR"),
@@ -440,6 +447,7 @@ class RunMockElectionLib:
                     "minimum_cast_cache",
                     "flush_mode",
                     "iterations",
+                    "duration",
                     "verbosity",
                     "printonly",
                 ],
