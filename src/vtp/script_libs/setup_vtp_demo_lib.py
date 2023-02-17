@@ -196,6 +196,49 @@ class SetupVtpDemoLib:
                 "in setup mode (without the -g switch)."
             )
 
+    def create_a_guid_workspace_folder(self):
+        """creates guid workspace"""
+        guid = secrets.token_hex(10)
+        folder1 = guid[:2]
+        folder2 = guid[2:]
+        # Note - mkdir raises an error if the directory exists. So
+        # just try creating them.
+        path1 = os.path.join(self.parsed_args.location, folder1)
+        try:
+            logging.debug("creating (%s) if it does not exist", path1)
+            os.mkdir(path1)
+        except FileExistsError:
+            pass
+        # make sure it is a directory
+        if not os.path.isdir(path1):
+            raise RuntimeError(
+                f"Run time error - {folder1} is not a directory" f" (for path {path1})"
+            )
+        # if after 3 tries it still does not work, raise an error
+        count = 0
+        while True:
+            count += 1
+            path2 = os.path.join(path1, folder2)
+            try:
+                logging.debug("creating (%s)", path2)
+                os.mkdir(path2)
+            except FileExistsError as exc:
+                if count > 3:
+                    # raise an error
+                    raise RuntimeError(
+                        "could not create a GUID directory after 3 tries - giving up"
+                    ) from exc
+                # otherwise try again
+                folder2 = secrets.token_hex(8)
+                continue
+            # success
+            break
+
+        # Clone the repo from the local clone, not the GitHub remote clone
+        self.create_client_repos([path2], self.tabulation_local_upstream_absdir)
+        # return the GUID
+        return guid
+
     ################
     # main
     ################
@@ -229,35 +272,13 @@ class SetupVtpDemoLib:
             os.path.basename(election_data_remote_url),
         )
 
-        # When creating a GUID workspace
-
+        # When creating a GUID workspace ...
         if self.parsed_args.guid_client_store:
-            # generate a GUID for the directory name
-            guid = secrets.token_hex(10)
-            folder1 = guid[:2]
-            folder2 = guid[2:]
-            # Need to determine without race conditions if the
-            # directory does not exist already.
+            return self.create_a_guid_workspace_folder()
 
-            # ZZZ
+        # ... or the initial setup of the non-GUID client and server workspaces
 
-            # create the subdirs
-            for subdir in [folder1, folder2]:
-                full_dir = os.path.join(self.parsed_args.location, subdir)
-                if not os.path.isdir(full_dir):
-                    logging.debug("creating (%s)", full_dir)
-                    if not self.parsed_args.printonly:
-                        os.mkdir(full_dir)
-            # Clone the repo from the local clone, not the GitHub remote clone
-            self.create_client_repos(
-                [os.path.join(folder1, folder2)], self.tabulation_local_upstream_absdir
-            )
-            # return the GUID
-            return guid
-
-        # Initial setup of the demo client side workspace
-
-        # First bare clone the upstream remote GitHub ElectionData repo
+        # First clone the bare upstream remote GitHub ElectionData repo
         with Shellout.changed_cwd(self.tabulation_local_upstream_absdir):
             Shellout.run(
                 ["git", "clone", "--bare", election_data_remote_url],
