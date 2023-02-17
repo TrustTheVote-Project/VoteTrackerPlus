@@ -41,15 +41,30 @@ from vtp.utils.common import Globals, Shellout
 class SetupVtpDemoLib:
     """A class to wrap the run_mock_election.py script."""
 
-    _client_dir_name = "client-store"
-    _server_dir_name = "tabulation-server"
-    _mock_client_dir_name = "mock-clients"
+    # Note - all three of these folders hold git repos where the
+    # remote is a bare clone of the upstream/remote GitHub
+    # ElectionData repo. In an attempt at clarity, the word
+    # 'workspace' here refers to a non bare repo, 'upstream' is the
+    # parent repo, and 'remote' means non-local to this computer
+    # (requires a TPC/IP connection to get to).
+
+    # The subdirectory where the FastAPI connection git workspaces are stored
+    _guid_client_dirname = "guid-client-store"
+    # The subdirectory where the local tabulation git workspace is stored
+    _tabulation_server_dirname = "tabulation-server"
+    # The subdirectory where the mock scanner git workspaces are stored
+    _mock_client_dirname = "mock-clients"
 
     def __init__(self, argv):
         """Only to module-ize the scripts and keep things simple and idiomatic."""
+        # Unparsed args nominally from argv or the constructor caller
+        # - must be strings
         self.argv = argv
+        # Parsed args
         self.parsed_args = None
-        self.tabulation_server_dir = ""
+        # The absolute path to the local bare clone of the upstream
+        # GitHub ElectionData remote repo
+        self.tabulation_local_upstream_absdir = ""
         # hrmph, parse the args now even though it is in the constructor
         self.parse_arguments()
 
@@ -61,18 +76,22 @@ class SetupVtpDemoLib:
             + "\nparsed_args="
             + str(self.parsed_args)
             + "\ntabulation server="
-            + self.tabulation_server_dir
+            + self.tabulation_local_upstream_absdir
         )
 
-    def create_client_repos(self, clone_dirs, remote_path):
-        """create demo clients workspaces"""
+    def create_client_repos(self, clone_dirs, upstream_url):
+        """
+        Create demo clients workspaces.  The first arg is an list of
+        directories in which to create the clone.  The second arg is
+        the remote URL which can be a path
+        """
         # Now locally clone those as needed.  With the python/poetry
         # local install idiom, the demo location no longer needs the
         # submodules to be cloned.
         for clone_dir in clone_dirs:
             with Shellout.changed_cwd(clone_dir):
                 Shellout.run(
-                    ["git", "clone", remote_path],
+                    ["git", "clone", upstream_url],
                     self.parsed_args.printonly,
                     verbosity=self.parsed_args.verbosity,
                 )
@@ -167,13 +186,12 @@ class SetupVtpDemoLib:
                 f"The root demo folder, {self.parsed_args.location}, does not exit.  "
                 "It needs to pre-exist - please manually create it."
             )
-        self.tabulation_server_dir = self.parsed_args.location
-        client_dir = os.path.join(
-            self.tabulation_server_dir, SetupVtpDemoLib._client_dir_name
+        test_dir = os.path.join(
+            self.parsed_args.location, SetupVtpDemoLib._tabulation_server_dirname
         )
-        if self.parsed_args.guid_client_store and not os.path.isdir(client_dir):
+        if self.parsed_args.guid_client_store and not os.path.isdir(test_dir):
             raise FileNotFoundError(
-                f"The git client data store folder ({client_dir}) does not exit.  "
+                f"The tabulation server workspace ({test_dir}) does not exit.  "
                 "It needs to pre-exist and is created when setup-vtp-demo is executed "
                 "in setup mode (without the -g switch)."
             )
@@ -191,6 +209,28 @@ class SetupVtpDemoLib:
             Globals.get("ROOT_ELECTION_DATA_SUBDIR"),
         )
 
+        # Get the election data native GitHub remote clone name from _here_
+        with Shellout.changed_cwd(election_data_dir):
+            election_data_remote_url = Shellout.run(
+                ["git", "config", "--get", "remote.origin.url"],
+                check=True,
+                capture_output=True,
+                text=True,
+            ).stdout.strip()
+
+        # Need the complete absolute path to the local upstream bare
+        # repo (a.k.a. the tabulation server). Since it will be bare,
+        # that name will contain a .git suffix while the client
+        # workspaces (client and server) will not have that suffix
+        # (and not be bare).
+        self.tabulation_local_upstream_absdir = os.path.join(
+            self.parsed_args.location,
+            SetupVtpDemoLib._tabulation_server_dirname,
+            os.path.basename(election_data_remote_url),
+        )
+
+        # When creating a GUID workspace
+
         if self.parsed_args.guid_client_store:
             # generate a GUID for the directory name
             guid = secrets.token_hex(10)
@@ -199,6 +239,8 @@ class SetupVtpDemoLib:
             # Need to determine without race conditions if the
             # directory does not exist already.
 
+            # ZZZ
+
             # create the subdirs
             for subdir in [folder1, folder2]:
                 full_dir = os.path.join(self.parsed_args.location, subdir)
@@ -206,33 +248,28 @@ class SetupVtpDemoLib:
                     logging.debug("creating (%s)", full_dir)
                     if not self.parsed_args.printonly:
                         os.mkdir(full_dir)
-            # Need to determine on the fly the absolute path to the
-            # tabulation-server dir.  We have the parent dir but not
-            # the actual git clone folder name.  Get that
-            with Shellout.changed_cwd(election_data_dir):
-                git_repo_name = os.path.basename(
-                    Shellout.run(
-                        ["git", "config", "--get", "remote.origin.url"],
-                        check=True,
-                        capture_output=True,
-                        text=True,
-                    ).stdout.strip()
-                )
-            # Clone the repo
+            # Clone the repo from the local clone, not the GitHub remote clone
             self.create_client_repos(
-                [os.path.join(folder1, folder2)],
-                os.path.join(self.tabulation_server_dir, git_repo_name),
+                [os.path.join(folder1, folder2)], self.tabulation_local_upstream_absdir
             )
             # return the GUID
             return guid
 
-        # Initial setup of the demo
+        # Initial setup of the demo client side workspace
+
+        # First bare clone the upstream remote GitHub ElectionData repo
+        with Shellout.changed_cwd(self.tabulation_local_upstream_absdir):
+            Shellout.run(
+                ["git", "clone", "--bare", election_data_remote_url],
+                self.parsed_args.printonly,
+                verbosity=self.parsed_args.verbosity,
+            )
 
         # Create the first subdirectory level
         for subdir in [
-            SetupVtpDemoLib._client_dir_name,
-            SetupVtpDemoLib._server_dir_name,
-            SetupVtpDemoLib._mock_client_dir_name,
+            SetupVtpDemoLib._guid_client_dirname,
+            SetupVtpDemoLib._tabulation_server_dirname,
+            SetupVtpDemoLib._mock_client_dirname,
         ]:
             full_dir = os.path.join(self.parsed_args.location, subdir)
             if not os.path.isdir(full_dir):
@@ -240,54 +277,34 @@ class SetupVtpDemoLib:
                 if not self.parsed_args.printonly:
                     os.mkdir(full_dir)
 
-        # Create the mock scanner subdirs
+        # Create the mock scanner client subdirs
         clone_dirs = []
         for count in range(self.parsed_args.scanners):
             full_dir = os.path.join(
                 self.parsed_args.location,
-                SetupVtpDemoLib._client_dir_name,
+                SetupVtpDemoLib._mock_client_dirname,
                 "scanner." + f"{count:02d}",
             )
-            clone_dirs.append(full_dir)
             if not os.path.isdir(full_dir):
                 logging.debug("creating (%s)", full_dir)
                 if not self.parsed_args.printonly:
                     os.mkdir(full_dir)
+            clone_dirs.append(full_dir)
 
-        # Create the tabulation server subdir
+        # Create the tabulation client subdir
         full_dir = os.path.join(
-            self.parsed_args.location, SetupVtpDemoLib._client_dir_name, "server"
+            self.parsed_args.location, SetupVtpDemoLib._mock_client_dirname, "server"
         )
-        clone_dirs.append(full_dir)
         if not os.path.isdir(full_dir):
             logging.debug("creating (%s)", full_dir)
             if not self.parsed_args.printonly:
                 os.mkdir(full_dir)
+        clone_dirs.append(full_dir)
 
-        # Clone the election data repo from GitHub as a bare clone
-        tabulation_abs_dir = os.path.join(
-            self.parsed_args.location, SetupVtpDemoLib._server_dir_name
-        )
-        # Get the election data remote clone name
-        with Shellout.changed_cwd(election_data_dir):
-            election_data_remote_name = Shellout.run(
-                ["git", "config", "--get", "remote.origin.url"],
-                check=True,
-                capture_output=True,
-                text=True,
-            ).stdout.strip()
-        # Note -since the repo is a bare it has the same ".git" suffix
-        # as the remote.
-        with Shellout.changed_cwd(tabulation_abs_dir):
-            Shellout.run(
-                ["git", "clone", "--bare", election_data_remote_name],
-                self.parsed_args.printonly,
-                verbosity=self.parsed_args.verbosity,
-            )
-
-        # With the local tabulation bare clone cloned, create the
-        # actual mock client and tabulation server clones.
-        self.create_client_repos(clone_dirs, tabulation_abs_dir)
+        # With the GitHub remote ElectionData repo cloned (bare) and
+        # with all the necessary client workspaces created, create the
+        # client workspaces.
+        self.create_client_repos(clone_dirs, self.tabulation_local_upstream_absdir)
 
         # return something
         return 0
