@@ -89,12 +89,18 @@ class SetupVtpDemoLib:
         # local install idiom, the demo location no longer needs the
         # submodules to be cloned.
         for clone_dir in clone_dirs:
-            with Shellout.changed_cwd(clone_dir):
-                Shellout.run(
-                    ["git", "clone", upstream_url],
-                    self.parsed_args.printonly,
-                    verbosity=self.parsed_args.verbosity,
-                )
+            if not self.parsed_args.printonly:
+                with Shellout.changed_cwd(clone_dir):
+                    Shellout.run(
+                        ["git", "clone", upstream_url],
+                        self.parsed_args.printonly,
+                        verbosity=self.parsed_args.verbosity,
+                        check=True,
+                    )
+            else:
+                logging.debug("Entering dir (%s):", clone_dir)
+                logging.info("Running git clone %s", upstream_url)
+                logging.debug("Leaving dir (%s):", clone_dir)
 
     ################
     # arg parsing
@@ -104,30 +110,25 @@ class SetupVtpDemoLib:
         """Parse arguments from a command line"""
 
         parser = argparse.ArgumentParser(
-            description="""Will leverage this current git repository
-                        (VoteTrackerPlus) and the associated
-                        ElectionData repo(s) to nominally create in
-                        /opt/VoteTrackerPlus (the default) a demo
-                        election mock with 4 mock ballot scanner apps
-                        and one tabulation server app.  The initial
-                        demo idea is to have three scanners scanning
-                        random ballots while one scanner is used
-                        interactively.
+            formatter_class=argparse.RawDescriptionHelpFormatter,
+            description="""
+Will leverage this current git repository (VoteTrackerPlus) and the
+associated ElectionData repo(s) to nominally create in
+/opt/VoteTrackerPlus (the default) a demo election with 4 mock ballot
+scanner apps and one tabulation server app. The initial demo idea is
+to have three scanners scanning random ballots while one scanner is
+used interactively.
 
-                        All five apps run in separate git repos that
-                        are clones of the same ElectionData repo(s).
-                        The (4) mock scanner app clones are located in
-                        the 'mock-clients' folder, the one tabulation
-                        server is located in the 'tabulation-server'
-                        folder, and the FASTapi clients are located in
-                        the 'client-store' folder via two subfolders
-                        driven by a GUID for each FASTapi client.
+All five apps run in separate git workspaces that are clones of the
+same ElectionData repo(s). The (4) mock scanner app clones are located
+in one folder, the one tabulation server is located in another, and
+the FastAPI clients are located in a third. The FastAPI clients are
+separated by a GUID based subdirectory similar to the native Git
+storage idiom.
 
-                        If the --guid_client_store option is set,
-                        instead of setting up the demo this script
-                        will create a new GUID based FASTapi clone and
-                        return the GUID.
-                        """
+If the --guid_client_store option is set, instead of setting up the
+demo this script will create a new GUID based FASTapi clone and return
+the GUID.  """,
         )
         parser.add_argument(
             "-s",
@@ -198,45 +199,53 @@ class SetupVtpDemoLib:
 
     def create_a_guid_workspace_folder(self):
         """creates guid workspace"""
-        guid = secrets.token_hex(10)
+        guid = secrets.token_hex(20)
         folder1 = guid[:2]
         folder2 = guid[2:]
         # Note - mkdir raises an error if the directory exists. So
         # just try creating them.
-        path1 = os.path.join(self.parsed_args.location, folder1)
-        try:
-            logging.debug("creating (%s) if it does not exist", path1)
-            os.mkdir(path1)
-        except FileExistsError:
-            pass
-        # make sure it is a directory
-        if not os.path.isdir(path1):
-            raise RuntimeError(
-                f"Run time error - {folder1} is not a directory" f" (for path {path1})"
-            )
-        # if after 3 tries it still does not work, raise an error
-        count = 0
-        while True:
-            count += 1
-            path2 = os.path.join(path1, folder2)
+        path1 = os.path.join(
+            self.parsed_args.location, SetupVtpDemoLib._guid_client_dirname, folder1
+        )
+        path2 = os.path.join(path1, folder2)
+        if not self.parsed_args.printonly:
             try:
-                logging.debug("creating (%s)", path2)
-                os.mkdir(path2)
-            except FileExistsError as exc:
-                if count > 3:
-                    # raise an error
-                    raise RuntimeError(
-                        "could not create a GUID directory after 3 tries - giving up"
-                    ) from exc
-                # otherwise try again
-                folder2 = secrets.token_hex(8)
-                continue
-            # success
-            break
+                logging.debug("creating (%s) if it does not exist", path1)
+                os.mkdir(path1)
+            except FileExistsError:
+                pass
+            # make sure it is a directory
+            if not os.path.isdir(path1):
+                raise RuntimeError(
+                    f"Run time error - {folder1} is not a directory"
+                    f" (for path {path1})"
+                )
+            # if after 3 tries it still does not work, raise an error
+            count = 0
+            while True:
+                count += 1
+                try:
+                    logging.debug("creating (%s)", path2)
+                    os.mkdir(path2)
+                except FileExistsError as exc:
+                    if count > 3:
+                        # raise an error
+                        raise RuntimeError(
+                            "could not create a GUID directory after 3 tries - giving up"
+                        ) from exc
+                    # otherwise try again
+                    folder2 = secrets.token_hex(18)
+                    continue
+                # success
+                break
+        else:
+            logging.debug("creating (%s) if it does not exist", path1)
+            logging.debug("creating (%s) if it does not exist", path2)
 
         # Clone the repo from the local clone, not the GitHub remote clone
         self.create_client_repos([path2], self.tabulation_local_upstream_absdir)
         # return the GUID
+        logging.debug("returning %s", guid)
         return guid
 
     ################
@@ -271,22 +280,22 @@ class SetupVtpDemoLib:
             SetupVtpDemoLib._tabulation_server_dirname,
             os.path.basename(election_data_remote_url),
         )
-
+        # Need both the above and the dirname of the above
+        bare_clone_path = os.path.dirname(self.tabulation_local_upstream_absdir)
         # When creating a GUID workspace ...
         if self.parsed_args.guid_client_store:
             return self.create_a_guid_workspace_folder()
 
         # ... or the initial setup of the non-GUID client and server workspaces
 
-        # First clone the bare upstream remote GitHub ElectionData repo
-        with Shellout.changed_cwd(self.tabulation_local_upstream_absdir):
-            Shellout.run(
-                ["git", "clone", "--bare", election_data_remote_url],
-                self.parsed_args.printonly,
-                verbosity=self.parsed_args.verbosity,
+        # Only run if the directory is empty
+        if len(os.listdir(self.parsed_args.location)) != 0:
+            raise RuntimeError(
+                f"the directory ({self.parsed_args.location}) is not empty - "
+                "setup-vtp-demo can only be run on an empty directory"
             )
 
-        # Create the first subdirectory level
+        # First create the necessary subdirectories
         for subdir in [
             SetupVtpDemoLib._guid_client_dirname,
             SetupVtpDemoLib._tabulation_server_dirname,
@@ -298,7 +307,21 @@ class SetupVtpDemoLib:
                 if not self.parsed_args.printonly:
                     os.mkdir(full_dir)
 
-        # Create the mock scanner client subdirs
+        # Second clone the bare upstream remote GitHub ElectionData repo
+        if not self.parsed_args.printonly:
+            with Shellout.changed_cwd(bare_clone_path):
+                Shellout.run(
+                    ["git", "clone", "--bare", election_data_remote_url],
+                    self.parsed_args.printonly,
+                    verbosity=self.parsed_args.verbosity,
+                    check=True,
+                )
+        else:
+            logging.debug("Entering dir (%s):", bare_clone_path)
+            logging.info("Running git clone --bare %s", election_data_remote_url)
+            logging.debug("Leaving dir (%s):", bare_clone_path)
+
+        # Third create the mock scanner client subdirs
         clone_dirs = []
         for count in range(self.parsed_args.scanners):
             full_dir = os.path.join(
@@ -312,7 +335,7 @@ class SetupVtpDemoLib:
                     os.mkdir(full_dir)
             clone_dirs.append(full_dir)
 
-        # Create the tabulation client subdir
+        # Fourth create the tabulation client subdir
         full_dir = os.path.join(
             self.parsed_args.location, SetupVtpDemoLib._mock_client_dirname, "server"
         )
@@ -322,9 +345,9 @@ class SetupVtpDemoLib:
                 os.mkdir(full_dir)
         clone_dirs.append(full_dir)
 
-        # With the GitHub remote ElectionData repo cloned (bare) and
-        # with all the necessary client workspaces created, create the
-        # client workspaces.
+        # Fifth, with the GitHub remote ElectionData repo cloned
+        # (bare) and with all the necessary client workspaces created,
+        # create the client workspaces.
         self.create_client_repos(clone_dirs, self.tabulation_local_upstream_absdir)
 
         # return something

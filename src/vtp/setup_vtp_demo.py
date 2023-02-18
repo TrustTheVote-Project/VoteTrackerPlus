@@ -33,7 +33,12 @@ from vtp.utils.election_config import ElectionConfig
 
 # pylint: disable=duplicate-code
 def main():
-    """If called via a python local install entrypoint"""
+    """
+    Called via a python local install entrypoint or this file.  Simply
+    wraps the scripts constructor, creates and ElectionConfig instance
+    (which parses VTP's election data file which is implemented as a
+    directory tree), and calls its main function.
+    """
 
     # Parse args first (ZZZ note logging interface)
     _main = SetupVtpDemoLib(sys.argv[1:])
@@ -43,9 +48,9 @@ def main():
     the_election_config.parse_configs()
 
     # do it
-    _main.main(the_election_config)
+    print(_main.main(the_election_config))
 
 
-# If called as a script entrypoint
+# If called directly via this file
 if __name__ == "__main__":
-    main()
+    main
