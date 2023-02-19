@@ -15,7 +15,9 @@ SRC_DIR     := src/vtp
 TEST_DIR    := test
 BUILD_DIR   := _tools/build
 BUILD_FILES := pyproject.toml poetry.lock setup.cfg 
-ifeq ($(shell test -t 1; echo $$?), 0)
+
+INTERACTIVE := $(shell test -t 0 && echo 1)
+ifdef INTERACTIVE
     RED	:= \033[0;31m
     END	:= \033[0m
 else
