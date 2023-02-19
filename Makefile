@@ -15,7 +15,7 @@ SRC_DIR     := src/vtp
 TEST_DIR    := test
 BUILD_DIR   := _tools/build
 BUILD_FILES := pyproject.toml poetry.lock setup.cfg 
-ifeq ($(shell test -t ; echo $$?), 0)
+ifeq ($(shell test -t 1; echo $$?), 0)
     RED	:= \033[0;31m
     END	:= \033[0m
 else
