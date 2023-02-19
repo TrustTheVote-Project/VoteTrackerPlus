@@ -27,7 +27,7 @@ See 'verify_ballot_receipt.py -h' for usage information.
 # pylint: disable=wrong-import-position   # import statements not top of file
 import sys
 
-from vtp.ops.verify_ballot_receipt_lib import VerifyBallotReceiptLib
+from vtp.ops.verify_ballot_receipt_lib import VerifyBallotReceiptOperation
 from vtp.utils.election_config import ElectionConfig
 
 
@@ -41,7 +41,7 @@ def main():
     """
 
     # Parse args first (ZZZ note logging interface)
-    _main = VerifyBallotReceiptLib(sys.argv[1:])
+    _main = VerifyBallotReceiptOperation(sys.argv[1:])
 
     # Create an VTP election config object
     the_election_config = ElectionConfig()

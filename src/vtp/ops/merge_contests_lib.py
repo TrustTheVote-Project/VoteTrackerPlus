@@ -37,7 +37,7 @@ import sys
 from vtp.utils.common import Globals, Shellout
 
 
-class MergeContestsLib:
+class MergeContestsOperation:
     """A class to wrap the merge_contests.py script."""
 
     def __init__(self, argv):

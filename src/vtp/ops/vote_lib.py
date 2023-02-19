@@ -31,8 +31,8 @@ import logging
 import sys
 
 # Script modules
-from vtp.ops.accept_ballot_lib import AcceptBallotLib
-from vtp.ops.cast_ballot_lib import CastBallotLib
+from vtp.ops.accept_ballot_lib import AcceptBallotOperation
+from vtp.ops.cast_ballot_lib import CastBallotOperation
 
 # Local libraries
 from vtp.utils.address import Address
@@ -40,7 +40,7 @@ from vtp.utils.ballot import Ballot
 from vtp.utils.common import Shellout
 
 
-class VoteLib:
+class VoteOperation:
     """A class to wrap the vote.py script."""
 
     def __init__(self, argv):
@@ -142,14 +142,14 @@ class VoteLib:
         # Basically only do as little as necessary to call cast_ballot.py
         # followed by accept_ballot.py
         # Cast a ballot
-        a_cast_ballot_lib = CastBallotLib(
+        a_cast_ballot_lib = CastBallotOperation(
             ["-v", str(self.parsed_args.verbosity)]
             + cast_address_args
             + (["-n"] if self.parsed_args.printonly else []),
         )
         a_cast_ballot_lib.main(the_election_config)
         # Accept the ballot
-        a_accept_ballot_lib = AcceptBallotLib(
+        a_accept_ballot_lib = AcceptBallotOperation(
             ["-v", str(self.parsed_args.verbosity)]
             + accept_address_args
             + (["-n"] if self.parsed_args.printonly else [])

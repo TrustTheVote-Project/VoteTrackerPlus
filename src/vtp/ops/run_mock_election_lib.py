@@ -33,10 +33,10 @@ import sys
 import time
 
 # Script modules
-from vtp.ops.accept_ballot_lib import AcceptBallotLib
-from vtp.ops.cast_ballot_lib import CastBallotLib
-from vtp.ops.merge_contests_lib import MergeContestsLib
-from vtp.ops.tally_contests_lib import TallyContestsLib
+from vtp.ops.accept_ballot_lib import AcceptBallotOperation
+from vtp.ops.cast_ballot_lib import CastBallotOperation
+from vtp.ops.merge_contests_lib import MergeContestsOperation
+from vtp.ops.tally_contests_lib import TallyContestsOperation
 
 # Local libraries
 from vtp.utils.address import Address
@@ -44,7 +44,7 @@ from vtp.utils.ballot import Ballot
 from vtp.utils.common import Globals, Shellout
 
 
-class RunMockElectionLib:
+class RunMockElectionOperation:
     """A class to wrap the run_mock_election.py script."""
 
     def __init__(self, argv):
@@ -220,7 +220,7 @@ class RunMockElectionLib:
                         timeout=None,
                         check=True,
                     )
-                cast_ballot = CastBallotLib(
+                cast_ballot = CastBallotOperation(
                     Shellout.handle_printonly_switch(
                         [
                             "--blank_ballot=" + blank_ballot,
@@ -233,7 +233,7 @@ class RunMockElectionLib:
                 )
                 cast_ballot.main(the_election_config)
                 # - accept the ballot
-                accept_ballot = AcceptBallotLib(
+                accept_ballot = AcceptBallotOperation(
                     Shellout.handle_printonly_switch(
                         [
                             "--cast_ballot=" + Ballot.get_cast_from_blank(blank_ballot),
@@ -249,7 +249,7 @@ class RunMockElectionLib:
                     if self.parsed_args.flush_mode == 2:
                         # Since casting and merging is basically
                         # synchronous, no need for an extra large timeout
-                        merge_contests = MergeContestsLib(
+                        merge_contests = MergeContestsOperation(
                             Shellout.handle_printonly_switch(
                                 [
                                     "-f",
@@ -264,7 +264,7 @@ class RunMockElectionLib:
                         # Should only need to merge one ballot worth of
                         # contests - also no need for an extra large
                         # timeout
-                        merge_contests = MergeContestsLib(
+                        merge_contests = MergeContestsOperation(
                             Shellout.handle_printonly_switch(
                                 [
                                     "-m",
@@ -289,7 +289,7 @@ class RunMockElectionLib:
         if self.parsed_args.device == "both":
             # merge the remaining contests
             # Note - this needs a longer timeout as it can take many seconds
-            merge_contests = MergeContestsLib(
+            merge_contests = MergeContestsOperation(
                 Shellout.handle_printonly_switch(
                     [
                         "-f",
@@ -301,7 +301,7 @@ class RunMockElectionLib:
             )
             merge_contests.main(the_election_config)
             # tally the contests
-            tally_contests = TallyContestsLib(
+            tally_contests = TallyContestsOperation(
                 Shellout.handle_printonly_switch(
                     [
                         "-v",
@@ -346,7 +346,7 @@ class RunMockElectionLib:
                     check=True,
                 )
             if self.parsed_args.flush_mode == 2:
-                merge_contests = MergeContestsLib(
+                merge_contests = MergeContestsOperation(
                     Shellout.handle_printonly_switch(
                         [
                             "-r",
@@ -358,7 +358,7 @@ class RunMockElectionLib:
                     )
                 )
                 merge_contests.main(the_election_config)
-                tally_contests = TallyContestsLib(
+                tally_contests = TallyContestsOperation(
                     Shellout.handle_printonly_switch(
                         [
                             "-v",
@@ -369,7 +369,7 @@ class RunMockElectionLib:
                 )
                 tally_contests.main(the_election_config)
                 return
-            merge_contests = MergeContestsLib(
+            merge_contests = MergeContestsOperation(
                 Shellout.handle_printonly_switch(
                     [
                         "-r",
@@ -389,7 +389,7 @@ class RunMockElectionLib:
                 break
         if self.parsed_args.flush_mode in [1, 2]:
             print("Cleaning up remaining unmerged ballots")
-            merge_contests = MergeContestsLib(
+            merge_contests = MergeContestsOperation(
                 Shellout.handle_printonly_switch(
                     [
                         "-r",
@@ -402,7 +402,7 @@ class RunMockElectionLib:
             )
             merge_contests.main(the_election_config)
         # tally the contests
-        tally_contests = TallyContestsLib(
+        tally_contests = TallyContestsOperation(
             Shellout.handle_printonly_switch(
                 [
                     "-v",

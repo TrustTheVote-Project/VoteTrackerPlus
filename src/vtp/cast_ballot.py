@@ -25,7 +25,7 @@ See 'cast_ballot.py -h' for usage information.
 # pylint: disable=wrong-import-position
 import sys
 
-from vtp.ops.cast_ballot_lib import CastBallotLib
+from vtp.ops.cast_ballot_lib import CastBallotOperation
 from vtp.utils.election_config import ElectionConfig
 
 
@@ -39,7 +39,7 @@ def main():
     """
 
     # Parse args first (ZZZ note logging interface)
-    _main = CastBallotLib(sys.argv[1:])
+    _main = CastBallotOperation(sys.argv[1:])
 
     # Create an VTP election config object
     the_election_config = ElectionConfig()

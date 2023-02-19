@@ -39,7 +39,7 @@ from vtp.utils.ballot import Ballot
 from vtp.utils.common import Globals, Shellout
 
 
-class VerifyBallotReceiptLib:
+class VerifyBallotReceiptOperation:
     """A class to wrap the run_mock_election.py script."""
 
     def __init__(self, argv):

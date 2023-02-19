@@ -34,7 +34,7 @@ import sys
 from vtp.utils.common import Globals, Shellout
 
 
-class ShowContestsLib:
+class ShowContestsOperation:
     """A class to wrap the run_mock_election.py script."""
 
     def __init__(self, argv):

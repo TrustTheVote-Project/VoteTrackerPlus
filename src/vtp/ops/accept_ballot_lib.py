@@ -38,7 +38,7 @@ from vtp.utils.ballot import Ballot, Contests
 from vtp.utils.common import Globals, Shellout
 
 
-class AcceptBallotLib:
+class AcceptBallotOperation:
     """A class to wrap the accept_ballot.py script."""
 
     def __init__(self, argv):

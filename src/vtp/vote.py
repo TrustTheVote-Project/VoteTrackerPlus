@@ -27,7 +27,7 @@ See 'vote.py -h' for usage information.
 # pylint: disable=wrong-import-position   # import statements not top of file
 import sys
 
-from vtp.ops.vote_lib import VoteLib
+from vtp.ops.vote_lib import VoteOperation
 from vtp.utils.election_config import ElectionConfig
 
 
@@ -41,7 +41,7 @@ def main():
     """
 
     # Parse args first (ZZZ note logging interface)
-    _main = VoteLib(sys.argv[1:])
+    _main = VoteOperation(sys.argv[1:])
 
     # Create an VTP election config object
     the_election_config = ElectionConfig()

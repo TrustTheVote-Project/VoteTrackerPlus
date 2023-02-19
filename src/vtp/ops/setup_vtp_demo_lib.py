@@ -38,7 +38,7 @@ import sys
 from vtp.utils.common import Globals, Shellout
 
 
-class SetupVtpDemoLib:
+class SetupVtpDemoOperation:
     """A class to wrap the run_mock_election.py script."""
 
     # Note - all three of these folders hold git repos where the
@@ -188,7 +188,7 @@ the GUID.  """,
                 "It needs to pre-exist - please manually create it."
             )
         test_dir = os.path.join(
-            self.parsed_args.location, SetupVtpDemoLib._tabulation_server_dirname
+            self.parsed_args.location, SetupVtpDemoOperation._tabulation_server_dirname
         )
         if self.parsed_args.guid_client_store and not os.path.isdir(test_dir):
             raise FileNotFoundError(
@@ -205,7 +205,9 @@ the GUID.  """,
         # Note - mkdir raises an error if the directory exists. So
         # just try creating them.
         path1 = os.path.join(
-            self.parsed_args.location, SetupVtpDemoLib._guid_client_dirname, folder1
+            self.parsed_args.location,
+            SetupVtpDemoOperation._guid_client_dirname,
+            folder1,
         )
         path2 = os.path.join(path1, folder2)
         if not self.parsed_args.printonly:
@@ -277,7 +279,7 @@ the GUID.  """,
         # (and not be bare).
         self.tabulation_local_upstream_absdir = os.path.join(
             self.parsed_args.location,
-            SetupVtpDemoLib._tabulation_server_dirname,
+            SetupVtpDemoOperation._tabulation_server_dirname,
             os.path.basename(election_data_remote_url),
         )
         # Need both the above and the dirname of the above
@@ -297,9 +299,9 @@ the GUID.  """,
 
         # First create the necessary subdirectories
         for subdir in [
-            SetupVtpDemoLib._guid_client_dirname,
-            SetupVtpDemoLib._tabulation_server_dirname,
-            SetupVtpDemoLib._mock_client_dirname,
+            SetupVtpDemoOperation._guid_client_dirname,
+            SetupVtpDemoOperation._tabulation_server_dirname,
+            SetupVtpDemoOperation._mock_client_dirname,
         ]:
             full_dir = os.path.join(self.parsed_args.location, subdir)
             if not os.path.isdir(full_dir):
@@ -326,7 +328,7 @@ the GUID.  """,
         for count in range(self.parsed_args.scanners):
             full_dir = os.path.join(
                 self.parsed_args.location,
-                SetupVtpDemoLib._mock_client_dirname,
+                SetupVtpDemoOperation._mock_client_dirname,
                 "scanner." + f"{count:02d}",
             )
             if not os.path.isdir(full_dir):
@@ -337,7 +339,9 @@ the GUID.  """,
 
         # Fourth create the tabulation client subdir
         full_dir = os.path.join(
-            self.parsed_args.location, SetupVtpDemoLib._mock_client_dirname, "server"
+            self.parsed_args.location,
+            SetupVtpDemoOperation._mock_client_dirname,
+            "server",
         )
         if not os.path.isdir(full_dir):
             logging.debug("creating (%s)", full_dir)

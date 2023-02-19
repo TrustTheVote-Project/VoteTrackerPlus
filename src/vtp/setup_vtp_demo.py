@@ -27,7 +27,7 @@ See 'setup_vtp_demo -h' for usage information.
 # pylint: disable=wrong-import-position   # import statements not top of file
 import sys
 
-from vtp.ops.setup_vtp_demo_lib import SetupVtpDemoLib
+from vtp.ops.setup_vtp_demo_lib import SetupVtpDemoOperation
 from vtp.utils.election_config import ElectionConfig
 
 
@@ -41,7 +41,7 @@ def main():
     """
 
     # Parse args first (ZZZ note logging interface)
-    _main = SetupVtpDemoLib(sys.argv[1:])
+    _main = SetupVtpDemoOperation(sys.argv[1:])
 
     # Create an VTP election config object
     the_election_config = ElectionConfig()

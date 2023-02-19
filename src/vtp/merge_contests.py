@@ -28,7 +28,7 @@ See 'merge_contests.py -h' for usage information.
 # pylint: disable=wrong-import-position   # import statements not top of file
 import sys
 
-from vtp.ops.merge_contests_lib import MergeContestsLib
+from vtp.ops.merge_contests_lib import MergeContestsOperation
 from vtp.utils.election_config import ElectionConfig
 
 
@@ -42,7 +42,7 @@ def main():
     """
 
     # Parse args first (ZZZ note logging interface)
-    _main = MergeContestsLib(sys.argv[1:])
+    _main = MergeContestsOperation(sys.argv[1:])
 
     # Create an VTP election config object
     the_election_config = ElectionConfig()

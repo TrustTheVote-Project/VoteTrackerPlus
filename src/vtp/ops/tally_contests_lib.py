@@ -38,7 +38,7 @@ from vtp.utils.contest import Tally
 from vtp.utils.exceptions import TallyException
 
 
-class TallyContestsLib:
+class TallyContestsOperation:
     """A class to wrap the tally_contests.py script."""
 
     def __init__(self, argv):

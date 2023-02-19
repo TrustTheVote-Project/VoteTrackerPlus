@@ -40,7 +40,7 @@ from vtp.utils.ballot import Ballot, BlankBallot, Contests
 from vtp.utils.common import Globals, Shellout
 
 
-class CastBallotLib:
+class CastBallotOperation:
     """Implement the casting of a ballot."""
 
     def __init__(self, argv):

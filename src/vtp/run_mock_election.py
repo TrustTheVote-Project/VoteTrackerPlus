@@ -27,7 +27,7 @@ See 'run_mock_election.py -h' for usage information.
 # pylint: disable=wrong-import-position   # import statements not top of file
 import sys
 
-from vtp.ops.run_mock_election_lib import RunMockElectionLib
+from vtp.ops.run_mock_election_lib import RunMockElectionOperation
 from vtp.utils.election_config import ElectionConfig
 
 
@@ -41,7 +41,7 @@ def main():
     """
 
     # Parse args first (ZZZ note logging interface)
-    _main = RunMockElectionLib(sys.argv[1:])
+    _main = RunMockElectionOperation(sys.argv[1:])
 
     # Create an VTP election config object
     the_election_config = ElectionConfig()
