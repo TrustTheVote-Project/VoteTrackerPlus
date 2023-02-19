@@ -31,8 +31,8 @@ import logging
 import sys
 
 # Script modules
-from vtp.script_libs.accept_ballot_lib import AcceptBallotLib
-from vtp.script_libs.cast_ballot_lib import CastBallotLib
+from vtp.ops.accept_ballot_lib import AcceptBallotLib
+from vtp.ops.cast_ballot_lib import CastBallotLib
 
 # Local libraries
 from vtp.utils.address import Address

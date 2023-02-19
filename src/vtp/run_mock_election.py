@@ -27,7 +27,7 @@ See 'run_mock_election.py -h' for usage information.
 # pylint: disable=wrong-import-position   # import statements not top of file
 import sys
 
-from vtp.script_libs.run_mock_election_lib import RunMockElectionLib
+from vtp.ops.run_mock_election_lib import RunMockElectionLib
 from vtp.utils.election_config import ElectionConfig
 
 
