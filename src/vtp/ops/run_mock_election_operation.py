@@ -33,10 +33,10 @@ import sys
 import time
 
 # Script modules
-from vtp.ops.accept_ballot_lib import AcceptBallotOperation
-from vtp.ops.cast_ballot_lib import CastBallotOperation
-from vtp.ops.merge_contests_lib import MergeContestsOperation
-from vtp.ops.tally_contests_lib import TallyContestsOperation
+from vtp.ops.accept_ballot_operation import AcceptBallotOperation
+from vtp.ops.cast_ballot_operation import CastBallotOperation
+from vtp.ops.merge_contests_operation import MergeContestsOperation
+from vtp.ops.tally_contests_operation import TallyContestsOperation
 
 # Local libraries
 from vtp.utils.address import Address

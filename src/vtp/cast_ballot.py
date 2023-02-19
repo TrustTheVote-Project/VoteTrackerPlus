@@ -25,7 +25,7 @@ See 'cast_ballot.py -h' for usage information.
 # pylint: disable=wrong-import-position
 import sys
 
-from vtp.ops.cast_ballot_lib import CastBallotOperation
+from vtp.ops.cast_ballot_operation import CastBallotOperation
 from vtp.utils.election_config import ElectionConfig
 
 

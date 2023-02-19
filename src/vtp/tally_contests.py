@@ -27,7 +27,7 @@ See 'tally_contests.py -h' for usage information.
 # pylint: disable=wrong-import-position   # import statements not top of file
 import sys
 
-from vtp.ops.tally_contests_lib import TallyContestsOperation
+from vtp.ops.tally_contests_operation import TallyContestsOperation
 from vtp.utils.election_config import ElectionConfig
 
 

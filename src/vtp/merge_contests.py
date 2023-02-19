@@ -28,7 +28,7 @@ See 'merge_contests.py -h' for usage information.
 # pylint: disable=wrong-import-position   # import statements not top of file
 import sys
 
-from vtp.ops.merge_contests_lib import MergeContestsOperation
+from vtp.ops.merge_contests_operation import MergeContestsOperation
 from vtp.utils.election_config import ElectionConfig
 
 

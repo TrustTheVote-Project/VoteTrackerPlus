@@ -27,7 +27,7 @@ See 'setup_vtp_demo -h' for usage information.
 # pylint: disable=wrong-import-position   # import statements not top of file
 import sys
 
-from vtp.ops.setup_vtp_demo_lib import SetupVtpDemoOperation
+from vtp.ops.setup_vtp_demo_operation import SetupVtpDemoOperation
 from vtp.utils.election_config import ElectionConfig
 
 

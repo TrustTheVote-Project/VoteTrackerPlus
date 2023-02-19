@@ -26,7 +26,7 @@ See 'show_contest.py -h' for usage information.
 # pylint: disable=wrong-import-position   # import statements not top of file
 import sys
 
-from vtp.ops.show_contests_lib import ShowContestsOperation
+from vtp.ops.show_contests_operation import ShowContestsOperation
 from vtp.utils.election_config import ElectionConfig
 
 

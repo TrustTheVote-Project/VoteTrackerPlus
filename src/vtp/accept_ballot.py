@@ -26,7 +26,7 @@ See './accept_ballot.py -h' for usage information.
 # pylint: disable=wrong-import-position   # import statements not top of file
 import sys
 
-from vtp.ops.accept_ballot_lib import AcceptBallotOperation
+from vtp.ops.accept_ballot_operation import AcceptBallotOperation
 from vtp.utils.election_config import ElectionConfig
 
 
