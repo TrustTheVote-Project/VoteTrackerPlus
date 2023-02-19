@@ -28,7 +28,7 @@ endif
 # Let there be no default target
 .PHONY: default
 default:
-	@echo "${RED}There is no default make target.  Specify one of:${END}"
+	@echo "${RED}There is no default make target.${END}  Specify one of:"
 	@echo "poetry-build            - performs a poetry local install"
 	@echo "setuptools-build        - performs a setuptools local install"
 	@echo "setuptools-legacy-build - performs a legacy setuptools local install"
