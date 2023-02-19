@@ -41,7 +41,7 @@ from vtp.utils.common import Globals, Shellout
 
 
 class CastBallotLib:
-    """A class to wrap the cast_ballot.py script."""
+    """Implement the casting of a ballot."""
 
     def __init__(self, argv):
         """Only to module-ize the scripts and keep things simple and idiomatic."""
