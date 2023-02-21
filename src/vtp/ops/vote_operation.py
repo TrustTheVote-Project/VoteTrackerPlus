@@ -147,7 +147,7 @@ class VoteOperation:
             + cast_address_args
             + (["-n"] if self.parsed_args.printonly else []),
         )
-        a_cast_ballot_operation.main(the_election_config)
+        a_cast_ballot_operation.run()
         # Accept the ballot
         a_accept_ballot_operation = AcceptBallotOperation(
             ["-v", str(self.parsed_args.verbosity)]

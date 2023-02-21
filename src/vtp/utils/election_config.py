@@ -101,6 +101,19 @@ class ElectionConfig:
     _uids = {}
     _nextuid = 0
 
+    # Hrmph - for the moment let there be only one ElectionData tree
+    # (or Election Data File - EDF) configuration per VTP execution.
+    # This may need to changed later.
+    _election_data = None
+
+    @staticmethod
+    def configure_election():
+        """If return the existing ElectionData or parse it"""
+        if ElectionConfig._election_data is None:
+            ElectionConfig._election_data = ElectionConfig()
+            ElectionConfig._election_data.parse_configs()
+        return ElectionConfig._election_data
+
     @staticmethod
     def get_next_uid(ggo):
         """Will return the next GGO uid (only good within the context of

@@ -231,7 +231,7 @@ class RunMockElectionOperation:
                         self.parsed_args.printonly,
                     )
                 )
-                cast_ballot.main(the_election_config)
+                cast_ballot.run()
                 # - accept the ballot
                 accept_ballot = AcceptBallotOperation(
                     Shellout.handle_printonly_switch(

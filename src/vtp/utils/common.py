@@ -25,6 +25,7 @@ import logging
 import os
 import re
 import subprocess
+import sys
 from contextlib import contextmanager
 
 
@@ -102,12 +103,30 @@ class Globals:
         """A generic getter"""
         return Globals._config[name]
 
-    # @staticmethod
-    # def set(name, value):
-    #     """A generic setter"""
-    #     if name in Globals._setters:
-    #         raise NameError("Globals are read-only")
-    #     raise NameError(f"The supplied name ({name}) is not a valid Global constant")
+
+class Common:
+    """Common functions without a better home at this time"""
+
+    _configured = False
+
+    @staticmethod
+    def configure_logging(verbosity):
+        """How VTP is (currently) using logging"""
+        if Common._configured:
+            return
+        verbose = {
+            0: logging.CRITICAL,
+            1: logging.ERROR,
+            2: logging.WARNING,
+            3: logging.INFO,
+            4: logging.DEBUG,
+        }
+        logging.basicConfig(
+            format="%(message)s",
+            level=verbose[verbosity],
+            stream=sys.stdout,
+        )
+        Common._configured = True
 
 
 # pylint: disable=too-few-public-methods   # ZZZ - remove this later

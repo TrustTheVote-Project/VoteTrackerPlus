@@ -24,7 +24,6 @@ See 'cast_ballot.py -h' for usage information.
 """
 
 # pylint: disable=wrong-import-position
-import argparse
 import logging
 import os
 import pprint
@@ -37,21 +36,16 @@ import pyinputplus
 # Local imports
 from vtp.utils.address import Address
 from vtp.utils.ballot import Ballot, BlankBallot, Contests
-from vtp.utils.common import Globals, Shellout
+from vtp.utils.common import Common, Globals, Shellout
+from vtp.utils.election_config import ElectionConfig
 
 
 class CastBallotOperation:
     """Implement the casting of a ballot."""
 
-    def __init__(self, argv):
+    def __init__(self, parsed_args):
         """Only to module-ize the scripts and keep things simple and idiomatic."""
-        self.argv = argv
-        self.parsed_args = None
-        self.parse_arguments()
-
-    def __str__(self):
-        """Boilerplate"""
-        return "argv=" + str(self.argv) + "\n" + "parsed_args=" + str(self.parsed_args)
+        self.parsed_args = parsed_args
 
     def make_random_selection(self, the_ballot, the_contest):
         """Will randomly make selections on a contest"""
@@ -220,64 +214,16 @@ class CastBallotOperation:
         return contests
 
     ################
-    # arg parsing
-    ################
-    # pylint: disable=duplicate-code
-    def parse_arguments(self):
-        """Parse command line arguments"""
-
-        parser = argparse.ArgumentParser(
-            description="""Can either read a blank ballot and allow a user
-        to manually select choices or when in demo mode, cast_ballot.py
-        will randominly select choices.
-        """
-        )
-
-        Address.add_address_args(parser)
-        # ZZZ - cloaked contests are enabled at cast_ballot time
-        #    parser.add_argument('-k', "--cloak", action="store_true",
-        #                            help="if possible provide a cloaked ballot offset")
-        parser.add_argument(
-            "--demo_mode",
-            action="store_true",
-            help="set demo mode to automatically cast random ballots",
-        )
-        parser.add_argument(
-            "--blank_ballot",
-            help="overrides an address - specifies the specific blank ballot",
-        )
-        parser.add_argument(
-            "-v",
-            "--verbosity",
-            type=int,
-            default=3,
-            help="0 critical, 1 error, 2 warning, 3 info, 4 debug (def=3)",
-        )
-        parser.add_argument(
-            "-n",
-            "--printonly",
-            action="store_true",
-            help="will printonly and not write to disk (def=True)",
-        )
-        self.parsed_args = parser.parse_args([str(x) for x in self.argv])
-        verbose = {
-            0: logging.CRITICAL,
-            1: logging.ERROR,
-            2: logging.WARNING,
-            3: logging.INFO,
-            4: logging.DEBUG,
-        }
-        logging.basicConfig(
-            format="%(message)s",
-            level=verbose[self.parsed_args.verbosity],
-            stream=sys.stdout,
-        )
-
-    ################
     # main
     ################
-    def main(self, the_election_config):
+    def run(self):
         """Main function - see -h for more info"""
+
+        # Configure logging
+        Common.configure_logging(self.parsed_args.verbosity)
+
+        # Create a VTP ElectionData object if one does not already exist
+        the_election_config = ElectionConfig.configure_election()
 
         # Create a ballot
         a_ballot = BlankBallot()
