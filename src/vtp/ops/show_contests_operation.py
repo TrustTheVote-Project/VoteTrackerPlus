@@ -80,7 +80,6 @@ class ShowContestsOperation:
         if errors:
             raise ValueError(f"Found {errors} invalid digest(s)")
 
-
     ################
     # main
     ################

@@ -163,7 +163,6 @@ class MergeContestsOperation:
         logging.debug("Merged %s %s contests", count, uid)
         return count
 
-
     ################
     # main
     ################

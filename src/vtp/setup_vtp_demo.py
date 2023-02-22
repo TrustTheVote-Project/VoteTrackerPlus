@@ -27,8 +27,8 @@ See 'setup_vtp_demo -h' for usage information.
 import argparse
 import os
 
-from vtp.utils.common import Globals
 from vtp.ops.setup_vtp_demo_operation import SetupVtpDemoOperation
+from vtp.utils.common import Globals
 
 
 ################
@@ -114,6 +114,7 @@ the GUID.  """,
             "in setup mode (without the -g switch)."
         )
     return parsed_args
+
 
 # pylint: disable=duplicate-code
 def main():

@@ -280,7 +280,6 @@ class VerifyBallotReceiptOperation:
                 "[GOOD]: ballot receipt VALID - no digest errors found\n############"
             )
 
-
     ################
     # main
     ################

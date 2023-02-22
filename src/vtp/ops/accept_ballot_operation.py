@@ -291,7 +291,6 @@ class AcceptBallotOperation:
         print(f"############\n### Receipt file: {receipt_file}")
         print(f"### Voter's row: {voters_row}\n############")
 
-
     ################
     # main
     ################

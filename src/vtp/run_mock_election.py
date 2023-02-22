@@ -26,8 +26,8 @@ See 'run_mock_election.py -h' for usage information.
 # Standard imports
 import argparse
 
-from vtp.utils.address import Address
 from vtp.ops.run_mock_election_operation import RunMockElectionOperation
+from vtp.utils.address import Address
 
 
 ################
@@ -136,6 +136,7 @@ def parse_arguments():
             f" - {parsed_args.flush_mode} was supplied."
         )
     return parsed_args
+
 
 # pylint: disable=duplicate-code
 def main():

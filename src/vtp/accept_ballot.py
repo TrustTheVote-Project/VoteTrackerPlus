@@ -19,12 +19,11 @@
 
 """accept_ballot.py - command line level script to accept a ballot.
 
-See './accept_ballot.py -h' for usage information.
+See 'accept_ballot.py -h' for usage information.
 
 """
 
 import argparse
-import sys
 
 from vtp.ops.accept_ballot_operation import AcceptBallotOperation
 from vtp.utils.address import Address
@@ -80,7 +79,6 @@ def parse_arguments():
     )
 
     return parser.parse_args()
-
 
 
 # pylint: disable=duplicate-code

@@ -26,8 +26,8 @@ See 'verify_ballot_receipt.py -h' for usage information.
 # Standard imports
 import argparse
 
-from vtp.utils.address import Address
 from vtp.ops.verify_ballot_receipt_operation import VerifyBallotReceiptOperation
+from vtp.utils.address import Address
 
 
 ################
@@ -91,10 +91,7 @@ def parse_arguments():
     parsed_args = parser.parse_args()
 
     # Validate required args
-    if not (
-        parsed_args.receipt_file
-        or (parsed_args.state and parsed_args.town)
-    ):
+    if not (parsed_args.receipt_file or (parsed_args.state and parsed_args.town)):
         raise ValueError(
             "Either an explicit or implicit (via an address) receipt file must be provided"
         )
