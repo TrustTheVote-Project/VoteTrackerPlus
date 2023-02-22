@@ -24,6 +24,7 @@ See 'accept_ballot.py -h' for usage information.
 """
 
 # Standard imports
+import argparse
 import logging
 import os
 import random
@@ -39,9 +40,55 @@ from vtp.utils.election_config import ElectionConfig
 class AcceptBallotOperation:
     """A class to wrap the accept_ballot.py script."""
 
-    def __init__(self, parsed_args):
+    @staticmethod
+    def parse_arguments(argv):
+        """Parse arguments from a command line"""
+
+        safe_args = Common.cast_thing_to_list(argv)
+        parser = argparse.ArgumentParser(
+            formatter_class=argparse.RawDescriptionHelpFormatter,
+            description="""
+Will run the git based workflow on a VTP scanner node to accept the json
+rendering of the cast vote record of a voter's ballot. The json file is read,
+the contests are extraced and submitted to separate git branches, one per
+contest, and pushed back to the Voter Center's VTP remote.
+
+In addition a voter's ballot receipt and offset are optionally printed.
+
+Either the location of the ballot_file or the associated address is required.
+""",
+        )
+
+        Address.add_address_args(parser, True)
+        parser.add_argument(
+            "-m",
+            "--merge_contests",
+            action="store_true",
+            help="Will immediately merge the ballot contests (to master)",
+        )
+        parser.add_argument(
+            "--cast_ballot",
+            help="overrides an address - specifies a specific cast ballot",
+        )
+        parser.add_argument(
+            "-v",
+            "--verbosity",
+            type=int,
+            default=3,
+            help="0 critical, 1 error, 2 warning, 3 info, 4 debug (def=3)",
+        )
+        parser.add_argument(
+            "-n",
+            "--printonly",
+            action="store_true",
+            help="will printonly and not write to disk (def=True)",
+        )
+
+        return parser.parse_args(safe_args)
+
+    def __init__(self, unparsed_args):
         """Only to module-ize the scripts and keep things simple and idiomatic."""
-        self.parsed_args = parsed_args
+        self.parsed_args = AcceptBallotOperation.parse_arguments(unparsed_args)
 
     def get_random_branchpoint(self, branch):
         """Return a random branchpoint on the supplied branch

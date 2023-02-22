@@ -25,7 +25,9 @@ See 'tally_contests.py -h' for usage information.
 """
 
 # Standard imports
+import argparse
 import logging
+import re
 
 # Local imports
 from vtp.utils.ballot import Ballot
@@ -39,9 +41,75 @@ from vtp.utils.exceptions import TallyException
 class TallyContestsOperation:
     """A class to wrap the tally_contests.py script."""
 
-    def __init__(self, parsed_args):
+    @staticmethod
+    def parse_arguments(argv):
+        """Parse arguments from a command line"""
+
+        safe_args = Common.cast_thing_to_list(argv)
+        parser = argparse.ArgumentParser(
+            formatter_class=argparse.RawDescriptionHelpFormatter,
+            description="""
+Will tally all the contests so far merged to the master branch and
+report the results.  The results are computed on a voting center basis
+(git submodule) basis.
+
+Note - the current implementation relies on git submodules (individual
+git repos) to break up the tally data of an election.  If there is
+only one git repository and the election is large, then a potentiallu
+large amount of memory will be used in executing the tallies.  One
+short term fix for this is to limit the number of contests being
+tallied.
+
+Also note that the current implementation does not yet support
+tallying across git submodules/repos.
+""",
+        )
+
+        parser.add_argument(
+            "-c",
+            "--contest_uid",
+            default="",
+            help="limit the tally to a specific contest uid",
+        )
+        parser.add_argument(
+            "-t",
+            "--track_contests",
+            default="",
+            help="a comma separated list of contests checks to track",
+        )
+        parser.add_argument(
+            "-x",
+            "--do_not_pull",
+            action="store_true",
+            help="Before tallying the votes, pull the ElectionData repo",
+        )
+        parser.add_argument(
+            "-v",
+            "--verbosity",
+            type=int,
+            default=3,
+            help="0 critical, 1 error, 2 warning, 3 info, 4 debug (def=3)",
+        )
+        #    parser.add_argument("-n", "--printonly", action="store_true",
+        #                            help="will printonly and not write to disk (def=True)")
+
+        parsed_args = parser.parse_args(safe_args)
+
+        # Validate required args
+        if parsed_args.track_contests:
+            if not bool(re.match("^[0-9a-f,]", parsed_args.track_contests)):
+                raise ValueError(
+                    "The track_contests parameter only accepts a comma separated (no spaces) "
+                    "list of contest checks/digests to track."
+                )
+            parsed_args.track_contests = parsed_args.track_contests.split(",")
+        else:
+            parsed_args.track_contests = []
+        return parsed_args
+
+    def __init__(self, unparsed_args):
         """Only to module-ize the scripts and keep things simple and idiomatic."""
-        self.parsed_args = parsed_args
+        self.parsed_args = TallyContestsOperation.parse_arguments(unparsed_args)
 
     ################
     # main

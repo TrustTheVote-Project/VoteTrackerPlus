@@ -25,11 +25,12 @@ See 'vote.py -h' for usage information.
 """
 
 # Standard imports
-from argparse import Namespace
+import argparse
 
 # Local libraries
 from vtp.ops.accept_ballot_operation import AcceptBallotOperation
 from vtp.ops.cast_ballot_operation import CastBallotOperation
+from vtp.utils.address import Address
 from vtp.utils.ballot import Ballot
 from vtp.utils.common import Common, Shellout
 from vtp.utils.election_config import ElectionConfig
@@ -39,9 +40,50 @@ from vtp.utils.election_config import ElectionConfig
 class VoteOperation:
     """A class to wrap the vote.py script."""
 
-    def __init__(self, parsed_args):
+    @staticmethod
+    def parse_arguments(argv):
+        """Parse arguments from a command line"""
+
+        safe_args = Common.cast_thing_to_list(argv)
+        parser = argparse.ArgumentParser(
+            formatter_class=argparse.RawDescriptionHelpFormatter,
+            description="""
+    Will interactively allow a voter to vote.  Internally it first calls
+    cast_balloy.py followed by accept_ballot.py.  If a specific election
+    address or a specific blank ballot is not specified, a random blank
+    ballot is chosen.
+    """,
+        )
+
+        Address.add_address_args(parser)
+        parser.add_argument(
+            "-m",
+            "--merge_contests",
+            action="store_true",
+            help="Will immediately merge the ballot contests (to master)",
+        )
+        parser.add_argument(
+            "--blank_ballot",
+            help="overrides an address - specifies the specific blank ballot",
+        )
+        parser.add_argument(
+            "-v",
+            "--verbosity",
+            type=int,
+            default=3,
+            help="0 critical, 1 error, 2 warning, 3 info, 4 debug (def=3)",
+        )
+        parser.add_argument(
+            "-n",
+            "--printonly",
+            action="store_true",
+            help="will printonly and not write to disk (def=True)",
+        )
+        return parser.parse_args(safe_args)
+
+    def __init__(self, unparsed_args):
         """Only to module-ize the scripts and keep things simple and idiomatic."""
-        self.parsed_args = parsed_args
+        self.parsed_args = VoteOperation.parse_arguments(unparsed_args)
 
     ################
     # main
@@ -68,13 +110,13 @@ class VoteOperation:
 
         # If an address was used, use that
         cast_args = {
-            "verbosity":self.parsed_args.verbosity,
-            "printonly":self.parsed_args.printonly,
-            }
+            "verbosity": self.parsed_args.verbosity,
+            "printonly": self.parsed_args.printonly,
+        }
         accept_args = {
-            "verbosity":self.parsed_args.verbosity,
-            "printonly":self.parsed_args.printonly,
-            }
+            "verbosity": self.parsed_args.verbosity,
+            "printonly": self.parsed_args.printonly,
+        }
         if not self.parsed_args.blank_ballot:
             if self.parsed_args.state:
                 cast_args["state"] = self.parsed_args.state
@@ -93,11 +135,10 @@ class VoteOperation:
         # Basically only do as little as necessary to call cast_ballot.py
         # followed by accept_ballot.py
         # Cast a ballot
-        import pdb; pdb.set_trace()
-        a_cast_ballot_operation = CastBallotOperation(Namespace(**cast_args))
+        a_cast_ballot_operation = CastBallotOperation(cast_args)
         a_cast_ballot_operation.run()
         # Accept the ballot
-        a_accept_ballot_operation = AcceptBallotOperation(Namespace(**accept_args))
+        a_accept_ballot_operation = AcceptBallotOperation(accept_args)
         a_accept_ballot_operation.run()
 
     # End Of Class

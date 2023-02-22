@@ -24,79 +24,13 @@ a election.
 See 'tally_contests.py -h' for usage information.
 """
 
+# Global imports
 import argparse
-import re
 
+# Local imports
 from vtp.ops.tally_contests_operation import TallyContestsOperation
 
 
-# pylint: disable=duplicate-code
-def parse_arguments():
-    """Parse arguments from a command line"""
-
-    parser = argparse.ArgumentParser(
-        formatter_class=argparse.RawDescriptionHelpFormatter,
-        description="""
-Will tally all the contests so far merged to the master branch and
-report the results.  The results are computed on a voting center basis
-(git submodule) basis.
-
-Note - the current implementation relies on git submodules (individual
-git repos) to break up the tally data of an election.  If there is
-only one git repository and the election is large, then a potentiallu
-large amount of memory will be used in executing the tallies.  One
-short term fix for this is to limit the number of contests being
-tallied.
-
-Also note that the current implementation does not yet support
-tallying across git submodules/repos.
-""",
-    )
-
-    parser.add_argument(
-        "-c",
-        "--contest_uid",
-        default="",
-        help="limit the tally to a specific contest uid",
-    )
-    parser.add_argument(
-        "-t",
-        "--track_contests",
-        default="",
-        help="a comma separated list of contests checks to track",
-    )
-    parser.add_argument(
-        "-x",
-        "--do_not_pull",
-        action="store_true",
-        help="Before tallying the votes, pull the ElectionData repo",
-    )
-    parser.add_argument(
-        "-v",
-        "--verbosity",
-        type=int,
-        default=3,
-        help="0 critical, 1 error, 2 warning, 3 info, 4 debug (def=3)",
-    )
-    #    parser.add_argument("-n", "--printonly", action="store_true",
-    #                            help="will printonly and not write to disk (def=True)")
-
-    parsed_args = parser.parse_args()
-
-    # Validate required args
-    if parsed_args.track_contests:
-        if not bool(re.match("^[0-9a-f,]", parsed_args.track_contests)):
-            raise ValueError(
-                "The track_contests parameter only accepts a comma separated (no spaces) "
-                "list of contest checks/digests to track."
-            )
-        parsed_args.track_contests = parsed_args.track_contests.split(",")
-    else:
-        parsed_args.track_contests = []
-    return parsed_args
-
-
-# pylint: disable=duplicate-code
 def main():
     """
     Called via a python local install entrypoint or this file.  Simply
@@ -104,7 +38,7 @@ def main():
     """
 
     # do it
-    tco = TallyContestsOperation(parse_arguments())
+    tco = TallyContestsOperation(sys.argv[1:])
     tco.run()
 
 

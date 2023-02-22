@@ -23,6 +23,7 @@ See 'generate_all_blank_ballots.py -h' for usage information.
 """
 
 # Standard imports
+import argparse
 import logging
 import os
 import pprint
@@ -38,9 +39,41 @@ from vtp.utils.election_config import ElectionConfig
 class GenerateAllBlankBallotsOperation:
     """A class to wrap the run_mock_election.py script."""
 
-    def __init__(self, parsed_args):
+    @staticmethod
+    def parse_arguments(argv):
+        """Parse arguments from a command line"""
+
+        safe_args = Common.cast_thing_to_list(argv)
+        parser = argparse.ArgumentParser(
+            formatter_class=argparse.RawDescriptionHelpFormatter,
+            description="""
+    Will crawl the ElectionData tree and determine all possible blank
+    ballots and generate them.  They will be placed in the town's
+    blank-ballots subdir.
+    """,
+        )
+
+        parser.add_argument(
+            "-v",
+            "--verbosity",
+            type=int,
+            default=3,
+            help="0 critical, 1 error, 2 warning, 3 info, 4 debug (def=3)",
+        )
+        parser.add_argument(
+            "-n",
+            "--printonly",
+            action="store_true",
+            help="will printonly and not write to disk (def=True)",
+        )
+
+        return parser.parse_args(safe_args)
+
+    def __init__(self, unparsed_args):
         """Only to module-ize the scripts and keep things simple and idiomatic."""
-        self.parsed_args = parsed_args
+        self.parsed_args = GenerateAllBlankBallotsOperation.parse_arguments(
+            unparsed_args
+        )
 
     def run(self):
         """Main function - see -h for more info"""

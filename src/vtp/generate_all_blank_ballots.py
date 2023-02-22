@@ -23,7 +23,7 @@ See 'generate_all_blank_ballots.py -h' for usage information.
 """
 
 # Standard imports
-import argparse
+import sys
 
 # Local import
 from vtp.ops.generate_all_blank_ballots_operation import (
@@ -32,43 +32,8 @@ from vtp.ops.generate_all_blank_ballots_operation import (
 
 
 ################
-# arg parsing
-################
-# pylint: disable=duplicate-code
-def parse_arguments():
-    """Parse arguments from a command line"""
-
-    parser = argparse.ArgumentParser(
-        formatter_class=argparse.RawDescriptionHelpFormatter,
-        description="""
-Will crawl the ElectionData tree and determine all possible blank
-ballots and generate them.  They will be placed in the town's
-blank-ballots subdir.
-""",
-    )
-
-    parser.add_argument(
-        "-v",
-        "--verbosity",
-        type=int,
-        default=3,
-        help="0 critical, 1 error, 2 warning, 3 info, 4 debug (def=3)",
-    )
-    parser.add_argument(
-        "-n",
-        "--printonly",
-        action="store_true",
-        help="will printonly and not write to disk (def=True)",
-    )
-
-    return parser.parse_args()
-
-
-################
 # main
 ################
-
-# pylint: disable=duplicate-code
 def main():
     """
     Called via a python local install entrypoint or this file.  Simply
@@ -76,7 +41,7 @@ def main():
     """
 
     # do it
-    gabbo = GenerateAllBlankBallotsOperation(parse_arguments())
+    gabbo = GenerateAllBlankBallotsOperation(sys.argv[1:])
     gabbo.run()
 
 

@@ -140,6 +140,20 @@ class Common:
         )
         Common._configured = True
 
+    @staticmethod
+    def cast_thing_to_list(argv):
+        """Primarly used by the argparse function in the operation classes"""
+        if isinstance(argv, dict):
+            new_argv = []
+            for key, value in argv.items():
+                if isinstance(value, bool):
+                    if value:
+                        new_argv.append("--" + key)
+                elif value is not None:
+                    new_argv.extend(["--" + key, str(value)])
+            return new_argv
+        return argv
+
 
 # pylint: disable=too-few-public-methods   # ZZZ - remove this later
 class Shellout:

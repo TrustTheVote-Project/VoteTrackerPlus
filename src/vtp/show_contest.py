@@ -23,58 +23,12 @@ See 'show_contest.py -h' for usage information.
 """
 
 # Standard imports
-import argparse
-import re
+import sys
 
+# Local imports
 from vtp.ops.show_contests_operation import ShowContestsOperation
 
 
-################
-# arg parsing
-################
-# pylint: disable=duplicate-code
-def parse_arguments():
-    """Parse command line arguments"""
-
-    parser = argparse.ArgumentParser(
-        formatter_class=argparse.RawDescriptionHelpFormatter,
-        description="""
-will print the CVRs (Cast Vote Records) for the supplied contest(s)
-""",
-    )
-
-    parser.add_argument(
-        "-c",
-        "--contest-check",
-        help="a comma separate list of contests digests to validate/display",
-    )
-    parser.add_argument(
-        "-v",
-        "--verbosity",
-        type=int,
-        default=3,
-        help="0 critical, 1 error, 2 warning, 3 info, 4 debug (def=3)",
-    )
-    parser.add_argument(
-        "-n",
-        "--printonly",
-        action="store_true",
-        help="will printonly and not write to disk (def=True)",
-    )
-    parsed_args = parser.parse_args()
-
-    # Validate required args
-    if not parsed_args.contest_check:
-        raise ValueError("The contest check is required")
-    if not bool(re.match("^[0-9a-f,]", parsed_args.contest_check)):
-        raise ValueError(
-            "The contest_check parameter only accepts a comma separated (no spaces) "
-            "list of contest checks/digests to track."
-        )
-    return parsed_args
-
-
-# pylint: disable=duplicate-code
 def main():
     """
     Called via a python local install entrypoint or this file.  Simply
@@ -82,7 +36,7 @@ def main():
     """
 
     # do it
-    sco = ShowContestsOperation(parse_arguments())
+    sco = ShowContestsOperation(sys.argv[1:])
     sco.run()
 
 

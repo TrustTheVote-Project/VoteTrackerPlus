@@ -26,59 +26,15 @@ See ../../docs/tech/executable-overview.md for the context in which this file wa
 """
 
 # Standard imports
-import argparse
-
-from vtp.ops.create_blank_ballot_operation import CreateBlankBallotOperation
+import sys
 
 # Local imports
-from vtp.utils.address import Address
-
-
-################
-# arg parsing
-################
-# pylint: disable=duplicate-code
-def parse_arguments():
-    """Parse command line arguments"""
-
-    parser = argparse.ArgumentParser(
-        formatter_class=argparse.RawDescriptionHelpFormatter,
-        description="""
-Will parse all the config and address_map yaml files in the current
-VTP ElectionData git tree and create a blank ballot based on the
-supplied address.
-""",
-    )
-
-    Address.add_address_args(parser)
-    parser.add_argument(
-        "-l",
-        "--language",
-        default="en",
-        help="will print the ballot in the specified language",
-    )
-    parser.add_argument(
-        "-v",
-        "--verbosity",
-        type=int,
-        default=3,
-        help="0 critical, 1 error, 2 warning, 3 info, 4 debug (def=3)",
-    )
-    parser.add_argument(
-        "-n",
-        "--printonly",
-        action="store_true",
-        help="will printonly and not write to disk (def=True)",
-    )
-
-    return parser.parse_args()
+from vtp.ops.create_blank_ballot_operation import CreateBlankBallotOperation
 
 
 ################
 # main
 ################
-
-# pylint: disable=duplicate-code
 def main():
     """
     Called via a python local install entrypoint or this file.  Simply
@@ -86,7 +42,7 @@ def main():
     """
 
     # do it
-    cbbo = CreateBlankBallotOperation(parse_arguments())
+    cbbo = CreateBlankBallotOperation(sys.argv[1:])
     cbbo.run()
 
 

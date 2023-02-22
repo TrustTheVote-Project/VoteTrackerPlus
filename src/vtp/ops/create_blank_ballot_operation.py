@@ -23,6 +23,7 @@ See 'create_blank_ballot_operation.py -h' for usage information.
 """
 
 # Standard imports
+import argparse
 import logging
 import pprint
 
@@ -33,13 +34,47 @@ from vtp.utils.common import Common
 from vtp.utils.election_config import ElectionConfig
 
 
-# pylint: disable=too-few-public-methods
 class CreateBlankBallotOperation:
     """A class to wrap the run_mock_election.py script."""
 
-    def __init__(self, parsed_args):
+    @staticmethod
+    def parse_arguments(argv):
+        """Parse command line arguments"""
+
+        safe_args = Common.cast_thing_to_list(argv)
+        parser = argparse.ArgumentParser(
+            formatter_class=argparse.RawDescriptionHelpFormatter,
+            description="""
+    Will parse all the config and address_map yaml files in the current
+    VTP ElectionData git tree and create a blank ballot based on the
+    supplied address.
+    """,
+        )
+        Address.add_address_args(parser)
+        parser.add_argument(
+            "-l",
+            "--language",
+            default="en",
+            help="will print the ballot in the specified language",
+        )
+        parser.add_argument(
+            "-v",
+            "--verbosity",
+            type=int,
+            default=3,
+            help="0 critical, 1 error, 2 warning, 3 info, 4 debug (def=3)",
+        )
+        parser.add_argument(
+            "-n",
+            "--printonly",
+            action="store_true",
+            help="will printonly and not write to disk (def=True)",
+        )
+        return parser.parse_args(safe_args)
+
+    def __init__(self, unparsed_args):
         """Only to module-ize the scripts and keep things simple and idiomatic."""
-        self.parsed_args = parsed_args
+        self.parsed_args = CreateBlankBallotOperation.parse_arguments(unparsed_args)
 
     def run(self):
         """Main function - see -h for more info"""

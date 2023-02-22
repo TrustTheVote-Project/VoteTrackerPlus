@@ -23,6 +23,7 @@ See 'show_contest.py -h' for usage information.
 """
 
 # Standard imports
+import argparse
 import logging
 import os
 
@@ -34,9 +35,51 @@ from vtp.utils.election_config import ElectionConfig
 class ShowContestsOperation:
     """A class to wrap the run_mock_election.py script."""
 
-    def __init__(self, parsed_args):
+    @staticmethod
+    def parse_arguments(argv):
+        """Parse command line arguments"""
+
+        safe_args = Common.cast_thing_to_list(argv)
+        parser = argparse.ArgumentParser(
+            formatter_class=argparse.RawDescriptionHelpFormatter,
+            description="""
+    will print the CVRs (Cast Vote Records) for the supplied contest(s)
+    """,
+        )
+
+        parser.add_argument(
+            "-c",
+            "--contest-check",
+            help="a comma separate list of contests digests to validate/display",
+        )
+        parser.add_argument(
+            "-v",
+            "--verbosity",
+            type=int,
+            default=3,
+            help="0 critical, 1 error, 2 warning, 3 info, 4 debug (def=3)",
+        )
+        parser.add_argument(
+            "-n",
+            "--printonly",
+            action="store_true",
+            help="will printonly and not write to disk (def=True)",
+        )
+        parsed_args = parser.parse_args(safe_args)
+
+        # Validate required args
+        if not parsed_args.contest_check:
+            raise ValueError("The contest check is required")
+        if not bool(re.match("^[0-9a-f,]", parsed_args.contest_check)):
+            raise ValueError(
+                "The contest_check parameter only accepts a comma separated (no spaces) "
+                "list of contest checks/digests to track."
+            )
+        return parsed_args
+
+    def __init__(self, unparsed_args):
         """Only to module-ize the scripts and keep things simple and idiomatic."""
-        self.parsed_args = parsed_args
+        self.parsed_args = ShowContestsOperation.parse_arguments(unparsed_args)
 
     def validate_digests(self, digests, election_data_dir, error_digests):
         """Will scan the supplied digests for validity.  Will print and
