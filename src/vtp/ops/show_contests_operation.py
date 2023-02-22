@@ -22,30 +22,21 @@
 See 'show_contest.py -h' for usage information.
 """
 
-import argparse
+# Standard imports
 import logging
-
-# pylint: disable=wrong-import-position
 import os
-import re
-import sys
 
 # Local libraries
-from vtp.utils.common import Globals, Shellout
+from vtp.utils.common import Common, Globals, Shellout
+from vtp.utils.election_config import ElectionConfig
 
 
 class ShowContestsOperation:
     """A class to wrap the run_mock_election.py script."""
 
-    def __init__(self, argv):
+    def __init__(self, parsed_args):
         """Only to module-ize the scripts and keep things simple and idiomatic."""
-        self.argv = argv
-        self.parsed_args = None
-        self.parse_arguments()
-
-    def __str__(self):
-        """Boilerplate"""
-        return "argv=" + str(self.argv) + "\n" + "parsed_args=" + str(self.parsed_args)
+        self.parsed_args = parsed_args
 
     def validate_digests(self, digests, election_data_dir, error_digests):
         """Will scan the supplied digests for validity.  Will print and
@@ -89,65 +80,19 @@ class ShowContestsOperation:
         if errors:
             raise ValueError(f"Found {errors} invalid digest(s)")
 
-    ################
-    # arg parsing
-    ################
-    # pylint: disable=duplicate-code
-    def parse_arguments(self):
-        """Parse command line arguments"""
-
-        parser = argparse.ArgumentParser(
-            description="""will print the CVRs (Cast Vote Records) for the
-                        supplied contest(s)
-                        """
-        )
-
-        parser.add_argument(
-            "-c",
-            "--contest-check",
-            help="a comma separate list of contests digests to validate/display",
-        )
-        parser.add_argument(
-            "-v",
-            "--verbosity",
-            type=int,
-            default=3,
-            help="0 critical, 1 error, 2 warning, 3 info, 4 debug (def=3)",
-        )
-        parser.add_argument(
-            "-n",
-            "--printonly",
-            action="store_true",
-            help="will printonly and not write to disk (def=True)",
-        )
-        self.parsed_args = parser.parse_args([str(x) for x in self.argv])
-        verbose = {
-            0: logging.CRITICAL,
-            1: logging.ERROR,
-            2: logging.WARNING,
-            3: logging.INFO,
-            4: logging.DEBUG,
-        }
-        logging.basicConfig(
-            format="%(message)s",
-            level=verbose[self.parsed_args.verbosity],
-            stream=sys.stdout,
-        )
-        # Validate required args
-        if not self.parsed_args.contest_check:
-            raise ValueError("The contest check is required")
-        if not bool(re.match("^[0-9a-f,]", self.parsed_args.contest_check)):
-            raise ValueError(
-                "The contest_check parameter only accepts a comma separated (no spaces) "
-                "list of contest checks/digests to track."
-            )
 
     ################
     # main
     ################
     # pylint: disable=duplicate-code
-    def main(self, the_election_config):
+    def run(self):
         """Main function - see -h for more info"""
+
+        # Configure logging
+        Common.configure_logging(self.parsed_args.verbosity)
+
+        # Create a VTP ElectionData object if one does not already exist
+        the_election_config = ElectionConfig.configure_election()
 
         # Check the ElectionData
         election_data_dir = os.path.join(

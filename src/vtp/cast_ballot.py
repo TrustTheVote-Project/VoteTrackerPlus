@@ -22,9 +22,7 @@
 See 'cast_ballot.py -h' for usage information.
 """
 
-# pylint: disable=wrong-import-position
 import argparse
-import sys
 
 from vtp.ops.cast_ballot_operation import CastBallotOperation
 from vtp.utils.address import Address
@@ -70,7 +68,7 @@ def parse_arguments():
         action="store_true",
         help="will printonly and not write to disk (def=True)",
     )
-    return parser.parse_args(sys.argv)
+    return parser.parse_args()
 
 
 # pylint: disable=duplicate-code
@@ -82,11 +80,8 @@ def main():
     directory tree), and calls its main function.
     """
 
-    # Parse args first (ZZZ note logging interface)
-    parsed_args = parse_arguments()
-
     # do it
-    cbo = CastBallotOperation(parsed_args)
+    cbo = CastBallotOperation(parse_arguments())
     cbo.run()
 
 

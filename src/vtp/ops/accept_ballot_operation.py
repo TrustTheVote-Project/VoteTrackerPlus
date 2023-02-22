@@ -24,32 +24,24 @@ See 'accept_ballot.py -h' for usage information.
 """
 
 # Standard imports
-# pylint: disable=wrong-import-position   # import statements not top of file
-import argparse
 import logging
 import os
 import random
 import secrets
-import sys
 
 # Local imports
 from vtp.utils.address import Address
 from vtp.utils.ballot import Ballot, Contests
-from vtp.utils.common import Globals, Shellout
+from vtp.utils.common import Common, Globals, Shellout
+from vtp.utils.election_config import ElectionConfig
 
 
 class AcceptBallotOperation:
     """A class to wrap the accept_ballot.py script."""
 
-    def __init__(self, argv):
+    def __init__(self, parsed_args):
         """Only to module-ize the scripts and keep things simple and idiomatic."""
-        self.argv = argv
-        self.parsed_args = None
-        self.parse_arguments()
-
-    def __str__(self):
-        """Boilerplate"""
-        return "argv=" + str(self.argv) + "\n" + "parsed_args=" + str(self.parsed_args)
+        self.parsed_args = parsed_args
 
     def get_random_branchpoint(self, branch):
         """Return a random branchpoint on the supplied branch
@@ -299,75 +291,19 @@ class AcceptBallotOperation:
         print(f"############\n### Receipt file: {receipt_file}")
         print(f"### Voter's row: {voters_row}\n############")
 
-    ################
-    # arg parsing
-    ################
-    # pylint: disable=duplicate-code
-    def parse_arguments(self):
-        """Parse arguments from a command line"""
-
-        parser = argparse.ArgumentParser(
-            description="""Will run the git based workflow on a VTP
-                        scanner node to accept the json rendering of the
-                        cast vote record of a voter's ballot.  The json
-                        file is read, the contests are extraced and
-                        submitted to separate git branches, one per
-                        contest, and pushed back to the Voter Center's VTP
-                        remote.
-
-                        In addition a voter's ballot receipt and offset
-                        are optionally printed.
-
-                        Either the location of the ballot_file or the
-                        associated address is required.
-                        """
-        )
-
-        Address.add_address_args(parser, True)
-        parser.add_argument(
-            "-m",
-            "--merge_contests",
-            action="store_true",
-            help="Will immediately merge the ballot contests (to master)",
-        )
-        parser.add_argument(
-            "--cast_ballot",
-            help="overrides an address - specifies a specific cast ballot",
-        )
-        parser.add_argument(
-            "-v",
-            "--verbosity",
-            type=int,
-            default=3,
-            help="0 critical, 1 error, 2 warning, 3 info, 4 debug (def=3)",
-        )
-        parser.add_argument(
-            "-n",
-            "--printonly",
-            action="store_true",
-            help="will printonly and not write to disk (def=True)",
-        )
-
-        self.parsed_args = parser.parse_args([str(x) for x in self.argv])
-        verbose = {
-            0: logging.CRITICAL,
-            1: logging.ERROR,
-            2: logging.WARNING,
-            3: logging.INFO,
-            4: logging.DEBUG,
-        }
-        logging.basicConfig(
-            format="%(message)s",
-            level=verbose[self.parsed_args.verbosity],
-            stream=sys.stdout,
-        )
 
     ################
     # main
     ################
     # pylint: disable=duplicate-code
-    def main(self, the_election_config):
+    def run(self):
         """Main function - see -h for more info"""
+
+        # Configure logging
+        Common.configure_logging(self.parsed_args.verbosity)
+
+        # Create a VTP ElectionData object if one does not already exist
+        the_election_config = ElectionConfig.configure_election()
 
         # Create a ballot
         a_ballot = Ballot()

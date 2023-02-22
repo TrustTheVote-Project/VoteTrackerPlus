@@ -93,6 +93,20 @@ class Globals:
             "CouncilDistrict": "CouncilDistricts",
             "Precinct": "Precincts",
         },
+        # Note - all three of the following folders hold git repos
+        # where the remote is a bare clone of the upstream/remote
+        # GitHub ElectionData repo. In an attempt at clarity, the word
+        # 'workspace' here refers to a non bare repo, 'upstream' is
+        # the parent repo, and 'remote' means non-local to this
+        # computer (requires a TPC/IP connection to get to).
+
+        # The subdirectory where the FastAPI connection git workspaces are stored
+        "GUID_CLIENT_DIRNAME": "guid-client-store",
+        # The subdirectory where the local tabulation git workspace is stored
+        "TABULATION_SERVER_DIRNAME": "tabulation-server",
+        # The subdirectory where the mock scanner git workspaces are stored
+        "MOCK_CLIENT_DIRNAME": "mock-clients",
+
     }
 
     # Legitimate setters

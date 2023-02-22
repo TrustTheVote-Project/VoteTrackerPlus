@@ -24,91 +24,35 @@ vote - it simply wraps a call to cast_ballot.py and accept_ballot.py.
 See 'vote.py -h' for usage information.
 """
 
-# pylint: disable=wrong-import-position   # import statements not top of file
 # Standard imports
-import argparse
-import logging
-import sys
-
-# Script modules
 from vtp.ops.accept_ballot_operation import AcceptBallotOperation
 from vtp.ops.cast_ballot_operation import CastBallotOperation
 
 # Local libraries
-from vtp.utils.address import Address
 from vtp.utils.ballot import Ballot
-from vtp.utils.common import Shellout
+from vtp.utils.common import Common, Shellout
+from vtp.utils.election_config import ElectionConfig
 
 
+# pylint: disable=too-few-public-methods
 class VoteOperation:
     """A class to wrap the vote.py script."""
 
-    def __init__(self, argv):
+    def __init__(self, parsed_args):
         """Only to module-ize the scripts and keep things simple and idiomatic."""
-        self.argv = argv
-        self.parsed_args = None
-        self.parse_arguments()
-
-    def __str__(self):
-        """Boilerplate"""
-        return "argv=" + str(self.argv) + "\n" + "parsed_args=" + str(self.parsed_args)
-
-    def parse_arguments(self):
-        """Parse arguments from a command line"""
-
-        parser = argparse.ArgumentParser(
-            description="""Will interactively allow a voter to vote.  Internally
-        it first calls cast_balloy.py followed by accept_ballot.py.  If a
-        specific election address or a specific blank ballot is not
-        specified, a random blank ballot is chosen.
-        """
-        )
-
-        Address.add_address_args(parser)
-        parser.add_argument(
-            "-m",
-            "--merge_contests",
-            action="store_true",
-            help="Will immediately merge the ballot contests (to master)",
-        )
-        parser.add_argument(
-            "--blank_ballot",
-            help="overrides an address - specifies the specific blank ballot",
-        )
-        parser.add_argument(
-            "-v",
-            "--verbosity",
-            type=int,
-            default=3,
-            help="0 critical, 1 error, 2 warning, 3 info, 4 debug (def=3)",
-        )
-        parser.add_argument(
-            "-n",
-            "--printonly",
-            action="store_true",
-            help="will printonly and not write to disk (def=True)",
-        )
-
-        #        import pdb; pdb.set_trace()
-        self.parsed_args = parser.parse_args([str(x) for x in self.argv])
-        verbose = {
-            0: logging.CRITICAL,
-            1: logging.ERROR,
-            2: logging.WARNING,
-            3: logging.INFO,
-            4: logging.DEBUG,
-        }
-        logging.basicConfig(
-            format="%(message)s",
-            level=verbose[self.parsed_args.verbosity],
-            stream=sys.stdout,
-        )
+        self.parsed_args = parsed_args
 
     ################
     # main
     ################
-    def main(self, the_election_config):
+    def run(self):
         """Main function - see -h for more info"""
+
+        # Configure logging
+        Common.configure_logging(self.parsed_args.verbosity)
+
+        # Create a VTP ElectionData object if one does not already exist
+        the_election_config = ElectionConfig.configure_election()
 
         # git pull the ElectionData repo so to get the latest set of
         # remote CVRs branches
@@ -155,7 +99,7 @@ class VoteOperation:
             + (["-n"] if self.parsed_args.printonly else [])
             + (["-m"] if self.parsed_args.merge_contests else []),
         )
-        a_accept_ballot_operation.main(the_election_config)
+        a_accept_ballot_operation.run()
 
     # End Of Class
 

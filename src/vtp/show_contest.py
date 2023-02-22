@@ -23,11 +23,54 @@ See 'show_contest.py -h' for usage information.
 """
 
 # Standard imports
-# pylint: disable=wrong-import-position   # import statements not top of file
-import sys
+import argparse
+import re
 
 from vtp.ops.show_contests_operation import ShowContestsOperation
-from vtp.utils.election_config import ElectionConfig
+
+
+################
+# arg parsing
+################
+# pylint: disable=duplicate-code
+def parse_arguments():
+    """Parse command line arguments"""
+
+    parser = argparse.ArgumentParser(
+        description="""will print the CVRs (Cast Vote Records) for the
+                    supplied contest(s)
+                    """
+    )
+
+    parser.add_argument(
+        "-c",
+        "--contest-check",
+        help="a comma separate list of contests digests to validate/display",
+    )
+    parser.add_argument(
+        "-v",
+        "--verbosity",
+        type=int,
+        default=3,
+        help="0 critical, 1 error, 2 warning, 3 info, 4 debug (def=3)",
+    )
+    parser.add_argument(
+        "-n",
+        "--printonly",
+        action="store_true",
+        help="will printonly and not write to disk (def=True)",
+    )
+    parsed_args = parser.parse_args()
+
+    # Validate required args
+    if not parsed_args.contest_check:
+        raise ValueError("The contest check is required")
+    if not bool(re.match("^[0-9a-f,]", parsed_args.contest_check)):
+        raise ValueError(
+            "The contest_check parameter only accepts a comma separated (no spaces) "
+            "list of contest checks/digests to track."
+        )
+    return parsed_args
 
 
 # pylint: disable=duplicate-code
@@ -39,15 +82,9 @@ def main():
     directory tree), and calls its main function.
     """
 
-    # Parse args first (ZZZ note logging interface)
-    _main = ShowContestsOperation(sys.argv[1:])
-
-    # Create an VTP election config object
-    the_election_config = ElectionConfig()
-    the_election_config.parse_configs()
-
     # do it
-    _main.main(the_election_config)
+    sco = ShowContestsOperation(parse_arguments())
+    sco.run()
 
 
 # If called directly via this file

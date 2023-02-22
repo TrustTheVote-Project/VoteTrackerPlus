@@ -25,30 +25,22 @@ See './merge_contests.py -h' for usage information.
 """
 
 # Standard imports
-# pylint: disable=wrong-import-position   # import statements not top of file
-import argparse
 import logging
 import os
 import random
 import re
-import sys
 
 # Local import
-from vtp.utils.common import Globals, Shellout
+from vtp.utils.common import Common, Globals, Shellout
+from vtp.utils.election_config import ElectionConfig
 
 
 class MergeContestsOperation:
     """A class to wrap the merge_contests.py script."""
 
-    def __init__(self, argv):
+    def __init__(self, parsed_args):
         """Only to module-ize the scripts and keep things simple and idiomatic."""
-        self.argv = argv
-        self.parsed_args = None
-        self.parse_arguments()
-
-    def __str__(self):
-        """Boilerplate"""
-        return "argv=" + str(self.argv) + "\n" + "parsed_args=" + str(self.parsed_args)
+        self.parsed_args = parsed_args
 
     def merge_contest_branch(self, branch):
         """Merge a specific branch"""
@@ -171,82 +163,19 @@ class MergeContestsOperation:
         logging.debug("Merged %s %s contests", count, uid)
         return count
 
-    ################
-    # arg parsing
-    ################
-    # pylint: disable=duplicate-code
-    def parse_arguments(self):
-        """Parse arguments from a command line"""
-
-        parser = argparse.ArgumentParser(
-            description="""Will run the git based workflow on a VTP
-        server node so to merge pending CVR contest branches into the
-        master git branch.
-
-        If there are less then the prerequisite number of already cast
-        contests, a warning will be printed/logged but no error will be
-        raised.  Supplying -f will flush all remaining contests to the
-        master branch.
-        """
-        )
-
-        parser.add_argument(
-            "-b", "--branch", default="", help="specify a specific branch to merge"
-        )
-        parser.add_argument(
-            "-m",
-            "--minimum_cast_cache",
-            type=int,
-            default=100,
-            help="the minimum number of cast ballots required prior to merging (def=100)",
-        )
-        parser.add_argument(
-            "-f",
-            "--flush",
-            action="store_true",
-            help="will flush the remaining unmerged contest branches",
-        )
-        parser.add_argument(
-            "-r",
-            "--remote",
-            action="store_true",
-            help="will merge remote branches instead of local branches",
-        )
-        parser.add_argument(
-            "-v",
-            "--verbosity",
-            type=int,
-            default=3,
-            help="0 critical, 1 error, 2 warning, 3 info, 4 debug (def=3)",
-        )
-        parser.add_argument(
-            "-n",
-            "--printonly",
-            action="store_true",
-            help="will printonly and not write to disk (def=True)",
-        )
-
-        # import pdb; pdb.set_trace()
-        self.parsed_args = parser.parse_args([str(x) for x in self.argv])
-        verbose = {
-            0: logging.CRITICAL,
-            1: logging.ERROR,
-            2: logging.WARNING,
-            3: logging.INFO,
-            4: logging.DEBUG,
-        }
-        logging.basicConfig(
-            format="%(message)s",
-            level=verbose[self.parsed_args.verbosity],
-            stream=sys.stdout,
-        )
 
     ################
     # main
     ################
     # pylint: disable=duplicate-code
-    def main(self, the_election_config):
+    def run(self):
         """Main function - see -h for more info"""
+
+        # Configure logging
+        Common.configure_logging(self.parsed_args.verbosity)
+
+        # Create a VTP ElectionData object if one does not already exist
+        the_election_config = ElectionConfig.configure_election()
 
         # Set the three EV's
         os.environ["GIT_AUTHOR_DATE"] = "2022-01-01T12:00:00"

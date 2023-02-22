@@ -25,11 +25,8 @@ See 'run_mock_election.py -h' for usage information.
 """
 
 # Standard imports
-# pylint: disable=wrong-import-position   # import statements not top of file
-import argparse
 import logging
 import os
-import sys
 import time
 
 # Script modules
@@ -41,139 +38,16 @@ from vtp.ops.tally_contests_operation import TallyContestsOperation
 # Local libraries
 from vtp.utils.address import Address
 from vtp.utils.ballot import Ballot
-from vtp.utils.common import Globals, Shellout
+from vtp.utils.common import Common, Globals, Shellout
+from vtp.utils.election_config import ElectionConfig
 
 
 class RunMockElectionOperation:
     """A class to wrap the run_mock_election.py script."""
 
-    def __init__(self, argv):
+    def __init__(self, parsed_args):
         """Only to module-ize the scripts and keep things simple and idiomatic."""
-        self.argv = argv
-        self.parsed_args = None
-        self.parse_arguments()
-
-    def __str__(self):
-        """Boilerplate"""
-        return "argv=" + str(self.argv) + "\n" + "parsed_args=" + str(self.parsed_args)
-
-    ################
-    # arg parsing
-    ################
-    # pylint: disable=duplicate-code
-    def parse_arguments(self):
-        """Parse arguments from a command line"""
-
-        parser = argparse.ArgumentParser(
-            description="""Will run a mock election with N ballots
-        across the available blank ballots found in the ElectionData.
-
-        One basic idea is to run this in different windows, one per VTP
-        scanner.  The scanner is nominally associated with a town (as
-        configured).
-
-        When "-d scanner" is supplied, run_mock_election.py will randomly
-        cast and scan ballots.
-
-        When "-d server" is supplied, run_mock_election.py will
-        synchronously run the merge_contests.py program which will once
-        every 10 seconds.  Note that nominally 100 contgests need to have
-        been pushed for merge_contests.py to merge in a contest into the
-        master branch without the --flush_mode option.
-
-        If "-d both" is supplied, run_mock_election.py will run a single
-        scanner N iterations while also calling the server function.  If
-        --flush_mode is set to 1 or 2, run_mock_election.py will then
-        flush the ballot cache before printing the tallies and exiting.
-
-        By default run_mock_election.py will loop over all available blank
-        ballots found withint the ElectionData tree.  However, either a
-        specific blank ballot or an address can be specified to limit the
-        mock to a single ballot N times.
-        """
-        )
-
-        Address.add_address_args(parser)
-        parser.add_argument(
-            "--blank_ballot",
-            help="overrides an address - specifies the specific blank ballot",
-        )
-        parser.add_argument(
-            "-d",
-            "--device",
-            default="",
-            help="specify a specific VC local device (scanner or server or both) to mock",
-        )
-        parser.add_argument(
-            "-m",
-            "--minimum_cast_cache",
-            type=int,
-            default=100,
-            help="the minimum number of cast ballots required prior to merging (def=100)",
-        )
-        parser.add_argument(
-            "-f",
-            "--flush_mode",
-            type=int,
-            default=0,
-            help=(
-                "will either not flush (0 - default), flush on exit (1), "
-                "or flush on each iteration (2)",
-            ),
-        )
-        parser.add_argument(
-            "-i",
-            "--iterations",
-            type=int,
-            default=10,
-            help="the number of unique blank ballots for the scanner app to cast (def=10)",
-        )
-        parser.add_argument(
-            "-u",
-            "--duration",
-            type=int,
-            default=10,
-            help="the number of minutes for the server app to run (def=10)",
-        )
-        parser.add_argument(
-            "-v",
-            "--verbosity",
-            type=int,
-            default=3,
-            help="0 critical, 1 error, 2 warning, 3 info, 4 debug (def=3)",
-        )
-        parser.add_argument(
-            "-n",
-            "--printonly",
-            action="store_true",
-            help="will printonly and not write to disk (def=True)",
-        )
-
-        self.parsed_args = parser.parse_args([str(x) for x in self.argv])
-        verbose = {
-            0: logging.CRITICAL,
-            1: logging.ERROR,
-            2: logging.WARNING,
-            3: logging.INFO,
-            4: logging.DEBUG,
-        }
-        logging.basicConfig(
-            format="%(message)s",
-            level=verbose[self.parsed_args.verbosity],
-            stream=sys.stdout,
-        )
-
-        # Validate required args
-        if self.parsed_args.device not in ["scanner", "server", "both"]:
-            raise ValueError(
-                "The --device parameter only accepts 'device' or 'server' "
-                f"or 'both' - ({self.parsed_args.device}) was suppllied."
-            )
-        if self.parsed_args.flush_mode not in [0, 1, 2]:
-            raise ValueError(
-                "The value of flush_mode must be either 0, 1, or 2"
-                f" - {self.parsed_args.flush_mode} was supplied."
-            )
+        self.parsed_args = parsed_args
 
     def scanner_mockup(self, the_election_config, ballot):
         """Simulate a VTP scanner"""
@@ -243,7 +117,7 @@ class RunMockElectionOperation:
                         self.parsed_args.printonly,
                     )
                 )
-                accept_ballot.main(the_election_config)
+                accept_ballot.run()
                 if self.parsed_args.device == "both":
                     # - merge the ballot's contests
                     if self.parsed_args.flush_mode == 2:
@@ -259,7 +133,7 @@ class RunMockElectionOperation:
                                 self.parsed_args.printonly,
                             )
                         )
-                        merge_contests.main(the_election_config)
+                        merge_contests.run()
                     else:
                         # Should only need to merge one ballot worth of
                         # contests - also no need for an extra large
@@ -275,7 +149,7 @@ class RunMockElectionOperation:
                                 self.parsed_args.printonly,
                             )
                         )
-                        merge_contests.main(the_election_config)
+                        merge_contests.run()
                     # don't let too much garbage build up
                     if count % 10 == 9:
                         Shellout.run(
@@ -299,7 +173,7 @@ class RunMockElectionOperation:
                     self.parsed_args.printonly,
                 )
             )
-            merge_contests.main(the_election_config)
+            merge_contests.run()
             # tally the contests
             tally_contests = TallyContestsOperation(
                 Shellout.handle_printonly_switch(
@@ -310,7 +184,7 @@ class RunMockElectionOperation:
                     self.parsed_args.printonly,
                 )
             )
-            tally_contests.main(the_election_config)
+            tally_contests.run()
         # clean up git just in case
         Shellout.run(
             ["git", "gc"],
@@ -357,7 +231,7 @@ class RunMockElectionOperation:
                         self.parsed_args.printonly,
                     )
                 )
-                merge_contests.main(the_election_config)
+                merge_contests.run()
                 tally_contests = TallyContestsOperation(
                     Shellout.handle_printonly_switch(
                         [
@@ -367,7 +241,7 @@ class RunMockElectionOperation:
                         self.parsed_args.printonly,
                     )
                 )
-                tally_contests.main(the_election_config)
+                tally_contests.run()
                 return
             merge_contests = MergeContestsOperation(
                 Shellout.handle_printonly_switch(
@@ -381,7 +255,7 @@ class RunMockElectionOperation:
                     self.parsed_args.printonly,
                 )
             )
-            merge_contests.main(the_election_config)
+            merge_contests.run()
             logging.info("Sleeping for 10")
             time.sleep(10)
             elapsed_time = time.time() - start_time
@@ -400,7 +274,7 @@ class RunMockElectionOperation:
                     self.parsed_args.printonly,
                 )
             )
-            merge_contests.main(the_election_config)
+            merge_contests.run()
         # tally the contests
         tally_contests = TallyContestsOperation(
             Shellout.handle_printonly_switch(
@@ -411,13 +285,13 @@ class RunMockElectionOperation:
                 self.parsed_args.printonly,
             )
         )
-        tally_contests.main(the_election_config)
+        tally_contests.run()
 
     ################
     # main
     ################
     # pylint: disable=duplicate-code
-    def main(self, the_election_config):
+    def run(self):
         """Main function - see -h for more info
 
         Note - this is a serial synchronous mock election loop.  A
@@ -434,6 +308,12 @@ class RunMockElectionOperation:
         Assumes that each supplied town already has the blank ballots
         generated and/or already committed.
         """
+
+        # Configure logging
+        Common.configure_logging(self.parsed_args.verbosity)
+
+        # Create a VTP ElectionData object if one does not already exist
+        the_election_config = ElectionConfig.configure_election()
 
         # If an address was used, use that
         if (

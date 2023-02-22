@@ -24,11 +24,81 @@ See 'verify_ballot_receipt.py -h' for usage information.
 """
 
 # Standard imports
-# pylint: disable=wrong-import-position   # import statements not top of file
-import sys
+import argparse
 
+from vtp.utils.address import Address
 from vtp.ops.verify_ballot_receipt_operation import VerifyBallotReceiptOperation
-from vtp.utils.election_config import ElectionConfig
+
+
+################
+# arg parsing
+################
+# pylint: disable=duplicate-code
+def parse_arguments():
+    """Parse arguments from a command line"""
+
+    parser = argparse.ArgumentParser(
+        description="""Will read a voter's ballot receipt and validate
+                    all the digests contained therein.  If a contest
+                    has been merged to the master branch, will report
+                    the current ballot tally number (which ballot in
+                    the actula tally cound is the voter's).
+
+                    An address is also supported as an argument in
+                    which case the last ballot check is read from the
+                    default location for the specified address.
+
+                    Can also optionally print the ballot's CVRs when a
+                    specific ballot check row is provided.
+                    """
+    )
+
+    Address.add_address_args(parser, True)
+    parser.add_argument(
+        "-f",
+        "--receipt_file",
+        default="",
+        help="specify the ballot receipt location - overrides an address",
+    )
+    parser.add_argument(
+        "-r",
+        "--row",
+        default="",
+        help="specify a row to inspect that row (the first row is 1, not 0)",
+    )
+    parser.add_argument(
+        "-c",
+        "--cvr",
+        action="store_true",
+        help="display the contents of the content CVRs specifying a row",
+    )
+    parser.add_argument(
+        "-x",
+        "--do_not_pull",
+        action="store_true",
+        help="Before tallying the votes, pull the ElectionData repo",
+    )
+    parser.add_argument(
+        "-v",
+        "--verbosity",
+        type=int,
+        default=3,
+        help="0 critical, 1 error, 2 warning, 3 info, 4 debug (def=3)",
+    )
+    #    parser.add_argument("-n", "--printonly", action="store_true",
+    #                            help="will printonly and not write to disk (def=True)")
+
+    parsed_args = parser.parse_args()
+
+    # Validate required args
+    if not (
+        parsed_args.receipt_file
+        or (parsed_args.state and parsed_args.town)
+    ):
+        raise ValueError(
+            "Either an explicit or implicit (via an address) receipt file must be provided"
+        )
+    return parsed_args
 
 
 # pylint: disable=duplicate-code
@@ -40,15 +110,9 @@ def main():
     directory tree), and calls its main function.
     """
 
-    # Parse args first (ZZZ note logging interface)
-    _main = VerifyBallotReceiptOperation(sys.argv[1:])
-
-    # Create an VTP election config object
-    the_election_config = ElectionConfig()
-    the_election_config.parse_configs()
-
     # do it
-    _main.main(the_election_config)
+    vbro = VerifyBallotReceiptOperation(parse_arguments())
+    vbro.run()
 
 
 # If called directly via this file

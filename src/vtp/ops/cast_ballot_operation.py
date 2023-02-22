@@ -23,7 +23,7 @@ LIbrary backend to command line level test script to automatically cast a ballot
 See 'cast_ballot.py -h' for usage information.
 """
 
-# pylint: disable=wrong-import-position
+# Standard imports
 import logging
 import os
 import pprint

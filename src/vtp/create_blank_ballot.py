@@ -26,7 +26,6 @@ See ../../docs/tech/executable-overview.md for the context in which this file wa
 """
 
 # Standard imports
-# pylint: disable=wrong-import-position
 import argparse
 import logging
 import pprint

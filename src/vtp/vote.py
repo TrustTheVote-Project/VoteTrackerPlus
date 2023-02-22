@@ -24,11 +24,48 @@ simply wraps a call to cast_ballot.py and accept_ballot.py.
 See 'vote.py -h' for usage information.
 """
 
-# pylint: disable=wrong-import-position   # import statements not top of file
-import sys
+import argparse
 
 from vtp.ops.vote_operation import VoteOperation
-from vtp.utils.election_config import ElectionConfig
+from vtp.utils.address import Address
+
+
+def parse_arguments():
+    """Parse arguments from a command line"""
+
+    parser = argparse.ArgumentParser(
+        description="""Will interactively allow a voter to vote.  Internally
+    it first calls cast_balloy.py followed by accept_ballot.py.  If a
+    specific election address or a specific blank ballot is not
+    specified, a random blank ballot is chosen.
+    """
+    )
+
+    Address.add_address_args(parser)
+    parser.add_argument(
+        "-m",
+        "--merge_contests",
+        action="store_true",
+        help="Will immediately merge the ballot contests (to master)",
+    )
+    parser.add_argument(
+        "--blank_ballot",
+        help="overrides an address - specifies the specific blank ballot",
+    )
+    parser.add_argument(
+        "-v",
+        "--verbosity",
+        type=int,
+        default=3,
+        help="0 critical, 1 error, 2 warning, 3 info, 4 debug (def=3)",
+    )
+    parser.add_argument(
+        "-n",
+        "--printonly",
+        action="store_true",
+        help="will printonly and not write to disk (def=True)",
+    )
+    return parser.parse_args()
 
 
 # pylint: disable=duplicate-code
@@ -40,15 +77,9 @@ def main():
     directory tree), and calls its main function.
     """
 
-    # Parse args first (ZZZ note logging interface)
-    _main = VoteOperation(sys.argv[1:])
-
-    # Create an VTP election config object
-    the_election_config = ElectionConfig()
-    the_election_config.parse_configs()
-
     # do it
-    _main.main(the_election_config)
+    vote_op = VoteOperation(parse_arguments())
+    vote_op.run()
 
 
 # If called directly via this file

@@ -25,32 +25,24 @@ See 'verify_ballot_receipt.py -h' for usage information.
 """
 
 # Standard imports
-# pylint: disable=wrong-import-position   # import statements not top of file
-import argparse
 import json
 import logging
 import os
 import re
-import sys
 
 # Local import
 from vtp.utils.address import Address
 from vtp.utils.ballot import Ballot
-from vtp.utils.common import Globals, Shellout
+from vtp.utils.common import Common, Globals, Shellout
+from vtp.utils.election_config import ElectionConfig
 
 
 class VerifyBallotReceiptOperation:
     """A class to wrap the run_mock_election.py script."""
 
-    def __init__(self, argv):
+    def __init__(self, parsed_args):
         """Only to module-ize the scripts and keep things simple and idiomatic."""
-        self.argv = argv
-        self.parsed_args = None
-        self.parse_arguments()
-
-    def __str__(self):
-        """Boilerplate"""
-        return "argv=" + str(self.argv) + "\n" + "parsed_args=" + str(self.parsed_args)
+        self.parsed_args = parsed_args
 
     # pylint: disable=too-many-arguments   # self is not technically an arg kind-of
     def validate_ballot_lines(self, lines, headers, uids, e_config, error_digests):
@@ -288,93 +280,19 @@ class VerifyBallotReceiptOperation:
                 "[GOOD]: ballot receipt VALID - no digest errors found\n############"
             )
 
-    ################
-    # arg parsing
-    ################
-    # pylint: disable=duplicate-code
-    def parse_arguments(self):
-        """Parse arguments from a command line"""
-
-        parser = argparse.ArgumentParser(
-            description="""Will read a voter's ballot receipt and validate
-                        all the digests contained therein.  If a contest
-                        has been merged to the master branch, will report
-                        the current ballot tally number (which ballot in
-                        the actula tally cound is the voter's).
-
-                        An address is also supported as an argument in
-                        which case the last ballot check is read from the
-                        default location for the specified address.
-
-                        Can also optionally print the ballot's CVRs when a
-                        specific ballot check row is provided.
-                        """
-        )
-
-        Address.add_address_args(parser, True)
-        parser.add_argument(
-            "-f",
-            "--receipt_file",
-            default="",
-            help="specify the ballot receipt location - overrides an address",
-        )
-        parser.add_argument(
-            "-r",
-            "--row",
-            default="",
-            help="specify a row to inspect that row (the first row is 1, not 0)",
-        )
-        parser.add_argument(
-            "-c",
-            "--cvr",
-            action="store_true",
-            help="display the contents of the content CVRs specifying a row",
-        )
-        parser.add_argument(
-            "-x",
-            "--do_not_pull",
-            action="store_true",
-            help="Before tallying the votes, pull the ElectionData repo",
-        )
-        parser.add_argument(
-            "-v",
-            "--verbosity",
-            type=int,
-            default=3,
-            help="0 critical, 1 error, 2 warning, 3 info, 4 debug (def=3)",
-        )
-        #    parser.add_argument("-n", "--printonly", action="store_true",
-        #                            help="will printonly and not write to disk (def=True)")
-
-        self.parsed_args = parser.parse_args([str(x) for x in self.argv])
-        verbose = {
-            0: logging.CRITICAL,
-            1: logging.ERROR,
-            2: logging.WARNING,
-            3: logging.INFO,
-            4: logging.DEBUG,
-        }
-        logging.basicConfig(
-            format="%(message)s",
-            level=verbose[self.parsed_args.verbosity],
-            stream=sys.stdout,
-        )
-
-        # Validate required args
-        if not (
-            self.parsed_args.receipt_file
-            or (self.parsed_args.state and self.parsed_args.town)
-        ):
-            raise ValueError(
-                "Either an explicit or implicit (via an address) receipt file must be provided"
-            )
 
     ################
     # main
     ################
     # pylint: disable=duplicate-code
-    def main(self, the_election_config):
+    def run(self):
         """Main function - see -h for more info"""
+
+        # Configure logging
+        Common.configure_logging(self.parsed_args.verbosity)
+
+        # Create a VTP ElectionData object if one does not already exist
+        the_election_config = ElectionConfig.configure_election()
 
         # git pull the ElectionData repo so to get the latest set of
         # remote CVRs branches
