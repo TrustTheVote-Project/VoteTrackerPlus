@@ -25,10 +25,11 @@ See 'vote.py -h' for usage information.
 """
 
 # Standard imports
-from vtp.ops.accept_ballot_operation import AcceptBallotOperation
-from vtp.ops.cast_ballot_operation import CastBallotOperation
+from argparse import Namespace
 
 # Local libraries
+from vtp.ops.accept_ballot_operation import AcceptBallotOperation
+from vtp.ops.cast_ballot_operation import CastBallotOperation
 from vtp.utils.ballot import Ballot
 from vtp.utils.common import Common, Shellout
 from vtp.utils.election_config import ElectionConfig
@@ -66,39 +67,37 @@ class VoteOperation:
             )
 
         # If an address was used, use that
-        cast_address_args = []
-        accept_address_args = []
+        cast_args = {
+            "verbosity":self.parsed_args.verbosity,
+            "printonly":self.parsed_args.printonly,
+            }
+        accept_args = {
+            "verbosity":self.parsed_args.verbosity,
+            "printonly":self.parsed_args.printonly,
+            }
         if not self.parsed_args.blank_ballot:
             if self.parsed_args.state:
-                cast_address_args += ["-s", self.parsed_args.state]
-                accept_address_args += ["-s", self.parsed_args.state]
+                cast_args["state"] = self.parsed_args.state
+                accept_args["state"] = self.parsed_args.state
             if self.parsed_args.town:
-                cast_address_args += ["-t", self.parsed_args.town]
-                accept_address_args += ["-t", self.parsed_args.town]
+                cast_args["town"] = self.parsed_args.town
+                accept_args["town"] = self.parsed_args.town
             if self.parsed_args.substreet:
-                cast_address_args += ["-b", self.parsed_args.substreet]
+                cast_args["substreet"] = self.parsed_args.substreet
             if self.parsed_args.address:
-                cast_address_args += ["-a", self.parsed_args.address]
+                cast_args["address"] = self.parsed_args.address
         else:
-            cast_address_args += ["--blank_ballot", self.parsed_args.blank_ballot]
-            accept_address_args += ["--blank_ballot", self.parsed_args.blank_ballot]
+            cast_args["blank_ballot"] = self.parsed_args.blank_ballot
+            accept_args["blank_ballot"] = self.parsed_args.blank_ballot
 
         # Basically only do as little as necessary to call cast_ballot.py
         # followed by accept_ballot.py
         # Cast a ballot
-        a_cast_ballot_operation = CastBallotOperation(
-            ["-v", str(self.parsed_args.verbosity)]
-            + cast_address_args
-            + (["-n"] if self.parsed_args.printonly else []),
-        )
+        import pdb; pdb.set_trace()
+        a_cast_ballot_operation = CastBallotOperation(Namespace(**cast_args))
         a_cast_ballot_operation.run()
         # Accept the ballot
-        a_accept_ballot_operation = AcceptBallotOperation(
-            ["-v", str(self.parsed_args.verbosity)]
-            + accept_address_args
-            + (["-n"] if self.parsed_args.printonly else [])
-            + (["-m"] if self.parsed_args.merge_contests else []),
-        )
+        a_accept_ballot_operation = AcceptBallotOperation(Namespace(**accept_args))
         a_accept_ballot_operation.run()
 
     # End Of Class

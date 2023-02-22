@@ -43,7 +43,11 @@ from vtp.utils.election_config import ElectionConfig
 
 
 class RunMockElectionOperation:
-    """A class to wrap the run_mock_election.py script."""
+    """
+    A class to wrap the run_mock_election.py script.  Constructor
+    takes a complete list of valid arguments (either as a type
+    Namespace or dict).
+    """
 
     def __init__(self, parsed_args):
         """Only to module-ize the scripts and keep things simple and idiomatic."""
@@ -95,27 +99,21 @@ class RunMockElectionOperation:
                         check=True,
                     )
                 cast_ballot = CastBallotOperation(
-                    Shellout.handle_printonly_switch(
-                        [
-                            "--blank_ballot=" + blank_ballot,
-                            "--demo_mode",
-                            "-v",
-                            self.parsed_args.verbosity,
-                        ],
-                        self.parsed_args.printonly,
-                    )
+                    {
+                        "blank_ballot": blank_ballot,
+                        "demo_mode": True,
+                        "verbosity": self.parsed_args.verbosity,
+                        "printonly": self.parsed_args.printonly,
+                    }
                 )
                 cast_ballot.run()
                 # - accept the ballot
                 accept_ballot = AcceptBallotOperation(
-                    Shellout.handle_printonly_switch(
-                        [
-                            "--cast_ballot=" + Ballot.get_cast_from_blank(blank_ballot),
-                            "-v",
-                            self.parsed_args.verbosity,
-                        ],
-                        self.parsed_args.printonly,
-                    )
+                    {
+                        "cast_ballot": Ballot.get_cast_from_blank(blank_ballot),
+                        "verbosity": self.parsed_args.verbosity,
+                        "printonly": self.parsed_args.printonly,
+                    }
                 )
                 accept_ballot.run()
                 if self.parsed_args.device == "both":
@@ -124,14 +122,11 @@ class RunMockElectionOperation:
                         # Since casting and merging is basically
                         # synchronous, no need for an extra large timeout
                         merge_contests = MergeContestsOperation(
-                            Shellout.handle_printonly_switch(
-                                [
-                                    "-f",
-                                    "-v",
-                                    self.parsed_args.verbosity,
-                                ],
-                                self.parsed_args.printonly,
-                            )
+                            {
+                                "flush_mode": True,
+                                "verbosity": self.parsed_args.verbosity,
+                                "printonly": self.parsed_args.printonly,
+                            }
                         )
                         merge_contests.run()
                     else:
@@ -139,15 +134,11 @@ class RunMockElectionOperation:
                         # contests - also no need for an extra large
                         # timeout
                         merge_contests = MergeContestsOperation(
-                            Shellout.handle_printonly_switch(
-                                [
-                                    "-m",
-                                    self.parsed_args.minimum_cast_cache,
-                                    "-v",
-                                    self.parsed_args.verbosity,
-                                ],
-                                self.parsed_args.printonly,
-                            )
+                            {
+                                "minimum_cast_cache": self.parsed_args.minimum_cast_cache,
+                                "verbosity": self.parsed_args.verbosity,
+                                "printonly": self.parsed_args.printonly,
+                            }
                         )
                         merge_contests.run()
                     # don't let too much garbage build up
@@ -164,25 +155,19 @@ class RunMockElectionOperation:
             # merge the remaining contests
             # Note - this needs a longer timeout as it can take many seconds
             merge_contests = MergeContestsOperation(
-                Shellout.handle_printonly_switch(
-                    [
-                        "-f",
-                        "-v",
-                        self.parsed_args.verbosity,
-                    ],
-                    self.parsed_args.printonly,
-                )
+                {
+                    "flush_mode": True,
+                    "verbosity": self.parsed_args.verbosity,
+                    "printonly": self.parsed_args.printonly,
+                }
             )
             merge_contests.run()
             # tally the contests
             tally_contests = TallyContestsOperation(
-                Shellout.handle_printonly_switch(
-                    [
-                        "-v",
-                        self.parsed_args.verbosity,
-                    ],
-                    self.parsed_args.printonly,
-                )
+                {
+                    "verbosity": self.parsed_args.verbosity,
+                    "printonly": self.parsed_args.printonly,
+                }
             )
             tally_contests.run()
         # clean up git just in case
@@ -221,39 +206,29 @@ class RunMockElectionOperation:
                 )
             if self.parsed_args.flush_mode == 2:
                 merge_contests = MergeContestsOperation(
-                    Shellout.handle_printonly_switch(
-                        [
-                            "-r",
-                            "-f",
-                            "-v",
-                            self.parsed_args.verbosity,
-                        ],
-                        self.parsed_args.printonly,
-                    )
+                    {
+                        "remote": True,
+                        "flush": True,
+                        "verbosity": self.parsed_args.verbosity,
+                        "printonly": self.parsed_args.printonly,
+                    }
                 )
                 merge_contests.run()
                 tally_contests = TallyContestsOperation(
-                    Shellout.handle_printonly_switch(
-                        [
-                            "-v",
-                            self.parsed_args.verbosity,
-                        ],
-                        self.parsed_args.printonly,
-                    )
+                    {
+                        "verbosity": self.parsed_args.verbosity,
+                        "printonly": self.parsed_args.printonly,
+                    }
                 )
                 tally_contests.run()
                 return
             merge_contests = MergeContestsOperation(
-                Shellout.handle_printonly_switch(
-                    [
-                        "-r",
-                        "-m",
-                        self.parsed_args.minimum_cast_cache,
-                        "-v",
-                        self.parsed_args.verbosity,
-                    ],
-                    self.parsed_args.printonly,
-                )
+                {
+                    "remote": True,
+                    "minimum_cast_cache": self.parsed_args.minimum_cast_cache,
+                    "verbosity": self.parsed_args.verbosity,
+                    "printonly": self.parsed_args.printonly,
+                }
             )
             merge_contests.run()
             logging.info("Sleeping for 10")
@@ -264,26 +239,20 @@ class RunMockElectionOperation:
         if self.parsed_args.flush_mode in [1, 2]:
             print("Cleaning up remaining unmerged ballots")
             merge_contests = MergeContestsOperation(
-                Shellout.handle_printonly_switch(
-                    [
-                        "-r",
-                        "-f",
-                        "-v",
-                        self.parsed_args.verbosity,
-                    ],
-                    self.parsed_args.printonly,
-                )
+                {
+                    "remote": True,
+                    "flush": True,
+                    "verbosity": self.parsed_args.verbosity,
+                    "printonly": self.parsed_args.printonly,
+                }
             )
             merge_contests.run()
         # tally the contests
         tally_contests = TallyContestsOperation(
-            Shellout.handle_printonly_switch(
-                [
-                    "-v",
-                    self.parsed_args.verbosity,
-                ],
-                self.parsed_args.printonly,
-            )
+            {
+                "verbosity": self.parsed_args.verbosity,
+                "printonly": self.parsed_args.printonly,
+            }
         )
         tally_contests.run()
 

@@ -149,13 +149,6 @@ class Shellout:
     """
 
     @staticmethod
-    def handle_printonly_switch(args, printonly):
-        """Since printonly is a boolean, need to convert it back to a switch"""
-        if printonly:
-            return args + "-n"
-        return args
-
-    @staticmethod
     def get_script_name(script, the_election_config):
         """
         Given a python script name, either return the poetry local
