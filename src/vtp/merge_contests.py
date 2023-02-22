@@ -38,15 +38,16 @@ def parse_arguments():
     """Parse arguments from a command line"""
 
     parser = argparse.ArgumentParser(
-        description="""Will run the git based workflow on a VTP
-    server node so to merge pending CVR contest branches into the
-    master git branch.
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        description="""
+Will run the git based workflow on a VTP server node so to merge
+pending CVR contest branches into the master git branch.
 
-    If there are less then the prerequisite number of already cast
-    contests, a warning will be printed/logged but no error will be
-    raised.  Supplying -f will flush all remaining contests to the
-    master branch.
-    """
+If there are less then the prerequisite number of already cast
+contests, a warning will be printed/logged but no error will be
+raised.  Supplying -f will flush all remaining contests to the master
+branch.
+""",
     )
 
     parser.add_argument(
@@ -92,9 +93,7 @@ def parse_arguments():
 def main():
     """
     Called via a python local install entrypoint or this file.  Simply
-    wraps the scripts constructor, creates and ElectionConfig instance
-    (which parses VTP's election data file which is implemented as a
-    directory tree), and calls its main function.
+    wraps the scripts constructor and calls run.
     """
 
     # do it

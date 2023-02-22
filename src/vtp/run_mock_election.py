@@ -38,32 +38,34 @@ def parse_arguments():
     """Parse arguments from a command line"""
 
     parser = argparse.ArgumentParser(
-        description="""Will run a mock election with N ballots
-    across the available blank ballots found in the ElectionData.
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        description="""
+Will run a mock election with N ballots across the available blank
+ballots found in the ElectionData.
 
-    One basic idea is to run this in different windows, one per VTP
-    scanner.  The scanner is nominally associated with a town (as
-    configured).
+One basic idea is to run this in different windows, one per VTP
+scanner.  The scanner is nominally associated with a town (as
+configured).
 
-    When "-d scanner" is supplied, run_mock_election.py will randomly
-    cast and scan ballots.
+When "-d scanner" is supplied, run_mock_election.py will randomly
+cast and scan ballots.
 
-    When "-d server" is supplied, run_mock_election.py will
-    synchronously run the merge_contests.py program which will once
-    every 10 seconds.  Note that nominally 100 contgests need to have
-    been pushed for merge_contests.py to merge in a contest into the
-    master branch without the --flush_mode option.
+When "-d server" is supplied, run_mock_election.py will
+synchronously run the merge_contests.py program which will once
+every 10 seconds.  Note that nominally 100 contgests need to have
+been pushed for merge_contests.py to merge in a contest into the
+master branch without the --flush_mode option.
 
-    If "-d both" is supplied, run_mock_election.py will run a single
-    scanner N iterations while also calling the server function.  If
-    --flush_mode is set to 1 or 2, run_mock_election.py will then
-    flush the ballot cache before printing the tallies and exiting.
+If "-d both" is supplied, run_mock_election.py will run a single
+scanner N iterations while also calling the server function.  If
+--flush_mode is set to 1 or 2, run_mock_election.py will then
+flush the ballot cache before printing the tallies and exiting.
 
-    By default run_mock_election.py will loop over all available blank
-    ballots found withint the ElectionData tree.  However, either a
-    specific blank ballot or an address can be specified to limit the
-    mock to a single ballot N times.
-    """
+By default run_mock_election.py will loop over all available blank
+ballots found withint the ElectionData tree.  However, either a
+specific blank ballot or an address can be specified to limit the
+mock to a single ballot N times.
+""",
     )
 
     Address.add_address_args(parser)
@@ -142,9 +144,7 @@ def parse_arguments():
 def main():
     """
     Called via a python local install entrypoint or this file.  Simply
-    wraps the scripts constructor, creates and ElectionConfig instance
-    (which parses VTP's election data file which is implemented as a
-    directory tree), and calls its main function.
+    wraps the scripts constructor and calls run.
     """
 
     # do it

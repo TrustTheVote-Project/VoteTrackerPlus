@@ -42,14 +42,12 @@ def parse_arguments():
     """Parse command line arguments"""
 
     parser = argparse.ArgumentParser(
-        description="""Will parse all the config and
-    address_map yaml files in the current VTP election git tree and
-    create a blank ballot based on the supplied address.
-
-    ZZZ - in the future some other argument can be supported to print
-    for example all possible unique blank ballots found in the current
-    VTP election tree, whatever.
-    """
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        description="""
+Will parse all the config and address_map yaml files in the current
+VTP ElectionData git tree and create a blank ballot based on the
+supplied address.
+""",
     )
 
     Address.add_address_args(parser)
@@ -84,7 +82,7 @@ def parse_arguments():
 def main():
     """
     Called via a python local install entrypoint or this file.  Simply
-    wraps the script's constructor.
+    wraps the scripts constructor and calls run.
     """
 
     # do it

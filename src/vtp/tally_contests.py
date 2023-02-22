@@ -35,20 +35,22 @@ def parse_arguments():
     """Parse arguments from a command line"""
 
     parser = argparse.ArgumentParser(
-        description="""Will tally all the contests so far merged to
-    the master branch and report the results.  The results are
-    computed on a voting center basis (git submodule) basis.
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        description="""
+Will tally all the contests so far merged to the master branch and
+report the results.  The results are computed on a voting center basis
+(git submodule) basis.
 
-    Note - the current implementation relies on git submodules
-    (individual git repos) to break up the tally data of an election.
-    If there is only one git repository and the election is large,
-    then a potentiallu large amount of memory will be used in
-    executing the tallies.  One short term fix for this is to limit
-    the number of contests being tallied.
+Note - the current implementation relies on git submodules (individual
+git repos) to break up the tally data of an election.  If there is
+only one git repository and the election is large, then a potentiallu
+large amount of memory will be used in executing the tallies.  One
+short term fix for this is to limit the number of contests being
+tallied.
 
-    Also note that the current implementation does not yet support
-    tallying across git submodules/repos.
-    """
+Also note that the current implementation does not yet support
+tallying across git submodules/repos.
+""",
     )
 
     parser.add_argument(
@@ -98,9 +100,7 @@ def parse_arguments():
 def main():
     """
     Called via a python local install entrypoint or this file.  Simply
-    wraps the scripts constructor, creates and ElectionConfig instance
-    (which parses VTP's election data file which is implemented as a
-    directory tree), and calls its main function.
+    wraps the scripts constructor and calls run.
     """
 
     # do it

@@ -20,7 +20,6 @@
 """accept_ballot.py - command line level script to accept a ballot.
 
 See 'accept_ballot.py -h' for usage information.
-
 """
 
 import argparse
@@ -37,20 +36,17 @@ def parse_arguments():
     """Parse arguments from a command line"""
 
     parser = argparse.ArgumentParser(
-        description="""Will run the git based workflow on a VTP
-                    scanner node to accept the json rendering of the
-                    cast vote record of a voter's ballot.  The json
-                    file is read, the contests are extraced and
-                    submitted to separate git branches, one per
-                    contest, and pushed back to the Voter Center's VTP
-                    remote.
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        description="""
+Will run the git based workflow on a VTP scanner node to accept the json
+rendering of the cast vote record of a voter's ballot. The json file is read,
+the contests are extraced and submitted to separate git branches, one per
+contest, and pushed back to the Voter Center's VTP remote.
 
-                    In addition a voter's ballot receipt and offset
-                    are optionally printed.
+In addition a voter's ballot receipt and offset are optionally printed.
 
-                    Either the location of the ballot_file or the
-                    associated address is required.
-                    """
+Either the location of the ballot_file or the associated address is required.
+""",
     )
 
     Address.add_address_args(parser, True)
@@ -85,9 +81,7 @@ def parse_arguments():
 def main():
     """
     Called via a python local install entrypoint or this file.  Simply
-    wraps the scripts constructor, creates and ElectionConfig instance
-    (which parses VTP's election data file which is implemented as a
-    directory tree), and calls its main function.
+    wraps the scripts constructor and calls run.
     """
 
     # do it

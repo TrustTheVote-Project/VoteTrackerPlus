@@ -57,7 +57,8 @@ storage idiom.
 
 If the --guid_client_store option is set, instead of setting up the
 demo this script will create a new GUID based FASTapi clone and return
-the GUID.  """,
+the GUID.
+""",
     )
     parser.add_argument(
         "-s",
@@ -120,9 +121,7 @@ the GUID.  """,
 def main():
     """
     Called via a python local install entrypoint or this file.  Simply
-    wraps the scripts constructor, creates and ElectionConfig instance
-    (which parses VTP's election data file which is implemented as a
-    directory tree), and calls its main function.
+    wraps the scripts constructor and calls run.
     """
 
     # do it

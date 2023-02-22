@@ -37,9 +37,10 @@ def parse_arguments():
     """Parse command line arguments"""
 
     parser = argparse.ArgumentParser(
-        description="""will print the CVRs (Cast Vote Records) for the
-                    supplied contest(s)
-                    """
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        description="""
+will print the CVRs (Cast Vote Records) for the supplied contest(s)
+""",
     )
 
     parser.add_argument(
@@ -77,9 +78,7 @@ def parse_arguments():
 def main():
     """
     Called via a python local install entrypoint or this file.  Simply
-    wraps the scripts constructor, creates and ElectionConfig instance
-    (which parses VTP's election data file which is implemented as a
-    directory tree), and calls its main function.
+    wraps the scripts constructor and calls run.
     """
 
     # do it

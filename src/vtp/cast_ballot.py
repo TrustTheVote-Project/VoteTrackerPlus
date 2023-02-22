@@ -36,10 +36,12 @@ def parse_arguments():
     """Parse command line arguments"""
 
     parser = argparse.ArgumentParser(
-        description="""Can either read a blank ballot and allow a user
-    to manually select choices or when in demo mode, cast_ballot.py
-    will randominly select choices.
-    """
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        description="""
+Given either an address or a specific blank ballot, will either read a
+blank ballot and allow a user to manually select choices or when in
+demo mode, cast_ballot.py will randominly select choices.
+""",
     )
 
     Address.add_address_args(parser)
@@ -75,9 +77,7 @@ def parse_arguments():
 def main():
     """
     Called via a python local install entrypoint or this file.  Simply
-    wraps the scripts constructor, creates and ElectionConfig instance
-    (which parses VTP's election data file which is implemented as a
-    directory tree), and calls its main function.
+    wraps the scripts constructor and calls run.
     """
 
     # do it

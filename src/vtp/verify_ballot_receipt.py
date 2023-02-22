@@ -38,19 +38,20 @@ def parse_arguments():
     """Parse arguments from a command line"""
 
     parser = argparse.ArgumentParser(
-        description="""Will read a voter's ballot receipt and validate
-                    all the digests contained therein.  If a contest
-                    has been merged to the master branch, will report
-                    the current ballot tally number (which ballot in
-                    the actula tally cound is the voter's).
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        description="""
+Will read a voter's ballot receipt and validate all the digests
+contained therein.  If a contest has been merged to the master branch,
+will report the current ballot tally number (which ballot in the
+actula tally cound is the voter's).
 
-                    An address is also supported as an argument in
-                    which case the last ballot check is read from the
-                    default location for the specified address.
+An address is also supported as an argument in which case the last
+ballot check is read from the default location for the specified
+address.
 
-                    Can also optionally print the ballot's CVRs when a
-                    specific ballot check row is provided.
-                    """
+Can also optionally print the ballot's CVRs when a specific ballot
+check row is provided.
+""",
     )
 
     Address.add_address_args(parser, True)
@@ -102,9 +103,7 @@ def parse_arguments():
 def main():
     """
     Called via a python local install entrypoint or this file.  Simply
-    wraps the scripts constructor, creates and ElectionConfig instance
-    (which parses VTP's election data file which is implemented as a
-    directory tree), and calls its main function.
+    wraps the scripts constructor and calls run.
     """
 
     # do it
