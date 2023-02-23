@@ -39,11 +39,15 @@ from vtp.utils.exceptions import TallyException
 
 # pylint: disable=too-few-public-methods
 class TallyContestsOperation:
-    """A class to wrap the tally_contests.py script."""
+    """
+    A class to implememt the tally-contests operation.  See the
+    tally-contests help output or read the parse_argument argparse
+    description (immediately below this) in the source file.
+    """
 
     @staticmethod
     def parse_arguments(argv):
-        """Parse arguments from a command line"""
+        """Parse arguments from a command line or from the constructor"""
 
         safe_args = Common.cast_thing_to_list(argv)
         parser = argparse.ArgumentParser(

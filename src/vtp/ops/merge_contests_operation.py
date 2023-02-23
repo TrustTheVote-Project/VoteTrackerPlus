@@ -37,11 +37,15 @@ from vtp.utils.election_config import ElectionConfig
 
 
 class MergeContestsOperation:
-    """A class to wrap the merge_contests.py script."""
+    """
+    A class to implememt the merge-contests operation.  See the
+    merge-contests help output or read the parse_argument argparse
+    description (immediately below this) in the source file.
+    """
 
     @staticmethod
     def parse_arguments(argv):
-        """Parse arguments from a command line"""
+        """Parse arguments from a command line or from the constructor"""
 
         safe_args = Common.cast_thing_to_list(argv)
         parser = argparse.ArgumentParser(

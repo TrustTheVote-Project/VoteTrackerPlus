@@ -35,11 +35,15 @@ from vtp.utils.election_config import ElectionConfig
 
 
 class CreateBlankBallotOperation:
-    """A class to wrap the run_mock_election.py script."""
+    """
+    A class to implememt the create-blank-ballot operation.  See the
+    create-blank-ballot help output or read the parse_argument argparse
+    description (immediately below this) in the source file.
+    """
 
     @staticmethod
     def parse_arguments(argv):
-        """Parse command line arguments"""
+        """Parse arguments from a command line or from the constructor"""
 
         safe_args = Common.cast_thing_to_list(argv)
         parser = argparse.ArgumentParser(

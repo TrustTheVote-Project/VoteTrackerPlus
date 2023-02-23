@@ -38,11 +38,15 @@ from vtp.utils.election_config import ElectionConfig
 
 
 class AcceptBallotOperation:
-    """A class to wrap the accept_ballot.py script."""
+    """
+    A class to implememt the accept_ballot.py operation.  See the
+    cast-ballot help output or read the parse_argument argparse
+    description (immediately below this) in the source file.
+    """
 
     @staticmethod
     def parse_arguments(argv):
-        """Parse arguments from a command line"""
+        """Parse arguments from a command line or from the constructor"""
 
         safe_args = Common.cast_thing_to_list(argv)
         parser = argparse.ArgumentParser(

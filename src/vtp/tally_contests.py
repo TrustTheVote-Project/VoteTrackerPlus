@@ -25,7 +25,7 @@ See 'tally_contests.py -h' for usage information.
 """
 
 # Global imports
-import argparse
+import sys
 
 # Local imports
 from vtp.ops.tally_contests_operation import TallyContestsOperation
@@ -33,8 +33,11 @@ from vtp.ops.tally_contests_operation import TallyContestsOperation
 
 def main():
     """
-    Called via a python local install entrypoint or this file.  Simply
-    wraps the scripts constructor and calls run.
+    Called via a python local install entrypoint or by running this
+    file.  Simply wraps the scripts constructor and calls the run
+    method.  See the script's help output or read the
+    vtp.ops.tally_contests_operation.py (argparse) description in the
+    source file.
     """
 
     # do it

@@ -36,8 +36,11 @@ from vtp.ops.generate_all_blank_ballots_operation import (
 ################
 def main():
     """
-    Called via a python local install entrypoint or this file.  Simply
-    wraps the scripts constructor and calls run.
+    Called via a python local install entrypoint or by running this
+    file.  Simply wraps the scripts constructor and calls the run
+    method.  See the script's help output or read the
+    vtp.ops.generate_all_blank_ballots_operation.py (argparse)
+    description in the source file.
     """
 
     # do it

@@ -32,8 +32,11 @@ from vtp.ops.run_mock_election_operation import RunMockElectionOperation
 
 def main():
     """
-    Called via a python local install entrypoint or this file.  Simply
-    wraps the scripts constructor and calls run.
+    Called via a python local install entrypoint or by running this
+    file.  Simply wraps the scripts constructor and calls the run
+    method.  See the script's help output or read the
+    vtp.ops.run_mock_election_operation.py (argparse) description in the
+    source file.
     """
 
     # do it

@@ -38,11 +38,15 @@ from vtp.utils.election_config import ElectionConfig
 
 # pylint: disable=too-few-public-methods
 class VoteOperation:
-    """A class to wrap the vote.py script."""
+    """
+    A class to implememt the vote operation.  See the
+    vote help output or read the parse_argument argparse
+    description (immediately below this) in the source file.
+    """
 
     @staticmethod
     def parse_arguments(argv):
-        """Parse arguments from a command line"""
+        """Parse arguments from a command line or from the constructor"""
 
         safe_args = Common.cast_thing_to_list(argv)
         parser = argparse.ArgumentParser(

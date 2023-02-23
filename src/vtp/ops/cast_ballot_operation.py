@@ -42,7 +42,11 @@ from vtp.utils.election_config import ElectionConfig
 
 
 class CastBallotOperation:
-    """Implement the casting of a ballot."""
+    """
+    A class to implememt the cast-ballot operation.  See the
+    cast-ballot help output or read the parse_argument argparse
+    description (immediately below this) in the source file.
+    """
 
     @staticmethod
     def parse_arguments(argv):

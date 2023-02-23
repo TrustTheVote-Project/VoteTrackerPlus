@@ -26,6 +26,7 @@ See 'vote.py -h' for usage information.
 
 # Global imports
 import sys
+
 # Local imports
 from vtp.ops.vote_operation import VoteOperation
 
@@ -33,8 +34,11 @@ from vtp.ops.vote_operation import VoteOperation
 # pylint: disable=duplicate-code
 def main():
     """
-    Called via a python local install entrypoint or this file.  Simply
-    wraps the scripts constructor and calls run.
+    Called via a python local install entrypoint or by running this
+    file.  Simply wraps the scripts constructor and calls the run
+    method.  See the script's help output or read the
+    vtp.ops.vote_operation.py (argparse) description in the source
+    file.
     """
 
     # do it
