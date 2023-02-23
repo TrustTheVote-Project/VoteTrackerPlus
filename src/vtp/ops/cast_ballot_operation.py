@@ -112,12 +112,13 @@ demo mode, cast_ballot.py will randominly select choices.
         # get the possible choices
         choices = the_contest.get("choices")
         tally = the_contest.get("tally")
-        # choose something randomly
         picks = list(range(len(choices)))
         # For plurality and max=1, the first choice is the only
         # choice.  For plurality and max>1, the order does not matter
         # - a selection is a selection.  For RCV, the order does
         # matter as that is the ranking.
+        #
+        # Choose something randomly
         random.shuffle(picks)
         if "plurality" == tally:
             loop = the_contest.get("max")
@@ -156,7 +157,11 @@ demo mode, cast_ballot.py will randominly select choices.
             count += 1
 
         def validate_multichoice(text):
-            """Will validate the space separated user input choice string"""
+            """Will validate the space separated user input choice
+            string.  Note - this is never called by this code - it is passed to
+            pyinputplus.inputCustom as a function.  As such it technically not an
+            instance method and does not have a self.
+            """
             selections = text.split()
             choice_max = len(choices)
             errors = []
