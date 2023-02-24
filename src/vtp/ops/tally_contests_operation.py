@@ -30,11 +30,11 @@ import logging
 import re
 
 # Local imports
-from vtp.utils.ballot import Ballot
-from vtp.utils.common import Common, Shellout
-from vtp.utils.contest import Tally
-from vtp.utils.election_config import ElectionConfig
-from vtp.utils.exceptions import TallyException
+from vtp.core.ballot import Ballot
+from vtp.core.common import Common, Shellout
+from vtp.core.contest import Tally
+from vtp.core.election_config import ElectionConfig
+from vtp.core.exceptions import TallyException
 
 
 # pylint: disable=too-few-public-methods
