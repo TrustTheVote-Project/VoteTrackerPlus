@@ -20,128 +20,36 @@
 """generate_all_blank_ballots.py - generate all possible blank ballots
 
 See 'generate_all_blank_ballots.py -h' for usage information.
-
-See ../../docs/tech/executable-overview.md for the context in which this file was created.
-
 """
 
 # Standard imports
-# pylint: disable=wrong-import-position   # import statements not top of file
-import argparse
-import logging
-import os
-import pprint
 import sys
 
 # Local import
-from vtp.utils.address import Address
-from vtp.utils.ballot import BlankBallot
-from vtp.utils.election_config import ElectionConfig
-
-# Functions
-
-################
-# arg parsing
-################
-# pylint: disable=duplicate-code
-def parse_arguments():
-    """Parse arguments from a command line"""
-
-    parser = argparse.ArgumentParser(
-        description="""Will crawl the ElectionData tree
-    and determine all possible blank ballots and generate them.  They
-    will be placed in the town's blank-ballots subdir.
-    """
-    )
-
-    parser.add_argument(
-        "-v",
-        "--verbosity",
-        type=int,
-        default=3,
-        help="0 critical, 1 error, 2 warning, 3 info, 4 debug (def=3)",
-    )
-    parser.add_argument(
-        "-n",
-        "--printonly",
-        action="store_true",
-        help="will printonly and not write to disk (def=True)",
-    )
-
-    parsed_args = parser.parse_args()
-    verbose = {
-        0: logging.CRITICAL,
-        1: logging.ERROR,
-        2: logging.WARNING,
-        3: logging.INFO,
-        4: logging.DEBUG,
-    }
-    logging.basicConfig(
-        format="%(message)s", level=verbose[parsed_args.verbosity], stream=sys.stdout
-    )
-
-    # No args need to be validated
-    return parsed_args
+from vtp.ops.generate_all_blank_ballots_operation import (
+    GenerateAllBlankBallotsOperation,
+)
 
 
 ################
 # main
 ################
-
-ARGS = None
-
-# pylint: disable=duplicate-code
 def main():
-    """Main function - see -h for more info"""
+    """
+    Called via a python local install entrypoint or by running this
+    file.  Simply wraps the scripts constructor and calls the run
+    method.  See the script's help output or read the
+    vtp.ops.generate_all_blank_ballots_operation.py (argparse)
+    description in the source file.
+    """
 
-    # pylint: disable=global-statement
-    global ARGS
-    ARGS = parse_arguments()
-
-    # Create an VTP election config object
-    the_election_config = ElectionConfig()
-    the_election_config.parse_configs()
-
-    # Walk a topo sort of the DAG and for any node with
-    # 'unique-ballots', add them all.  If the subdir does not match
-    # REQUIRED_GGO_ADDRESS_FIELDS, place the blank ballot
-    for node in the_election_config.get_dag("topo"):
-        address_map = the_election_config.get_node(node, "address_map")
-        if "unique-ballots" in address_map:
-            for unique_ballot in address_map["unique-ballots"]:
-                subdir = the_election_config.get_node(node, "subdir")
-                ggos = unique_ballot.get("ggos")
-                # if the subdir is not a state/town, shorten it to that
-                subdir = os.path.sep.join(subdir.split(os.path.sep)[0:6])
-                # Now create a generic address on the list of ggos, an
-                # associated generic blank ballot, and store it out
-                generic_address = Address.create_generic_address(
-                    the_election_config, subdir, ggos
-                )
-                generic_ballot = BlankBallot()
-                generic_ballot.create_blank_ballot(generic_address, the_election_config)
-                logging.info(
-                    "Active GGOs for blank ballot (%s): %s",
-                    generic_address,
-                    generic_ballot.get("active_ggos"),
-                )
-                logging.debug(
-                    "And the blank ballot looks like:\n%s",
-                    pprint.pformat(generic_ballot.dict()),
-                )
-                # Write it out
-                if ARGS.printonly:
-                    ballot_file = the_election_config.gen_blank_ballot_location(
-                        generic_address.active_ggos,
-                        generic_address.ballot_subdir,
-                        "json",
-                    )
-                else:
-                    ballot_file = generic_ballot.write_blank_ballot(the_election_config)
-                logging.info("Blank ballot file: %s", ballot_file)
+    # do it
+    gabbo = GenerateAllBlankBallotsOperation(sys.argv[1:])
+    gabbo.run()
 
 
-#                import pdb; pdb.set_trace()
-
+# If called directly via this file
 if __name__ == "__main__":
     main()
+
+# EOF

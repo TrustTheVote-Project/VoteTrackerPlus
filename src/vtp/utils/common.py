@@ -25,6 +25,7 @@ import logging
 import os
 import re
 import subprocess
+import sys
 from contextlib import contextmanager
 
 
@@ -92,6 +93,18 @@ class Globals:
             "CouncilDistrict": "CouncilDistricts",
             "Precinct": "Precincts",
         },
+        # Note - all three of the following folders hold git repos
+        # where the remote is a bare clone of the upstream/remote
+        # GitHub ElectionData repo. In an attempt at clarity, the word
+        # 'workspace' here refers to a non bare repo, 'upstream' is
+        # the parent repo, and 'remote' means non-local to this
+        # computer (requires a TPC/IP connection to get to).
+        # The subdirectory where the FastAPI connection git workspaces are stored
+        "GUID_CLIENT_DIRNAME": "guid-client-store",
+        # The subdirectory where the local tabulation git workspace is stored
+        "TABULATION_SERVER_DIRNAME": "tabulation-server",
+        # The subdirectory where the mock scanner git workspaces are stored
+        "MOCK_CLIENT_DIRNAME": "mock-clients",
     }
 
     # Legitimate setters
@@ -102,12 +115,44 @@ class Globals:
         """A generic getter"""
         return Globals._config[name]
 
-    # @staticmethod
-    # def set(name, value):
-    #     """A generic setter"""
-    #     if name in Globals._setters:
-    #         raise NameError("Globals are read-only")
-    #     raise NameError(f"The supplied name ({name}) is not a valid Global constant")
+
+class Common:
+    """Common functions without a better home at this time"""
+
+    _configured = False
+
+    @staticmethod
+    def configure_logging(verbosity):
+        """How VTP is (currently) using logging"""
+        if Common._configured:
+            return
+        verbose = {
+            0: logging.CRITICAL,
+            1: logging.ERROR,
+            2: logging.WARNING,
+            3: logging.INFO,
+            4: logging.DEBUG,
+        }
+        logging.basicConfig(
+            format="%(message)s",
+            level=verbose[verbosity],
+            stream=sys.stdout,
+        )
+        Common._configured = True
+
+    @staticmethod
+    def cast_thing_to_list(argv):
+        """Primarly used by the argparse function in the operation classes"""
+        if isinstance(argv, dict):
+            new_argv = []
+            for key, value in argv.items():
+                if isinstance(value, bool):
+                    if value:
+                        new_argv.append("--" + key)
+                elif value is not None:
+                    new_argv.extend(["--" + key, str(value)])
+            return new_argv
+        return argv
 
 
 # pylint: disable=too-few-public-methods   # ZZZ - remove this later
