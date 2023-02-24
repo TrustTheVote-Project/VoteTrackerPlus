@@ -242,9 +242,9 @@ mccabe==0.7.0; python_version >= "3.6" and python_full_version >= "3.7.2" \
 mypy-extensions==1.0.0; python_version >= "3.7" \
     --hash=sha256:4392f6c0eb8a5668a69e23d168ffa70f0be9ccfd32b5cc2d26a34ae5b844552d \
     --hash=sha256:75dbf8955dc00442a438fc4d0666508a9a97b6bd41aa2f0ffe9d2f2725af0782
-networkx==2.8.8; python_version >= "3.8" \
-    --hash=sha256:e435dfa75b1d7195c7b8378c3859f0445cd88c6b0375c181ed66823a9ceb7524 \
-    --hash=sha256:230d388117af870fce5647a3c52401fcf753e94720e6ea6b4197a5355648885e
+networkx==3.0; python_version >= "3.8" \
+    --hash=sha256:58058d66b1818043527244fab9d41a51fcd7dcc271748015f3c181b8a90c8e2e \
+    --hash=sha256:9a9992345353618ae98339c2b63d8201c381c2944f38a2ab49cb45a4c667e412
 packaging==23.0; python_version >= "3.7" \
     --hash=sha256:714ac14496c3e68c99c29b00845f7a2b85f3bb6f1078fd9f72fd20f0570002b2 \
     --hash=sha256:b6ad297f8907de0fa2fe1ccbd26fdaf387f5f47c7275fedf8cce89f99446cf97
