@@ -27,13 +27,14 @@ See 'vote.py -h' for usage information.
 # Standard imports
 import argparse
 
+from vtp.core.address import Address
+from vtp.core.ballot import Ballot
+from vtp.core.common import Common, Shellout
+from vtp.core.election_config import ElectionConfig
+
 # Local libraries
 from vtp.ops.accept_ballot_operation import AcceptBallotOperation
 from vtp.ops.cast_ballot_operation import CastBallotOperation
-from vtp.utils.address import Address
-from vtp.utils.ballot import Ballot
-from vtp.utils.common import Common, Shellout
-from vtp.utils.election_config import ElectionConfig
 
 
 # pylint: disable=too-few-public-methods

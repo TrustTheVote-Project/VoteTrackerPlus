@@ -31,10 +31,10 @@ import random
 import secrets
 
 # Local imports
-from vtp.utils.address import Address
-from vtp.utils.ballot import Ballot, Contests
-from vtp.utils.common import Common, Globals, Shellout
-from vtp.utils.election_config import ElectionConfig
+from vtp.core.address import Address
+from vtp.core.ballot import Ballot, Contests
+from vtp.core.common import Common, Globals, Shellout
+from vtp.core.election_config import ElectionConfig
 
 
 class AcceptBallotOperation:

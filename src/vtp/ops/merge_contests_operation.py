@@ -32,8 +32,8 @@ import random
 import re
 
 # Local import
-from vtp.utils.common import Common, Globals, Shellout
-from vtp.utils.election_config import ElectionConfig
+from vtp.core.common import Common, Globals, Shellout
+from vtp.core.election_config import ElectionConfig
 
 
 class MergeContestsOperation:

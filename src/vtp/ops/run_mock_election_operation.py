@@ -30,17 +30,17 @@ import logging
 import os
 import time
 
+# Local libraries
+from vtp.core.address import Address
+from vtp.core.ballot import Ballot
+from vtp.core.common import Common, Globals, Shellout
+from vtp.core.election_config import ElectionConfig
+
 # Script modules
 from vtp.ops.accept_ballot_operation import AcceptBallotOperation
 from vtp.ops.cast_ballot_operation import CastBallotOperation
 from vtp.ops.merge_contests_operation import MergeContestsOperation
 from vtp.ops.tally_contests_operation import TallyContestsOperation
-
-# Local libraries
-from vtp.utils.address import Address
-from vtp.utils.ballot import Ballot
-from vtp.utils.common import Common, Globals, Shellout
-from vtp.utils.election_config import ElectionConfig
 
 
 class RunMockElectionOperation:
