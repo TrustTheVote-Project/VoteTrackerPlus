@@ -19,7 +19,7 @@
 
 """
 Library backend to command line level script to merge CVR contest
-branches into the master branch
+branches into the main branch
 
 See './merge_contests.py -h' for usage information.
 """
@@ -52,11 +52,11 @@ class MergeContestsOperation:
             formatter_class=argparse.RawDescriptionHelpFormatter,
             description="""
     Will run the git based workflow on a VTP server node so to merge
-    pending CVR contest branches into the master git branch.
+    pending CVR contest branches into the main git branch.
 
     If there are less then the prerequisite number of already cast
     contests, a warning will be printed/logged but no error will be
-    raised.  Supplying -f will flush all remaining contests to the master
+    raised.  Supplying -f will flush all remaining contests to the main
     branch.
     """,
         )
@@ -167,7 +167,7 @@ class MergeContestsOperation:
             check=True,
         )
         Shellout.run(
-            ["git", "push", "origin", "master"], self.parsed_args.printonly, check=True
+            ["git", "push", "origin", "main"], self.parsed_args.printonly, check=True
         )
         # Delete the local and remote branch if this is a local branch
         if not self.parsed_args.remote:
@@ -196,9 +196,9 @@ class MergeContestsOperation:
         """
         Will randomingly select (len(batch) - BALLOT_RECEIPT_ROWS) contest
         branches from the supplied list of branch and merge them to the
-        master branch.
+        main branch.
 
-        This is the git merge-to-master sequence.
+        This is the git merge-to-main sequence.
         """
         if len(batch) <= self.parsed_args.minimum_cast_cache:
             if self.parsed_args.flush:

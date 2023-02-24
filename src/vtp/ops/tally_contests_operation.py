@@ -53,7 +53,7 @@ class TallyContestsOperation:
         parser = argparse.ArgumentParser(
             formatter_class=argparse.RawDescriptionHelpFormatter,
             description="""
-Will tally all the contests so far merged to the master branch and
+Will tally all the contests so far merged to the main branch and
 report the results.  The results are computed on a voting center basis
 (git submodule) basis.
 
@@ -136,7 +136,7 @@ tallying across git submodules/repos.
                 ["git", "pull"], verbosity=self.parsed_args.verbosity, check=True
             )
 
-        # Will process all the CVR commits on the master branch and tally
+        # Will process all the CVR commits on the main branch and tally
         # all the contests found.  Note - even if a contest is specified,
         # as a first pass it is easier to just perform a git log across
         # all the contests and then filter later for the contest of

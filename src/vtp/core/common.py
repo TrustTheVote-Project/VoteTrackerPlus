@@ -249,7 +249,7 @@ class Shellout:
         Note the the order of the list is git log order and not
         randomized FWIIW.
         """
-        # Will process all the CVR commits on the master branch and tally
+        # Will process all the CVR commits on the main branch and tally
         # all the contests found.
         git_log_cvrs = {}
         with Shellout.changed_cwd(

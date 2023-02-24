@@ -1,6 +1,6 @@
 # 1) General GitHub and DevSecOps Overview
 
-The VTP product repositories can be forked at any time from the master branch, after first product ship, to set up an election.  For the purpose of the election, it is the forked copies which are considered to the source of truth regarding the git repositories.  These repositories are never merged back into the VTP product repositories, though it highly likely that patches will flow back both ways as bugs and CVE's are discovered and addressed.
+The VTP product repositories can be forked at any time from the main branch, after first product ship, to set up an election.  For the purpose of the election, it is the forked copies which are considered to the source of truth regarding the git repositories.  These repositories are never merged back into the VTP product repositories, though it highly likely that patches will flow back both ways as bugs and CVE's are discovered and addressed.
 
 Once forked, the election is configured with the various GGOs (Geopolitical geographical Overlay - NIST calls this a [geopolitical unit](https://pages.nist.gov/ElectionGlossary/#geopolitical-unit)), contests, and blank ballot details.  VTP supports other types of configurations such as the type of tally being used for the contest as well as various VTP internal configurations.
 

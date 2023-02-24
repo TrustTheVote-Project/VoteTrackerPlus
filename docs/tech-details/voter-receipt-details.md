@@ -9,13 +9,13 @@ Per the overview of the VTP git directory and submodule layout as described in .
 Per the git submodule layout, the git repo ultimately  associated with CVRs will have a CVRs subdirectory.  In the CVRs directory there is a single file called 'contest.json'.  The contest.json file will contain a JSON rendering of a specific contest on the voter's ballot.  Each contest will be checked into a separate git branch albeit the same file.  The git branching naming convention is something like the following:
 
 ```bash
-$ git checkout -b <contest>/<short GUID> <random master branch commit>
+$ git checkout -b <contest>/<short GUID> <random main branch commit>
 
 Where:
 
 <contest> is the VTP contest identifier
 <short GUID> is a short and random and non repeating number for this repo
-<random master branch commit> is a random master branch commit
+<random main branch commit> is a random main branch commit
 ```
 
 Where <scanner id> is the alphanumeric VTP identification of the physical scanner and <contest> is the unique contest name for this [Voting Center](https://pages.nist.gov/ElectionGlossary/#vote-center).  The JSON payload looks something like the following:
@@ -70,7 +70,7 @@ Note - this does not describe the pre-election configuration of a specific elect
 
 TBD - at the moment there is nothing that needs to be initialized on the server.  A boot from the distributed firmware and software brings up the VTP Voting Center git server into a ready-to-use mode.  At the moment the following step is seen as part of the configuration prior to deployment:
 
-Initialize the contest.json file with the following contents on the master branch (with the git DATE's similarly set):
+Initialize the contest.json file with the following contents on the main branch (with the git DATE's similarly set):
 
 ```json
 {"CVR": {
@@ -100,7 +100,7 @@ Once the voter blesses their interpretation of their ballot into CVRs, the follo
 ```bash
 # pre-condition: scanner places JSON payload in CVRs/ballot.json post voter's approval step
 # VTP python code validates ballot.json, initiates ballot casting, and loops over each contest:
-$ git checkout -b <contest>/<short branch GUID> <random master branch commit>
+$ git checkout -b <contest>/<short branch GUID> <random main branch commit>
 $ git add CVRs/contest.json
 $ git commit -F CVRs/contest.json
 $ git push origin <contest>/<short branch GUID>
@@ -111,7 +111,7 @@ Where:
 
 <contest>                     is the VTP contest identifier
 <short branch GUID>           is a short, random, and non repeating GUID for this repo
-<random master branch commit> is a random master branch commit
+<random main branch commit> is a random main branch commit
 <election ballot GUID>        is a election (CA chain) specific and random, anonymous GUID
 ```
 
@@ -129,7 +129,7 @@ $ # privately display N to the voter
 
 ## 3.4) Server side sequence: per contest example
 
-This is always on the master branch.
+This is always on the main branch.
 
 ```bash
 $ git pull
@@ -137,13 +137,13 @@ $ git merge --no-ff --no-commit <contest>/<short GUID>
 $ openssl rand -base64 48 > CVRs/contest.json
 $ GIT_EDITOR=true git commit
 $ git branch -d <contest>/<short GUID>
-$ git push origin master
+$ git push origin main
 $ git push origin :<contest>/<short GUID>
 ```
 
 ## 3.5) To see the results as so far pushed to the VTP git server:
 
 ```bash
-$ git pull origin master
+$ git pull origin main
 $ git log --topo-order --no-merges contest.json
 ```

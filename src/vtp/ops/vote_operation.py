@@ -65,7 +65,7 @@ class VoteOperation:
             "-m",
             "--merge_contests",
             action="store_true",
-            help="Will immediately merge the ballot contests (to master)",
+            help="Will immediately merge the ballot contests (to main)",
         )
         parser.add_argument(
             "--blank_ballot",

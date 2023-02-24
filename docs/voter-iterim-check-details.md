@@ -35,7 +35,7 @@ When a interim ballot check is scanned:
 - if the GUID matches the supplied interim index, then a real ballot chech is created and the assocuated real index is privately displayed to the user.  If there are less than 100 total ballots, the ballot check will contain that number.
 - the tag is deleted
 
-Note that the CVR digests may or may not already be merged to master as that is a different workflow independent of this one.  This workflow only concerns delivering to the first 100 voters a real after-the-fact ballot check and index.
+Note that the CVR digests may or may not already be merged to main as that is a different workflow independent of this one.  This workflow only concerns delivering to the first 100 voters a real after-the-fact ballot check and index.
 
 Note that tags are never pushed upstream of the tabulation git server - they only remain local to the tabulation git server. 
 
