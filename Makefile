@@ -87,6 +87,6 @@ ETAG_SRCS := $(shell find * -type f -name '*.py' -o -name '*.md' | grep -v defun
 etags: ${ETAG_SRCS}
 	etags ${ETAG_SRCS}
 
-# Generate a requirements.txt for dependabot
-requirements.txt: pyproject.toml poetry.lock
+# Generate a requirements.txt for dependabot (ignoring the symlinks)
+requirements.txt: ${BUILD_DIR}/poetry_pyproject.toml ${BUILD_DIR}/poetry_poetry.lock
 	poetry export --dev -f requirements.txt --output requirements.txt
