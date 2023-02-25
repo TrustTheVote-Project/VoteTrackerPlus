@@ -33,6 +33,8 @@ from vtp.core.address import Address
 from vtp.core.common import Common
 from vtp.ops.merge_contests_operation import MergeContestsOperation
 
+from ._arguments import Arguments
+
 
 def parse_arguments(argv):
     safe_args = Common.cast_thing_to_list(argv)
@@ -51,13 +53,7 @@ branch.
     parser.add_argument(
         "-b", "--branch", default="", help="specify a specific branch to merge"
     )
-    parser.add_argument(
-        "-m",
-        "--minimum_cast_cache",
-        type=int,
-        default=100,
-        help="the minimum number of cast ballots required prior to merging (def=100)",
-    )
+    Arguments.add_minimum_cast_cache(parser)
     parser.add_argument(
         "-f",
         "--flush",
@@ -70,19 +66,9 @@ branch.
         action="store_true",
         help="will merge remote branches instead of local branches",
     )
-    parser.add_argument(
-        "-v",
-        "--verbosity",
-        type=int,
-        default=3,
-        help="0 critical, 1 error, 2 warning, 3 info, 4 debug (def=3)",
-    )
-    parser.add_argument(
-        "-n",
-        "--printonly",
-        action="store_true",
-        help="will printonly and not write to disk (def=True)",
-    )
+    Arguments.add_verbosity(parser)
+    Arguments.add_print_only(parser)
+
     return parser.parse_args(safe_args)
 
 

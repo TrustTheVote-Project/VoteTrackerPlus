@@ -33,6 +33,8 @@ from vtp.core.address import Address
 from vtp.core.common import Common
 from vtp.ops.create_blank_ballot_operation import CreateBlankBallotOperation
 
+from ._arguments import Arguments
+
 
 def parse_arguments(argv):
     safe_args = Common.cast_thing_to_list(argv)
@@ -44,6 +46,7 @@ VTP ElectionData git tree and create a blank ballot based on the
 supplied address.
 """,
     )
+
     Address.add_address_args(parser)
     parser.add_argument(
         "-l",
@@ -51,19 +54,9 @@ supplied address.
         default="en",
         help="will print the ballot in the specified language",
     )
-    parser.add_argument(
-        "-v",
-        "--verbosity",
-        type=int,
-        default=3,
-        help="0 critical, 1 error, 2 warning, 3 info, 4 debug (def=3)",
-    )
-    parser.add_argument(
-        "-n",
-        "--printonly",
-        action="store_true",
-        help="will printonly and not write to disk (def=True)",
-    )
+    Arguments.add_verbosity(parser)
+    Arguments.add_print_only(parser)
+
     return parser.parse_args(safe_args)
 
 

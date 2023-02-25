@@ -31,6 +31,8 @@ from vtp.core.address import Address
 from vtp.core.common import Common
 from vtp.ops.show_contests_operation import ShowContestsOperation
 
+from ._arguments import Arguments
+
 
 def parse_arguments(argv):
     safe_args = Common.cast_thing_to_list(argv)
@@ -46,19 +48,9 @@ will print the CVRs (Cast Vote Records) for the supplied contest(s)
         "--contest-check",
         help="a comma separate list of contests digests to validate/display",
     )
-    parser.add_argument(
-        "-v",
-        "--verbosity",
-        type=int,
-        default=3,
-        help="0 critical, 1 error, 2 warning, 3 info, 4 debug (def=3)",
-    )
-    parser.add_argument(
-        "-n",
-        "--printonly",
-        action="store_true",
-        help="will printonly and not write to disk (def=True)",
-    )
+    Arguments.add_verbosity(parser)
+    Arguments.add_print_only(parser)
+
     parsed_args = parser.parse_args(safe_args)
 
     # Validate required args

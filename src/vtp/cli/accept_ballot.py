@@ -31,6 +31,8 @@ from vtp.core.address import Address
 from vtp.core.common import Common
 from vtp.ops.accept_ballot_operation import AcceptBallotOperation
 
+from ._arguments import Arguments
+
 
 def parse_arguments(argv):
     safe_args = Common.cast_thing_to_list(argv)
@@ -49,29 +51,13 @@ Either the location of the ballot_file or the associated address is required.
     )
 
     Address.add_address_args(parser, True)
-    parser.add_argument(
-        "-m",
-        "--merge_contests",
-        action="store_true",
-        help="Will immediately merge the ballot contests (to main)",
-    )
+    Arguments.add_merge_contests(parser)
     parser.add_argument(
         "--cast_ballot",
         help="overrides an address - specifies a specific cast ballot",
     )
-    parser.add_argument(
-        "-v",
-        "--verbosity",
-        type=int,
-        default=3,
-        help="0 critical, 1 error, 2 warning, 3 info, 4 debug (def=3)",
-    )
-    parser.add_argument(
-        "-n",
-        "--printonly",
-        action="store_true",
-        help="will printonly and not write to disk (def=True)",
-    )
+    Arguments.add_verbosity(parser)
+    Arguments.add_print_only(parser)    
 
     return parser.parse_args(safe_args)
 
