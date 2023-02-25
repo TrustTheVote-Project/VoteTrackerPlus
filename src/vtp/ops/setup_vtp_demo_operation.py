@@ -326,7 +326,7 @@ the GUID.
         self.create_client_repos(clone_dirs, self.tabulation_local_upstream_absdir)
 
         # return something
-        return 0
+        return None
 
 
 # End Of Class

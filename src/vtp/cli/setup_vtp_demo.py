@@ -42,7 +42,9 @@ def main():
 
     # do it
     svdo = SetupVtpDemoOperation(sys.argv[1:])
-    svdo.run()
+    guid = svdo.run()
+    if isinstance(guid, str):
+        print(guid)
 
 
 # If called directly via this file

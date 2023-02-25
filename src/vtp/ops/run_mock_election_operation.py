@@ -104,16 +104,19 @@ mock to a single ballot N times.
             default=100,
             help="the minimum number of cast ballots required prior to merging (def=100)",
         )
+        # Note - the black formatter will by default break the help
+        # line below into two lines via a '()', which breaks the
+        # parser.add_argument.  It is python.
+        #
+        # fmt: off
         parser.add_argument(
             "-f",
             "--flush_mode",
             type=int,
             default=0,
-            help=(
-                "will either not flush (0 - default), flush on exit (1), "
-                "or flush on each iteration (2)",
-            ),
+            help="will either not flush (0 - default), flush on exit (1), or flush on each iteration (2)",
         )
+        # fmt: on
         parser.add_argument(
             "-i",
             "--iterations",
