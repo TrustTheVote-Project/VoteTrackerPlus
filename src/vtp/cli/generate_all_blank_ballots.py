@@ -23,17 +23,47 @@ See 'generate_all_blank_ballots.py -h' for usage information.
 """
 
 # Standard imports
+import argparse
 import sys
 
 # Local import
+from vtp.core.address import Address
+from vtp.core.common import Common
 from vtp.ops.generate_all_blank_ballots_operation import (
     GenerateAllBlankBallotsOperation,
 )
 
 
-################
-# main
-################
+def parse_arguments(argv):
+    """Parse arguments from a command line or from the constructor"""
+
+    safe_args = Common.cast_thing_to_list(argv)
+    parser = argparse.ArgumentParser(
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        description="""
+Will crawl the ElectionData tree and determine all possible blank
+ballots and generate them.  They will be placed in the town's
+blank-ballots subdir.
+""",
+    )
+
+    parser.add_argument(
+        "-v",
+        "--verbosity",
+        type=int,
+        default=3,
+        help="0 critical, 1 error, 2 warning, 3 info, 4 debug (def=3)",
+    )
+    parser.add_argument(
+        "-n",
+        "--printonly",
+        action="store_true",
+        help="will printonly and not write to disk (def=True)",
+    )
+
+    return parser.parse_args(safe_args)
+
+
 def main():
     """
     Called via a python local install entrypoint or by running this
@@ -43,13 +73,11 @@ def main():
     description in the source file.
     """
 
-    # do it
-    gabbo = GenerateAllBlankBallotsOperation(sys.argv[1:])
-    gabbo.run()
+    args = parse_arguments(sys.argv[1:])
+    op = GenerateAllBlankBallotsOperation(args)
+    op.run()
 
 
 # If called directly via this file
 if __name__ == "__main__":
     main()
-
-# EOF

@@ -24,11 +24,55 @@ simply wraps a call to cast_ballot.py and accept_ballot.py.
 See 'vote.py -h' for usage information.
 """
 
-# Global imports
+# Standard imports
+import argparse
 import sys
 
 # Local imports
+from vtp.core.address import Address
+from vtp.core.common import Common
 from vtp.ops.vote_operation import VoteOperation
+
+
+def parse_arguments(argv):
+    """Parse arguments from a command line or from the constructor"""
+
+    safe_args = Common.cast_thing_to_list(argv)
+    parser = argparse.ArgumentParser(
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        description="""
+Will interactively allow a voter to vote.  Internally it first calls
+cast_balloy.py followed by accept_ballot.py.  If a specific election
+address or a specific blank ballot is not specified, a random blank
+ballot is chosen.
+""",
+    )
+
+    Address.add_address_args(parser)
+    parser.add_argument(
+        "-m",
+        "--merge_contests",
+        action="store_true",
+        help="Will immediately merge the ballot contests (to main)",
+    )
+    parser.add_argument(
+        "--blank_ballot",
+        help="overrides an address - specifies the specific blank ballot",
+    )
+    parser.add_argument(
+        "-v",
+        "--verbosity",
+        type=int,
+        default=3,
+        help="0 critical, 1 error, 2 warning, 3 info, 4 debug (def=3)",
+    )
+    parser.add_argument(
+        "-n",
+        "--printonly",
+        action="store_true",
+        help="will printonly and not write to disk (def=True)",
+    )
+    return parser.parse_args(safe_args)
 
 
 # pylint: disable=duplicate-code
@@ -41,9 +85,9 @@ def main():
     file.
     """
 
-    # do it
-    vote_op = VoteOperation(sys.argv[1:])
-    vote_op.run()
+    args = parse_arguments(sys.argv[1:])
+    op = VoteOperation(args)
+    op.run()
 
 
 # If called directly via this file

@@ -23,7 +23,6 @@ See 'create_blank_ballot_operation.py -h' for usage information.
 """
 
 # Standard imports
-import argparse
 import logging
 import pprint
 
@@ -41,50 +40,15 @@ class CreateBlankBallotOperation:
     description (immediately below this) in the source file.
     """
 
-    @staticmethod
-    def parse_arguments(argv):
-        """Parse arguments from a command line or from the constructor"""
-
-        safe_args = Common.cast_thing_to_list(argv)
-        parser = argparse.ArgumentParser(
-            formatter_class=argparse.RawDescriptionHelpFormatter,
-            description="""
-    Will parse all the config and address_map yaml files in the current
-    VTP ElectionData git tree and create a blank ballot based on the
-    supplied address.
-    """,
-        )
-        Address.add_address_args(parser)
-        parser.add_argument(
-            "-l",
-            "--language",
-            default="en",
-            help="will print the ballot in the specified language",
-        )
-        parser.add_argument(
-            "-v",
-            "--verbosity",
-            type=int,
-            default=3,
-            help="0 critical, 1 error, 2 warning, 3 info, 4 debug (def=3)",
-        )
-        parser.add_argument(
-            "-n",
-            "--printonly",
-            action="store_true",
-            help="will printonly and not write to disk (def=True)",
-        )
-        return parser.parse_args(safe_args)
-
-    def __init__(self, unparsed_args):
+    def __init__(self, args):
         """Only to module-ize the scripts and keep things simple and idiomatic."""
-        self.parsed_args = CreateBlankBallotOperation.parse_arguments(unparsed_args)
+        self.args = args
 
     def run(self):
         """Main function - see -h for more info"""
 
         # Configure logging
-        Common.configure_logging(self.parsed_args.verbosity)
+        Common.configure_logging(self.args.verbosity)
 
         # Create a VTP ElectionData object if one does not already exist
         the_election_config = ElectionConfig.configure_election()
@@ -99,7 +63,7 @@ class CreateBlankBallotOperation:
         # imported somehow. And all that comes later - for now just map an
         # address to a town.
         the_address = Address.create_address_from_args(
-            self.parsed_args, ["verbosity", "printonly", "language"]
+            self.args, ["verbosity", "printonly", "language"]
         )
         the_address.map_ggos(the_election_config)
 
@@ -126,11 +90,6 @@ class CreateBlankBallotOperation:
         )
 
         # Write it out
-        if not self.parsed_args.printonly:
+        if not self.args.printonly:
             ballot_file = the_ballot.write_blank_ballot(the_election_config)
             logging.info("Blank ballot file: %s", ballot_file)
-
-
-# End Of Class
-
-# EOF

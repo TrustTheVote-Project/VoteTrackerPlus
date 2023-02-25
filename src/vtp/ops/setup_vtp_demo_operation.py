@@ -23,7 +23,6 @@ See 'setup_vtp_demo -h' for usage information.
 """
 
 # Standard imports
-import argparse
 import logging
 import os
 import secrets
@@ -40,92 +39,9 @@ class SetupVtpDemoOperation:
     description (immediately below this) in the source file.
     """
 
-    @staticmethod
-    def parse_arguments(argv):
-        """Parse arguments from a command line or from the constructor"""
-
-        safe_args = Common.cast_thing_to_list(argv)
-        parser = argparse.ArgumentParser(
-            formatter_class=argparse.RawDescriptionHelpFormatter,
-            description="""
-Will leverage this current git repository (VoteTrackerPlus) and the
-associated ElectionData repo(s) to nominally create in
-/opt/VoteTrackerPlus (the default) a demo election with 4 mock ballot
-scanner apps and one tabulation server app. The initial demo idea is
-to have three scanners scanning random ballots while one scanner is
-used interactively.
-
-All five apps run in separate git workspaces that are clones of the
-same ElectionData repo(s). The (4) mock scanner app clones are located
-in one folder, the one tabulation server is located in another, and
-the FastAPI clients are located in a third. The FastAPI clients are
-separated by a GUID based subdirectory similar to the native Git
-storage idiom.
-
-If the --guid_client_store option is set, instead of setting up the
-demo this script will create a new GUID based FASTapi clone and return
-the GUID.
-""",
-        )
-        parser.add_argument(
-            "-s",
-            "--scanners",
-            type=int,
-            default=4,
-            help="specify a number of scanner app instances (def=4)",
-        )
-        parser.add_argument(
-            "-g",
-            "--guid_client_store",
-            action="store_true",
-            help="if set will create a single GUID based ballot-store and return the GUID",
-        )
-        parser.add_argument(
-            "-l",
-            "--location",
-            default="/opt/VoteTrackerPlus/demo.01",
-            help="specify the location of VTP demo (def=/opt/VoteTrackerPlus/demo.01)",
-        )
-        parser.add_argument(
-            "-v",
-            "--verbosity",
-            type=int,
-            default=3,
-            help="0 critical, 1 error, 2 warning, 3 info, 4 debug (def=3)",
-        )
-        parser.add_argument(
-            "-n",
-            "--printonly",
-            action="store_true",
-            help="will printonly and not write to disk (def=True)",
-        )
-        parsed_args = parser.parse_args(safe_args)
-        # Validate required args
-        if parsed_args.scanners < 1 or parsed_args.scanners > 16:
-            raise ValueError(
-                "The demo needs at least one TVP scanner app "
-                "and arbitrarily limits a demo to 16."
-            )
-        # Check the root of the demo
-        if not os.path.isdir(parsed_args.location):
-            raise FileNotFoundError(
-                f"The root demo folder, {parsed_args.location}, does not exit.  "
-                "It needs to pre-exist - please manually create it."
-            )
-        test_dir = os.path.join(
-            parsed_args.location, Globals.get("TABULATION_SERVER_DIRNAME")
-        )
-        if parsed_args.guid_client_store and not os.path.isdir(test_dir):
-            raise FileNotFoundError(
-                f"The tabulation server workspace ({test_dir}) does not exit.  "
-                "It needs to pre-exist and is created when setup-vtp-demo is executed "
-                "in setup mode (without the -g switch)."
-            )
-        return parsed_args
-
-    def __init__(self, unparsed_args):
+    def __init__(self, args):
         """Only to module-ize the scripts and keep things simple and idiomatic."""
-        self.parsed_args = SetupVtpDemoOperation.parse_arguments(unparsed_args)
+        self.args = args
         # The absolute path to the local bare clone of the upstream
         # GitHub ElectionData remote repo
         self.tabulation_local_upstream_absdir = ""
@@ -134,7 +50,7 @@ the GUID.
         """Boilerplate"""
         return (
             "parsed_args="
-            + str(self.parsed_args)
+            + str(self.args)
             + "\ntabulation server="
             + self.tabulation_local_upstream_absdir
         )
@@ -149,12 +65,12 @@ the GUID.
         # local install idiom, the demo location no longer needs the
         # submodules to be cloned.
         for clone_dir in clone_dirs:
-            if not self.parsed_args.printonly:
+            if not self.args.printonly:
                 with Shellout.changed_cwd(clone_dir):
                     Shellout.run(
                         ["git", "clone", upstream_url],
-                        self.parsed_args.printonly,
-                        verbosity=self.parsed_args.verbosity,
+                        self.args.printonly,
+                        verbosity=self.args.verbosity,
                         check=True,
                     )
             else:
@@ -170,12 +86,12 @@ the GUID.
         # Note - mkdir raises an error if the directory exists. So
         # just try creating them.
         path1 = os.path.join(
-            self.parsed_args.location,
+            self.args.location,
             Globals.get("GUID_CLIENT_DIRNAME"),
             folder1,
         )
         path2 = os.path.join(path1, folder2)
-        if not self.parsed_args.printonly:
+        if not self.args.printonly:
             try:
                 logging.debug("creating (%s) if it does not exist", path1)
                 os.mkdir(path1)
@@ -215,15 +131,12 @@ the GUID.
         logging.debug("returning %s", guid)
         return guid
 
-    ################
-    # main
-    ################
     # pylint: disable=duplicate-code
     def run(self):
         """Main function - see -h for more info"""
 
         # Configure logging
-        Common.configure_logging(self.parsed_args.verbosity)
+        Common.configure_logging(self.args.verbosity)
 
         # Create a VTP ElectionData object if one does not already exist
         the_election_config = ElectionConfig.configure_election()
@@ -249,22 +162,22 @@ the GUID.
         # workspaces (client and server) will not have that suffix
         # (and not be bare).
         self.tabulation_local_upstream_absdir = os.path.join(
-            self.parsed_args.location,
+            self.args.location,
             Globals.get("TABULATION_SERVER_DIRNAME"),
             os.path.basename(election_data_remote_url),
         )
         # Need both the above and the dirname of the above
         bare_clone_path = os.path.dirname(self.tabulation_local_upstream_absdir)
         # When creating a GUID workspace ...
-        if self.parsed_args.guid_client_store:
+        if self.args.guid_client_store:
             return self.create_a_guid_workspace_folder()
 
         # ... or the initial setup of the non-GUID client and server workspaces
 
         # Only run if the directory is empty
-        if len(os.listdir(self.parsed_args.location)) != 0:
+        if len(os.listdir(self.args.location)) != 0:
             raise RuntimeError(
-                f"the directory ({self.parsed_args.location}) is not empty - "
+                f"the directory ({self.args.location}) is not empty - "
                 "setup-vtp-demo can only be run on an empty directory"
             )
 
@@ -274,19 +187,19 @@ the GUID.
             Globals.get("TABULATION_SERVER_DIRNAME"),
             Globals.get("MOCK_CLIENT_DIRNAME"),
         ]:
-            full_dir = os.path.join(self.parsed_args.location, subdir)
+            full_dir = os.path.join(self.args.location, subdir)
             if not os.path.isdir(full_dir):
                 logging.debug("creating (%s)", full_dir)
-                if not self.parsed_args.printonly:
+                if not self.args.printonly:
                     os.mkdir(full_dir)
 
         # Second clone the bare upstream remote GitHub ElectionData repo
-        if not self.parsed_args.printonly:
+        if not self.args.printonly:
             with Shellout.changed_cwd(bare_clone_path):
                 Shellout.run(
                     ["git", "clone", "--bare", election_data_remote_url],
-                    self.parsed_args.printonly,
-                    verbosity=self.parsed_args.verbosity,
+                    self.args.printonly,
+                    verbosity=self.args.verbosity,
                     check=True,
                 )
         else:
@@ -296,27 +209,27 @@ the GUID.
 
         # Third create the mock scanner client subdirs
         clone_dirs = []
-        for count in range(self.parsed_args.scanners):
+        for count in range(self.args.scanners):
             full_dir = os.path.join(
-                self.parsed_args.location,
+                self.args.location,
                 Globals.get("MOCK_CLIENT_DIRNAME"),
                 "scanner." + f"{count:02d}",
             )
             if not os.path.isdir(full_dir):
                 logging.debug("creating (%s)", full_dir)
-                if not self.parsed_args.printonly:
+                if not self.args.printonly:
                     os.mkdir(full_dir)
             clone_dirs.append(full_dir)
 
         # Fourth create the tabulation client subdir
         full_dir = os.path.join(
-            self.parsed_args.location,
+            self.args.location,
             Globals.get("MOCK_CLIENT_DIRNAME"),
             "server",
         )
         if not os.path.isdir(full_dir):
             logging.debug("creating (%s)", full_dir)
-            if not self.parsed_args.printonly:
+            if not self.args.printonly:
                 os.mkdir(full_dir)
         clone_dirs.append(full_dir)
 
@@ -327,8 +240,3 @@ the GUID.
 
         # return something
         return None
-
-
-# End Of Class
-
-# EOF

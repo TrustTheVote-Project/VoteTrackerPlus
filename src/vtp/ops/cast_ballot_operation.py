@@ -24,7 +24,6 @@ See 'cast_ballot.py -h' for usage information.
 """
 
 # Standard imports
-import argparse
 import logging
 import os
 import pprint
@@ -48,64 +47,12 @@ class CastBallotOperation:
     description (immediately below this) in the source file.
     """
 
-    @staticmethod
-    def parse_arguments(argv):
-        """
-        Parse command line arguments.  This can be called either with
-        sys.argv sans the first arg which is the 'script name', in
-        which case argv is a list of strings, or with a dictionary, in
-        which case is converted to a list of strings.
-
-        So to match native argparse argv parsing, if a dict value is a
-        boolean, the value is removed from the list and the key is
-        either kept (True) or deleted (False).  If the value is None,
-        the key is removed.
-        """
-
-        safe_args = Common.cast_thing_to_list(argv)
-        parser = argparse.ArgumentParser(
-            formatter_class=argparse.RawDescriptionHelpFormatter,
-            description="""
-Given either an address or a specific blank ballot, will either read a
-blank ballot and allow a user to manually select choices or when in
-demo mode, cast_ballot.py will randominly select choices.
-""",
-        )
-
-        Address.add_address_args(parser)
-        # ZZZ - cloaked contests are enabled at cast_ballot time
-        #    parser.add_argument('-k', "--cloak", action="store_true",
-        #                            help="if possible provide a cloaked ballot offset")
-        parser.add_argument(
-            "--demo_mode",
-            action="store_true",
-            help="set demo mode to automatically cast random ballots",
-        )
-        parser.add_argument(
-            "--blank_ballot",
-            help="overrides an address - specifies the specific blank ballot",
-        )
-        parser.add_argument(
-            "-v",
-            "--verbosity",
-            type=int,
-            default=3,
-            help="0 critical, 1 error, 2 warning, 3 info, 4 debug (def=3)",
-        )
-        parser.add_argument(
-            "-n",
-            "--printonly",
-            action="store_true",
-            help="will printonly and not write to disk (def=True)",
-        )
-        return parser.parse_args(safe_args)
-
-    def __init__(self, unparsed_args):
+    def __init__(self, args):
         """
         Only to module-ize the scripts and keep things simple and
         idiomatic.  parsed_args is an argparse Namespace object.
         """
-        self.parsed_args = CastBallotOperation.parse_arguments(unparsed_args)
+        self.args = args
 
     def make_random_selection(self, the_ballot, the_contest):
         """Will randomly make selections on a contest"""
@@ -234,7 +181,7 @@ demo mode, cast_ballot.py will randominly select choices.
         contest_uids = []
         for contest in contests:
             contest_uids.append(contest.get("uid"))
-            if self.parsed_args.demo_mode:
+            if self.args.demo_mode:
                 self.make_random_selection(a_ballot, contest)
             else:
                 # Display the tally type and choices and allow the user to manually
@@ -242,7 +189,7 @@ demo mode, cast_ballot.py will randominly select choices.
                 # this demo) as that is the long-term VTP vision.
                 count += 1
                 self.get_user_selection(a_ballot, contest, count, total_contests)
-        if not self.parsed_args.demo_mode:
+        if not self.args.demo_mode:
             # UX wise replicate the self adjudication experince.  This is
             # basically another endless loop until done
             while True:
@@ -278,14 +225,11 @@ demo mode, cast_ballot.py will randominly select choices.
         # For a convenient side effect, return the contests
         return contests
 
-    ################
-    # main
-    ################
     def run(self):
         """Main function - see -h for more info"""
 
         # Configure logging
-        Common.configure_logging(self.parsed_args.verbosity)
+        Common.configure_logging(self.args.verbosity)
 
         # Create a VTP ElectionData object if one does not already exist
         the_election_config = ElectionConfig.configure_election()
@@ -294,7 +238,7 @@ demo mode, cast_ballot.py will randominly select choices.
         a_ballot = BlankBallot()
 
         # process the provided address
-        if self.parsed_args.blank_ballot:
+        if self.args.blank_ballot:
             # Read the specified blank_ballot
             with Shellout.changed_cwd(
                 os.path.join(
@@ -303,12 +247,12 @@ demo mode, cast_ballot.py will randominly select choices.
                 )
             ):
                 a_ballot.read_a_blank_ballot(
-                    "", the_election_config, self.parsed_args.blank_ballot
+                    "", the_election_config, self.args.blank_ballot
                 )
         else:
             # Use the specified address
             the_address = Address.create_address_from_args(
-                self.parsed_args,
+                self.args,
                 ["verbosity", "printonly", "blank_ballot", "demo_mode"],
             )
             the_address.map_ggos(the_election_config)
@@ -322,7 +266,7 @@ demo mode, cast_ballot.py will randominly select choices.
         # verify that the ballot has been filled out correctly and offer
         # to the voter a chance to redo it.
 
-        if self.parsed_args.printonly:
+        if self.args.printonly:
             ballot_file = Ballot.gen_cast_ballot_location(
                 the_election_config, a_ballot.get("ballot_subdir")
             )
@@ -338,8 +282,3 @@ demo mode, cast_ballot.py will randominly select choices.
                 "Casting a %s contest ballot at VC %s", contests.len(), vote_center
             )
             logging.info("Cast ballot file: %s", ballot_file)
-
-    # End Of Class
-
-
-# EOF
