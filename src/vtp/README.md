@@ -36,10 +36,10 @@ Currently both poetry and conda/miniconda python virtual environment frameworks 
 
 It is a goal to create a development process that eventually includes the following:
 
-- Every commit is signed with a PGP key
+- Commits are required to be signed.  See [https://github.com/TrustTheVote-Project/VoteTrackerPlus/blob/main/docs/informal-security-overview.md](https://github.com/TrustTheVote-Project/VoteTrackerPlus/blob/main/docs/informal-security-overview.md)
 - Standard GitHub pull request (PR) development models are in play
-- All pull-requests and un-squashed commits pass pylint with at least a 9.9 score
-- All pull-requests and un-squashed commits pass pytest
+- All pull-requests pass isort, black, and pylint with a pylint score of 10.0
+- All pull-requests pass pytest (once tests have been written)
 - A TBD level of unit and functional test coverage (pytest coverage)
 - A TBD level of mock election test coverage (system testing)
 
