@@ -29,7 +29,6 @@ import argparse
 import sys
 
 # Local imports
-from vtp.core.address import Address
 from vtp.core.common import Common
 from vtp.ops.merge_contests_operation import MergeContestsOperation
 

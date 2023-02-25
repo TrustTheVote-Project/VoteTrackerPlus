@@ -27,7 +27,6 @@ import argparse
 import sys
 
 # Local import
-from vtp.core.address import Address
 from vtp.core.common import Common
 from vtp.ops.generate_all_blank_ballots_operation import (
     GenerateAllBlankBallotsOperation,

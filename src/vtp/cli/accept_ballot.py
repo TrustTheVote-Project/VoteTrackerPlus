@@ -27,7 +27,6 @@ import argparse
 import sys
 
 # Local imports
-from vtp.core.address import Address
 from vtp.core.common import Common
 from vtp.ops.accept_ballot_operation import AcceptBallotOperation
 
@@ -50,7 +49,7 @@ Either the location of the ballot_file or the associated address is required.
 """,
     )
 
-    Address.add_address_args(parser, True)
+    Arguments.add_address(parser, True)
     Arguments.add_merge_contests(parser)
     parser.add_argument(
         "--cast_ballot",

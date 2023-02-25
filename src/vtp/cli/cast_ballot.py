@@ -27,7 +27,6 @@ import argparse
 import sys
 
 # Local imports
-from vtp.core.address import Address
 from vtp.core.common import Common
 from vtp.ops.cast_ballot_operation import CastBallotOperation
 
@@ -57,7 +56,7 @@ demo mode, cast_ballot.py will randominly select choices.
 """,
     )
 
-    Address.add_address_args(parser)
+    Arguments.add_address(parser)
     # ZZZ - cloaked contests are enabled at cast_ballot time
     #    parser.add_argument('-k', "--cloak", action="store_true",
     #                            help="if possible provide a cloaked ballot offset")

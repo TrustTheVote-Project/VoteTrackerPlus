@@ -28,6 +28,29 @@ class Arguments:
     # Note: If commands were classes this would be a base class.
 
     @staticmethod
+    def add_address(parser, generic_address=False):
+        """Add standard address program options"""
+        # parser.add_argument('-c', "--csv",
+        #     help="a comma separated address")
+        #        parser.add_argument('-r', "--street",
+        #     help="the street/road field of an address, in which case the address is the number")
+        # parser.add_argument('-z', "--zipcode",
+        #     help="the zipcode field of an address")
+        if not generic_address:
+            parser.add_argument(
+                "-a",
+                "--address",
+                help="the number and name of the street address (space separated)",
+            )
+            parser.add_argument(
+                "-b", "--substreet", help="the substreet field of an address"
+            )
+        parser.add_argument("-t", "--town", help="the town field of an address")
+        parser.add_argument(
+            "-s", "--state", help="the state/province field of an address"
+        )
+
+    @staticmethod
     def add_merge_contests(parser):
         parser.add_argument(
             "-m",

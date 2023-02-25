@@ -29,7 +29,6 @@ import argparse
 import sys
 
 # Local imports
-from vtp.core.address import Address
 from vtp.core.common import Common, Globals
 from vtp.ops.setup_vtp_demo_operation import SetupVtpDemoOperation
 

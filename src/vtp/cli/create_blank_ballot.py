@@ -29,7 +29,6 @@ import argparse
 import sys
 
 # Local imports
-from vtp.core.address import Address
 from vtp.core.common import Common
 from vtp.ops.create_blank_ballot_operation import CreateBlankBallotOperation
 
@@ -47,7 +46,7 @@ supplied address.
 """,
     )
 
-    Address.add_address_args(parser)
+    Arguments.add_address(parser)
     parser.add_argument(
         "-l",
         "--language",

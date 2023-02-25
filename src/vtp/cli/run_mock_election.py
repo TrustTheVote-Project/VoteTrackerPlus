@@ -27,7 +27,6 @@ import argparse
 import sys
 
 # Local import
-from vtp.core.address import Address
 from vtp.core.common import Common
 from vtp.ops.run_mock_election_operation import RunMockElectionOperation
 
@@ -67,7 +66,7 @@ mock to a single ballot N times.
 """,
     )
 
-    Address.add_address_args(parser)
+    Arguments.add_address(parser)
     parser.add_argument(
         "--blank_ballot",
         help="overrides an address - specifies the specific blank ballot",

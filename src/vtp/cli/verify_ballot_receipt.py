@@ -29,7 +29,6 @@ import argparse
 import sys
 
 # Local imports
-from vtp.core.address import Address
 from vtp.core.common import Common
 from vtp.ops.verify_ballot_receipt_operation import VerifyBallotReceiptOperation
 
@@ -55,7 +54,7 @@ check row is provided.
 """,
     )
 
-    Address.add_address_args(parser, True)
+    Arguments.add_address(parser, True)
     parser.add_argument(
         "-f",
         "--receipt_file",
