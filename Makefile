@@ -45,7 +45,11 @@ conda-export:
 	pip freeze > requirements.txt
 
 # Build with poetry
-.PHONY: poetry-build
+.PHONY: poetry-build poetry-link
+poetry-link:
+	rm -f ${BUILD_FILES}
+	ln -s ${BUILD_DIR}/poetry_pyproject.toml pyproject.toml
+	ln -s ${BUILD_DIR}/poetry_poetry.lock poetry.lock
 poetry-build:
 	rm -f ${BUILD_FILES}
 	ln -s ${BUILD_DIR}/poetry_pyproject.toml pyproject.toml

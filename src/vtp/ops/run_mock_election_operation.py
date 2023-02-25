@@ -109,6 +109,7 @@ mock to a single ballot N times.
         # parser.add_argument.  It is python.
         #
         # fmt: off
+        # pylint: disable=line-too-long
         parser.add_argument(
             "-f",
             "--flush_mode",
