@@ -17,9 +17,9 @@
 #   with this program; if not, write to the Free Software Foundation, Inc.,
 #   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
-"""cast_ballot.py - command line level test script to automatically cast a ballot.
+"""Command line script to automatically cast a ballot.
 
-See 'cast_ballot.py -h' for usage information.
+Run with '--help' for usage information.
 """
 
 # Standard imports
@@ -86,13 +86,7 @@ demo mode, cast_ballot.py will randominly select choices.
 
 # pylint: disable=duplicate-code
 def main():
-    """
-    Called via a python local install entrypoint or by running this
-    file.  Simply wraps the scripts constructor and calls the run
-    method.  See the script's help output or read the
-    vtp.ops.cast_ballot_operation.py (argparse) description in the
-    source file.
-    """
+    """Entry point for 'cast-ballot'."""
 
     args = parse_arguments(sys.argv[1:])
     op = CastBallotOperation(args)

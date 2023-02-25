@@ -17,11 +17,11 @@
 #   with this program; if not, write to the Free Software Foundation, Inc.,
 #   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
-"""
-Command line level script to merge CVR contest
-branches into the main branch
+"""Command line script to merge CVR contest.
 
-See 'merge_contests.py -h' for usage information.
+Branches into the main branch.
+
+Run with '--help' for usage information.
 """
 
 # Standard imports
@@ -35,8 +35,6 @@ from vtp.ops.merge_contests_operation import MergeContestsOperation
 
 
 def parse_arguments(argv):
-    """Parse arguments from a command line or from the constructor"""
-
     safe_args = Common.cast_thing_to_list(argv)
     parser = argparse.ArgumentParser(
         formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -90,13 +88,7 @@ branch.
 
 # pylint: disable=duplicate-code
 def main():
-    """
-    Called via a python local install entrypoint or by running this
-    file.  Simply wraps the scripts constructor and calls the run
-    method.  See the script's help output or read the
-    vtp.ops.merge_contests_operation.py (argparse) description in the
-    source file.
-    """
+    """Entry point for 'merge-contests'."""
 
     args = parse_arguments(sys.argv[1:])
     op = MergeContestsOperation(args)

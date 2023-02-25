@@ -17,12 +17,7 @@
 #   with this program; if not, write to the Free Software Foundation, Inc.,
 #   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
-"""
-Library backend for command line level script to verify a
-voters ballot receipt.
-
-See 'verify_ballot_receipt.py -h' for usage information.
-"""
+"""Logic of operation for verifying receipt of a ballot."""
 
 # Standard imports
 import json
@@ -38,11 +33,7 @@ from vtp.core.election_config import ElectionConfig
 
 
 class VerifyBallotReceiptOperation:
-    """
-    A class to implememt the verify-ballot-receipt operation.  See the
-    verify-ballot-receipt help output or read the parse_argument argparse
-    description (immediately below this) in the source file.
-    """
+    """Implementation of 'verify-ballot-receipt' operation."""
 
     def __init__(self, args):
         """Only to module-ize the scripts and keep things simple and idiomatic."""
@@ -286,8 +277,6 @@ class VerifyBallotReceiptOperation:
 
     # pylint: disable=duplicate-code
     def run(self):
-        """Main function - see -h for more info"""
-
         # Configure logging
         Common.configure_logging(self.args.verbosity)
 

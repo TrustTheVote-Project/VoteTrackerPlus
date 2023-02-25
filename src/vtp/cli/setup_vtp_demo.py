@@ -17,11 +17,11 @@
 #   with this program; if not, write to the Free Software Foundation, Inc.,
 #   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
-"""
-Command line level script script set up a VTP demo.  Can also set up
-individual GUID based ballot-stores and return the GUID
+"""Command line script set up a VTP demo.
 
-See 'setup_vtp_demo -h' for usage information.
+Can also set up individual GUID based ballot-stores and return the GUID.
+
+Run with '--help' for usage information.
 """
 
 # Standard imports
@@ -35,8 +35,6 @@ from vtp.ops.setup_vtp_demo_operation import SetupVtpDemoOperation
 
 
 def parse_arguments(argv):
-    """Parse arguments from a command line or from the constructor"""
-
     safe_args = Common.cast_thing_to_list(argv)
     parser = argparse.ArgumentParser(
         formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -118,13 +116,7 @@ the GUID.
 
 
 def main():
-    """
-    Called via a python local install entrypoint or by running this
-    file.  Simply wraps the scripts constructor and calls the run
-    method.  See the script's help output or read the
-    vtp.ops.setup_vtp_demo_operation.py (argparse) description in the
-    source file.
-    """
+    """Entry point for 'setup-vtp-demo'."""
 
     args = parse_arguments(sys.argv[1:])
     op = SetupVtpDemoOperation(args)

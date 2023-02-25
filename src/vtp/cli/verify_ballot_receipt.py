@@ -17,10 +17,11 @@
 #   with this program; if not, write to the Free Software Foundation, Inc.,
 #   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
-"""
-Command line level script to verify a voters ballot receipt.  Supports several interesting options.
+"""Command line script to verify a voter's ballot receipt.
 
-See 'verify_ballot_receipt.py -h' for usage information.
+Supports several interesting options.
+
+Run with '--help' for usage information.
 """
 
 # Standard imports
@@ -34,8 +35,6 @@ from vtp.ops.verify_ballot_receipt_operation import VerifyBallotReceiptOperation
 
 
 def parse_arguments(argv):
-    """Parse arguments from a command line or from the constructor"""
-
     safe_args = Common.cast_thing_to_list(argv)
     parser = argparse.ArgumentParser(
         formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -100,13 +99,7 @@ check row is provided.
 
 
 def main():
-    """
-    Called via a python local install entrypoint or by running this
-    file.  Simply wraps the scripts constructor and calls the run
-    method.  See the script's help output or read the
-    vtp.ops.verify_ballot_receipt_operation.py (argparse) description
-    in the source file.
-    """
+    """Entry point for 'verify-ballot-receipt'."""
 
     args = parse_arguments(sys.argv[1:])
     op = VerifyBallotReceiptOperation(args)

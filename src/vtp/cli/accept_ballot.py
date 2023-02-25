@@ -17,9 +17,9 @@
 #   with this program; if not, write to the Free Software Foundation, Inc.,
 #   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
-"""accept_ballot.py - command line level script to accept a ballot.
+"""Command line script to accept a ballot.
 
-See 'accept_ballot.py -h' for usage information.
+Run with '--help' for usage information.
 """
 
 # Standard imports
@@ -78,13 +78,7 @@ Either the location of the ballot_file or the associated address is required.
 
 # pylint: disable=duplicate-code
 def main():
-    """
-    Called via a python local install entrypoint or by running this
-    file.  Simply wraps the scripts constructor and calls the run
-    method.  See the script's help output or read the
-    vtp.ops.accept_ballot_operation.py (argparse) description in the
-    source file.
-    """
+    """Entry point for 'accept-ballot'."""
 
     args = parse_arguments(sys.argv[1:])
     op = AcceptBallotOperation(args)

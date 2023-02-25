@@ -17,10 +17,7 @@
 #   with this program; if not, write to the Free Software Foundation, Inc.,
 #   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
-"""Library backend for command line level test script to automatically cast a ballot.
-
-See 'show_contest.py -h' for usage information.
-"""
+"""Logic of operation for showing contests."""
 
 # Standard imports
 import logging
@@ -33,11 +30,7 @@ from vtp.core.election_config import ElectionConfig
 
 
 class ShowContestsOperation:
-    """
-    A class to implememt the show-contests operation.  See the
-    show-contests help output or read the parse_argument argparse
-    description (immediately below this) in the source file.
-    """
+    """Implementation of 'show-contest' operation."""
 
     def __init__(self, args):
         """Only to module-ize the scripts and keep things simple and idiomatic."""
@@ -87,8 +80,6 @@ class ShowContestsOperation:
 
     # pylint: disable=duplicate-code
     def run(self):
-        """Main function - see -h for more info"""
-
         # Configure logging
         Common.configure_logging(self.args.verbosity)
 

@@ -17,10 +17,7 @@
 #   with this program; if not, write to the Free Software Foundation, Inc.,
 #   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
-"""generate_all_blank_ballots.py - generate all possible blank ballots
-
-See 'generate_all_blank_ballots.py -h' for usage information.
-"""
+"""Logic of operation for generating blank ballots."""
 
 # Standard imports
 import logging
@@ -36,19 +33,13 @@ from vtp.core.election_config import ElectionConfig
 
 # pylint: disable=too-few-public-methods
 class GenerateAllBlankBallotsOperation:
-    """
-    A class to implememt the generate-all-blank-ballots operation.  See the
-    generate-all-blank-ballots help output or read the parse_argument argparse
-    description (immediately below this) in the source file.
-    """
+    """Implementation of 'generate-all-blank-ballots'."""
 
     def __init__(self, args):
         """Only to module-ize the scripts and keep things simple and idiomatic."""
         self.args = args
 
     def run(self):
-        """Main function - see -h for more info"""
-
         # Configure logging
         Common.configure_logging(self.args.verbosity)
 

@@ -17,11 +17,7 @@
 #   with this program; if not, write to the Free Software Foundation, Inc.,
 #   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
-"""
-LIbrary backend to command line level test script to automatically cast a ballot.
-
-See 'cast_ballot.py -h' for usage information.
-"""
+"""Logic of operation for casting a ballot."""
 
 # Standard imports
 import logging
@@ -41,11 +37,7 @@ from vtp.core.election_config import ElectionConfig
 
 
 class CastBallotOperation:
-    """
-    A class to implememt the cast-ballot operation.  See the
-    cast-ballot help output or read the parse_argument argparse
-    description (immediately below this) in the source file.
-    """
+    """Implementation of 'cast-ballot'."""
 
     def __init__(self, args):
         """
@@ -226,8 +218,6 @@ class CastBallotOperation:
         return contests
 
     def run(self):
-        """Main function - see -h for more info"""
-
         # Configure logging
         Common.configure_logging(self.args.verbosity)
 

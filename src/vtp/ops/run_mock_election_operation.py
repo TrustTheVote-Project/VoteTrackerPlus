@@ -17,12 +17,7 @@
 #   with this program; if not, write to the Free Software Foundation, Inc.,
 #   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
-"""
-Library backend for command line level script to merge CVR contest
-branches into the main branch
-
-See 'run_mock_election.py -h' for usage information.
-"""
+"""Logic of operation for running a mock election."""
 
 # Standard imports
 import logging
@@ -43,11 +38,7 @@ from vtp.ops.tally_contests_operation import TallyContestsOperation
 
 
 class RunMockElectionOperation:
-    """
-    A class to implememt the run-mock-election operation.  See the
-    run-mock-election help output or read the parse_argument argparse
-    description (immediately below this) in the source file.
-    """
+    """Implementation of 'run-mock-election'."""
 
     def __init__(self, args):
         """Only to module-ize the scripts and keep things simple and idiomatic."""
@@ -258,7 +249,7 @@ class RunMockElectionOperation:
 
     # pylint: disable=duplicate-code
     def run(self):
-        """Main function - see -h for more info
+        """Run a mock election.
 
         Note - this is a serial synchronous mock election loop.  A
         parallel loop would have one VTP server git workspace somewhere

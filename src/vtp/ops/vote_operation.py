@@ -17,12 +17,7 @@
 #   with this program; if not, write to the Free Software Foundation, Inc.,
 #   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
-"""
-Library backend to command line level script to allow an end voter to
-vote - it simply wraps a call to cast_ballot.py and accept_ballot.py.
-
-See 'vote.py -h' for usage information.
-"""
+"""Logic of operation for voting."""
 
 from vtp.core.ballot import Ballot
 from vtp.core.common import Common, Shellout
@@ -35,19 +30,13 @@ from vtp.ops.cast_ballot_operation import CastBallotOperation
 
 # pylint: disable=too-few-public-methods
 class VoteOperation:
-    """
-    A class to implememt the vote operation.  See the
-    vote help output or read the parse_argument argparse
-    description (immediately below this) in the source file.
-    """
+    """Implementation of 'vote' operation."""
 
     def __init__(self, args):
         """Only to module-ize the scripts and keep things simple and idiomatic."""
         self.args = args
 
     def run(self):
-        """Main function - see -h for more info"""
-
         # Configure logging
         Common.configure_logging(self.args.verbosity)
 

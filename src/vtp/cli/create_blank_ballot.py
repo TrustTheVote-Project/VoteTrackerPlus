@@ -17,12 +17,11 @@
 #   with this program; if not, write to the Free Software Foundation, Inc.,
 #   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
-"""create_blank_ballot.py - command line level test script to automatically cast a ballot.
+"""Command line script to automatically cast a ballot.
 
-See './create_blank_ballot.py -h' for usage information.
+Run with '--help' for usage information.
 
-See ../../docs/tech/executable-overview.md for the context in which this file was created.
-
+See 'docs/tech/executable-overview.md' for the context in which this file was created.
 """
 
 # Standard imports
@@ -36,8 +35,6 @@ from vtp.ops.create_blank_ballot_operation import CreateBlankBallotOperation
 
 
 def parse_arguments(argv):
-    """Parse arguments from a command line or from the constructor"""
-
     safe_args = Common.cast_thing_to_list(argv)
     parser = argparse.ArgumentParser(
         formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -71,13 +68,7 @@ supplied address.
 
 
 def main():
-    """
-    Called via a python local install entrypoint or by running this
-    file.  Simply wraps the scripts constructor and calls the run
-    method.  See the script's help output or read the
-    vtp.ops.create_blank_ballot_operation.py (argparse) description in
-    the source file.
-    """
+    """Entry point for 'accept-ballot'."""
 
     args = parse_arguments(sys.argv[1:])
     op = CreateBlankBallotOperation(args)

@@ -17,11 +17,7 @@
 #   with this program; if not, write to the Free Software Foundation, Inc.,
 #   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
-"""Library backend to command line level script to accept a ballot.
-
-See 'accept_ballot.py -h' for usage information.
-
-"""
+"""Logic of operation for accepting a ballot."""
 
 # Standard imports
 import logging
@@ -37,11 +33,7 @@ from vtp.core.election_config import ElectionConfig
 
 
 class AcceptBallotOperation:
-    """
-    A class to implememt the accept_ballot.py operation.  See the
-    cast-ballot help output or read the parse_argument argparse
-    description (immediately below this) in the source file.
-    """
+    """Implementation of 'accept-ballot'."""
 
     def __init__(self, args):
         """Only to module-ize the scripts and keep things simple and idiomatic."""
@@ -297,8 +289,6 @@ class AcceptBallotOperation:
 
     # pylint: disable=duplicate-code
     def run(self):
-        """Main function - see -h for more info"""
-
         # Configure logging
         Common.configure_logging(self.args.verbosity)
 

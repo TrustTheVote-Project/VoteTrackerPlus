@@ -17,9 +17,9 @@
 #   with this program; if not, write to the Free Software Foundation, Inc.,
 #   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
-"""generate_all_blank_ballots.py - generate all possible blank ballots
+"""Command line script to generate all possible blank ballots.
 
-See 'generate_all_blank_ballots.py -h' for usage information.
+Run with '--help' for usage information.
 """
 
 # Standard imports
@@ -35,8 +35,6 @@ from vtp.ops.generate_all_blank_ballots_operation import (
 
 
 def parse_arguments(argv):
-    """Parse arguments from a command line or from the constructor"""
-
     safe_args = Common.cast_thing_to_list(argv)
     parser = argparse.ArgumentParser(
         formatter_class=argparse.RawDescriptionHelpFormatter,

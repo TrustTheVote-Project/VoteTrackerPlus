@@ -17,11 +17,11 @@
 #   with this program; if not, write to the Free Software Foundation, Inc.,
 #   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
-"""
-vote.py - command line level script to allow an end voter to vote - it
-simply wraps a call to cast_ballot.py and accept_ballot.py.
+"""Command line script to allow an end voter to vote.
 
-See 'vote.py -h' for usage information.
+Simply wraps a call to cast_ballot.py and accept_ballot.py.
+
+Run with '--help' for usage information.
 """
 
 # Standard imports
@@ -35,8 +35,6 @@ from vtp.ops.vote_operation import VoteOperation
 
 
 def parse_arguments(argv):
-    """Parse arguments from a command line or from the constructor"""
-
     safe_args = Common.cast_thing_to_list(argv)
     parser = argparse.ArgumentParser(
         formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -77,13 +75,7 @@ ballot is chosen.
 
 # pylint: disable=duplicate-code
 def main():
-    """
-    Called via a python local install entrypoint or by running this
-    file.  Simply wraps the scripts constructor and calls the run
-    method.  See the script's help output or read the
-    vtp.ops.vote_operation.py (argparse) description in the source
-    file.
-    """
+    """Entry point for 'vote'."""
 
     args = parse_arguments(sys.argv[1:])
     op = VoteOperation(args)
