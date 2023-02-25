@@ -54,7 +54,7 @@ class VerifyBallotReceiptOperation:
             formatter_class=argparse.RawDescriptionHelpFormatter,
             description="""
 Will read a voter's ballot receipt and validate all the digests
-contained therein.  If a contest has been merged to the master branch,
+contained therein.  If a contest has been merged to the main branch,
 will report the current ballot tally number (which ballot in the
 actula tally cound is the voter's).
 
@@ -179,7 +179,7 @@ check row is provided.
     # pylint: disable=too-many-arguments   # self is not technically an arg kind-of
     def vet_rows(self, lines, headers, uids, e_config, error_digests):
         """
-        Will scan the master branch and validate that the receipt digests
+        Will scan the main branch and validate that the receipt digests
         are there and that they are in the correct contest.
         """
         requested_row = None
@@ -221,7 +221,7 @@ check row is provided.
                     continue
                 if digest not in cvrs:
                     logging.error(
-                        "[ERROR]: missing digest in master branch: row %s contest=%s digest=%s",
+                        "[ERROR]: missing digest in main branch: row %s contest=%s digest=%s",
                         index,
                         headers[column],
                         digest,
@@ -250,7 +250,7 @@ check row is provided.
 
         # At the moment, the validation of the ballot receipt is multiple
         # steps: 1) does the digest exist; 2) is it the correct uid?; 3)
-        # is the digest in the tally (legally in master). Some future meta
+        # is the digest in the tally (legally in main). Some future meta
         # tests could be: 4) does the receipt have a repeated digest?; 5)
         # does it have a valid election uid beyond a valid digest and
         # contest uid (TBD - not implemented yet)
@@ -289,7 +289,7 @@ check row is provided.
             for u_count, uid in enumerate(uids):
                 # For this contest loop over the reverse ordered CVRs (since it
                 # seems TBD that it makes sense to ballot #1 as the first ballot on
-                # master).
+                # main).
                 contest_votes = len(contest_batches[uid])
                 found = False
                 for c_count, contest in enumerate(contest_batches[uid]):
@@ -304,7 +304,7 @@ check row is provided.
                 if found is False:
                     unmerged_uids[uid] = u_count
             if unmerged_uids:
-                print("The following contests are not merged to master yet:")
+                print("The following contests are not merged to main yet:")
                 for uid, offset in unmerged_uids.items():
                     print(f"{headers[offset]} ({requested_digests[offset]})")
 

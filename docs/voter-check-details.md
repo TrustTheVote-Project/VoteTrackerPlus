@@ -28,7 +28,7 @@ The following timeline assumes the following design choices.  These design decis
 
 1. The ballot scanner is effectively a separate and individual OS/container/lambda function with its own file system, processes, and security model.  This is not a design requirement but an assumption.
 1. Each voting center basically contains a Git service that hosts a voting center local git repository.  Various devices in the voting center will pull and push into this Git service.  For reference this repo is referred to as the local remote repository.
-1. The local remote Git repo primarily operates on the master branch.
+1. The local remote Git repo primarily operates on the main branch.
 1. The ballot scanners have the ability to print but only in one color that does not match either the lead pencil or the ink pens provided by the election officials to the voters to fill out the ballot.
 1. The JSON payload that contains the CVRs as well as additional VoteTracker+ fields is stored as the Git commit comment and not as a separate file on a file system.
 1. The various voting center devices participating in VoteTracker+ are hardwired together.  There are specific security procedures in play on the physical LAN.
@@ -36,10 +36,10 @@ The following timeline assumes the following design choices.  These design decis
 ### 3.1) On the ballot scanner after the voter has blessed the CVR of their ballot:
 
 1. The ballot scanner will fetch from the local remote Git repo.
-1. A random master branch commit is selected back in history from the previous 100 commits, a different such commit for each contest.  Since there are never any merge conflicts, the location of the branch point on master is moot.
+1. A random main branch commit is selected back in history from the previous 100 commits, a different such commit for each contest.  Since there are never any merge conflicts, the location of the branch point on main is moot.
 1. A randomly generated number but one that is also a function of the election CA/ICA chain is signed/digested by the voting center's private key and printed on the paper ballot.  This number is also associated with the digital scan of the ballot managed by the physical scanner.
 1. The contests on the current voter's CVR are selected in random order and committed in separate branches without time information (or with time information set to a specific date/time).  Blank contests are recorded as such - as a blank.
-1. The JSON payload of the Git commit contains several additional fields, one being the value of the parent commit (on master) being encoded/digested by the private pem keys of the voting center as signed by RA chain for the election.  It is a security model TBD if there is also a voting center function that signs with the CA/ICA of the election as well.  See the VoteTracker+ security model for more details.
+1. The JSON payload of the Git commit contains several additional fields, one being the value of the parent commit (on main) being encoded/digested by the private pem keys of the voting center as signed by RA chain for the election.  It is a security model TBD if there is also a voting center function that signs with the CA/ICA of the election as well.  See the VoteTracker+ security model for more details.
 1. The first contest on the ballot also has a JSON field that contains the same generated paper ballot ID number printed on the ballot.
 1. The actual Git commit digests __are__ the digests that the voter will eventually receive.
 1. The (new) voter's commits are pushed to the local remote Git repo as new branches again in random order, incrementing by N contests the number of unmerged branches on the local remote.
@@ -49,7 +49,7 @@ The following timeline assumes the following design choices.  These design decis
 ### 3.2) On the local remote Git repo
 
 1. The local remote Git repo receives the N context pushed from a ballot scanning device.
-1. For each contest, whenever there are more than 100 branches, a random branch is selected, merged to master (no rebase, no squash), and deleted.  This process is repeated for the other contests.  It is a security TBD what the best random function is and if the life span of a branch should be limited or not.
+1. For each contest, whenever there are more than 100 branches, a random branch is selected, merged to main (no rebase, no squash), and deleted.  This process is repeated for the other contests.  It is a security TBD what the best random function is and if the life span of a branch should be limited or not.
 
 ### 3.3) Pushing live election results upstream
 

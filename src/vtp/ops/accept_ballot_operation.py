@@ -68,7 +68,7 @@ Either the location of the ballot_file or the associated address is required.
             "-m",
             "--merge_contests",
             action="store_true",
-            help="Will immediately merge the ballot contests (to master)",
+            help="Will immediately merge the ballot contests (to main)",
         )
         parser.add_argument(
             "--cast_ballot",
@@ -196,9 +196,9 @@ Either the location of the ballot_file or the associated address is required.
                     "git",
                     "rev-list",
                     "--no-walk",
-                    "--exclude=refs/heads/master",
+                    "--exclude=refs/heads/main",
                     "--exclude=HEAD",
-                    "--exclude=refs/remotes/origin/master",
+                    "--exclude=refs/remotes/origin/main",
                     "--exclude=refs/remotes/origin/HEAD",
                     "--all",
                 ],
@@ -406,7 +406,7 @@ Either the location of the ballot_file or the associated address is required.
             # So, the CWD in this block is the state/town subfolder
 
             # It turns out that determining the other not yet merged to
-            # master contests is apparently a challangin git query and one
+            # main contests is apparently a challangin git query and one
             # that creates a lot of temporary memory requirements.  One
             # current way to slice that pie is to just get all such
             # commits up front similar to the tally_contests.py code.
@@ -417,11 +417,11 @@ Either the location of the ballot_file or the associated address is required.
             unmerged_cvrs = self.get_unmerged_contests(the_election_config)
 
             for contest in contests:
-                with Shellout.changed_branch("master"):
+                with Shellout.changed_branch("main"):
                     # get N other values for each contest for this ballot
                     uid = contest.get("uid")
                     # atomically create the branch locally and remotely
-                    branches.append(self.checkout_new_contest_branch(contest, "master"))
+                    branches.append(self.checkout_new_contest_branch(contest, "main"))
                     # Add the cast_branch to the contest json payload
                     contest.set("cast_branch", branches[-1])
 
@@ -445,9 +445,7 @@ Either the location of the ballot_file or the associated address is required.
                     contest_receipts[uid] = self.contest_add_and_commit(branches[-1])
                     # if cloaking, get those as well
                     if "cloak" in contest.get("contest"):
-                        cloak_receipts[uid] = self.get_cloaked_contests(
-                            contest, "master"
-                        )
+                        cloak_receipts[uid] = self.get_cloaked_contests(contest, "main")
             # After all the contests digests have been generated as well
             # as the others and cloaks as much as possible, then push as
             # atomically as possible all the contests.

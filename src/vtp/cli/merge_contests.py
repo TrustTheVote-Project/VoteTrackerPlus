@@ -19,7 +19,7 @@
 
 """
 Command line level script to merge CVR contest
-branches into the master branch
+branches into the main branch
 
 See 'merge_contests.py -h' for usage information.
 """

@@ -226,7 +226,7 @@ Contest '0003 - County Clerk' (7d3e7f992628931d416de2095e0420436ce8f53f) is vote
 Contest '0005 - mayor' (c9734a3be4ef3533b4c1df0f14305bebe118b031) is vote 96 out of 146 votes
 Contest '0006 - Question 1 - school budget override' (92b70d29cbd677418ffd6166e5c455dedcf4033b) is vote 45 out of 146 votes
 Contest '0007 - Question 2 - new firehouse land purchase' (e4ae73730cf6d00e499af328d17c41f88599711c) is vote 65 out of 146 votes
-The following contests are not merged to master yet:
+The following contests are not merged to main yet:
 0001 - US senate (0a9682dccf6ab5cb83d8a5ce43786e74514ce3ef)
 0002 - governor (ef1b88c931222669997639a0c45f26a4ff0a7342)
 ############
@@ -234,9 +234,9 @@ The following contests are not merged to master yet:
 ############
 ```
 
-Note that five of the seven contests have been merged to master and as such now have a fixed offset in the _official_ tally of those contests.  This allows the voter who cast this ballot to say, with a very high level of trust, that their vote in contest '0000 - US president' is number 71 out of N.  As more contest CVRs are added to the tally (merged to master), the 71 will not change for this repo/precinct.  However, the vote number will change as precincts are aggregated.
+Note that five of the seven contests have been merged to main and as such now have a fixed offset in the _official_ tally of those contests.  This allows the voter who cast this ballot to say, with a very high level of trust, that their vote in contest '0000 - US president' is number 71 out of N.  As more contest CVRs are added to the tally (merged to main), the 71 will not change for this repo/precinct.  However, the vote number will change as precincts are aggregated.
 
-Two of the contests above remain in the ballot cache and can still be randomly included in some other anonymized ballot check.  They will be merged to master by the VTP server at some point, either randomly during the voting or once the voting ceases at the polling location.
+Two of the contests above remain in the ballot cache and can still be randomly included in some other anonymized ballot check.  They will be merged to main by the VTP server at some point, either randomly during the voting or once the voting ceases at the polling location.
 
 Running the above demo does not modify the VoteTrackerPlus repo and does not push any changes in the VTP-mock-election.US.nn repository back to the upstream GitHub repositories.  This is because by design the VTP scanner and server app repo pairs have the git origin pointing to the local bare repositories found in the tabulation-server folder in the demo.nn directory.
 
