@@ -29,8 +29,6 @@ import logging
 import os
 import pprint
 import random
-import sys
-import traceback
 
 import pyinputplus
 
@@ -187,18 +185,12 @@ demo mode, cast_ballot.py will randominly select choices.
                     "Warning - you selections have the following errors\n"
                     f"{err_string}"
                 )
-            # if still here, set the selection
-            try:
-                # Since it is possible to self adjudicate a contest, always
-                # explicitly clear the selection before adding
-                the_ballot.clear_selection(the_contest)
-                for sel in validated_selections:
-                    the_ballot.add_selection(the_contest, sel)
-            # pylint: disable=broad-except
-            except Exception:
-                # blow out of the internal pyinputplus try/catch
-                traceback.print_exc()
-                sys.exit(1)
+            # If still here, set the selection.  Since it is possible to self
+            # adjudicate a contest, always explicitly clear the selection
+            # before adding
+            the_ballot.clear_selection(the_contest)
+            for sel in validated_selections:
+                the_ballot.add_selection(the_contest, sel)
 
         if tally == "plurality":
             if max_votes > 1:
