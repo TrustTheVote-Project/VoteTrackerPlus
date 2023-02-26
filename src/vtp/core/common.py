@@ -122,6 +122,8 @@ class Globals:
 class Common:
     """Common functions without a better home at this time"""
 
+    # logging should only be configured once and only once (until a
+    # logger is set up)
     _configured = False
 
     @staticmethod
@@ -157,6 +159,10 @@ class Common:
             return new_argv
         return argv
 
+    # Tbe below are options that are shared across the various
+    # operations.  Options that are unique to one operation are
+    # located in that file.
+
     @staticmethod
     def add_blank_ballot(parser):
         """Add blank_ballot option"""
@@ -169,10 +175,12 @@ class Common:
     @staticmethod
     def add_election_data(parser):
         """Add election_data option"""
+        defval = Globals.get("ROOT_ELECTION_DATA_SUBDIR")
         parser.add_argument(
             "-e",
             "--election_data",
-            help="specify a absolute or relative path to the ElectionData tree",
+            default=defval,
+            help=f"specify a absolute or relative path to the ElectionData tree (def={defval})",
         )
 
     @staticmethod
