@@ -68,6 +68,7 @@ check row is provided.
         )
 
         Address.add_address_args(parser, True)
+        Common.add_election_data(parser)
         parser.add_argument(
             "-f",
             "--receipt_file",
@@ -92,19 +93,12 @@ check row is provided.
             action="store_true",
             help="Before tallying the votes, pull the ElectionData repo",
         )
-        parser.add_argument(
-            "-v",
-            "--verbosity",
-            type=int,
-            default=3,
-            help="0 critical, 1 error, 2 warning, 3 info, 4 debug (def=3)",
-        )
-        #    parser.add_argument("-n", "--printonly", action="store_true",
-        #                            help="will printonly and not write to disk (def=True)")
+        Common.add_verbosity(parser)
 
         parsed_args = parser.parse_args(safe_args)
 
         # Validate required args
+        Common.verify_election_data(parsed_args)
         if not (parsed_args.receipt_file or (parsed_args.state and parsed_args.town)):
             raise ValueError(
                 "Either an explicit or implicit (via an address) receipt file must be provided"
@@ -382,7 +376,14 @@ check row is provided.
             # Need to use the address to locate the last created receipt file
             the_address = Address.create_address_from_args(
                 self.parsed_args,
-                ["do_not_pull", "verbosity", "receipt_file", "row", "cvr"],
+                [
+                    "cvr",
+                    "do_not_pull",
+                    "election_data",
+                    "receipt_file",
+                    "row",
+                    "verbosity",
+                ],
                 generic_address=True,
             )
             the_address.map_ggos(the_election_config, skip_ggos=True)

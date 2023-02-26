@@ -87,35 +87,28 @@ mock to a single ballot N times.
         )
 
         Address.add_address_args(parser)
-        parser.add_argument(
-            "--blank_ballot",
-            help="overrides an address - specifies the specific blank ballot",
-        )
+        Common.add_election_data(parser)
+        Common.add_blank_ballot(parser)
         parser.add_argument(
             "-d",
             "--device",
             default="",
             help="specify a specific VC local device (scanner or server or both) to mock",
         )
-        parser.add_argument(
-            "-m",
-            "--minimum_cast_cache",
-            type=int,
-            default=100,
-            help="the minimum number of cast ballots required prior to merging (def=100)",
-        )
+        Common.add_minimum_cast_cache(parser)
         # Note - the black formatter will by default break the help
         # line below into two lines via a '()', which breaks the
         # parser.add_argument.  It is python.
         #
         # fmt: off
+        # pylint: disable=line-too-long
         parser.add_argument(
             "-f",
             "--flush_mode",
             type=int,
             default=0,
             help="will either not flush (0 - default), flush on exit (1), or flush on each iteration (2)",
-        )
+            )
         # fmt: on
         parser.add_argument(
             "-i",
@@ -131,23 +124,12 @@ mock to a single ballot N times.
             default=10,
             help="the number of minutes for the server app to run (def=10)",
         )
-        parser.add_argument(
-            "-v",
-            "--verbosity",
-            type=int,
-            default=3,
-            help="0 critical, 1 error, 2 warning, 3 info, 4 debug (def=3)",
-        )
-        parser.add_argument(
-            "-n",
-            "--printonly",
-            action="store_true",
-            help="will printonly and not write to disk (def=True)",
-        )
-
+        Common.add_verbosity(parser)
+        Common.add_printonly(parser)
         parsed_args = parser.parse_args(safe_args)
 
         # Validate required args
+        Common.verify_election_data(parsed_args)
         if parsed_args.device not in ["scanner", "server", "both"]:
             raise ValueError(
                 "The --device parameter only accepts 'device' or 'server' "
@@ -407,6 +389,7 @@ mock to a single ballot N times.
                 [
                     "blank_ballot",
                     "device",
+                    "election_data",
                     "minimum_cast_cache",
                     "flush_mode",
                     "iterations",

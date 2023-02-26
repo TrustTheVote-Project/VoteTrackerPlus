@@ -55,26 +55,19 @@ class CreateBlankBallotOperation:
     """,
         )
         Address.add_address_args(parser)
+        Common.add_election_data(parser)
         parser.add_argument(
             "-l",
             "--language",
             default="en",
             help="will print the ballot in the specified language",
         )
-        parser.add_argument(
-            "-v",
-            "--verbosity",
-            type=int,
-            default=3,
-            help="0 critical, 1 error, 2 warning, 3 info, 4 debug (def=3)",
-        )
-        parser.add_argument(
-            "-n",
-            "--printonly",
-            action="store_true",
-            help="will printonly and not write to disk (def=True)",
-        )
-        return parser.parse_args(safe_args)
+        Common.add_verbosity(parser)
+        Common.add_printonly(parser)
+        parsed_args = parser.parse_args(safe_args)
+        # Verify arguments
+        Common.verify_election_data(parsed_args)
+        return parsed_args
 
     def __init__(self, unparsed_args):
         """Only to module-ize the scripts and keep things simple and idiomatic."""
@@ -99,7 +92,7 @@ class CreateBlankBallotOperation:
         # imported somehow. And all that comes later - for now just map an
         # address to a town.
         the_address = Address.create_address_from_args(
-            self.parsed_args, ["verbosity", "printonly", "language"]
+            self.parsed_args, ["election_data", "language", "printonly", "verbosity"]
         )
         the_address.map_ggos(the_election_config)
 

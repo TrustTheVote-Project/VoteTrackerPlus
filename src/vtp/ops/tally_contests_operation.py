@@ -69,6 +69,7 @@ tallying across git submodules/repos.
 """,
         )
 
+        Common.add_election_data(parser)
         parser.add_argument(
             "-c",
             "--contest_uid",
@@ -87,19 +88,11 @@ tallying across git submodules/repos.
             action="store_true",
             help="Before tallying the votes, pull the ElectionData repo",
         )
-        parser.add_argument(
-            "-v",
-            "--verbosity",
-            type=int,
-            default=3,
-            help="0 critical, 1 error, 2 warning, 3 info, 4 debug (def=3)",
-        )
-        #    parser.add_argument("-n", "--printonly", action="store_true",
-        #                            help="will printonly and not write to disk (def=True)")
-
+        Common.add_verbosity(parser)
         parsed_args = parser.parse_args(safe_args)
 
         # Validate required args
+        Common.verify_election_data(parsed_args)
         if parsed_args.track_contests:
             if not bool(re.match("^[0-9a-f,]", parsed_args.track_contests)):
                 raise ValueError(

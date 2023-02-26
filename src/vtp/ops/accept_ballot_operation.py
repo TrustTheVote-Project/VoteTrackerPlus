@@ -64,6 +64,7 @@ Either the location of the ballot_file or the associated address is required.
         )
 
         Address.add_address_args(parser, True)
+        Common.add_election_data(parser)
         parser.add_argument(
             "-m",
             "--merge_contests",
@@ -74,21 +75,12 @@ Either the location of the ballot_file or the associated address is required.
             "--cast_ballot",
             help="overrides an address - specifies a specific cast ballot",
         )
-        parser.add_argument(
-            "-v",
-            "--verbosity",
-            type=int,
-            default=3,
-            help="0 critical, 1 error, 2 warning, 3 info, 4 debug (def=3)",
-        )
-        parser.add_argument(
-            "-n",
-            "--printonly",
-            action="store_true",
-            help="will printonly and not write to disk (def=True)",
-        )
-
-        return parser.parse_args(safe_args)
+        Common.add_verbosity(parser)
+        Common.add_printonly(parser)
+        parsed_args = parser.parse_args(safe_args)
+        # Verify arguments
+        Common.verify_election_data(parsed_args)
+        return parsed_args
 
     def __init__(self, unparsed_args):
         """Only to module-ize the scripts and keep things simple and idiomatic."""
@@ -376,7 +368,13 @@ Either the location of the ballot_file or the associated address is required.
             # Use the specified address
             the_address = Address.create_address_from_args(
                 self.parsed_args,
-                ["verbosity", "printonly", "cast_ballot", "merge_contests"],
+                [
+                    "cast_ballot",
+                    "election_data",
+                    "merge_contests",
+                    "printonly",
+                    "verbosity",
+                ],
                 generic_address=True,
             )
             the_address.map_ggos(the_election_config, skip_ggos=True)

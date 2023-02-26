@@ -108,7 +108,10 @@ class Globals:
     }
 
     # Legitimate setters
-    _setters = []
+    @staticmethod
+    def set_electiondatadir(path):
+        """Will overwrite the default location of the ElectionData tree"""
+        Globals._config["ROOT_ELECTION_DATA_SUBDIR"] = path
 
     @staticmethod
     def get(name):
@@ -119,6 +122,8 @@ class Globals:
 class Common:
     """Common functions without a better home at this time"""
 
+    # logging should only be configured once and only once (until a
+    # logger is set up)
     _configured = False
 
     @staticmethod
@@ -153,6 +158,79 @@ class Common:
                     new_argv.extend(["--" + key, str(value)])
             return new_argv
         return argv
+
+    # Tbe below are options that are shared across the various
+    # operations.  Options that are unique to one operation are
+    # located in that file.
+
+    @staticmethod
+    def add_blank_ballot(parser):
+        """Add blank_ballot option"""
+        parser.add_argument(
+            "--blank_ballot",
+            help="overrides an address - specifies the specific blank ballot",
+        )
+
+    @staticmethod
+    def add_election_data(parser):
+        """Add election_data option"""
+        defval = Globals.get("ROOT_ELECTION_DATA_SUBDIR")
+        parser.add_argument(
+            "-e",
+            "--election_data",
+            default=defval,
+            help=f"specify a absolute or relative path to the ElectionData tree (def={defval})",
+        )
+
+    @staticmethod
+    def add_merge_contests(parser):
+        """Add merge_contests option"""
+        parser.add_argument(
+            "-m",
+            "--merge_contests",
+            action="store_true",
+            help="Will immediately merge the ballot contests (to main)",
+        )
+
+    @staticmethod
+    def add_minimum_cast_cache(parser):
+        """Add minimum_cast_cache option"""
+        parser.add_argument(
+            "--minimum_cast_cache",
+            type=int,
+            default=100,
+            help="the minimum number of cast ballots required prior to merging (def=100)",
+        )
+
+    @staticmethod
+    def add_printonly(parser):
+        """Add printonly option"""
+        parser.add_argument(
+            "-n",
+            "--printonly",
+            action="store_true",
+            help="will printonly and not write to disk (def=True)",
+        )
+
+    @staticmethod
+    def add_verbosity(parser):
+        """Add verbosity option"""
+        parser.add_argument(
+            "-v",
+            "--verbosity",
+            type=int,
+            default=3,
+            help="0 critical, 1 error, 2 warning, 3 info, 4 debug (def=3)",
+        )
+
+    @staticmethod
+    def verify_election_data(parsed_args):
+        """Verify election_data option"""
+        if not os.path.isdir(parsed_args.election_data):
+            raise ValueError(
+                f"The provided --election_data value ({parsed_args.election_data}) does not exist"
+            )
+        Globals.set_electiondatadir(parsed_args.election_data)
 
 
 # pylint: disable=too-few-public-methods   # ZZZ - remove this later

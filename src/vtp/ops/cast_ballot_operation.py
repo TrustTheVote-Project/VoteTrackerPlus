@@ -29,8 +29,6 @@ import logging
 import os
 import pprint
 import random
-import sys
-import traceback
 
 import pyinputplus
 
@@ -76,29 +74,19 @@ demo mode, cast_ballot.py will randominly select choices.
         # ZZZ - cloaked contests are enabled at cast_ballot time
         #    parser.add_argument('-k', "--cloak", action="store_true",
         #                            help="if possible provide a cloaked ballot offset")
+        Common.add_election_data(parser)
         parser.add_argument(
             "--demo_mode",
             action="store_true",
             help="set demo mode to automatically cast random ballots",
         )
-        parser.add_argument(
-            "--blank_ballot",
-            help="overrides an address - specifies the specific blank ballot",
-        )
-        parser.add_argument(
-            "-v",
-            "--verbosity",
-            type=int,
-            default=3,
-            help="0 critical, 1 error, 2 warning, 3 info, 4 debug (def=3)",
-        )
-        parser.add_argument(
-            "-n",
-            "--printonly",
-            action="store_true",
-            help="will printonly and not write to disk (def=True)",
-        )
-        return parser.parse_args(safe_args)
+        Common.add_blank_ballot(parser)
+        Common.add_verbosity(parser)
+        Common.add_printonly(parser)
+        parsed_args = parser.parse_args(safe_args)
+        # Verify arguments
+        Common.verify_election_data(parsed_args)
+        return parsed_args
 
     def __init__(self, unparsed_args):
         """
@@ -197,18 +185,12 @@ demo mode, cast_ballot.py will randominly select choices.
                     "Warning - you selections have the following errors\n"
                     f"{err_string}"
                 )
-            # if still here, set the selection
-            try:
-                # Since it is possible to self adjudicate a contest, always
-                # explicitly clear the selection before adding
-                the_ballot.clear_selection(the_contest)
-                for sel in validated_selections:
-                    the_ballot.add_selection(the_contest, sel)
-            # pylint: disable=broad-except
-            except Exception:
-                # blow out of the internal pyinputplus try/catch
-                traceback.print_exc()
-                sys.exit(1)
+            # If still here, set the selection.  Since it is possible to self
+            # adjudicate a contest, always explicitly clear the selection
+            # before adding
+            the_ballot.clear_selection(the_contest)
+            for sel in validated_selections:
+                the_ballot.add_selection(the_contest, sel)
 
         if tally == "plurality":
             if max_votes > 1:
@@ -309,7 +291,13 @@ demo mode, cast_ballot.py will randominly select choices.
             # Use the specified address
             the_address = Address.create_address_from_args(
                 self.parsed_args,
-                ["verbosity", "printonly", "blank_ballot", "demo_mode"],
+                [
+                    "blank_ballot",
+                    "demo_mode",
+                    "election_data",
+                    "printonly",
+                    "verbosity",
+                ],
             )
             the_address.map_ggos(the_election_config)
             # get the ballot for the specified address
