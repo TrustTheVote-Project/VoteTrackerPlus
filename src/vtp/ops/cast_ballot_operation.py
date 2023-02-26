@@ -299,7 +299,13 @@ demo mode, cast_ballot.py will randominly select choices.
             # Use the specified address
             the_address = Address.create_address_from_args(
                 self.parsed_args,
-                ["verbosity", "printonly", "blank_ballot", "demo_mode"],
+                [
+                    "blank_ballot",
+                    "demo_mode",
+                    "election_data",
+                    "printonly",
+                    "verbosity",
+                ],
             )
             the_address.map_ggos(the_election_config)
             # get the ballot for the specified address

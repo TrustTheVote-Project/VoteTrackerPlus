@@ -167,7 +167,6 @@ class Common:
     def add_blank_ballot(parser):
         """Add blank_ballot option"""
         parser.add_argument(
-            "-b",
             "--blank_ballot",
             help="overrides an address - specifies the specific blank ballot",
         )

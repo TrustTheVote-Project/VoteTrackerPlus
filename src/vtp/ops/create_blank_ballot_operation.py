@@ -92,7 +92,7 @@ class CreateBlankBallotOperation:
         # imported somehow. And all that comes later - for now just map an
         # address to a town.
         the_address = Address.create_address_from_args(
-            self.parsed_args, ["verbosity", "printonly", "language"]
+            self.parsed_args, ["election_data", "language", "printonly", "verbosity"]
         )
         the_address.map_ggos(the_election_config)
 

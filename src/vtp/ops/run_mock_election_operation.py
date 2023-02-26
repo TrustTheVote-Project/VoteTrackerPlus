@@ -389,6 +389,7 @@ mock to a single ballot N times.
                 [
                     "blank_ballot",
                     "device",
+                    "election_data",
                     "minimum_cast_cache",
                     "flush_mode",
                     "iterations",

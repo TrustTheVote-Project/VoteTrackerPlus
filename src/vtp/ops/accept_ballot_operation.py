@@ -368,7 +368,13 @@ Either the location of the ballot_file or the associated address is required.
             # Use the specified address
             the_address = Address.create_address_from_args(
                 self.parsed_args,
-                ["verbosity", "printonly", "cast_ballot", "merge_contests"],
+                [
+                    "cast_ballot",
+                    "election_data",
+                    "merge_contests",
+                    "printonly",
+                    "verbosity",
+                ],
                 generic_address=True,
             )
             the_address.map_ggos(the_election_config, skip_ggos=True)

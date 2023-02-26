@@ -376,7 +376,14 @@ check row is provided.
             # Need to use the address to locate the last created receipt file
             the_address = Address.create_address_from_args(
                 self.parsed_args,
-                ["do_not_pull", "verbosity", "receipt_file", "row", "cvr"],
+                [
+                    "cvr",
+                    "do_not_pull",
+                    "election_data",
+                    "receipt_file",
+                    "row",
+                    "verbosity",
+                ],
                 generic_address=True,
             )
             the_address.map_ggos(the_election_config, skip_ggos=True)
