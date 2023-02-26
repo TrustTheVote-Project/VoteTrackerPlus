@@ -40,14 +40,23 @@ class Arguments:
             parser.add_argument(
                 "-a",
                 "--address",
+                default = "",
                 help="the number and name of the street address (space separated)",
             )
             parser.add_argument(
-                "-b", "--substreet", help="the substreet field of an address"
+                "-b", "--substreet",
+                default = "",
+                help="the substreet field of an address"
             )
-        parser.add_argument("-t", "--town", help="the town field of an address")
         parser.add_argument(
-            "-s", "--state", help="the state/province field of an address"
+            "-t", "--town",
+            default = "",
+            help="the town field of an address"
+        )
+        parser.add_argument(
+            "-s", "--state",
+            default = "",
+            help="the state/province field of an address"
         )
 
     @staticmethod
