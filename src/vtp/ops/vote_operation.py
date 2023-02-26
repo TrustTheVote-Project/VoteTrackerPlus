@@ -61,30 +61,15 @@ class VoteOperation:
         )
 
         Address.add_address_args(parser)
-        parser.add_argument(
-            "-m",
-            "--merge_contests",
-            action="store_true",
-            help="Will immediately merge the ballot contests (to main)",
-        )
-        parser.add_argument(
-            "--blank_ballot",
-            help="overrides an address - specifies the specific blank ballot",
-        )
-        parser.add_argument(
-            "-v",
-            "--verbosity",
-            type=int,
-            default=3,
-            help="0 critical, 1 error, 2 warning, 3 info, 4 debug (def=3)",
-        )
-        parser.add_argument(
-            "-n",
-            "--printonly",
-            action="store_true",
-            help="will printonly and not write to disk (def=True)",
-        )
-        return parser.parse_args(safe_args)
+        Common.add_election_data(parser)
+        Common.add_merge_contests(parser)
+        Common.add_blank_ballot(parser)
+        Common.add_verbosity(parser)
+        Common.add_printonly(parser)
+        parsed_args = parser.parse_args(safe_args)
+        # Validate required args
+        Common.verify_election_data(parsed_args)
+        return parsed_args
 
     def __init__(self, unparsed_args):
         """Only to module-ize the scripts and keep things simple and idiomatic."""

@@ -76,29 +76,19 @@ demo mode, cast_ballot.py will randominly select choices.
         # ZZZ - cloaked contests are enabled at cast_ballot time
         #    parser.add_argument('-k', "--cloak", action="store_true",
         #                            help="if possible provide a cloaked ballot offset")
+        Common.add_election_data(parser)
         parser.add_argument(
             "--demo_mode",
             action="store_true",
             help="set demo mode to automatically cast random ballots",
         )
-        parser.add_argument(
-            "--blank_ballot",
-            help="overrides an address - specifies the specific blank ballot",
-        )
-        parser.add_argument(
-            "-v",
-            "--verbosity",
-            type=int,
-            default=3,
-            help="0 critical, 1 error, 2 warning, 3 info, 4 debug (def=3)",
-        )
-        parser.add_argument(
-            "-n",
-            "--printonly",
-            action="store_true",
-            help="will printonly and not write to disk (def=True)",
-        )
-        return parser.parse_args(safe_args)
+        Common.add_blank_ballot(parser)
+        Common.add_verbosity(parser)
+        Common.add_printonly(parser)
+        parsed_args = parser.parse_args(safe_args)
+        # Verify arguments
+        Common.verify_election_data(parsed_args)
+        return parsed_args
 
     def __init__(self, unparsed_args):
         """

@@ -51,28 +51,19 @@ class ShowContestsOperation:
     will print the CVRs (Cast Vote Records) for the supplied contest(s)
     """,
         )
-
+        Common.add_election_data(parser)
         parser.add_argument(
             "-c",
             "--contest-check",
             help="a comma separate list of contests digests to validate/display",
         )
-        parser.add_argument(
-            "-v",
-            "--verbosity",
-            type=int,
-            default=3,
-            help="0 critical, 1 error, 2 warning, 3 info, 4 debug (def=3)",
-        )
-        parser.add_argument(
-            "-n",
-            "--printonly",
-            action="store_true",
-            help="will printonly and not write to disk (def=True)",
-        )
+
+        Common.add_verbosity(parser)
+        Common.add_printonly(parser)
         parsed_args = parser.parse_args(safe_args)
 
         # Validate required args
+        Common.verify_election_data(parsed_args)
         if not parsed_args.contest_check:
             raise ValueError("The contest check is required")
         if not bool(re.match("^[0-9a-f,]", parsed_args.contest_check)):
