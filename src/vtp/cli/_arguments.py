@@ -17,6 +17,11 @@
 
 """Argument handling."""
 
+import argparse
+
+from vtp.core.address import Address
+
+
 class Arguments:
 
     """Arguments common to multiple commands.
@@ -96,3 +101,31 @@ class Arguments:
             default=3,
             help="0 critical, 1 error, 2 warning, 3 info, 4 debug (def=3)",
         )
+
+    @staticmethod
+    def separate_addresses(
+        parsed_arguments: argparse.Namespace,
+        # TODO: Fix scope of 'Address._keys'. add 'tuple[str]'
+        address_fields = Address._keys,
+    ):
+        """Separate addresses and non-addresses from parsed arguments.
+
+        Parameters:
+            parsed_arguments: Arguments extracted by argument parsing.
+            address_fields: List of keys for addresses.
+    
+        Returns:
+            2-tuple of lists of arguments:
+            - All arguments that are address fields
+            - All arguments that are not address fields
+        """
+        # Convert namespace to a dictionary.
+        parsed_arguments = vars(parsed_arguments)
+        addresses = {}
+        non_addresses = {}
+        for key, value in parsed_arguments.items():
+            if key in address_fields:
+                addresses[key] = value
+            else:
+                non_addresses[key] = value
+        return addresses, non_addresses

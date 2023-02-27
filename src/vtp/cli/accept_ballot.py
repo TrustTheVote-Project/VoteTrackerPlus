@@ -27,6 +27,7 @@ import argparse
 import sys
 
 # Local imports
+from vtp.core.address import Address
 from vtp.core.common import Common
 from vtp.ops.accept_ballot_operation import AcceptBallotOperation
 
@@ -48,17 +49,19 @@ In addition a voter's ballot receipt and offset are optionally printed.
 Either the location of the ballot_file or the associated address is required.
 """,
     )
-
     Arguments.add_address(parser, True)
     Arguments.add_merge_contests(parser)
     parser.add_argument(
-        "--cast_ballot",
+        "--cast_ballot", default = "",
         help="overrides an address - specifies a specific cast ballot",
     )
     Arguments.add_verbosity(parser)
     Arguments.add_print_only(parser)    
 
-    return parser.parse_args(safe_args)
+    args = parser.parse_args(safe_args)
+    address_args, parsed = Arguments.separate_addresses(args)
+    parsed["address"] = Address(generic_address = True, **address_args)
+    return parsed
 
 
 # pylint: disable=duplicate-code
@@ -66,7 +69,7 @@ def main():
     """Entry point for 'accept-ballot'."""
 
     args = parse_arguments(sys.argv[1:])
-    op = AcceptBallotOperation(args)
+    op = AcceptBallotOperation(**args)
     op.run()
 
 

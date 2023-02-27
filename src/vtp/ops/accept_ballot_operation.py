@@ -31,13 +31,19 @@ from vtp.core.ballot import Ballot, Contests
 from vtp.core.common import Common, Globals, Shellout
 from vtp.core.election_config import ElectionConfig
 
+from .operation import Operation
 
-class AcceptBallotOperation:
+
+class AcceptBallotOperation(Operation):
     """Implementation of 'accept-ballot'."""
 
-    def __init__(self, args):
-        """Only to module-ize the scripts and keep things simple and idiomatic."""
-        self.args = args
+    def __init__(self, address: Address, cast_ballot: str = "", merge_contests: str = "",
+                 **base_options):
+        """Create an accept ballot operation."""
+        super().__init__(**base_options)
+        self._address = address
+        self._cast_ballot = cast_ballot
+        self._merge_contests = merge_contests
 
     def get_random_branchpoint(self, branch):
         """Return a random branchpoint on the supplied branch
@@ -91,15 +97,15 @@ class AcceptBallotOperation:
         for _ in [0, 1, 2]:
             cmd1 = Shellout.run(
                 ["git", "checkout", "-b", branch, branchpoint],
-                printonly=self.args.printonly,
-                verbosity=self.args.verbosity,
+                printonly=self._printonly,
+                verbosity=self._verbosity,
             )
             if cmd1.returncode == 0:
                 # Created the local branch - see if it is push-able
                 cmd2 = Shellout.run(
                     ["git", "push", "-u", "origin", branch],
-                    printonly=self.args.printonly,
-                    verbosity=self.args.verbosity,
+                    printonly=self._printonly,
+                    verbosity=self._verbosity,
                 )
                 if cmd2.returncode == 0:
                     # success
@@ -109,14 +115,14 @@ class AcceptBallotOperation:
                 Shellout.run(
                     ["git", "checkout", current_branch],
                     check=True,
-                    printonly=self.args.printonly,
-                    verbosity=self.args.verbosity,
+                    printonly=self._printonly,
+                    verbosity=self._verbosity,
                 )
                 Shellout.run(
                     ["git", "branch", "-D", branch],
                     check=True,
-                    printonly=self.args.printonly,
-                    verbosity=self.args.verbosity,
+                    printonly=self._printonly,
+                    verbosity=self._verbosity,
                 )
             # At this point the local did not get created - try again
             branch = contest.get("uid") + "/" + secrets.token_hex(5)
@@ -159,7 +165,7 @@ class AcceptBallotOperation:
         return Shellout.cvr_parse_git_log_output(
             ["git", "log", "--no-walk", "--pretty=format:%H%B"] + head_commits,
             config,
-            verbosity=self.args.verbosity - 1,
+            verbosity=self._verbosity - 1,
         )
 
     def get_cloaked_contests(self, contest, branch):
@@ -200,19 +206,19 @@ class AcceptBallotOperation:
         )
         Shellout.run(
             ["git", "add", contest_file],
-            printonly=self.args.printonly,
-            verbosity=self.args.verbosity,
+            printonly=self._printonly,
+            verbosity=self._verbosity,
         )
         # Note - apparently git place the commit msg on STDERR - hide it
         Shellout.run(
             ["git", "commit", "-F", contest_file],
-            printonly=self.args.printonly,
+            printonly=self._printonly,
             verbosity=1,
         )
         # Capture the digest
         digest = Shellout.run(
             ["git", "log", branch, "-1", "--pretty=format:%H"],
-            printonly=self.args.printonly,
+            printonly=self._printonly,
             check=True,
             capture_output=True,
             text=True,
@@ -290,7 +296,7 @@ class AcceptBallotOperation:
     # pylint: disable=duplicate-code
     def run(self):
         # Configure logging
-        Common.configure_logging(self.args.verbosity)
+        Common.configure_logging(self._verbosity)
 
         # Create a VTP ElectionData object if one does not already exist
         the_election_config = ElectionConfig.configure_election()
@@ -301,7 +307,7 @@ class AcceptBallotOperation:
         # Note - accept_ballot.py currently only deals with generic
         # addresses since all cast ballots, regardless of active ggos, end
         # up in the same spot, nominally in the town subfolder.
-        if self.args.cast_ballot:
+        if self._cast_ballot:
             # Read the specified cast_ballot
             with Shellout.changed_cwd(
                 os.path.join(
@@ -310,22 +316,16 @@ class AcceptBallotOperation:
                 )
             ):
                 a_ballot.read_a_cast_ballot(
-                    "", the_election_config, self.args.cast_ballot
+                    "", the_election_config, self._cast_ballot
                 )
         else:
-            # Use the specified address
-            the_address = Address.create_address_from_args(
-                self.args,
-                ["verbosity", "printonly", "cast_ballot", "merge_contests"],
-                generic_address=True,
-            )
-            the_address.map_ggos(the_election_config, skip_ggos=True)
+            self._address.map_ggos(the_election_config, skip_ggos=True)
             # Get the ballot for the specified address.  Note that reading
             # the cast ballot will define the active ggos etc for the
             # ballot even though those fields are not defined for the
             # address.  However, reading a ballot still needs the
             # ballot_subdir field of the address.
-            a_ballot.read_a_cast_ballot(the_address, the_election_config)
+            a_ballot.read_a_cast_ballot(self._address, the_election_config)
 
         # the voter's row of digests (indexed by contest uid)
         contest_receipts = {}
@@ -392,19 +392,19 @@ class AcceptBallotOperation:
             for branch in branches:
                 Shellout.run(
                     ["git", "push", "origin", branch],
-                    printonly=self.args.printonly,
-                    verbosity=self.args.verbosity,
+                    printonly=self._printonly,
+                    verbosity=self._verbosity,
                 )
                 # Delete the local as they build up too much.  The local
                 # reflog keeps track of the local branches
                 Shellout.run(
                     ["git", "branch", "-d", branch],
-                    printonly=self.args.printonly,
-                    verbosity=self.args.verbosity,
+                    printonly=self._printonly,
+                    verbosity=self._verbosity,
                 )
 
         # If in demo mode, optionally merge the branches
-        if self.args.merge_contests:
+        if self._merge_contests:
             for branch in branches:
                 # Merge the branch (but since the local branch should be
                 # deleted at this point, merge the remote).  Note -
@@ -416,12 +416,12 @@ class AcceptBallotOperation:
                             "merge_contests.py", the_election_config
                         ),
                         "-v",
-                        self.args.verbosity,
+                        self._verbosity,
                         "-b",
                         "remotes/origin/" + branch,
                         "-r",
                     ]
-                    + (["-n"] if self.args.printonly else []),
+                    + (["-n"] if self._printonly else []),
                     check=True,
                     no_touch_stds=True,
                     timeout=None,

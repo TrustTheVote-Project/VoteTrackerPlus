@@ -29,6 +29,7 @@ import argparse
 import sys
 
 # Local imports
+from vtp.core.address import Address
 from vtp.core.common import Common
 from vtp.ops.verify_ballot_receipt_operation import VerifyBallotReceiptOperation
 
@@ -53,7 +54,6 @@ Can also optionally print the ballot's CVRs when a specific ballot
 check row is provided.
 """,
     )
-
     Arguments.add_address(parser, True)
     parser.add_argument(
         "-f",
@@ -82,21 +82,24 @@ check row is provided.
     Arguments.add_verbosity(parser)
     # Arguments.add_print_only(parser)
 
-    parsed_args = parser.parse_args(safe_args)
+    args = parser.parse_args(safe_args)
 
     # Validate required args
-    if not (parsed_args.receipt_file or (parsed_args.state and parsed_args.town)):
+    if not (args.receipt_file or (args.state and args.town)):
         raise ValueError(
             "Either an explicit or implicit (via an address) receipt file must be provided"
         )
-    return parsed_args
+
+    address_args, parsed = Arguments.separate_addresses(args)
+    parsed["address"] = Address(generic_address = True, **address_args)
+    return parsed
 
 
 def main():
     """Entry point for 'verify-ballot-receipt'."""
 
     args = parse_arguments(sys.argv[1:])
-    op = VerifyBallotReceiptOperation(args)
+    op = VerifyBallotReceiptOperation(**args)
     op.run()
 
 
