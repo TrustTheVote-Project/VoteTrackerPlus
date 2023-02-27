@@ -52,15 +52,16 @@ Either the location of the ballot_file or the associated address is required.
     Arguments.add_address(parser, True)
     Arguments.add_merge_contests(parser)
     parser.add_argument(
-        "--cast_ballot", default = "",
+        "--cast_ballot",
+        default="",
         help="overrides an address - specifies a specific cast ballot",
     )
     Arguments.add_verbosity(parser)
-    Arguments.add_print_only(parser)    
+    Arguments.add_print_only(parser)
 
     args = parser.parse_args(safe_args)
     address_args, parsed = Arguments.separate_addresses(args)
-    parsed["address"] = Address(generic_address = True, **address_args)
+    parsed["address"] = Address(generic_address=True, **address_args)
     return parsed
 
 

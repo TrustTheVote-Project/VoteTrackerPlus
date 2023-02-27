@@ -43,8 +43,8 @@ class VerifyBallotReceiptOperation(Operation):
         receipt_file: str = "",
         row: str = "",
         cvr: bool = False,
-        do_not_pull = False,
-        **base_options
+        do_not_pull: bool = False,
+        **base_options,
     ):
         super().__init__(**base_options)
         self._address = address

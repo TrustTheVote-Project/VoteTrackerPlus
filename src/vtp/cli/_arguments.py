@@ -45,23 +45,26 @@ class Arguments:
             parser.add_argument(
                 "-a",
                 "--address",
-                default = "",
+                default="",
                 help="the number and name of the street address (space separated)",
             )
             parser.add_argument(
-                "-b", "--substreet",
-                default = "",
-                help="the substreet field of an address"
+                "-b",
+                "--substreet",
+                default="",
+                help="the substreet field of an address",
             )
         parser.add_argument(
-            "-t", "--town",
-            default = "",
-            help="the town field of an address"
+            "-t",
+            "--town",
+            default="",
+            help="the town field of an address",
         )
         parser.add_argument(
-            "-s", "--state",
-            default = "",
-            help="the state/province field of an address"
+            "-s",
+            "--state",
+            default="",
+            help="the state/province field of an address",
         )
 
     @staticmethod
@@ -74,7 +77,7 @@ class Arguments:
         )
 
     @staticmethod
-    def add_minimum_cast_cache(parser, default = 100):
+    def add_minimum_cast_cache(parser, default=100):
         parser.add_argument(
             "-m",
             "--minimum_cast_cache",
@@ -106,14 +109,14 @@ class Arguments:
     def separate_addresses(
         parsed_arguments: argparse.Namespace,
         # TODO: Fix scope of 'Address._keys'. add 'tuple[str]'
-        address_fields = Address._keys,
+        address_fields=Address._keys,
     ):
         """Separate addresses and non-addresses from parsed arguments.
 
         Parameters:
             parsed_arguments: Arguments extracted by argument parsing.
             address_fields: List of keys for addresses.
-    
+
         Returns:
             2-tuple of lists of arguments:
             - All arguments that are address fields

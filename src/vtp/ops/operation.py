@@ -19,7 +19,6 @@
 
 
 class Operation:
-
     def __init__(self, printonly: bool = True, verbosity: int = 3):
         self._printonly = printonly
         self._verbosity = verbosity

@@ -91,7 +91,7 @@ check row is provided.
         )
 
     address_args, parsed = Arguments.separate_addresses(args)
-    parsed["address"] = Address(generic_address = True, **address_args)
+    parsed["address"] = Address(generic_address=True, **address_args)
     return parsed
 
 

@@ -78,11 +78,6 @@ mock to a single ballot N times.
         help="specify a specific VC local device (scanner or server or both) to mock",
     )
     Arguments.add_minimum_cast_cache(parser)
-    # Note - the black formatter will by default break the help
-    # line below into two lines via a '()', which breaks the
-    # parser.add_argument.  It is python.
-    #
-    # fmt: off
     parser.add_argument(
         "-f",
         "--flush_mode",
@@ -90,7 +85,6 @@ mock to a single ballot N times.
         default=0,
         help="will either not flush (0 - default), flush on exit (1), or flush on each iteration (2)",
     )
-    # fmt: on
     parser.add_argument(
         "-i",
         "--iterations",

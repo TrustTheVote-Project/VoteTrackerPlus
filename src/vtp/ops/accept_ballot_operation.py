@@ -37,8 +37,13 @@ from .operation import Operation
 class AcceptBallotOperation(Operation):
     """Implementation of 'accept-ballot'."""
 
-    def __init__(self, address: Address, cast_ballot: str = "", merge_contests: str = "",
-                 **base_options):
+    def __init__(
+        self,
+        address: Address,
+        cast_ballot: str = "",
+        merge_contests: str = "",
+        **base_options,
+    ):
         """Create an accept ballot operation."""
         super().__init__(**base_options)
         self._address = address
@@ -315,9 +320,7 @@ class AcceptBallotOperation(Operation):
                     Globals.get("ROOT_ELECTION_DATA_SUBDIR"),
                 )
             ):
-                a_ballot.read_a_cast_ballot(
-                    "", the_election_config, self._cast_ballot
-                )
+                a_ballot.read_a_cast_ballot("", the_election_config, self._cast_ballot)
         else:
             self._address.map_ggos(the_election_config, skip_ggos=True)
             # Get the ballot for the specified address.  Note that reading
