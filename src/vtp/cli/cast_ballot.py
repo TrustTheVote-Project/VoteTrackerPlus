@@ -27,6 +27,7 @@ import argparse
 import sys
 
 # Local imports
+from vtp.core.address import Address
 from vtp.core.common import Common
 from vtp.ops.cast_ballot_operation import CastBallotOperation
 
@@ -55,7 +56,6 @@ blank ballot and allow a user to manually select choices or when in
 demo mode, cast_ballot.py will randominly select choices.
 """,
     )
-
     Arguments.add_address(parser)
     # ZZZ - cloaked contests are enabled at cast_ballot time
     #    parser.add_argument('-k', "--cloak", action="store_true",
@@ -67,12 +67,16 @@ demo mode, cast_ballot.py will randominly select choices.
     )
     parser.add_argument(
         "--blank_ballot",
+        default="",
         help="overrides an address - specifies the specific blank ballot",
     )
     Arguments.add_verbosity(parser)
     Arguments.add_print_only(parser)
 
-    return parser.parse_args(safe_args)
+    args = parser.parse_args(safe_args)
+    address_args, parsed = Arguments.separate_addresses(args)
+    parsed["address"] = Address(**address_args)
+    return parsed
 
 
 # pylint: disable=duplicate-code
@@ -80,7 +84,7 @@ def main():
     """Entry point for 'cast-ballot'."""
 
     args = parse_arguments(sys.argv[1:])
-    op = CastBallotOperation(args)
+    op = CastBallotOperation(**args)
     op.run()
 
 

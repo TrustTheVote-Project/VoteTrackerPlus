@@ -31,18 +31,36 @@ from vtp.core.common import Common, Globals, Shellout
 from vtp.core.election_config import ElectionConfig
 
 # Script modules
+from .operation import Operation
 from vtp.ops.accept_ballot_operation import AcceptBallotOperation
 from vtp.ops.cast_ballot_operation import CastBallotOperation
 from vtp.ops.merge_contests_operation import MergeContestsOperation
 from vtp.ops.tally_contests_operation import TallyContestsOperation
 
 
-class RunMockElectionOperation:
+class RunMockElectionOperation(Operation):
     """Implementation of 'run-mock-election'."""
 
-    def __init__(self, args):
-        """Only to module-ize the scripts and keep things simple and idiomatic."""
-        self.args = args
+    def __init__(
+        self,
+        address: Address,
+        blank_ballot: str = "",
+        device: str = "",
+        minimum_cast_cache: int = 100,
+        flush_mode: int = 0,
+        iterations: int = 10,
+        duration: int = 10,
+        **base_options,
+    ):
+        """Create a run mock election operation."""
+        super().__init__(**base_options)
+        self._address = address
+        self._blank_ballot = blank_ballot
+        self._device = device
+        self._minimum_cast_cache = minimum_cast_cache
+        self._flush_mode = flush_mode
+        self._iterations = iterations
+        self._duration = duration
 
     def scanner_mockup(self, the_election_config, ballot):
         """Simulate a VTP scanner"""
@@ -70,12 +88,12 @@ class RunMockElectionOperation:
         # Loop over the list N times
         if not blank_ballots:
             raise ValueError("found no blank ballots to cast")
-        for count in range(self.args.iterations):
+        for count in range(self._iterations):
             for blank_ballot in blank_ballots:
                 logging.debug(
                     "Iteration %s of %s - processing %s",
                     count,
-                    self.args.iterations,
+                    self._iterations,
                     blank_ballot,
                 )
                 # - cast a ballot
@@ -83,8 +101,8 @@ class RunMockElectionOperation:
                 with Shellout.changed_cwd(election_data_dir):
                     Shellout.run(
                         ["git", "pull"],
-                        printonly=self.args.printonly,
-                        verbosity=self.args.verbosity,
+                        printonly=self._printonly,
+                        verbosity=self._verbosity,
                         no_touch_stds=True,
                         timeout=None,
                         check=True,
@@ -93,8 +111,8 @@ class RunMockElectionOperation:
                     {
                         "blank_ballot": blank_ballot,
                         "demo_mode": True,
-                        "verbosity": self.args.verbosity,
-                        "printonly": self.args.printonly,
+                        "verbosity": self._verbosity,
+                        "printonly": self._printonly,
                     }
                 )
                 cast_ballot.run()
@@ -102,21 +120,21 @@ class RunMockElectionOperation:
                 accept_ballot = AcceptBallotOperation(
                     {
                         "cast_ballot": Ballot.get_cast_from_blank(blank_ballot),
-                        "verbosity": self.args.verbosity,
-                        "printonly": self.args.printonly,
+                        "verbosity": self._verbosity,
+                        "printonly": self._printonly,
                     }
                 )
                 accept_ballot.run()
-                if self.args.device == "both":
+                if self._device == "both":
                     # - merge the ballot's contests
-                    if self.args.flush_mode == 2:
+                    if self._flush_mode == 2:
                         # Since casting and merging is basically
                         # synchronous, no need for an extra large timeout
                         merge_contests = MergeContestsOperation(
                             {
                                 "flush_mode": True,
-                                "verbosity": self.args.verbosity,
-                                "printonly": self.args.printonly,
+                                "verbosity": self._verbosity,
+                                "printonly": self._printonly,
                             }
                         )
                         merge_contests.run()
@@ -126,9 +144,9 @@ class RunMockElectionOperation:
                         # timeout
                         merge_contests = MergeContestsOperation(
                             {
-                                "minimum_cast_cache": self.args.minimum_cast_cache,
-                                "verbosity": self.args.verbosity,
-                                "printonly": self.args.printonly,
+                                "minimum_cast_cache": self._minimum_cast_cache,
+                                "verbosity": self._verbosity,
+                                "printonly": self._printonly,
                             }
                         )
                         merge_contests.run()
@@ -136,36 +154,36 @@ class RunMockElectionOperation:
                     if count % 10 == 9:
                         Shellout.run(
                             ["git", "gc"],
-                            printonly=self.args.printonly,
-                            verbosity=self.args.verbosity,
+                            printonly=self._printonly,
+                            verbosity=self._verbosity,
                             no_touch_stds=True,
                             timeout=None,
                             check=True,
                         )
-        if self.args.device == "both":
+        if self._device == "both":
             # merge the remaining contests
             # Note - this needs a longer timeout as it can take many seconds
             merge_contests = MergeContestsOperation(
                 {
                     "flush_mode": True,
-                    "verbosity": self.args.verbosity,
-                    "printonly": self.args.printonly,
+                    "verbosity": self._verbosity,
+                    "printonly": self._printonly,
                 }
             )
             merge_contests.run()
             # tally the contests
             tally_contests = TallyContestsOperation(
                 {
-                    "verbosity": self.args.verbosity,
-                    "printonly": self.args.printonly,
+                    "verbosity": self._verbosity,
+                    "printonly": self._printonly,
                 }
             )
             tally_contests.run()
         # clean up git just in case
         Shellout.run(
             ["git", "gc"],
-            printonly=self.args.printonly,
-            verbosity=self.args.verbosity,
+            printonly=self._printonly,
+            verbosity=self._verbosity,
             no_touch_stds=True,
             timeout=None,
             check=True,
@@ -179,7 +197,7 @@ class RunMockElectionOperation:
         # the branches to be merged are remote and not local.
         start_time = time.time()
         # Loop for a day and sleep for 10 seconds
-        seconds = 60 * self.args.duration
+        seconds = 60 * self._duration
         election_data_dir = os.path.join(
             the_election_config.get("git_rootdir"),
             Globals.get("ROOT_ELECTION_DATA_SUBDIR"),
@@ -189,26 +207,26 @@ class RunMockElectionOperation:
             with Shellout.changed_cwd(election_data_dir):
                 Shellout.run(
                     ["git", "pull"],
-                    self.args.printonly,
-                    self.args.verbosity,
+                    self._printonly,
+                    self._verbosity,
                     no_touch_stds=True,
                     timeout=None,
                     check=True,
                 )
-            if self.args.flush_mode == 2:
+            if self._flush_mode == 2:
                 merge_contests = MergeContestsOperation(
                     {
                         "remote": True,
                         "flush": True,
-                        "verbosity": self.args.verbosity,
-                        "printonly": self.args.printonly,
+                        "verbosity": self._verbosity,
+                        "printonly": self._printonly,
                     }
                 )
                 merge_contests.run()
                 tally_contests = TallyContestsOperation(
                     {
-                        "verbosity": self.args.verbosity,
-                        "printonly": self.args.printonly,
+                        "verbosity": self._verbosity,
+                        "printonly": self._printonly,
                     }
                 )
                 tally_contests.run()
@@ -216,9 +234,9 @@ class RunMockElectionOperation:
             merge_contests = MergeContestsOperation(
                 {
                     "remote": True,
-                    "minimum_cast_cache": self.args.minimum_cast_cache,
-                    "verbosity": self.args.verbosity,
-                    "printonly": self.args.printonly,
+                    "minimum_cast_cache": self._minimum_cast_cache,
+                    "verbosity": self._verbosity,
+                    "printonly": self._printonly,
                 }
             )
             merge_contests.run()
@@ -227,22 +245,22 @@ class RunMockElectionOperation:
             elapsed_time = time.time() - start_time
             if elapsed_time > seconds:
                 break
-        if self.args.flush_mode in [1, 2]:
+        if self._flush_mode in [1, 2]:
             print("Cleaning up remaining unmerged ballots")
             merge_contests = MergeContestsOperation(
                 {
                     "remote": True,
                     "flush": True,
-                    "verbosity": self.args.verbosity,
-                    "printonly": self.args.printonly,
+                    "verbosity": self._verbosity,
+                    "printonly": self._printonly,
                 }
             )
             merge_contests.run()
         # tally the contests
         tally_contests = TallyContestsOperation(
             {
-                "verbosity": self.args.verbosity,
-                "printonly": self.args.printonly,
+                "verbosity": self._verbosity,
+                "printonly": self._printonly,
             }
         )
         tally_contests.run()
@@ -267,40 +285,28 @@ class RunMockElectionOperation:
         """
 
         # Configure logging
-        Common.configure_logging(self.args.verbosity)
+        Common.configure_logging(self._verbosity)
 
         # Create a VTP ElectionData object if one does not already exist
         the_election_config = ElectionConfig.configure_election()
 
         # If an address was used, use that
+        # TODO: Use single test: if self._address.is_valid():
         if (
-            self.args.address
-            or self.args.state
-            or self.args.town
-            or self.args.substreet
+            self._address.address["street"]
+            or self._address.address["state"]
+            or self._address.address["town"]
+            or self._address.address["substreet"]
         ):
-            the_address = Address.create_address_from_args(
-                self.args,
-                [
-                    "blank_ballot",
-                    "device",
-                    "minimum_cast_cache",
-                    "flush_mode",
-                    "iterations",
-                    "duration",
-                    "verbosity",
-                    "printonly",
-                ],
-            )
-            the_address.map_ggos(the_election_config)
+            self._address.map_ggos(the_election_config)
             blank_ballot = the_election_config.gen_blank_ballot_location(
-                the_address.active_ggos, the_address.ballot_subdir
+                self._address.active_ggos, self._address.ballot_subdir
             )
-        elif self.args.blank_ballot:
-            blank_ballot = self.args.blank_ballot
+        elif self._blank_ballot:
+            blank_ballot = self._blank_ballot
 
         # the VTP scanner mock simulation
-        if self.args.device in ["scanner", "both"]:
+        if self._device in ["scanner", "both"]:
             self.scanner_mockup(the_election_config, blank_ballot)
         else:
             self.server_mockup(the_election_config)

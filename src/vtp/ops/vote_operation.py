@@ -19,26 +19,37 @@
 
 """Logic of operation for voting."""
 
+from vtp.core.address import Address
 from vtp.core.ballot import Ballot
 from vtp.core.common import Common, Shellout
 from vtp.core.election_config import ElectionConfig
 
 # Local libraries
+from .operation import Operation
 from vtp.ops.accept_ballot_operation import AcceptBallotOperation
 from vtp.ops.cast_ballot_operation import CastBallotOperation
 
 
 # pylint: disable=too-few-public-methods
-class VoteOperation:
+class VoteOperation(Operation):
     """Implementation of 'vote' operation."""
 
-    def __init__(self, args):
-        """Only to module-ize the scripts and keep things simple and idiomatic."""
-        self.args = args
+    def __init__(
+        self,
+        address: Address,
+        merge_contests: bool = False,
+        blank_ballot: str = "",
+        **base_options,
+    ):
+        """Create a vote operation."""
+        super().__init__(**base_options)
+        self._address = address
+        self._merge_contests = merge_contests
+        self._blank_ballot = blank_ballot
 
     def run(self):
         # Configure logging
-        Common.configure_logging(self.args.verbosity)
+        Common.configure_logging(self._verbosity)
 
         # Create a VTP ElectionData object if one does not already exist
         the_election_config = ElectionConfig.configure_election()
@@ -49,40 +60,28 @@ class VoteOperation:
         with Shellout.changed_cwd(a_ballot.get_cvr_parent_dir(the_election_config)):
             Shellout.run(
                 ["git", "pull"],
-                printonly=self.args.printonly,
-                verbosity=self.args.verbosity,
+                printonly=self._printonly,
+                verbosity=self._verbosity,
                 check=True,
             )
 
         # If an address was used, use that
         cast_args = {
-            "verbosity": self.args.verbosity,
-            "printonly": self.args.printonly,
+            "address": self._address if not self._blank_ballot else Address(),
+            "printonly": self._printonly,
+            "verbosity": self._verbosity,
         }
         accept_args = {
-            "verbosity": self.args.verbosity,
-            "printonly": self.args.printonly,
+            "address": self._address if not self._blank_ballot else Address(),
+            "printonly": self._printonly,
+            "verbosity": self._verbosity,
         }
-        if not self.args.blank_ballot:
-            if self.args.state:
-                cast_args["state"] = self.args.state
-                accept_args["state"] = self.args.state
-            if self.args.town:
-                cast_args["town"] = self.args.town
-                accept_args["town"] = self.args.town
-            if self.args.substreet:
-                cast_args["substreet"] = self.args.substreet
-            if self.args.address:
-                cast_args["address"] = self.args.address
-        else:
-            cast_args["blank_ballot"] = self.args.blank_ballot
-            accept_args["blank_ballot"] = self.args.blank_ballot
 
         # Basically only do as little as necessary to call cast_ballot.py
         # followed by accept_ballot.py
         # Cast a ballot
-        a_cast_ballot_operation = CastBallotOperation(cast_args)
+        a_cast_ballot_operation = CastBallotOperation(**cast_args)
         a_cast_ballot_operation.run()
         # Accept the ballot
-        a_accept_ballot_operation = AcceptBallotOperation(accept_args)
+        a_accept_ballot_operation = AcceptBallotOperation(**accept_args)
         a_accept_ballot_operation.run()

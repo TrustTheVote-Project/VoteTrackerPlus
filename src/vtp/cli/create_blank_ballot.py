@@ -29,6 +29,7 @@ import argparse
 import sys
 
 # Local imports
+from vtp.core.address import Address
 from vtp.core.common import Common
 from vtp.ops.create_blank_ballot_operation import CreateBlankBallotOperation
 
@@ -45,7 +46,6 @@ VTP ElectionData git tree and create a blank ballot based on the
 supplied address.
 """,
     )
-
     Arguments.add_address(parser)
     parser.add_argument(
         "-l",
@@ -56,14 +56,17 @@ supplied address.
     Arguments.add_verbosity(parser)
     Arguments.add_print_only(parser)
 
-    return parser.parse_args(safe_args)
+    args = parser.parse_args(safe_args)
+    address_args, parsed = Arguments.separate_addresses(args)
+    parsed["address"] = Address(**address_args)
+    return parsed
 
 
 def main():
     """Entry point for 'accept-ballot'."""
 
     args = parse_arguments(sys.argv[1:])
-    op = CreateBlankBallotOperation(args)
+    op = CreateBlankBallotOperation(**args)
     op.run()
 
 

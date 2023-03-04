@@ -35,16 +35,24 @@ from vtp.core.ballot import Ballot, BlankBallot, Contests
 from vtp.core.common import Common, Globals, Shellout
 from vtp.core.election_config import ElectionConfig
 
+from .operation import Operation
 
-class CastBallotOperation:
+
+class CastBallotOperation(Operation):
     """Implementation of 'cast-ballot'."""
 
-    def __init__(self, args):
-        """
-        Only to module-ize the scripts and keep things simple and
-        idiomatic.  parsed_args is an argparse Namespace object.
-        """
-        self.args = args
+    def __init__(
+        self,
+        address: Address,
+        demo_mode: bool = False,
+        blank_ballot: str = "",
+        **base_options,
+    ):
+        """Create a cast ballot operation."""
+        super().__init__(**base_options)
+        self._address = address
+        self._demo_mode = demo_mode
+        self._blank_ballot = blank_ballot
 
     def make_random_selection(self, the_ballot, the_contest):
         """Will randomly make selections on a contest"""
@@ -173,7 +181,7 @@ class CastBallotOperation:
         contest_uids = []
         for contest in contests:
             contest_uids.append(contest.get("uid"))
-            if self.args.demo_mode:
+            if self._demo_mode:
                 self.make_random_selection(a_ballot, contest)
             else:
                 # Display the tally type and choices and allow the user to manually
@@ -181,7 +189,7 @@ class CastBallotOperation:
                 # this demo) as that is the long-term VTP vision.
                 count += 1
                 self.get_user_selection(a_ballot, contest, count, total_contests)
-        if not self.args.demo_mode:
+        if not self._demo_mode:
             # UX wise replicate the self adjudication experince.  This is
             # basically another endless loop until done
             while True:
@@ -219,7 +227,7 @@ class CastBallotOperation:
 
     def run(self):
         # Configure logging
-        Common.configure_logging(self.args.verbosity)
+        Common.configure_logging(self._verbosity)
 
         # Create a VTP ElectionData object if one does not already exist
         the_election_config = ElectionConfig.configure_election()
@@ -228,7 +236,7 @@ class CastBallotOperation:
         a_ballot = BlankBallot()
 
         # process the provided address
-        if self.args.blank_ballot:
+        if self._blank_ballot:
             # Read the specified blank_ballot
             with Shellout.changed_cwd(
                 os.path.join(
@@ -237,17 +245,13 @@ class CastBallotOperation:
                 )
             ):
                 a_ballot.read_a_blank_ballot(
-                    "", the_election_config, self.args.blank_ballot
+                    "", the_election_config, self._blank_ballot
                 )
         else:
             # Use the specified address
-            the_address = Address.create_address_from_args(
-                self.args,
-                ["verbosity", "printonly", "blank_ballot", "demo_mode"],
-            )
-            the_address.map_ggos(the_election_config)
+            self._address.map_ggos(the_election_config)
             # get the ballot for the specified address
-            a_ballot.read_a_blank_ballot(the_address, the_election_config)
+            a_ballot.read_a_blank_ballot(self._address, the_election_config)
 
         contests = self.loop_over_contests(a_ballot)
         logging.debug("And the ballot looks like:\n%s", pprint.pformat(a_ballot.dict()))
@@ -256,7 +260,7 @@ class CastBallotOperation:
         # verify that the ballot has been filled out correctly and offer
         # to the voter a chance to redo it.
 
-        if self.args.printonly:
+        if self._printonly:
             ballot_file = Ballot.gen_cast_ballot_location(
                 the_election_config, a_ballot.get("ballot_subdir")
             )

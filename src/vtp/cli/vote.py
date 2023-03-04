@@ -29,6 +29,7 @@ import argparse
 import sys
 
 # Local imports
+from vtp.core.address import Address
 from vtp.core.common import Common
 from vtp.ops.vote_operation import VoteOperation
 
@@ -56,7 +57,10 @@ ballot is chosen.
     Arguments.add_verbosity(parser)
     Arguments.add_print_only(parser)
 
-    return parser.parse_args(safe_args)
+    args = parser.parse_args(safe_args)
+    address_args, parsed = Arguments.separate_addresses(args)
+    parsed["address"] = Address(**address_args)
+    return parsed
 
 
 # pylint: disable=duplicate-code
@@ -64,7 +68,7 @@ def main():
     """Entry point for 'vote'."""
 
     args = parse_arguments(sys.argv[1:])
-    op = VoteOperation(args)
+    op = VoteOperation(**args)
     op.run()
 
 

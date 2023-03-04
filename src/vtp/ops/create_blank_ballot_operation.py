@@ -29,17 +29,26 @@ from vtp.core.ballot import BlankBallot
 from vtp.core.common import Common
 from vtp.core.election_config import ElectionConfig
 
+from .operation import Operation
 
-class CreateBlankBallotOperation:
+
+class CreateBlankBallotOperation(Operation):
     """Implementation of 'create-blank-ballot'."""
 
-    def __init__(self, args):
-        """Only to module-ize the scripts and keep things simple and idiomatic."""
-        self.args = args
+    def __init__(
+        self,
+        address: Address,
+        language: str = "en",
+        **base_options,
+    ):
+        """Create a blank ballot creation operation."""
+        super().__init__(**base_options)
+        self._address = address
+        self._language = language
 
     def run(self):
         # Configure logging
-        Common.configure_logging(self.args.verbosity)
+        Common.configure_logging(self._verbosity)
 
         # Create a VTP ElectionData object if one does not already exist
         the_election_config = ElectionConfig.configure_election()
@@ -53,14 +62,11 @@ class CreateBlankBallotOperation:
         # imported somehow and that each GGO for the address will also be
         # imported somehow. And all that comes later - for now just map an
         # address to a town.
-        the_address = Address.create_address_from_args(
-            self.args, ["verbosity", "printonly", "language"]
-        )
-        the_address.map_ggos(the_election_config)
+        self._address.map_ggos(the_election_config)
 
         # print some debugging info
         logging.debug("The election config ggos are: %s", the_election_config)
-        logging.debug("And the address is: %s", str(the_address))
+        logging.debug("And the address is: %s", str(self._address))
         node = "GGOs/states/California/GGOs/towns/Oakland"
         logging.debug(
             "And a/the node (%s) looks like:\n%s",
@@ -74,13 +80,13 @@ class CreateBlankBallotOperation:
 
         # Construct a blank ballot
         the_ballot = BlankBallot()
-        the_ballot.create_blank_ballot(the_address, the_election_config)
+        the_ballot.create_blank_ballot(self._address, the_election_config)
         logging.info("Active GGOs: %s", the_ballot.get("active_ggos"))
         logging.debug(
             "And the blank ballot looks like:\n%s", pprint.pformat(the_ballot.dict())
         )
 
         # Write it out
-        if not self.args.printonly:
+        if not self._printonly:
             ballot_file = the_ballot.write_blank_ballot(the_election_config)
             logging.info("Blank ballot file: %s", ballot_file)

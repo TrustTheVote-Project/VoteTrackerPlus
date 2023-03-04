@@ -27,6 +27,7 @@ import argparse
 import sys
 
 # Local import
+from vtp.core.address import Address
 from vtp.core.common import Common
 from vtp.ops.run_mock_election_operation import RunMockElectionOperation
 
@@ -116,7 +117,10 @@ mock to a single ballot N times.
             "The value of flush_mode must be either 0, 1, or 2"
             f" - {parsed_args.flush_mode} was supplied."
         )
-    return parsed_args
+
+    address_args, parsed = Arguments.separate_addresses(parsed_args)
+    parsed["address"] = Address(**address_args)
+    return parsed
 
 
 # pylint: disable=duplicate-code
@@ -124,7 +128,7 @@ def main():
     """Entry point for 'run-mock-elections'."""
 
     args = parse_arguments(sys.argv[1:])
-    op = RunMockElectionOperation(args)
+    op = RunMockElectionOperation(**args)
     op.run()
 
 
