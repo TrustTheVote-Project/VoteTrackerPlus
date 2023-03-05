@@ -57,10 +57,9 @@ ballot is chosen.
     Arguments.add_verbosity(parser)
     Arguments.add_print_only(parser)
 
-    args = parser.parse_args(safe_args)
-    address_args, parsed = Arguments.separate_addresses(args)
-    parsed["address"] = Address(**address_args)
-    return parsed
+    parsed_args = Arguments.parse_arguments(parser, safe_args)
+    # Validation, if any is needed, goes here.
+    return parsed_args
 
 
 # pylint: disable=duplicate-code

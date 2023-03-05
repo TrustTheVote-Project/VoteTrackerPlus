@@ -105,24 +105,39 @@ class Arguments:
             help="0 critical, 1 error, 2 warning, 3 info, 4 debug (def=3)",
         )
 
-    @staticmethod
-    def separate_addresses(
-        parsed_arguments: argparse.Namespace,
-        # TODO: Fix scope of 'Address._keys'. add 'tuple[str]'
-        address_fields=None,
-    ):
-        """Separate addresses and non-addresses from parsed arguments.
+    def parse_arguments(parser, args, generic_address=False):
+        """Main interface for argument parsing.
+
+        This wraps argparse to allow special case processing, including:
+            - Address argument canonicalization.
+            - ...
 
         Parameters:
-            parsed_arguments: Arguments extracted by argument parsing.
-            address_fields: List of keys for addresses.
-                default: All fields of addresses.
+            parser: Argparse argument parser
+            args: List of CLI arguments to parse
+            generic_address: Whether a generic address is expected.
 
         Returns:
-            2-tuple of lists of arguments:
-            - All arguments that are address fields
-            - All arguments that are not address fields
+            If address arguments are present, 2-tuple:
+            - Address arguments as a dictionary.
+            - Non-address arguments as a dictionary
+            Otherwise all parsed arguments as a single dictionary.
+
+        Notes:
+            No argparse namespaces are visible outside of this function.
+            Everything is dictionaries.
         """
-        # Convert namespace to a dictionary.
-        args = dict(vars(parsed_arguments))
-        return Address.separate_addresses_from_arguments(args)
+        parsed_options = parser.parse_args(args)
+        # Convert argparse namespace to dictionary.
+        parsed_args = dict(vars(parsed_options))
+        # Canonicalize address arguments if any
+        if Address.has_address_arguments(parsed_args):
+            address_args, processed_args = Address.separate_addresses_from_arguments(
+                parsed_args
+            )
+            processed_args["address"] = Address(
+                generic_address=generic_address, **address_args
+            )
+        else:
+            processed_args = parsed_args
+        return processed_args

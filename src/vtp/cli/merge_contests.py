@@ -68,9 +68,9 @@ branch.
     Arguments.add_verbosity(parser)
     Arguments.add_print_only(parser)
 
-    args = parser.parse_args(safe_args)
-    args = vars(args)
-    return args
+    parsed_args = Arguments.parse_arguments(parser, safe_args)
+    # Validation, if any is needed, goes here
+    return parsed_args
 
 
 # pylint: disable=duplicate-code

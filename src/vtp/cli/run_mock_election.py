@@ -103,24 +103,21 @@ mock to a single ballot N times.
     Arguments.add_verbosity(parser)
     Arguments.add_print_only(parser)
 
-    parsed_args = parser.parse_args(safe_args)
+    parsed_args = Arguments.parse_arguments(parser, safe_args)
 
-    # Validate required args
-
-    if parsed_args.device not in ["scanner", "server", "both"]:
+    # Validation
+    if parsed_args["device"] not in ["scanner", "server", "both"]:
         raise ValueError(
             "The --device parameter only accepts 'device' or 'server' "
-            f"or 'both' - ({parsed_args.device}) was suppllied."
+            f"or 'both' - ({parsed_args['device']}) was supplied."
         )
-    if parsed_args.flush_mode not in [0, 1, 2]:
+    if parsed_args["flush_mode"] not in [0, 1, 2]:
         raise ValueError(
             "The value of flush_mode must be either 0, 1, or 2"
-            f" - {parsed_args.flush_mode} was supplied."
+            f" - {parsed_args['flush_mode']} was supplied."
         )
 
-    address_args, parsed = Arguments.separate_addresses(parsed_args)
-    parsed["address"] = Address(**address_args)
-    return parsed
+    return parsed_args
 
 
 # pylint: disable=duplicate-code

@@ -82,28 +82,30 @@ the GUID.
     Arguments.add_verbosity(parser)
     Arguments.add_print_only(parser)
 
-    parsed_args = parser.parse_args(safe_args)
-    # Validate required args
-    if parsed_args.scanners < 1 or parsed_args.scanners > 16:
+    parsed_args = Arguments.parse_arguments(parser, safe_args)
+
+    # Validation
+    if parsed_args["scanners"] < 1 or parsed_args["scanners"] > 16:
         raise ValueError(
             "The demo needs at least one TVP scanner app "
             "and arbitrarily limits a demo to 16."
         )
     # Check the root of the demo
-    if not os.path.isdir(parsed_args.location):
+    if not os.path.isdir(parsed_args["location"]):
         raise FileNotFoundError(
-            f"The root demo folder, {parsed_args.location}, does not exit.  "
+            f"The root demo folder, {parsed_args['location']}, does not exit.  "
             "It needs to pre-exist - please manually create it."
         )
     test_dir = os.path.join(
-        parsed_args.location, Globals.get("TABULATION_SERVER_DIRNAME")
+        parsed_args["location"], Globals.get("TABULATION_SERVER_DIRNAME")
     )
-    if parsed_args.guid_client_store and not os.path.isdir(test_dir):
+    if parsed_args["guid_client_store"] and not os.path.isdir(test_dir):
         raise FileNotFoundError(
             f"The tabulation server workspace ({test_dir}) does not exit.  "
             "It needs to pre-exist and is created when setup-vtp-demo is executed "
             "in setup mode (without the -g switch)."
         )
+
     return parsed_args
 
 

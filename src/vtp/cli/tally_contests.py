@@ -76,22 +76,20 @@ tallying across git submodules/repos.
     Arguments.add_verbosity(parser)
     # Arguments.add_print_only(parser)
 
-    parsed_args = parser.parse_args(safe_args)
+    parsed_args = Arguments.parse_arguments(parser, safe_args)
 
-    # Validate required args
-    if parsed_args.track_contests:
-        if not bool(re.match("^[0-9a-f,]", parsed_args.track_contests)):
+    # Validation
+    if parsed_args["track_contests"]:
+        if not bool(re.match("^[0-9a-f,]", parsed_args["track_contests"])):
             raise ValueError(
                 "The track_contests parameter only accepts a comma separated (no spaces) "
                 "list of contest checks/digests to track."
             )
-        parsed_args.track_contests = parsed_args.track_contests.split(",")
+        parsed_args["track_contests"] = parsed_args["track_contests"].split(",")
     else:
-        parsed_args.track_contests = []
+        parsed_args["track_contests"] = []
 
-    args = parser.parse_args(safe_args)
-    args = vars(args)
-    return args
+    return parsed_args
 
 
 def main():

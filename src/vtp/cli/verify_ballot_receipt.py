@@ -54,7 +54,8 @@ Can also optionally print the ballot's CVRs when a specific ballot
 check row is provided.
 """,
     )
-    Arguments.add_address(parser, True)
+    generic_address = True
+    Arguments.add_address(parser, generic_address)
     parser.add_argument(
         "-f",
         "--receipt_file",
@@ -82,17 +83,21 @@ check row is provided.
     Arguments.add_verbosity(parser)
     # Arguments.add_print_only(parser)
 
-    args = parser.parse_args(safe_args)
+    parsed_args = Arguments.parse_arguments(parser, safe_args, generic_address)
 
-    # Validate required args
-    if not (args.receipt_file or (args.state and args.town)):
+    # Validation
+    if not (
+        parsed_args["receipt_file"]
+        or (
+            parsed_args["address"].address["state"]
+            and parsed_args["address"].address["town"]
+        )
+    ):
         raise ValueError(
             "Either an explicit or implicit (via an address) receipt file must be provided"
         )
 
-    address_args, parsed = Arguments.separate_addresses(args)
-    parsed["address"] = Address(generic_address=True, **address_args)
-    return parsed
+    return parsed_args
 
 
 def main():

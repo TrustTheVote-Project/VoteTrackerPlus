@@ -123,6 +123,14 @@ class Address:
         return args
 
     @staticmethod
+    def has_address_arguments(args: dict):
+        """True if argument dictionary has any address fields."""
+        for key in Address._keys:
+            if key in args:
+                return True
+        return False
+
+    @staticmethod
     def create_generic_address(config, subdir, ggos):
         """Will create/return a generic address nominally from the list
         of ggos

@@ -49,7 +49,8 @@ In addition a voter's ballot receipt and offset are optionally printed.
 Either the location of the ballot_file or the associated address is required.
 """,
     )
-    Arguments.add_address(parser, True)
+    generic_address = True
+    Arguments.add_address(parser, generic_address)
     Arguments.add_merge_contests(parser)
     parser.add_argument(
         "--cast_ballot",
@@ -59,10 +60,9 @@ Either the location of the ballot_file or the associated address is required.
     Arguments.add_verbosity(parser)
     Arguments.add_print_only(parser)
 
-    args = parser.parse_args(safe_args)
-    address_args, parsed = Arguments.separate_addresses(args)
-    parsed["address"] = Address(generic_address=True, **address_args)
-    return parsed
+    parsed_args = Arguments.parse_arguments(parser, safe_args, generic_address)
+    # Validation, if any is needed, goes here
+    return parsed_args
 
 
 # pylint: disable=duplicate-code

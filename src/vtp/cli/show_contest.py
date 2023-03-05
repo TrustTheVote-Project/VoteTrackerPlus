@@ -51,20 +51,18 @@ will print the CVRs (Cast Vote Records) for the supplied contest(s)
     Arguments.add_verbosity(parser)
     Arguments.add_print_only(parser)
 
-    parsed_args = parser.parse_args(safe_args)
+    parsed_args = Arguments.parse_arguments(parser, safe_args)
 
-    # Validate required args
-    if not parsed_args.contest_check:
+    # Validation
+    if not parsed_args["contest_check"]:
         raise ValueError("The contest check is required")
-    if not bool(re.match("^[0-9a-f,]", parsed_args.contest_check)):
+    if not bool(re.match("^[0-9a-f,]", parsed_args["contest_check"])):
         raise ValueError(
             "The contest_check parameter only accepts a comma separated (no spaces) "
             "list of contest checks/digests to track."
         )
 
-    args = parser.parse_args(safe_args)
-    args = vars(args)
-    return args
+    return parsed_args
 
 
 # pylint: disable=duplicate-code
