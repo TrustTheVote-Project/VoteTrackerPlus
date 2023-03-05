@@ -26,6 +26,7 @@ Run with '--help' for usage information.
 
 # Standard imports
 import argparse
+import os
 import sys
 
 # Local imports
@@ -110,7 +111,7 @@ def main():
     """Entry point for 'setup-vtp-demo'."""
 
     args = parse_arguments(sys.argv[1:])
-    op = SetupVtpDemoOperation(args)
+    op = SetupVtpDemoOperation(**args)
     guid = op.run()
     if isinstance(guid, str):
         print(guid)

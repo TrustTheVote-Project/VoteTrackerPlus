@@ -21,7 +21,6 @@
 
 # Standard imports
 import logging
-import re
 
 # Local imports
 from vtp.core.ballot import Ballot
@@ -30,19 +29,31 @@ from vtp.core.contest import Tally
 from vtp.core.election_config import ElectionConfig
 from vtp.core.exceptions import TallyException
 
+from .operation import Operation
+
 
 # pylint: disable=too-few-public-methods
-class TallyContestsOperation:
+class TallyContestsOperation(Operation):
     """Implementation of 'tally-contests' operation."""
 
-    def __init__(self, args):
-        """Only to module-ize the scripts and keep things simple and idiomatic."""
-        self.args = args
+    def __init__(
+        self,
+        contest_uid: str = "",
+        # TODO: Use 'list[str]''
+        track_contests: str = "",
+        do_not_pull: bool = False,
+        **base_options,
+    ):
+        """Create a tally contest operation."""
+        super().__init__(**base_options)
+        self._contest_uid = contest_uid
+        self._track_contests = track_contests
+        self._do_not_pull = do_not_pull
 
     # pylint: disable=duplicate-code
     def run(self):
         # Configure logging
-        Common.configure_logging(self.args.verbosity)
+        Common.configure_logging(self._verbosity)
 
         # Create a VTP ElectionData object if one does not already exist
         the_election_config = ElectionConfig.configure_election()
@@ -51,7 +62,7 @@ class TallyContestsOperation:
         # remote CVRs branches
         a_ballot = Ballot()
         with Shellout.changed_cwd(a_ballot.get_cvr_parent_dir(the_election_config)):
-            Shellout.run(["git", "pull"], verbosity=self.args.verbosity, check=True)
+            Shellout.run(["git", "pull"], verbosity=self._verbosity, check=True)
 
         # Will process all the CVR commits on the main branch and tally
         # all the contests found.  Note - even if a contest is specified,
@@ -69,11 +80,8 @@ class TallyContestsOperation:
         # everything in a separate loop.
         for contest_batch in sorted(contest_batches):
             # Maybe skip
-            if self.args.contest_uid != "":
-                if (
-                    contest_batches[contest_batch][0]["CVR"]["uid"]
-                    != self.args.contest_uid
-                ):
+            if self._contest_uid != "":
+                if contest_batches[contest_batch][0]["CVR"]["uid"] != self._contest_uid:
                     continue
             # Create a Tally object for this specific contest
             the_tally = Tally(contest_batches[contest_batch][0])
@@ -87,11 +95,8 @@ class TallyContestsOperation:
                 the_tally.get("win-by"),
             )
             # Tally all the contests for this contest
-            #        import pdb; pdb.set_trace()
             try:
-                the_tally.tallyho(
-                    contest_batches[contest_batch], self.args.track_contests
-                )
+                the_tally.tallyho(contest_batches[contest_batch], self._track_contests)
                 # Print stuff
                 the_tally.print_results()
             except TallyException as tally_error:

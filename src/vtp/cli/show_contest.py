@@ -24,6 +24,7 @@ Run with '--help' for usage information.
 
 # Standard imports
 import argparse
+import re
 import sys
 
 # Local imports
@@ -41,7 +42,7 @@ def parse_arguments(argv):
 will print the CVRs (Cast Vote Records) for the supplied contest(s)
 """,
     )
-
+    # TODO: Change to use nargs="+" to allow space separated arguments?
     parser.add_argument(
         "-c",
         "--contest-check",
@@ -60,7 +61,10 @@ will print the CVRs (Cast Vote Records) for the supplied contest(s)
             "The contest_check parameter only accepts a comma separated (no spaces) "
             "list of contest checks/digests to track."
         )
-    return parsed_args
+
+    args = parser.parse_args(safe_args)
+    args = vars(args)
+    return args
 
 
 # pylint: disable=duplicate-code
@@ -68,7 +72,7 @@ def main():
     """Entry point for 'show-contest'."""
 
     args = parse_arguments(sys.argv[1:])
-    op = ShowContestsOperation(args)
+    op = ShowContestsOperation(**args)
     op.run()
 
 

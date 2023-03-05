@@ -22,19 +22,26 @@
 # Standard imports
 import logging
 import os
-import re
 
 # Local libraries
 from vtp.core.common import Common, Globals, Shellout
 from vtp.core.election_config import ElectionConfig
 
+from .operation import Operation
 
-class ShowContestsOperation:
+
+class ShowContestsOperation(Operation):
     """Implementation of 'show-contest' operation."""
 
-    def __init__(self, args):
-        """Only to module-ize the scripts and keep things simple and idiomatic."""
-        self.args = args
+    def __init__(
+        self,
+        # TODO: Use `list[str]`
+        contest_check: str = "",
+        **base_options,
+    ):
+        """Create a show contest operation."""
+        super().__init__(**base_options)
+        self._contest_check = contest_check or []
 
     def validate_digests(self, digests, election_data_dir, error_digests):
         """Will scan the supplied digests for validity.  Will print and
@@ -51,7 +58,7 @@ class ShowContestsOperation:
                         "--batch-check=%(objectname) %(objecttype)",
                         "--buffer",
                     ],
-                    verbosity=self.args.verbosity,
+                    verbosity=self._verbosity,
                     input=input_data,
                     text=True,
                     check=True,
@@ -81,7 +88,7 @@ class ShowContestsOperation:
     # pylint: disable=duplicate-code
     def run(self):
         # Configure logging
-        Common.configure_logging(self.args.verbosity)
+        Common.configure_logging(self._verbosity)
 
         # Create a VTP ElectionData object if one does not already exist
         the_election_config = ElectionConfig.configure_election()
@@ -94,10 +101,10 @@ class ShowContestsOperation:
 
         # First validate the digests
         error_digests = set()
-        self.validate_digests(self.args.contest_check, election_data_dir, error_digests)
+        self.validate_digests(self._contest_check, election_data_dir, error_digests)
         valid_digests = [
             digest
-            for digest in self.args.contest_check.split(",")
+            for digest in self._contest_check.split(",")
             if digest not in error_digests
         ]
         # show/log the digests
@@ -107,15 +114,15 @@ class ShowContestsOperation:
 
 # For future reference just in case . . .
 # this is a loop of shell commands
-#        for digest in self.args.contest_check.split(','):
+#        for digest in self._contest_check.split(','):
 #            if digest not in error_digests:
 #                Shellout.run(['git', 'log', '-1', digest], check=True)
 
 # this does not work well enough either
-#        input_data = '\n'.join(self.args.contest_check.split(',')) + '\n'
+#        input_data = '\n'.join(self._contest_check.split(',')) + '\n'
 #        Shellout.run(
 #            ['git', 'cat-file', '--batch=%(objectname)'],
 #            input=input_data,
 #            text=True,
 #            check=True,
-#            verbosity=self.args.verbosity)
+#            verbosity=self._verbosity)

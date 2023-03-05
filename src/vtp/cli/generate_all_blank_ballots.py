@@ -45,11 +45,12 @@ ballots and generate them.  They will be placed in the town's
 blank-ballots subdir.
 """,
     )
-
     Arguments.add_verbosity(parser)
     Arguments.add_print_only(parser)
 
-    return parser.parse_args(safe_args)
+    args = parser.parse_args(safe_args)
+    args = vars(args)
+    return args
 
 
 def main():
@@ -62,7 +63,7 @@ def main():
     """
 
     args = parse_arguments(sys.argv[1:])
-    op = GenerateAllBlankBallotsOperation(args)
+    op = GenerateAllBlankBallotsOperation(**args)
     op.run()
 
 

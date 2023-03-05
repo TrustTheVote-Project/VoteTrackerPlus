@@ -28,13 +28,25 @@ import secrets
 from vtp.core.common import Common, Globals, Shellout
 from vtp.core.election_config import ElectionConfig
 
+from .operation import Operation
 
-class SetupVtpDemoOperation:
+
+class SetupVtpDemoOperation(Operation):
     """Implementation of setup-vtp-demo."""
 
-    def __init__(self, args):
-        """Only to module-ize the scripts and keep things simple and idiomatic."""
-        self.args = args
+    def __init__(
+        self,
+        scanners: int = 4,
+        guid_client_store: bool = False,
+        # TODO: Use 'pathlib.Path'?
+        location: str = "/opt/VoteTrackerPlus/demo.01",
+        **base_options,
+    ):
+        """Create a setup VTP demo operation."""
+        super().__init__(**base_options)
+        self._scanners = scanners
+        self._guid_client_store = guid_client_store
+        self._location = location
         # The absolute path to the local bare clone of the upstream
         # GitHub ElectionData remote repo
         self.tabulation_local_upstream_absdir = ""
@@ -58,12 +70,12 @@ class SetupVtpDemoOperation:
         # local install idiom, the demo location no longer needs the
         # submodules to be cloned.
         for clone_dir in clone_dirs:
-            if not self.args.printonly:
+            if not self._printonly:
                 with Shellout.changed_cwd(clone_dir):
                     Shellout.run(
                         ["git", "clone", upstream_url],
-                        self.args.printonly,
-                        verbosity=self.args.verbosity,
+                        self._printonly,
+                        verbosity=self._verbosity,
                         check=True,
                     )
             else:
@@ -79,12 +91,12 @@ class SetupVtpDemoOperation:
         # Note - mkdir raises an error if the directory exists. So
         # just try creating them.
         path1 = os.path.join(
-            self.args.location,
+            self._location,
             Globals.get("GUID_CLIENT_DIRNAME"),
             folder1,
         )
         path2 = os.path.join(path1, folder2)
-        if not self.args.printonly:
+        if not self._printonly:
             try:
                 logging.debug("creating (%s) if it does not exist", path1)
                 os.mkdir(path1)
@@ -127,7 +139,7 @@ class SetupVtpDemoOperation:
     # pylint: disable=duplicate-code
     def run(self):
         # Configure logging
-        Common.configure_logging(self.args.verbosity)
+        Common.configure_logging(self._verbosity)
 
         # Create a VTP ElectionData object if one does not already exist
         the_election_config = ElectionConfig.configure_election()
@@ -153,22 +165,22 @@ class SetupVtpDemoOperation:
         # workspaces (client and server) will not have that suffix
         # (and not be bare).
         self.tabulation_local_upstream_absdir = os.path.join(
-            self.args.location,
+            self._location,
             Globals.get("TABULATION_SERVER_DIRNAME"),
             os.path.basename(election_data_remote_url),
         )
         # Need both the above and the dirname of the above
         bare_clone_path = os.path.dirname(self.tabulation_local_upstream_absdir)
         # When creating a GUID workspace ...
-        if self.args.guid_client_store:
+        if self._guid_client_store:
             return self.create_a_guid_workspace_folder()
 
         # ... or the initial setup of the non-GUID client and server workspaces
 
         # Only run if the directory is empty
-        if len(os.listdir(self.args.location)) != 0:
+        if len(os.listdir(self._location)) != 0:
             raise RuntimeError(
-                f"the directory ({self.args.location}) is not empty - "
+                f"the directory ({self._location}) is not empty - "
                 "setup-vtp-demo can only be run on an empty directory"
             )
 
@@ -178,19 +190,19 @@ class SetupVtpDemoOperation:
             Globals.get("TABULATION_SERVER_DIRNAME"),
             Globals.get("MOCK_CLIENT_DIRNAME"),
         ]:
-            full_dir = os.path.join(self.args.location, subdir)
+            full_dir = os.path.join(self._location, subdir)
             if not os.path.isdir(full_dir):
                 logging.debug("creating (%s)", full_dir)
-                if not self.args.printonly:
+                if not self._printonly:
                     os.mkdir(full_dir)
 
         # Second clone the bare upstream remote GitHub ElectionData repo
-        if not self.args.printonly:
+        if not self._printonly:
             with Shellout.changed_cwd(bare_clone_path):
                 Shellout.run(
                     ["git", "clone", "--bare", election_data_remote_url],
-                    self.args.printonly,
-                    verbosity=self.args.verbosity,
+                    self._printonly,
+                    verbosity=self._verbosity,
                     check=True,
                 )
         else:
@@ -200,27 +212,27 @@ class SetupVtpDemoOperation:
 
         # Third create the mock scanner client subdirs
         clone_dirs = []
-        for count in range(self.args.scanners):
+        for count in range(self._scanners):
             full_dir = os.path.join(
-                self.args.location,
+                self._location,
                 Globals.get("MOCK_CLIENT_DIRNAME"),
                 "scanner." + f"{count:02d}",
             )
             if not os.path.isdir(full_dir):
                 logging.debug("creating (%s)", full_dir)
-                if not self.args.printonly:
+                if not self._printonly:
                     os.mkdir(full_dir)
             clone_dirs.append(full_dir)
 
         # Fourth create the tabulation client subdir
         full_dir = os.path.join(
-            self.args.location,
+            self._location,
             Globals.get("MOCK_CLIENT_DIRNAME"),
             "server",
         )
         if not os.path.isdir(full_dir):
             logging.debug("creating (%s)", full_dir)
-            if not self.args.printonly:
+            if not self._printonly:
                 os.mkdir(full_dir)
         clone_dirs.append(full_dir)
 

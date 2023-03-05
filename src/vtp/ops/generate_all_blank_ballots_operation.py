@@ -30,18 +30,22 @@ from vtp.core.ballot import BlankBallot
 from vtp.core.common import Common
 from vtp.core.election_config import ElectionConfig
 
+from .operation import Operation
 
 # pylint: disable=too-few-public-methods
-class GenerateAllBlankBallotsOperation:
+class GenerateAllBlankBallotsOperation(Operation):
     """Implementation of 'generate-all-blank-ballots'."""
 
-    def __init__(self, args):
-        """Only to module-ize the scripts and keep things simple and idiomatic."""
-        self.args = args
+    def __init__(
+        self,
+        **base_options,
+    ):
+        """Create a generate blank ballots operation."""
+        super().__init__(**base_options)
 
     def run(self):
         # Configure logging
-        Common.configure_logging(self.args.verbosity)
+        Common.configure_logging(self._verbosity)
 
         # Create a VTP ElectionData object if one does not already exist
         the_election_config = ElectionConfig.configure_election()
@@ -76,7 +80,7 @@ class GenerateAllBlankBallotsOperation:
                         pprint.pformat(generic_ballot.dict()),
                     )
                     # Write it out
-                    if self.args.printonly:
+                    if self._printonly:
                         ballot_file = the_election_config.gen_blank_ballot_location(
                             generic_address.active_ggos,
                             generic_address.ballot_subdir,

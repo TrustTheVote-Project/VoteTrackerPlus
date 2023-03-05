@@ -24,6 +24,7 @@ Run with '--help' for usage information.
 
 # Standard imports
 import argparse
+import re
 import sys
 
 # Local imports
@@ -53,13 +54,13 @@ Also note that the current implementation does not yet support
 tallying across git submodules/repos.
 """,
     )
-
     parser.add_argument(
         "-c",
         "--contest_uid",
         default="",
         help="limit the tally to a specific contest uid",
     )
+    # TODO: Change to use nargs="+" to allow space separated arguments?
     parser.add_argument(
         "-t",
         "--track_contests",
@@ -87,14 +88,17 @@ tallying across git submodules/repos.
         parsed_args.track_contests = parsed_args.track_contests.split(",")
     else:
         parsed_args.track_contests = []
-    return parsed_args
+
+    args = parser.parse_args(safe_args)
+    args = vars(args)
+    return args
 
 
 def main():
     """Entry point for 'tally-contests'."""
 
     args = parse_arguments(sys.argv[1:])
-    op = TallyContestsOperation(args)
+    op = TallyContestsOperation(**args)
     op.run()
 
 

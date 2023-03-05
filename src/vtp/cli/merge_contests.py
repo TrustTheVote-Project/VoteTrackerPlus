@@ -68,7 +68,9 @@ branch.
     Arguments.add_verbosity(parser)
     Arguments.add_print_only(parser)
 
-    return parser.parse_args(safe_args)
+    args = parser.parse_args(safe_args)
+    args = vars(args)
+    return args
 
 
 # pylint: disable=duplicate-code
@@ -76,7 +78,7 @@ def main():
     """Entry point for 'merge-contests'."""
 
     args = parse_arguments(sys.argv[1:])
-    op = MergeContestsOperation(args)
+    op = MergeContestsOperation(**args)
     op.run()
 
 
