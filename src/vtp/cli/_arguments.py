@@ -109,13 +109,14 @@ class Arguments:
     def separate_addresses(
         parsed_arguments: argparse.Namespace,
         # TODO: Fix scope of 'Address._keys'. add 'tuple[str]'
-        address_fields=Address._keys,
+        address_fields=None,
     ):
         """Separate addresses and non-addresses from parsed arguments.
 
         Parameters:
             parsed_arguments: Arguments extracted by argument parsing.
             address_fields: List of keys for addresses.
+                default: All fields of addresses.
 
         Returns:
             2-tuple of lists of arguments:
@@ -123,38 +124,5 @@ class Arguments:
             - All arguments that are not address fields
         """
         # Convert namespace to a dictionary.
-        args = vars(parsed_arguments)
-        args = Arguments._process_generic_address(args)
-        addresses = {}
-        non_addresses = {}
-        for key, value in args.items():
-            if key in address_fields:
-                addresses[key] = value
-            else:
-                non_addresses[key] = value
-        return addresses, non_addresses
-
-    @staticmethod
-    def _process_generic_address(args: dict):
-        """Convert a generic address in parsed arguments, if present.
-
-        A non-generic address split into street and street number.
-
-        Parameters:
-            args: Parsed arguments.
-                Modified in place.
-
-        Returns:
-            Original arguments, possibly modified.
-        """
-        # If the 'address' field is present the argument is generic
-        if "address" in args:
-            if args["address"]:
-                number, street = Address.convert_address_to_num_street(args["address"])
-                args["number"] = number
-                args["street"] = street
-            del args["address"]
-        # FIXME: Where is this used?
-        # else:
-        #     args["generic_address"] = True
-        return args
+        args = dict(vars(parsed_arguments))
+        return Address.separate_addresses_from_arguments(args)

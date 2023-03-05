@@ -65,6 +65,64 @@ class Address:
         return Address(**my_args)
 
     @staticmethod
+    def separate_addresses_from_arguments(
+        parsed_arguments: dict,
+        # TODO: Use 'tuple[str]'
+        address_fields=None,
+    ):
+        """Separate addresses and non-addresses from parsed arguments.
+
+        Parameters:
+            parsed_arguments: Arguments extracted by argument parsing.
+            address_fields: Names of arguments used for addresses.
+                default: All fields of addresses.
+
+        Returns:
+            2-tuple of lists of arguments:
+            - All arguments that are address fields
+            - All arguments that are not address fields
+        """
+        # Use the list of Address keys to do the separation unless explicitly
+        # given a different set of fields
+        address_fields = address_fields or Address._keys
+        processed_args = Address.canonicalize_address_arguments(parsed_arguments)
+        addresses = {}
+        non_addresses = {}
+        for key, value in processed_args.items():
+            if key in address_fields:
+                addresses[key] = value
+            else:
+                non_addresses[key] = value
+        return addresses, non_addresses
+
+    @staticmethod
+    def canonicalize_address_arguments(args: dict):
+        """Canonicalize addresses in parsed arguments.
+
+        The following rules are applied:
+            - If 'address' field is present split into street and street number.
+
+        Parameters:
+            args: Parsed arguments.
+                Modified in place.
+
+        Returns:
+            Original arguments, possibly modified.
+        """
+        # Split 'address' into street and street number
+        if "address" in args:
+            if args["address"]:
+                number, street = Address.convert_address_to_num_street(args["address"])
+                args["number"] = number
+                args["street"] = street
+            # FIXME: This always happens. Is that correct?
+            del args["address"]
+        # FIXME: Is this actually used? Leaving it out for now.
+        # else:
+        #     args["generic_address"] = True
+        return args
+
+    @staticmethod
     def create_generic_address(config, subdir, ggos):
         """Will create/return a generic address nominally from the list
         of ggos
