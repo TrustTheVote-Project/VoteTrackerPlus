@@ -28,11 +28,11 @@ See 'docs/tech/executable-overview.md' for the context in which this file was cr
 import argparse
 import sys
 
-# Local imports
-from vtp.core.address import Address
+# Project imports
 from vtp.core.common import Common
 from vtp.ops.create_blank_ballot_operation import CreateBlankBallotOperation
 
+# Local imports
 from ._arguments import Arguments
 
 

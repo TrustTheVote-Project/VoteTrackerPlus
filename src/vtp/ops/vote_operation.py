@@ -19,15 +19,16 @@
 
 """Logic of operation for voting."""
 
+# Project imports
 from vtp.core.address import Address
 from vtp.core.ballot import Ballot
 from vtp.core.common import Common, Shellout
 from vtp.core.election_config import ElectionConfig
 
-# Local libraries
+# Local imports
 from .operation import Operation
-from vtp.ops.accept_ballot_operation import AcceptBallotOperation
-from vtp.ops.cast_ballot_operation import CastBallotOperation
+from .accept_ballot_operation import AcceptBallotOperation
+from .cast_ballot_operation import CastBallotOperation
 
 
 # pylint: disable=too-few-public-methods

@@ -24,18 +24,18 @@ import logging
 import os
 import time
 
-# Local libraries
+# Project imports
 from vtp.core.address import Address
 from vtp.core.ballot import Ballot
 from vtp.core.common import Common, Globals, Shellout
 from vtp.core.election_config import ElectionConfig
 
-# Script modules
+# Local imports
 from .operation import Operation
-from vtp.ops.accept_ballot_operation import AcceptBallotOperation
-from vtp.ops.cast_ballot_operation import CastBallotOperation
-from vtp.ops.merge_contests_operation import MergeContestsOperation
-from vtp.ops.tally_contests_operation import TallyContestsOperation
+from .accept_ballot_operation import AcceptBallotOperation
+from .cast_ballot_operation import CastBallotOperation
+from .merge_contests_operation import MergeContestsOperation
+from .tally_contests_operation import TallyContestsOperation
 
 
 class RunMockElectionOperation(Operation):

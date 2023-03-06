@@ -17,8 +17,6 @@
 
 """Argument handling."""
 
-import argparse
-
 from vtp.core.address import Address
 
 

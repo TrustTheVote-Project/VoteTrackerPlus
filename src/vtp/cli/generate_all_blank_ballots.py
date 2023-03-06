@@ -26,12 +26,13 @@ Run with '--help' for usage information.
 import argparse
 import sys
 
-# Local import
+# Project imports
 from vtp.core.common import Common
 from vtp.ops.generate_all_blank_ballots_operation import (
     GenerateAllBlankBallotsOperation,
 )
 
+# Local imports
 from ._arguments import Arguments
 
 

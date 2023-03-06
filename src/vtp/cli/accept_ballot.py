@@ -26,11 +26,11 @@ Run with '--help' for usage information.
 import argparse
 import sys
 
-# Local imports
-from vtp.core.address import Address
+# Project imports
 from vtp.core.common import Common
 from vtp.ops.accept_ballot_operation import AcceptBallotOperation
 
+# Local imports
 from ._arguments import Arguments
 
 

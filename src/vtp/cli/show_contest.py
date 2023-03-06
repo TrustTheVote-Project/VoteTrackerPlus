@@ -27,7 +27,7 @@ import argparse
 import re
 import sys
 
-# Local imports
+# Project imports
 from vtp.core.common import Common
 from vtp.ops.show_contests_operation import ShowContestsOperation
 

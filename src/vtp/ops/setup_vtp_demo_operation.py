@@ -24,10 +24,11 @@ import logging
 import os
 import secrets
 
-# Local import
+# Project imports
 from vtp.core.common import Common, Globals, Shellout
 from vtp.core.election_config import ElectionConfig
 
+# Local imports
 from .operation import Operation
 
 

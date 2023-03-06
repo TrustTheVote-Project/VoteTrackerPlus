@@ -23,7 +23,7 @@
 import logging
 import pprint
 
-# Local import
+# Project imports
 from vtp.core.address import Address
 from vtp.core.ballot import BlankBallot
 from vtp.core.common import Common

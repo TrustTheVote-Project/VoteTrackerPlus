@@ -28,10 +28,11 @@ Run with '--help' for usage information.
 import argparse
 import sys
 
-# Local imports
+# Project imports
 from vtp.core.common import Common
 from vtp.ops.merge_contests_operation import MergeContestsOperation
 
+# Local imports
 from ._arguments import Arguments
 
 

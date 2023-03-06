@@ -27,10 +27,11 @@ import argparse
 import re
 import sys
 
-# Local imports
+# Project imports
 from vtp.core.common import Common
 from vtp.ops.tally_contests_operation import TallyContestsOperation
 
+# Local imports
 from ._arguments import Arguments
 
 

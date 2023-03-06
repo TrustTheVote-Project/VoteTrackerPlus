@@ -29,10 +29,11 @@ import argparse
 import os
 import sys
 
-# Local imports
+# Project imports
 from vtp.core.common import Common, Globals
 from vtp.ops.setup_vtp_demo_operation import SetupVtpDemoOperation
 
+# Local imports
 from ._arguments import Arguments
 
 

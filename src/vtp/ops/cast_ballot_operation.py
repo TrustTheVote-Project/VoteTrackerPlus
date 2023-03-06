@@ -29,7 +29,7 @@ import traceback
 
 import pyinputplus
 
-# Local imports
+# Project imports
 from vtp.core.address import Address
 from vtp.core.ballot import Ballot, BlankBallot, Contests
 from vtp.core.common import Common, Globals, Shellout

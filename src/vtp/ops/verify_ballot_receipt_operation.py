@@ -25,7 +25,7 @@ import logging
 import os
 import re
 
-# Local import
+# Project imports
 from vtp.core.address import Address
 from vtp.core.ballot import Ballot
 from vtp.core.common import Common, Globals, Shellout

@@ -25,7 +25,7 @@ import os
 import random
 import secrets
 
-# Local imports
+# Project imports
 from vtp.core.address import Address
 from vtp.core.ballot import Ballot, Contests
 from vtp.core.common import Common, Globals, Shellout

@@ -23,10 +23,11 @@
 import logging
 import os
 
-# Local libraries
+# Project imports
 from vtp.core.common import Common, Globals, Shellout
 from vtp.core.election_config import ElectionConfig
 
+# Local imports
 from .operation import Operation
 
 

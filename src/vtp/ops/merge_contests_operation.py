@@ -25,7 +25,7 @@ import os
 import random
 import re
 
-# Local import
+# Project imports
 from vtp.core.common import Common, Globals, Shellout
 from vtp.core.election_config import ElectionConfig
 
