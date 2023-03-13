@@ -32,10 +32,10 @@ class Contest:
 
     # Legitimate Contest keys.  Note 'selection', 'uid', 'cloak', and
     # 'name' are not legitimate keys for blank ballots
-    _config_keys = ["choices", "tally", "win-by", "max", "write-in"]
+    _config_keys = ["choices", "tally", "win-by", "max", "write-in", "description"]
     _blank_ballot_keys = _config_keys + ["uid"]
     _cast_keys = _blank_ballot_keys + ["selection", "name", "cast_branch", "ggo"]
-    _choice_keys = ["name", "party"]
+    _choice_keys = ["name", "party", "ticket_names", "ticket_offices"]
 
     # A simple numerical n digit uid
     _uids = {}
@@ -69,6 +69,22 @@ class Contest:
                         "the following keys are not valid Contest choice keys: "
                         f"{','.join(bad_keys)}"
                     )
+                if "ticket_names" in choice or "ticket_offices" in choice:
+                    if len(choice["ticket_names"]) != len(choice["ticket_names"]):
+                        raise KeyError(
+                            "when either 'ticket_names' or 'ticket_offices' are specified"
+                            "the length of each array mush match - "
+                            f"{len(choice['ticket_names'])} != {len(choice['ticket_names'])}"
+                        )
+                    if "ticket_names" not in choice or "ticket_offices" not in choice:
+                        raise KeyError(
+                            "both 'ticket_names' and 'ticket_offices' "
+                            "are required if either is specified"
+                        )
+                    if not isinstance(choice["ticket_names"], list):
+                        raise KeyError("the key 'ticket_names' can only be a list")
+                    if not isinstance(choice["ticket_choices"], list):
+                        raise KeyError("the key 'ticket_names' can only be a list")
                 continue
             if isinstance(choice, bool):
                 continue

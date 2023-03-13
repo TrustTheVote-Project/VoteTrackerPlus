@@ -30,6 +30,7 @@ endif
 default:
 	@echo "${RED}There is no default make target.${END}  Specify one of:"
 	@echo "poetry-build            - performs a poetry local install"
+	@echo "poetry-link             - refreshes local (poetry file) symlinks"
 	@echo "setuptools-build        - performs a setuptools local install"
 	@echo "setuptools-legacy-build - performs a legacy setuptools local install"
 	@echo "pylint                  - runs pylint"

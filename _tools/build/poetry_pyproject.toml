@@ -15,17 +15,17 @@ packages = [
 ]
 
 [tool.poetry.dependencies]
-python = "^3.9"
-
 networkx = "^2.8.6"
 pyinputplus = "^0.2.12"
+python = "^3.9"
 pyyaml = "^6.0"
 
-[tool.poetry.dev-dependencies]
-pylint = "^2.15.3"
-pytest = "^7.2.0"
+[tool.poetry.group.dev.dependencies]
+black = "^23.1.0"
+pylint = "^2.16.2"
+pytest = "^7.2.1"
+pytest-cov = "^4.0.0"
 sphinx = "^5.3.0"
-black = "^22.12.0"
 
 [tool.poetry.scripts]
 accept-ballot = "vtp.cli.accept_ballot:main"
