@@ -43,8 +43,9 @@ class AcceptBallotOperation:
     description (immediately below this) in the source file.
     """
 
-    def __init__(self, verbosity, printonly):
+    def __init__(self, election_data_dir=str, verbosity=int, printonly=bool):
         """Only to module-ize the scripts and keep things simple and idiomatic."""
+        self.election_data_dir = election_data_dir
         self.verbosity = verbosity
         self.printonly = printonly
         # Configure logging
@@ -305,7 +306,6 @@ class AcceptBallotOperation:
     def run(
         self,
         an_address=Address,
-        election_data="",
         cast_ballot="",
             ):
         """
@@ -314,7 +314,7 @@ class AcceptBallotOperation:
         """
 
         # Create a VTP ElectionData object if one does not already exist
-        the_election_config = ElectionConfig.configure_election(election_data)
+        the_election_config = ElectionConfig.configure_election(self.election_data_dir)
 
         # Create a ballot
         a_ballot = Ballot()
@@ -327,7 +327,7 @@ class AcceptBallotOperation:
             with Shellout.changed_cwd(
                 os.path.join(
                     the_election_config.get("git_rootdir"),
-                    Globals.get("ROOT_ELECTION_DATA_SUBDIR"),
+                    self.election_data_dir,
                 )
             ):
                 a_ballot.read_a_cast_ballot(

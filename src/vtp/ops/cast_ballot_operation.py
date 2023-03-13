@@ -45,11 +45,9 @@ class CastBallotOperation:
     description (immediately below this) in the source file.
     """
 
-    def __init__(self, verbosity, printonly):
-        """
-        Only to module-ize the scripts and keep things simple and
-        idiomatic.  parsed_args is an argparse Namespace object.
-        """
+    def __init__(self, election_data_dir=str, verbosity=int, printonly=bool):
+        """Only to module-ize the scripts and keep things simple and idiomatic."""
+        self.election_data_dir = election_data_dir
         self.verbosity = verbosity
         self.printonly = printonly
         # Configure logging

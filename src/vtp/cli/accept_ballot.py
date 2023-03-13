@@ -49,17 +49,14 @@ Either the location of the ballot_file or the associated address is required.
     )
 
     Address.add_address_args(parser, True)
-    Common.add_election_data(parser)
+    Common.add_election_data_dir(parser)
     parser.add_argument(
         "--cast_ballot",
         help="overrides an address - specifies a specific cast ballot",
     )
     Common.add_verbosity(parser)
     Common.add_printonly(parser)
-    parsed_args = parser.parse_args(argv)
-    # Verify arguments
-    Common.verify_election_data_dir(parsed_args.election_data)
-    return parsed_args
+    return parser.parse_args(argv)
 
 def main():
     """
@@ -82,10 +79,12 @@ def main():
         )
 
     # do it
-    abo = AcceptBallotOperation(parsed_args.verbosity, parsed_args.printonly)
+    abo = AcceptBallotOperation(
+        parsed_args.election_data_dir,
+        parsed_args.verbosity,
+        parsed_args.printonly)
     abo.run(
         an_address=an_address,
-        election_data=parsed_args.election_data,
         cast_ballot=parsed_args.cast_ballot,
         )
 

@@ -42,9 +42,9 @@ class VoteOperation:
     description (immediately below this) in the source file.
     """
 
-    def __init__(self, verbosity: int, printonly: bool):
+    def __init__(self, election_data_dir=str, verbosity=int, printonly=bool):
         """Only to module-ize the scripts and keep things simple and idiomatic."""
-        # TBD - default values
+        self.election_data_dir = election_data_dir
         self.verbosity = verbosity
         self.printonly = printonly
         # Configure logging
@@ -57,12 +57,11 @@ class VoteOperation:
         self,
         an_address: Address,
         blank_ballot: str,
-        election_data: str,
     ) -> tuple[dict, int]:
         """Main function - see -h for more info"""
 
         # Create a VTP ElectionData object if one does not already exist
-        the_election_config = ElectionConfig.configure_election(election_data)
+        the_election_config = ElectionConfig.configure_election(self.election_data_dir)
 
         # git pull the ElectionData repo so to get the latest set of
         # remote CVRs branches
@@ -78,18 +77,22 @@ class VoteOperation:
         # Basically only do as little as necessary to call cast_ballot.py
         # followed by accept_ballot.py
         # Cast a ballot
-        a_cast_ballot_operation = CastBallotOperation(self.verbosity, self.printonly)
+        a_cast_ballot_operation = CastBallotOperation(
+            self.election_data_dir,
+            self.verbosity,
+            self.printonly)
         a_cast_ballot_operation.run(
             an_address=an_address,
             blank_ballot=blank_ballot,
-            election_data=election_data,
             )
         # Accept a ballot
-        a_accept_ballot_operation = AcceptBallotOperation(self.verbosity, self.printonly)
+        a_accept_ballot_operation = AcceptBallotOperation(
+            self.election_data_dir,
+            self.verbosity,
+            self.printonly)
         a_accept_ballot_operation.run(
             an_address=an_address,
             cast_ballot=blank_ballot,
-            election_data=election_data,
             )
 
 

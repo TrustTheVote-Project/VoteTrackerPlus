@@ -49,14 +49,11 @@ ballot is chosen.
     )
 
     Address.add_address_args(parser)
-    Common.add_election_data(parser)
+    Common.add_election_data_dir(parser)
     Common.add_blank_ballot(parser)
     Common.add_verbosity(parser)
     Common.add_printonly(parser)
-    parsed_args = parser.parse_args(safe_args)
-    # Validate required args
-    Common.verify_election_data_dir(parsed_args.election_data)
-    return parsed_args
+    return parser.parse_args(safe_args)
 
 
 def main():
@@ -80,11 +77,13 @@ def main():
         )
 
     # do it
-    vote_op = VoteOperation(parsed_args.verbosity, parsed_args.printonly)
+    vote_op = VoteOperation(
+        parsed_args.election_data_dir,
+        parsed_args.verbosity,
+        parsed_args.printonly)
     vote_op.run(
         an_address=an_address,
         blank_ballot=parsed_args.blank_ballot,
-        election_data=parsed_args.election_data,
     )
 
 

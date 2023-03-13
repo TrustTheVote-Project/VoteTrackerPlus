@@ -172,12 +172,12 @@ class Common:
         )
 
     @staticmethod
-    def add_election_data(parser):
+    def add_election_data_dir(parser):
         """Add election_data option"""
         defval = Globals.get("ROOT_ELECTION_DATA_SUBDIR")
         parser.add_argument(
             "-e",
-            "--election_data",
+            "--election_data_dir",
             default=defval,
             help=f"specify a absolute or relative path to the ElectionData tree (def={defval})",
         )

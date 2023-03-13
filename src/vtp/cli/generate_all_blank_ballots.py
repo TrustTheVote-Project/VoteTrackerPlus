@@ -23,17 +23,33 @@ See 'generate_all_blank_ballots.py -h' for usage information.
 """
 
 # Standard imports
+import argparse
 import sys
 
 # Local import
+from vtp.core.common import Common
 from vtp.ops.generate_all_blank_ballots_operation import (
     GenerateAllBlankBallotsOperation,
 )
 
+def parse_arguments(argv):
+    """Parse arguments from a command line or from the constructor"""
 
-################
-# main
-################
+    parser = argparse.ArgumentParser(
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        description="""
+Will crawl the ElectionData tree and determine all possible blank
+ballots and generate them.  They will be placed in the town's
+blank-ballots subdir.
+""",
+    )
+
+    Common.add_election_data_dir(parser)
+    Common.add_verbosity(parser)
+    Common.add_printonly(parser)
+    return parser.parse_args(argv)
+
+
 def main():
     """
     Called via a python local install entrypoint or by running this
@@ -43,8 +59,14 @@ def main():
     description in the source file.
     """
 
+    # Parse args
+    parsed_args = parse_arguments(sys.argv)
+
     # do it
-    gabbo = GenerateAllBlankBallotsOperation(sys.argv[1:])
+    gabbo = GenerateAllBlankBallotsOperation(
+        parsed_args.election_data,
+        parsed_args.verbosity,
+        parsed_args.printonly)
     gabbo.run()
 
 

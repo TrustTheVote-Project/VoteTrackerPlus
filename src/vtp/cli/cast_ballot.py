@@ -57,7 +57,7 @@ demo mode, cast_ballot.py will randominly select choices.
     # ZZZ - cloaked contests are enabled at cast_ballot time
     #    parser.add_argument('-k', "--cloak", action="store_true",
     #                            help="if possible provide a cloaked ballot offset")
-    Common.add_election_data(parser)
+    Common.add_election_data_dir(parser)
     parser.add_argument(
         "--demo_mode",
         action="store_true",
@@ -66,10 +66,7 @@ demo mode, cast_ballot.py will randominly select choices.
     Common.add_blank_ballot(parser)
     Common.add_verbosity(parser)
     Common.add_printonly(parser)
-    parsed_args = parser.parse_args(argv)
-    # Validate required args
-    Common.verify_election_data_dir(parsed_args.election_data)
-    return parsed_args
+    return parser.parse_args(argv)
 
 
 def main():
@@ -93,12 +90,14 @@ def main():
         )
 
     # do it
-    cbo = CastBallotOperation(parsed_args.verbosity, parsed_args.printonly)
+    cbo = CastBallotOperation(
+        parsed_args.election_data_dir,
+        parsed_args.verbosity,
+        parsed_args.printonly)
     cbo.run(
         an_address=an_address,
         blank_ballot=parsed_args.blank_ballot,
         demo_mode=parsed_args.demo_mode,
-        election_data=parsed_args.election_data,
         )
 
 

@@ -103,12 +103,22 @@ class ElectionConfig:
 
     # Hrmph - for the moment let there be only one ElectionData tree
     # (or Election Data File - EDF) configuration per VTP execution.
-    # This may need to changed later.
+    # This may need to changed later.  Note that this is NOT the same
+    # requirement as one and only one election_data_dir.  There can be
+    # many of those - and there needs to be many since there needs to
+    # be many git clones/workspaces.  But all the git
+    # clones/workspaces need to be exact (same commit) clones.  Since
+    # they are all the same clone, any instance needs only to be
+    # scanned once and only once.
     _election_data = None
 
     @staticmethod
     def configure_election(election_data_dir: str):
-        """Return a/the existing ElectionData or parse a new one into existence"""
+        """
+        Return a/the existing ElectionData or parse a new one into
+        existence.  This is the entrypoint/wrapper into/around the
+        ElectionData class/instance.
+        """
         # Need to set the Global ElectionData directory first
         Common.verify_election_data_dir(election_data_dir)
         # Then parse that one
