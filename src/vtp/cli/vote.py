@@ -25,13 +25,41 @@ See 'vote.py -h' for usage information.
 """
 
 # Global imports
+import argparse
 import sys
 
 # Local imports
+from vtp.core.address import Address
+from vtp.core.common import Common
 from vtp.ops.vote_operation import VoteOperation
 
 
-# pylint: disable=duplicate-code
+def parse_arguments(argv):
+    """Parse arguments from a command line or from the constructor"""
+
+    safe_args = Common.cast_thing_to_list(argv)
+    parser = argparse.ArgumentParser(
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        description="""
+Will interactively allow a voter to vote.  Internally it first calls
+cast_balloy.py followed by accept_ballot.py.  If a specific election
+address or a specific blank ballot is not specified, a random blank
+ballot is chosen.
+""",
+    )
+
+    Address.add_address_args(parser)
+    Common.add_election_data(parser)
+    Common.add_merge_contests(parser)
+    Common.add_blank_ballot(parser)
+    Common.add_verbosity(parser)
+    Common.add_printonly(parser)
+    parsed_args = parser.parse_args(safe_args)
+    # Validate required args
+    Common.verify_election_data_dir(parsed_args.election_data)
+    return parsed_args
+
+
 def main():
     """
     Called via a python local install entrypoint or by running this
@@ -41,9 +69,17 @@ def main():
     file.
     """
 
+    # Parse args
+    parsed_args = parse_arguments(sys.argv)
+
     # do it
-    vote_op = VoteOperation(sys.argv[1:])
-    vote_op.run()
+    vote_op = VoteOperation(parsed_args.verbosity, parsed_args.printonly)
+    vote_op.run(
+        parsed_args.address,
+        parsed_args.blank_ballot,
+        parsed_args.election_data,
+        parsed_args.merge_contests,
+    )
 
 
 # If called directly via this file

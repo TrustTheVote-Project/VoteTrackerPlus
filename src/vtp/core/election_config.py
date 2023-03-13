@@ -107,8 +107,11 @@ class ElectionConfig:
     _election_data = None
 
     @staticmethod
-    def configure_election():
-        """If return the existing ElectionData or parse it"""
+    def configure_election(election_data_dir: str):
+        """Return a/the existing ElectionData or parse a new one into existence"""
+        # Need to set the Global ElectionData directory first
+        Common.verify_election_data_dir(election_data_dir)
+        # Then parse that one
         if ElectionConfig._election_data is None:
             ElectionConfig._election_data = ElectionConfig()
             ElectionConfig._election_data.parse_configs()
