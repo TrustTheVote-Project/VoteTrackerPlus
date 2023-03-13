@@ -45,26 +45,6 @@ class Address:
         return re.split(r"\s+", address, 1)
 
     @staticmethod
-    def create_address_from_args(args, args_to_strip, generic_address=False):
-        """Helper function to strip just the address specific switches
-        from the program args and return the new address.
-        """
-        my_args = dict(vars(args))
-        for key in args_to_strip:
-            del my_args[key]
-        # if address was supplied, get rid of that too
-        if not generic_address:
-            if my_args["address"]:
-                (
-                    my_args["number"],
-                    my_args["street"],
-                ) = Address.convert_address_to_num_street(my_args["address"])
-            del my_args["address"]
-        if generic_address:
-            my_args["generic_address"] = True
-        return Address(**my_args)
-
-    @staticmethod
     def add_address_args(parser, generic_address=False):
         """Helper function to add standard address program switches to argparse"""
         #        parser.add_argument('-c', "--csv",
@@ -109,6 +89,7 @@ class Address:
     # pylint: disable=too-many-arguments
     def __init__(
         self,
+        address="",
         number="",
         street="",
         substreet="",
@@ -119,8 +100,11 @@ class Address:
         csv="",
         generic_address=False,
     ):
-        """At the moment support only support a csv keyword and a
-        reasonable dictionary set of keywords.
+        """At the moment only support a few ways of creating an
+        Address: a csv string and reasonable set of specified fields.
+        Note that when the address is generic, only need the address
+        down to the polling location GGO, which at the moment is
+        state,town.
         """
         self.address = {}
         self.address["number"] = number
@@ -139,7 +123,13 @@ class Address:
         self.ballot_node = ""
         self.ballot_subdir = ""
 
-        if csv:  # pylint: disable=consider-iterating-dictionary
+        if not csv:
+            if not generic_address and address:
+                (
+                    self.address["number"],
+                    self.address["street"],
+                ) = Address.convert_address_to_num_street(address)
+        else:  # pylint: disable=consider-iterating-dictionary
             address_fields = [x.strip() for x in re.split(r"\s*,\s*", csv)]
             self.address["number"] = address_fields[0]
             self.address["street"] = address_fields[1]

@@ -24,7 +24,6 @@ See 'accept_ballot.py -h' for usage information.
 """
 
 # Standard imports
-import argparse
 import logging
 import os
 import random
@@ -44,47 +43,12 @@ class AcceptBallotOperation:
     description (immediately below this) in the source file.
     """
 
-    @staticmethod
-    def parse_arguments(argv):
-        """Parse arguments from a command line or from the constructor"""
-
-        safe_args = Common.cast_thing_to_list(argv)
-        parser = argparse.ArgumentParser(
-            formatter_class=argparse.RawDescriptionHelpFormatter,
-            description="""
-Will run the git based workflow on a VTP scanner node to accept the json
-rendering of the cast vote record of a voter's ballot. The json file is read,
-the contests are extraced and submitted to separate git branches, one per
-contest, and pushed back to the Voter Center's VTP remote.
-
-In addition a voter's ballot receipt and offset are optionally printed.
-
-Either the location of the ballot_file or the associated address is required.
-""",
-        )
-
-        Address.add_address_args(parser, True)
-        Common.add_election_data(parser)
-        parser.add_argument(
-            "-m",
-            "--merge_contests",
-            action="store_true",
-            help="Will immediately merge the ballot contests (to main)",
-        )
-        parser.add_argument(
-            "--cast_ballot",
-            help="overrides an address - specifies a specific cast ballot",
-        )
-        Common.add_verbosity(parser)
-        Common.add_printonly(parser)
-        parsed_args = parser.parse_args(safe_args)
-        # Verify arguments
-        Common.verify_election_data(parsed_args)
-        return parsed_args
-
-    def __init__(self, unparsed_args):
+    def __init__(self, verbosity, printonly):
         """Only to module-ize the scripts and keep things simple and idiomatic."""
-        self.parsed_args = AcceptBallotOperation.parse_arguments(unparsed_args)
+        self.verbosity = verbosity
+        self.printonly = printonly
+        # Configure logging
+        Common.configure_logging(verbosity)
 
     def get_random_branchpoint(self, branch):
         """Return a random branchpoint on the supplied branch
@@ -138,15 +102,15 @@ Either the location of the ballot_file or the associated address is required.
         for _ in [0, 1, 2]:
             cmd1 = Shellout.run(
                 ["git", "checkout", "-b", branch, branchpoint],
-                printonly=self.parsed_args.printonly,
-                verbosity=self.parsed_args.verbosity,
+                printonly=self.printonly,
+                verbosity=self.verbosity,
             )
             if cmd1.returncode == 0:
                 # Created the local branch - see if it is push-able
                 cmd2 = Shellout.run(
                     ["git", "push", "-u", "origin", branch],
-                    printonly=self.parsed_args.printonly,
-                    verbosity=self.parsed_args.verbosity,
+                    printonly=self.printonly,
+                    verbosity=self.verbosity,
                 )
                 if cmd2.returncode == 0:
                     # success
@@ -156,14 +120,14 @@ Either the location of the ballot_file or the associated address is required.
                 Shellout.run(
                     ["git", "checkout", current_branch],
                     check=True,
-                    printonly=self.parsed_args.printonly,
-                    verbosity=self.parsed_args.verbosity,
+                    printonly=self.printonly,
+                    verbosity=self.verbosity,
                 )
                 Shellout.run(
                     ["git", "branch", "-D", branch],
                     check=True,
-                    printonly=self.parsed_args.printonly,
-                    verbosity=self.parsed_args.verbosity,
+                    printonly=self.printonly,
+                    verbosity=self.verbosity,
                 )
             # At this point the local did not get created - try again
             branch = contest.get("uid") + "/" + secrets.token_hex(5)
@@ -206,7 +170,7 @@ Either the location of the ballot_file or the associated address is required.
         return Shellout.cvr_parse_git_log_output(
             ["git", "log", "--no-walk", "--pretty=format:%H%B"] + head_commits,
             config,
-            verbosity=self.parsed_args.verbosity - 1,
+            verbosity=self.verbosity - 1,
         )
 
     def get_cloaked_contests(self, contest, branch):
@@ -247,19 +211,19 @@ Either the location of the ballot_file or the associated address is required.
         )
         Shellout.run(
             ["git", "add", contest_file],
-            printonly=self.parsed_args.printonly,
-            verbosity=self.parsed_args.verbosity,
+            printonly=self.printonly,
+            verbosity=self.verbosity,
         )
         # Note - apparently git place the commit msg on STDERR - hide it
         Shellout.run(
             ["git", "commit", "-F", contest_file],
-            printonly=self.parsed_args.printonly,
+            printonly=self.printonly,
             verbosity=1,
         )
         # Capture the digest
         digest = Shellout.run(
             ["git", "log", branch, "-1", "--pretty=format:%H"],
-            printonly=self.parsed_args.printonly,
+            printonly=self.printonly,
             check=True,
             capture_output=True,
             text=True,
@@ -338,14 +302,19 @@ Either the location of the ballot_file or the associated address is required.
     # main
     ################
     # pylint: disable=duplicate-code
-    def run(self):
-        """Main function - see -h for more info"""
-
-        # Configure logging
-        Common.configure_logging(self.parsed_args.verbosity)
+    def run(
+        self,
+        an_address=Address,
+        election_data="",
+        cast_ballot="",
+            ):
+        """
+        Main function - see -h for more info.  Will work with either
+        specific or an generic address.
+        """
 
         # Create a VTP ElectionData object if one does not already exist
-        the_election_config = ElectionConfig.configure_election()
+        the_election_config = ElectionConfig.configure_election(election_data)
 
         # Create a ballot
         a_ballot = Ballot()
@@ -353,7 +322,7 @@ Either the location of the ballot_file or the associated address is required.
         # Note - accept_ballot.py currently only deals with generic
         # addresses since all cast ballots, regardless of active ggos, end
         # up in the same spot, nominally in the town subfolder.
-        if self.parsed_args.cast_ballot:
+        if cast_ballot:
             # Read the specified cast_ballot
             with Shellout.changed_cwd(
                 os.path.join(
@@ -362,28 +331,16 @@ Either the location of the ballot_file or the associated address is required.
                 )
             ):
                 a_ballot.read_a_cast_ballot(
-                    "", the_election_config, self.parsed_args.cast_ballot
+                    "", the_election_config, cast_ballot
                 )
         else:
-            # Use the specified address
-            the_address = Address.create_address_from_args(
-                self.parsed_args,
-                [
-                    "cast_ballot",
-                    "election_data",
-                    "merge_contests",
-                    "printonly",
-                    "verbosity",
-                ],
-                generic_address=True,
-            )
-            the_address.map_ggos(the_election_config, skip_ggos=True)
+            an_address.map_ggos(the_election_config, skip_ggos=True)
             # Get the ballot for the specified address.  Note that reading
             # the cast ballot will define the active ggos etc for the
             # ballot even though those fields are not defined for the
             # address.  However, reading a ballot still needs the
             # ballot_subdir field of the address.
-            a_ballot.read_a_cast_ballot(the_address, the_election_config)
+            a_ballot.read_a_cast_ballot(an_address, the_election_config)
 
         # the voter's row of digests (indexed by contest uid)
         contest_receipts = {}
@@ -450,39 +407,15 @@ Either the location of the ballot_file or the associated address is required.
             for branch in branches:
                 Shellout.run(
                     ["git", "push", "origin", branch],
-                    printonly=self.parsed_args.printonly,
-                    verbosity=self.parsed_args.verbosity,
+                    printonly=self.printonly,
+                    verbosity=self.verbosity,
                 )
                 # Delete the local as they build up too much.  The local
                 # reflog keeps track of the local branches
                 Shellout.run(
                     ["git", "branch", "-d", branch],
-                    printonly=self.parsed_args.printonly,
-                    verbosity=self.parsed_args.verbosity,
-                )
-
-        # If in demo mode, optionally merge the branches
-        if self.parsed_args.merge_contests:
-            for branch in branches:
-                # Merge the branch (but since the local branch should be
-                # deleted at this point, merge the remote).  Note -
-                # 'origin' is already hardcoded in several places and
-                # 'remotes' is enough of a constant for this.
-                Shellout.run(
-                    [
-                        Shellout.get_script_name(
-                            "merge_contests.py", the_election_config
-                        ),
-                        "-v",
-                        self.parsed_args.verbosity,
-                        "-b",
-                        "remotes/origin/" + branch,
-                        "-r",
-                    ]
-                    + (["-n"] if self.parsed_args.printonly else []),
-                    check=True,
-                    no_touch_stds=True,
-                    timeout=None,
+                    printonly=self.printonly,
+                    verbosity=self.verbosity,
                 )
 
         logging.debug("Ballot's digests:\n%s", contest_receipts)

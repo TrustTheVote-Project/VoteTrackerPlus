@@ -28,7 +28,7 @@ import networkx
 import yaml
 
 # local imports
-from .common import Globals, Shellout
+from .common import Common, Globals, Shellout
 from .contest import Contest
 
 

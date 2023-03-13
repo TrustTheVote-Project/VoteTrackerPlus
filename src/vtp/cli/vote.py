@@ -72,13 +72,21 @@ def main():
     # Parse args
     parsed_args = parse_arguments(sys.argv)
 
+    # Convert the address args into an Address
+    an_address = Address(
+        address=parsed_args.address,
+        substreet=parsed_args.substreet,
+        town=parsed_args.town,
+        state=parsed_args.state,
+        )
+
     # do it
     vote_op = VoteOperation(parsed_args.verbosity, parsed_args.printonly)
     vote_op.run(
-        parsed_args.address,
-        parsed_args.blank_ballot,
-        parsed_args.election_data,
-        parsed_args.merge_contests,
+        an_address,
+        blank_ballot=parsed_args.blank_ballot,
+        election_data=parsed_args.election_data,
+        merge_contests=parsed_args.merge_contests,
     )
 
 
