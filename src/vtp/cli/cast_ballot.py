@@ -44,7 +44,6 @@ def parse_arguments(argv):
     the key is removed.
     """
 
-    safe_args = Common.cast_thing_to_list(argv)
     parser = argparse.ArgumentParser(
         formatter_class=argparse.RawDescriptionHelpFormatter,
         description="""
@@ -86,7 +85,7 @@ def main():
     parsed_args = parse_arguments(sys.argv)
 
     # Convert the address args into an Address
-    an_address = Address.create_address_from_args(
+    an_address = Address(
         address=parsed_args.address,
         substreet=parsed_args.substreet,
         town=parsed_args.town,
@@ -96,10 +95,10 @@ def main():
     # do it
     cbo = CastBallotOperation(parsed_args.verbosity, parsed_args.printonly)
     cbo.run(
-        an.address,
-        parsed_args.blank_ballot,
-        parsed_args.demo_mode,
-        parsed_args.election_data,
+        an_address=an_address,
+        blank_ballot=parsed_args.blank_ballot,
+        demo_mode=parsed_args.demo_mode,
+        election_data=parsed_args.election_data,
         )
 
 

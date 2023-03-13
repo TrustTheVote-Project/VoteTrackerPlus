@@ -55,10 +55,9 @@ class VoteOperation:
     ################
     def run(
         self,
-        address: Address,
+        an_address: Address,
         blank_ballot: str,
         election_data: str,
-        merge_contests: bool,
     ) -> tuple[dict, int]:
         """Main function - see -h for more info"""
 
@@ -80,10 +79,18 @@ class VoteOperation:
         # followed by accept_ballot.py
         # Cast a ballot
         a_cast_ballot_operation = CastBallotOperation(self.verbosity, self.printonly)
-        a_cast_ballot_operation.run(address, blank_ballot, election_data)
+        a_cast_ballot_operation.run(
+            an_address=an_address,
+            blank_ballot=blank_ballot,
+            election_data=election_data,
+            )
         # Accept a ballot
         a_accept_ballot_operation = AcceptBallotOperation(self.verbosity, self.printonly)
-        a_accept_ballot_operation.run(address, blank_ballot, merge_contests, election_data)
+        a_accept_ballot_operation.run(
+            an_address=an_address,
+            cast_ballot=blank_ballot,
+            election_data=election_data,
+            )
 
 
     # End Of Class

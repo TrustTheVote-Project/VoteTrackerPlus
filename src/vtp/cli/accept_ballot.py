@@ -34,7 +34,6 @@ from vtp.ops.accept_ballot_operation import AcceptBallotOperation
 def parse_arguments(argv):
     """Parse arguments from a command line or from the constructor"""
 
-    safe_args = Common.cast_thing_to_list(argv)
     parser = argparse.ArgumentParser(
         formatter_class=argparse.RawDescriptionHelpFormatter,
         description="""
@@ -57,9 +56,9 @@ Either the location of the ballot_file or the associated address is required.
     )
     Common.add_verbosity(parser)
     Common.add_printonly(parser)
-    parsed_args = parser.parse_args(safe_args)
+    parsed_args = parser.parse_args(argv)
     # Verify arguments
-    Common.verify_election_data(parsed_args.election_data)
+    Common.verify_election_data_dir(parsed_args.election_data)
     return parsed_args
 
 def main():
@@ -75,7 +74,7 @@ def main():
     parsed_args = parse_arguments(sys.argv)
 
     # Convert the address args into an Address
-    an_address = Address.create_address_from_args(
+    an_address = Address(
         address=parsed_args.address,
         substreet=parsed_args.substreet,
         town=parsed_args.town,
@@ -85,10 +84,9 @@ def main():
     # do it
     abo = AcceptBallotOperation(parsed_args.verbosity, parsed_args.printonly)
     abo.run(
-        an_address,
-        parsed_args.election_data,
-        parsed_args.merge_contests,
-        parsed_args.cast_ballot,
+        an_address=an_address,
+        election_data=parsed_args.election_data,
+        cast_ballot=parsed_args.cast_ballot,
         )
 
 
