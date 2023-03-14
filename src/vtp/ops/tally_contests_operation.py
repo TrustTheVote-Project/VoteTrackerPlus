@@ -56,7 +56,7 @@ class TallyContestsOperation:
         self,
         contest_uid: str = "",
         track_contests: str = "",
-        ):
+    ):
         """Main function - see -h for more info"""
 
         # Configure logging
@@ -69,9 +69,7 @@ class TallyContestsOperation:
         # remote CVRs branches
         a_ballot = Ballot()
         with Shellout.changed_cwd(a_ballot.get_cvr_parent_dir(the_election_config)):
-            Shellout.run(
-                ["git", "pull"], verbosity=self.verbosity, check=True
-            )
+            Shellout.run(["git", "pull"], verbosity=self.verbosity, check=True)
 
         # Will process all the CVR commits on the main branch and tally
         # all the contests found.  Note - even if a contest is specified,
@@ -90,10 +88,7 @@ class TallyContestsOperation:
         for contest_batch in sorted(contest_batches):
             # Maybe skip
             if contest_uid != "":
-                if (
-                    contest_batches[contest_batch][0]["CVR"]["uid"]
-                    != contest_uid
-                ):
+                if contest_batches[contest_batch][0]["CVR"]["uid"] != contest_uid:
                     continue
             # Create a Tally object for this specific contest
             the_tally = Tally(contest_batches[contest_batch][0])
@@ -109,9 +104,7 @@ class TallyContestsOperation:
             # Tally all the contests for this contest
             #        import pdb; pdb.set_trace()
             try:
-                the_tally.tallyho(
-                    contest_batches[contest_batch], track_contests
-                )
+                the_tally.tallyho(contest_batches[contest_batch], track_contests)
                 # Print stuff
                 the_tally.print_results()
             except TallyException as tally_error:

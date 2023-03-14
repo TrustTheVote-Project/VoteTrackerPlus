@@ -106,13 +106,9 @@ class ShowContestsOperation:
 
         # First validate the digests
         error_digests = set()
-        self.validate_digests(
-            contest_check, election_data_dir, error_digests
-        )
+        self.validate_digests(contest_check, election_data_dir, error_digests)
         valid_digests = [
-            digest
-            for digest in contest_check.split(",")
-            if digest not in error_digests
+            digest for digest in contest_check.split(",") if digest not in error_digests
         ]
         # show/log the digests
         with Shellout.changed_cwd(election_data_dir):

@@ -50,13 +50,8 @@ class VoteOperation:
         # Configure logging
         Common.configure_logging(verbosity)
 
-
-# pylint: disable=duplicate-code
-    def run(
-        self,
-        an_address: Address,
-        blank_ballot: str = ""
-    ) -> tuple[dict, int]:
+    # pylint: disable=duplicate-code
+    def run(self, an_address: Address, blank_ballot: str = "") -> tuple[dict, int]:
         """Main function - see -h for more info"""
 
         # Create a VTP ElectionData object if one does not already exist
@@ -77,23 +72,20 @@ class VoteOperation:
         # followed by accept_ballot.py
         # Cast a ballot
         a_cast_ballot_operation = CastBallotOperation(
-            self.election_data_dir,
-            self.verbosity,
-            self.printonly)
+            self.election_data_dir, self.verbosity, self.printonly
+        )
         a_cast_ballot_operation.run(
             an_address=an_address,
             blank_ballot=blank_ballot,
-            )
+        )
         # Accept a ballot
         a_accept_ballot_operation = AcceptBallotOperation(
-            self.election_data_dir,
-            self.verbosity,
-            self.printonly)
+            self.election_data_dir, self.verbosity, self.printonly
+        )
         a_accept_ballot_operation.run(
             an_address=an_address,
             cast_ballot=blank_ballot,
-            )
-
+        )
 
     # End Of Class
 

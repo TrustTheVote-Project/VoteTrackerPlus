@@ -178,14 +178,14 @@ class VerifyBallotReceiptOperation:
                     continue
         return (requested_row, requested_digests)
 
-# pylint: disable=too-many-locals
+    # pylint: disable=too-many-locals
     def verify_ballot_receipt(
         self,
         receipt_file,
         e_config,
         row,
         cvr,
-            ):
+    ):
         """Will verify all the rows in a ballot receipt"""
 
         # Need to get the heeder info as well as the specified row to
@@ -302,7 +302,7 @@ class VerifyBallotReceiptOperation:
         receipt_file: str = "",
         row: str = "",
         cvr: bool = True,
-        ):
+    ):
         """Main function - see -h for more info"""
 
         # Configure logging
@@ -315,9 +315,7 @@ class VerifyBallotReceiptOperation:
         # remote CVRs branches
         a_ballot = Ballot()
         with Shellout.changed_cwd(a_ballot.get_cvr_parent_dir(the_election_config)):
-            Shellout.run(
-                ["git", "pull"], verbosity=self.verbosity, check=True
-            )
+            Shellout.run(["git", "pull"], verbosity=self.verbosity, check=True)
 
         #    import pdb; pdb.set_trace()
         if receipt_file:

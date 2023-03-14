@@ -32,6 +32,7 @@ from vtp.core.ballot import BlankBallot
 from vtp.core.common import Common
 from vtp.core.election_config import ElectionConfig
 
+
 # pylint: disable=too-few-public-methods
 class CreateBlankBallotOperation:
     """
@@ -53,7 +54,7 @@ class CreateBlankBallotOperation:
         self,
         an_address: Address,
         language: str = "",
-        ):
+    ):
         """Main function - see -h for more info"""
 
         # Configure logging

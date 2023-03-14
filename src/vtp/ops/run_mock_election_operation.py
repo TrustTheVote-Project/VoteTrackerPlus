@@ -60,14 +60,14 @@ class RunMockElectionOperation:
     # pylint: disable=too-many-arguments
     # pylint: disable=too-many-locals
     def scanner_mockup(
-            self,
-            the_election_config,
-            ballot,
-            iterations,
-            device,
-            flush_mode,
-            minimum_cast_cache,
-            ):
+        self,
+        the_election_config,
+        ballot,
+        iterations,
+        device,
+        flush_mode,
+        minimum_cast_cache,
+    ):
         """Simulate a VTP scanner"""
 
         election_data_dir = os.path.join(
@@ -120,16 +120,16 @@ class RunMockElectionOperation:
                 cast_ballot.run(
                     blank_ballot=blank_ballot,
                     demo_mode=True,
-                    )
+                )
                 # - accept the ballot
                 accept_ballot = AcceptBallotOperation(
                     the_election_config,
                     self.verbosity,
                     self.printonly,
-                    )
+                )
                 accept_ballot.run(
                     cast_ballot=Ballot.get_cast_from_blank(blank_ballot),
-                    )
+                )
                 if device == "both":
                     # - merge the ballot's contests
                     if flush_mode == 2:
@@ -139,10 +139,10 @@ class RunMockElectionOperation:
                             the_election_config,
                             self.verbosity,
                             self.printonly,
-                            )
+                        )
                         merge_contests.run(
                             flush=True,
-                            )
+                        )
                     else:
                         # Should only need to merge one ballot worth of
                         # contests - also no need for an extra large
@@ -151,10 +151,10 @@ class RunMockElectionOperation:
                             the_election_config,
                             self.verbosity,
                             self.printonly,
-                            )
+                        )
                         merge_contests.run(
                             minimum_cast_cache=minimum_cast_cache,
-                            )
+                        )
                     # don't let too much garbage build up
                     if count % 10 == 9:
                         Shellout.run(
@@ -172,16 +172,16 @@ class RunMockElectionOperation:
                 the_election_config,
                 self.verbosity,
                 self.printonly,
-                )
+            )
             merge_contests.run(
                 flush=True,
-                )
+            )
             # tally the contests
             tally_contests = TallyContestsOperation(
                 the_election_config,
                 self.verbosity,
                 self.printonly,
-                )
+            )
             tally_contests.run()
         # clean up git just in case
         Shellout.run(
@@ -194,12 +194,12 @@ class RunMockElectionOperation:
         )
 
     def server_mockup(
-            self,
-            the_election_config,
-            flush_mode,
-            duration,
-            minimum_cast_cache,
-            ):
+        self,
+        the_election_config,
+        flush_mode,
+        duration,
+        minimum_cast_cache,
+    ):
         """Simulate a VTP server"""
         # This is the VTP server simulation code.  In this case, the VTP
         # scanners are pushing to an ElectionData remote and this (server)
@@ -228,27 +228,27 @@ class RunMockElectionOperation:
                     the_election_config,
                     self.verbosity,
                     self.printonly,
-                    )
+                )
                 merge_contests.run(
                     remote=True,
                     flush=True,
-                    )
+                )
                 tally_contests = TallyContestsOperation(
                     the_election_config,
                     self.verbosity,
                     self.printonly,
-                    )
+                )
                 tally_contests.run()
                 return
             merge_contests = MergeContestsOperation(
                 the_election_config,
                 self.verbosity,
                 self.printonly,
-                )
+            )
             merge_contests.run(
                 remote=True,
                 minimum_cast_cache=minimum_cast_cache,
-                )
+            )
             logging.info("Sleeping for 10")
             time.sleep(10)
             elapsed_time = time.time() - start_time
@@ -260,17 +260,17 @@ class RunMockElectionOperation:
                 the_election_config,
                 self.verbosity,
                 self.printonly,
-                )
+            )
             merge_contests.run(
                 remote=True,
                 flush=True,
-                )
+            )
         # tally the contests
         tally_contests = TallyContestsOperation(
             the_election_config,
             self.verbosity,
             self.printonly,
-            )
+        )
         tally_contests.run()
 
     ################
@@ -287,7 +287,7 @@ class RunMockElectionOperation:
         flush_mode: int = 0,
         iterations: int = 10,
         duration: int = 10,
-        ):
+    ):
         """Main function - see -h for more info
 
         Note - this is a serial synchronous mock election loop.  A
@@ -324,19 +324,16 @@ class RunMockElectionOperation:
                 device=device,
                 flush_mode=flush_mode,
                 minimum_cast_cache=minimum_cast_cache,
-                )
+            )
         elif device == "server":
             self.server_mockup(
                 the_election_config=the_election_config,
                 flush_mode=flush_mode,
                 duration=duration,
                 minimum_cast_cache=minimum_cast_cache,
-                )
-        else:
-            raise ValueError(
-                f"an illegal value was supplied for device ({device})"
             )
-
+        else:
+            raise ValueError(f"an illegal value was supplied for device ({device})")
 
     # End Of Class
 

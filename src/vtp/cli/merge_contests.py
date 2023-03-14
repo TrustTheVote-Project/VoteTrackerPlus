@@ -32,6 +32,7 @@ import sys
 from vtp.core.common import Common
 from vtp.ops.merge_contests_operation import MergeContestsOperation
 
+
 def parse_arguments(argv):
     """Parse arguments from a command line or from the constructor"""
 
@@ -86,9 +87,8 @@ def main():
 
     # do it
     mco = MergeContestsOperation(
-        parsed_args.election_data_dir,
-        parsed_args.verbosity,
-        parsed_args.printonly)
+        parsed_args.election_data_dir, parsed_args.verbosity, parsed_args.printonly
+    )
     mco.run(
         branch=parsed_args.branch,
         flush=parsed_args.flush,

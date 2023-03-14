@@ -33,6 +33,7 @@ import sys
 from vtp.core.common import Common, Globals
 from vtp.ops.setup_vtp_demo_operation import SetupVtpDemoOperation
 
+
 def parse_arguments(argv):
     """Parse arguments from a command line or from the constructor"""
 
@@ -122,12 +123,12 @@ def main():
         parsed_args.election_data_dir,
         parsed_args.verbosity,
         parsed_args.printonly,
-        )
+    )
     guid = svdo.run(
         scanners=parsed_args.scanners,
         guid_client_store=parsed_args.guid_client_store,
         location=parsed_args.location,
-        )
+    )
     if parsed_args.guid_client_store:
         print(guid)
 

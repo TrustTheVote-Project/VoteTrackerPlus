@@ -31,6 +31,7 @@ from vtp.core.address import Address
 from vtp.core.common import Common
 from vtp.ops.cast_ballot_operation import CastBallotOperation
 
+
 def parse_arguments(argv):
     """
     Parse command line arguments.  This can be called either with
@@ -87,18 +88,17 @@ def main():
         substreet=parsed_args.substreet,
         town=parsed_args.town,
         state=parsed_args.state,
-        )
+    )
 
     # do it
     cbo = CastBallotOperation(
-        parsed_args.election_data_dir,
-        parsed_args.verbosity,
-        parsed_args.printonly)
+        parsed_args.election_data_dir, parsed_args.verbosity, parsed_args.printonly
+    )
     cbo.run(
         an_address=an_address,
         blank_ballot=parsed_args.blank_ballot,
         demo_mode=parsed_args.demo_mode,
-        )
+    )
 
 
 # If called directly via this file

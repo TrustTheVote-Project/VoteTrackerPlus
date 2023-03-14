@@ -62,6 +62,7 @@ will print the CVRs (Cast Vote Records) for the supplied contest(s)
         )
     return parsed_args
 
+
 def main():
     """
     Called via a python local install entrypoint or by running this
@@ -76,12 +77,11 @@ def main():
 
     # do it
     sco = ShowContestsOperation(
-        parsed_args.election_data_dir,
-        parsed_args.verbosity,
-        parsed_args.printonly)
+        parsed_args.election_data_dir, parsed_args.verbosity, parsed_args.printonly
+    )
     sco.run(
         contest_check=parsed_args.contest_check,
-        )
+    )
 
 
 # If called directly via this file

@@ -84,6 +84,7 @@ check row is provided.
         )
     return parsed_args
 
+
 def main():
     """
     Called via a python local install entrypoint or by running this
@@ -102,20 +103,20 @@ def main():
         substreet=parsed_args.substreet,
         town=parsed_args.town,
         state=parsed_args.state,
-        )
+    )
 
     # do it
     vbro = VerifyBallotReceiptOperation(
         parsed_args.election_data_dir,
         parsed_args.verbosity,
         False,
-        )
+    )
     vbro.run(
         an_address=an_address,
         receipt_file=parsed_args.receipt_file,
         row=parsed_args.row,
         cvr=parsed_args.cvr,
-        )
+    )
 
 
 # If called directly via this file

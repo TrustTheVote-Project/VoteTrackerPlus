@@ -77,13 +77,12 @@ def main():
         substreet=parsed_args.substreet,
         town=parsed_args.town,
         state=parsed_args.state,
-        )
+    )
 
     # do it
     cbbo = CreateBlankBallotOperation(
-        parsed_args.election_data_dir,
-        parsed_args.verbosity,
-        parsed_args.printonly)
+        parsed_args.election_data_dir, parsed_args.verbosity, parsed_args.printonly
+    )
     cbbo.run(
         an_address=an_address,
         language=parsed_args.language,

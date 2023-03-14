@@ -84,6 +84,7 @@ tallying across git submodules/repos.
         parsed_args.track_contests = []
     return parsed_args
 
+
 def main():
     """
     Called via a python local install entrypoint or by running this
@@ -101,11 +102,11 @@ def main():
         parsed_args.election_data_dir,
         parsed_args.verbosity,
         parsed_args.printonly,
-        )
+    )
     tco.run(
         contest_uid=parsed_args.contest_uid,
         track_contests=parsed_args.track_contests,
-        )
+    )
 
 
 # If called directly via this file

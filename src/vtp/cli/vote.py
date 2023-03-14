@@ -74,13 +74,12 @@ def main():
         substreet=parsed_args.substreet,
         town=parsed_args.town,
         state=parsed_args.state,
-        )
+    )
 
     # do it
     vote_op = VoteOperation(
-        parsed_args.election_data_dir,
-        parsed_args.verbosity,
-        parsed_args.printonly)
+        parsed_args.election_data_dir, parsed_args.verbosity, parsed_args.printonly
+    )
     vote_op.run(
         an_address=an_address,
         blank_ballot=parsed_args.blank_ballot,

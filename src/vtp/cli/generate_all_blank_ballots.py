@@ -32,6 +32,7 @@ from vtp.ops.generate_all_blank_ballots_operation import (
     GenerateAllBlankBallotsOperation,
 )
 
+
 def parse_arguments(argv):
     """Parse arguments from a command line or from the constructor"""
 
@@ -64,9 +65,8 @@ def main():
 
     # do it
     gabbo = GenerateAllBlankBallotsOperation(
-        parsed_args.election_data,
-        parsed_args.verbosity,
-        parsed_args.printonly)
+        parsed_args.election_data, parsed_args.verbosity, parsed_args.printonly
+    )
     gabbo.run()
 
 

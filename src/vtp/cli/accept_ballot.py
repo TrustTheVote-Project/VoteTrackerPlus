@@ -31,6 +31,7 @@ from vtp.core.address import Address
 from vtp.core.common import Common
 from vtp.ops.accept_ballot_operation import AcceptBallotOperation
 
+
 def parse_arguments(argv):
     """Parse arguments from a command line or from the constructor"""
 
@@ -58,6 +59,7 @@ Either the location of the ballot_file or the associated address is required.
     Common.add_printonly(parser)
     return parser.parse_args(argv)
 
+
 def main():
     """
     Called via a python local install entrypoint or by running this
@@ -76,17 +78,16 @@ def main():
         substreet=parsed_args.substreet,
         town=parsed_args.town,
         state=parsed_args.state,
-        )
+    )
 
     # do it
     abo = AcceptBallotOperation(
-        parsed_args.election_data_dir,
-        parsed_args.verbosity,
-        parsed_args.printonly)
+        parsed_args.election_data_dir, parsed_args.verbosity, parsed_args.printonly
+    )
     abo.run(
         an_address=an_address,
         cast_ballot=parsed_args.cast_ballot,
-        )
+    )
 
 
 # If called directly via this file

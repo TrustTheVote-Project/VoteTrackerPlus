@@ -222,11 +222,11 @@ class CastBallotOperation:
     # main
     ################
     def run(
-            self,
-            an_address: Address = None,
-            blank_ballot: str = "",
-            demo_mode: bool = False,
-            ) -> str:
+        self,
+        an_address: Address = None,
+        blank_ballot: str = "",
+        demo_mode: bool = False,
+    ) -> str:
         """Main function - see -h for more info"""
 
         # Create a VTP ElectionData object if one does not already exist
@@ -244,9 +244,7 @@ class CastBallotOperation:
                     Globals.get("ROOT_ELECTION_DATA_SUBDIR"),
                 )
             ):
-                a_ballot.read_a_blank_ballot(
-                    "", the_election_config, blank_ballot
-                )
+                a_ballot.read_a_blank_ballot("", the_election_config, blank_ballot)
         else:
             # Use the specified address
             an_address.map_ggos(the_election_config)

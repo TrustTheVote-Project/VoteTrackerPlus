@@ -115,9 +115,7 @@ class MergeContestsOperation:
             verbosity=1,
             check=True,
         )
-        Shellout.run(
-            ["git", "push", "origin", "main"], self.printonly, check=True
-        )
+        Shellout.run(["git", "push", "origin", "main"], self.printonly, check=True)
         # Delete the local and remote branch if this is a local branch
         if not remote:
             Shellout.run(
@@ -141,14 +139,10 @@ class MergeContestsOperation:
                 check=True,
             )
 
-# pylint: disable=too-many-arguments
+    # pylint: disable=too-many-arguments
     def randomly_merge_contests(
-            self,
-            uid: int,
-            batch: int,
-            minimum_cast_cache: int,
-            flush: bool,
-            remote: bool):
+        self, uid: int, batch: int, minimum_cast_cache: int, flush: bool, remote: bool
+    ):
         """
         Will randomingly select (len(batch) - BALLOT_RECEIPT_ROWS) contest
         branches from the supplied list of branch and merge them to the
@@ -184,7 +178,7 @@ class MergeContestsOperation:
         flush: bool = True,
         remote: bool = True,
         minimum_cast_cache: int = 100,
-        ):
+    ):
         """Main function - see -h for more info"""
 
         # Create a VTP ElectionData object if one does not already exist
@@ -258,7 +252,7 @@ class MergeContestsOperation:
                         flush=flush,
                         remote=remote,
                         minimum_cast_cache=minimum_cast_cache,
-                        )
+                    )
                 # Start a new next batch
                 current_uid = uid
                 batch = [this_branch]
@@ -270,7 +264,7 @@ class MergeContestsOperation:
                     flush=flush,
                     remote=remote,
                     minimum_cast_cache=minimum_cast_cache,
-                    )
+                )
         logging.info("Merged %s contest branches", merged)
 
     # End Of Class

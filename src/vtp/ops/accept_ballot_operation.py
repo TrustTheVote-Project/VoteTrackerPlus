@@ -307,7 +307,7 @@ class AcceptBallotOperation:
         self,
         an_address: Address = None,
         cast_ballot: str = "",
-            ):
+    ):
         """
         Main function - see -h for more info.  Will work with either
         specific or an generic address.
@@ -330,9 +330,7 @@ class AcceptBallotOperation:
                     self.election_data_dir,
                 )
             ):
-                a_ballot.read_a_cast_ballot(
-                    "", the_election_config, cast_ballot
-                )
+                a_ballot.read_a_cast_ballot("", the_election_config, cast_ballot)
         else:
             an_address.map_ggos(the_election_config, skip_ggos=True)
             # Get the ballot for the specified address.  Note that reading

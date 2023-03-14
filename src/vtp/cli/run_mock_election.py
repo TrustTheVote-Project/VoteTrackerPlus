@@ -142,13 +142,12 @@ def main():
         substreet=parsed_args.substreet,
         town=parsed_args.town,
         state=parsed_args.state,
-        )
+    )
 
     # do it
     rmeo = RunMockElectionOperation(
-        parsed_args.election_data,
-        parsed_args.verbosity,
-        parsed_args.printonly)
+        parsed_args.election_data, parsed_args.verbosity, parsed_args.printonly
+    )
     rmeo.run(
         an_address=an_address,
         device=parsed_args.device,
