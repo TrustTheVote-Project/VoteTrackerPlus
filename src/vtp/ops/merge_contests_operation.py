@@ -181,9 +181,9 @@ class MergeContestsOperation:
     def run(
         self,
         branch: str,
-        flush: bool,
-        remote: bool,
-        minimum_cast_cache: int,
+        flush: bool = True,
+        remote: bool = True,
+        minimum_cast_cache: int = 100,
         ):
         """Main function - see -h for more info"""
 

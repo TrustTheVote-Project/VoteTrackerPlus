@@ -226,12 +226,11 @@ class CastBallotOperation:
             an_address: Address,
             blank_ballot: str = "",
             demo_mode: bool = False,
-            election_data: str = "",
             ) -> str:
         """Main function - see -h for more info"""
 
         # Create a VTP ElectionData object if one does not already exist
-        the_election_config = ElectionConfig.configure_election(election_data)
+        the_election_config = ElectionConfig.configure_election(self.election_data_dir)
 
         # Create a ballot
         a_ballot = BlankBallot()
