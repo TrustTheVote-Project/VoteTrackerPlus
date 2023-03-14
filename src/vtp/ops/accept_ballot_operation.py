@@ -305,7 +305,7 @@ class AcceptBallotOperation:
     # pylint: disable=duplicate-code
     def run(
         self,
-        an_address: Address,
+        an_address: Address = None,
         cast_ballot: str = "",
             ):
         """

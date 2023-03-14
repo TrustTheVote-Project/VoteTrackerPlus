@@ -223,7 +223,7 @@ class CastBallotOperation:
     ################
     def run(
             self,
-            an_address: Address,
+            an_address: Address = None,
             blank_ballot: str = "",
             demo_mode: bool = False,
             ) -> str:

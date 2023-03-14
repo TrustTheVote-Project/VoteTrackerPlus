@@ -180,7 +180,7 @@ class MergeContestsOperation:
 
     def run(
         self,
-        branch: str,
+        branch: str = "",
         flush: bool = True,
         remote: bool = True,
         minimum_cast_cache: int = 100,
