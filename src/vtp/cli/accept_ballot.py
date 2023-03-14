@@ -28,8 +28,9 @@ import sys
 
 # Local imports
 from vtp.core.address import Address
-from vtp.core.common import Common
 from vtp.ops.accept_ballot_operation import AcceptBallotOperation
+
+from ._arguments import Arguments
 
 
 def parse_arguments(argv):
@@ -50,13 +51,13 @@ Either the location of the ballot_file or the associated address is required.
     )
 
     Address.add_address_args(parser, True)
-    Common.add_election_data_dir(parser)
+    Arguments.add_election_data_dir(parser)
     parser.add_argument(
         "--cast_ballot",
         help="overrides an address - specifies a specific cast ballot",
     )
-    Common.add_verbosity(parser)
-    Common.add_printonly(parser)
+    Arguments.add_verbosity(parser)
+    Arguments.add_printonly(parser)
     return parser.parse_args(argv)
 
 

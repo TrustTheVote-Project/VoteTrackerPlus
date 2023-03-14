@@ -29,8 +29,9 @@ import sys
 
 # Local imports
 from vtp.core.address import Address
-from vtp.core.common import Common
 from vtp.ops.verify_ballot_receipt_operation import VerifyBallotReceiptOperation
+
+from ._arguments import Arguments
 
 
 def parse_arguments(argv):
@@ -54,7 +55,7 @@ check row is provided.
     )
 
     Address.add_address_args(parser, True)
-    Common.add_election_data_dir(parser)
+    Arguments.add_election_data_dir(parser)
     parser.add_argument(
         "-f",
         "--receipt_file",
@@ -73,7 +74,7 @@ check row is provided.
         action="store_true",
         help="display the contents of the content CVRs specifying a row",
     )
-    Common.add_verbosity(parser)
+    Arguments.add_verbosity(parser)
 
     parsed_args = parser.parse_args(argv)
 

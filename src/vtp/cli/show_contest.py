@@ -28,8 +28,9 @@ import re
 import sys
 
 # Local imports
-from vtp.core.common import Common
 from vtp.ops.show_contests_operation import ShowContestsOperation
+
+from ._arguments import Arguments
 
 
 def parse_arguments(argv):
@@ -41,15 +42,15 @@ def parse_arguments(argv):
 will print the CVRs (Cast Vote Records) for the supplied contest(s)
 """,
     )
-    Common.add_election_data_dir(parser)
+    Arguments.add_election_data_dir(parser)
     parser.add_argument(
         "-c",
         "--contest-check",
         help="a comma separate list of contests digests to validate/display",
     )
 
-    Common.add_verbosity(parser)
-    Common.add_printonly(parser)
+    Arguments.add_verbosity(parser)
+    Arguments.add_printonly(parser)
     parsed_args = parser.parse_args(argv)
 
     # Validate required args

@@ -31,8 +31,9 @@ import sys
 
 # Local imports
 from vtp.core.address import Address
-from vtp.core.common import Common
 from vtp.ops.create_blank_ballot_operation import CreateBlankBallotOperation
+
+from ._arguments import Arguments
 
 
 def parse_arguments(argv):
@@ -47,15 +48,15 @@ supplied address.
 """,
     )
     Address.add_address_args(parser)
-    Common.add_election_data_dir(parser)
+    Arguments.add_election_data_dir(parser)
     parser.add_argument(
         "-l",
         "--language",
         default="en",
         help="will print the ballot in the specified language",
     )
-    Common.add_verbosity(parser)
-    Common.add_printonly(parser)
+    Arguments.add_verbosity(parser)
+    Arguments.add_printonly(parser)
     return parser.parse_args(argv)
 
 

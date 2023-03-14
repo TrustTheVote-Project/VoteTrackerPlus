@@ -29,8 +29,9 @@ import argparse
 import sys
 
 # Local imports
-from vtp.core.common import Common
 from vtp.ops.merge_contests_operation import MergeContestsOperation
+
+from ._arguments import Arguments
 
 
 def parse_arguments(argv):
@@ -48,14 +49,14 @@ raised.  Supplying -f will flush all remaining contests to the main
 branch.
 """,
     )
-    Common.add_election_data_dir(parser)
+    Arguments.add_election_data_dir(parser)
     parser.add_argument(
         "-b",
         "--branch",
         default="",
         help="specify a specific branch to merge",
     )
-    Common.add_minimum_cast_cache(parser)
+    Arguments.add_minimum_cast_cache(parser)
     parser.add_argument(
         "-f",
         "--flush",
@@ -68,8 +69,8 @@ branch.
         action="store_true",
         help="will merge remote branches instead of local branches",
     )
-    Common.add_verbosity(parser)
-    Common.add_printonly(parser)
+    Arguments.add_verbosity(parser)
+    Arguments.add_printonly(parser)
     return parser.parse_args(argv)
 
 

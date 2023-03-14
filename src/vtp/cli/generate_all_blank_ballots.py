@@ -27,10 +27,11 @@ import argparse
 import sys
 
 # Local import
-from vtp.core.common import Common
 from vtp.ops.generate_all_blank_ballots_operation import (
     GenerateAllBlankBallotsOperation,
 )
+
+from ._arguments import Arguments
 
 
 def parse_arguments(argv):
@@ -45,9 +46,9 @@ blank-ballots subdir.
 """,
     )
 
-    Common.add_election_data_dir(parser)
-    Common.add_verbosity(parser)
-    Common.add_printonly(parser)
+    Arguments.add_election_data_dir(parser)
+    Arguments.add_verbosity(parser)
+    Arguments.add_printonly(parser)
     return parser.parse_args(argv)
 
 

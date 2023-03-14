@@ -30,14 +30,14 @@ import sys
 
 # Local imports
 from vtp.core.address import Address
-from vtp.core.common import Common
 from vtp.ops.vote_operation import VoteOperation
+
+from ._arguments import Arguments
 
 
 def parse_arguments(argv):
     """Parse arguments from a command line or from the constructor"""
 
-    safe_args = Common.cast_thing_to_list(argv)
     parser = argparse.ArgumentParser(
         formatter_class=argparse.RawDescriptionHelpFormatter,
         description="""
@@ -49,11 +49,11 @@ ballot is chosen.
     )
 
     Address.add_address_args(parser)
-    Common.add_election_data_dir(parser)
-    Common.add_blank_ballot(parser)
-    Common.add_verbosity(parser)
-    Common.add_printonly(parser)
-    return parser.parse_args(safe_args)
+    Arguments.add_election_data_dir(parser)
+    Arguments.add_blank_ballot(parser)
+    Arguments.add_verbosity(parser)
+    Arguments.add_printonly(parser)
+    return parser.parse_args(argv)
 
 
 def main():

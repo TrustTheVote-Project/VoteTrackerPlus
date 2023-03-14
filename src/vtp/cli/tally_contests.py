@@ -30,8 +30,9 @@ import re
 import sys
 
 # Local imports
-from vtp.core.common import Common
 from vtp.ops.tally_contests_operation import TallyContestsOperation
+
+from ._arguments import Arguments
 
 
 def parse_arguments(argv):
@@ -56,7 +57,7 @@ tallying across git submodules/repos.
 """,
     )
 
-    Common.add_election_data_dir(parser)
+    Arguments.add_election_data_dir(parser)
     parser.add_argument(
         "-c",
         "--contest_uid",
@@ -69,7 +70,7 @@ tallying across git submodules/repos.
         default="",
         help="a comma separated list of contests checks to track",
     )
-    Common.add_verbosity(parser)
+    Arguments.add_verbosity(parser)
     parsed_args = parser.parse_args(argv)
 
     # Validate required args

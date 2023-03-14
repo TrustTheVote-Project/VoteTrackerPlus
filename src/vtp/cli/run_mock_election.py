@@ -29,8 +29,9 @@ import sys
 
 # Local import
 from vtp.core.address import Address
-from vtp.core.common import Common
 from vtp.ops.run_mock_election_operation import RunMockElectionOperation
+
+from ._arguments import Arguments
 
 
 def parse_arguments(argv):
@@ -68,15 +69,15 @@ mock to a single ballot N times.
     )
 
     Address.add_address_args(parser)
-    Common.add_election_data_dir(parser)
-    Common.add_blank_ballot(parser)
+    Arguments.add_election_data_dir(parser)
+    Arguments.add_blank_ballot(parser)
     parser.add_argument(
         "-d",
         "--device",
         default="",
         help="specify a specific VC local device (scanner or server or both) to mock",
     )
-    Common.add_minimum_cast_cache(parser)
+    Arguments.add_minimum_cast_cache(parser)
     # Note - the black formatter will by default break the help
     # line below into two lines via a '()', which breaks the
     # parser.add_argument.  It is python.
@@ -105,12 +106,11 @@ mock to a single ballot N times.
         default=10,
         help="the number of minutes for the server app to run (def=10)",
     )
-    Common.add_verbosity(parser)
-    Common.add_printonly(parser)
+    Arguments.add_verbosity(parser)
+    Arguments.add_printonly(parser)
     parsed_args = parser.parse_args(argv)
 
     # Validate required args
-    Common.verify_election_data_dir(parsed_args)
     if parsed_args.device not in ["scanner", "server", "both"]:
         raise ValueError(
             "The --device parameter only accepts 'device' or 'server' "

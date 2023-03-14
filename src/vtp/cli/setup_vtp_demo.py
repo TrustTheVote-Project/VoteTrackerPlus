@@ -29,9 +29,12 @@ import argparse
 import os
 import sys
 
+from vtp.core.common import Globals
+
 # Local imports
-from vtp.core.common import Common, Globals
 from vtp.ops.setup_vtp_demo_operation import SetupVtpDemoOperation
+
+from ._arguments import Arguments
 
 
 def parse_arguments(argv):
@@ -59,7 +62,7 @@ demo this script will create a new GUID based FASTapi clone and return
 the GUID.
 """,
     )
-    Common.add_election_data_dir(parser)
+    Arguments.add_election_data_dir(parser)
     parser.add_argument(
         "-s",
         "--scanners",
@@ -79,8 +82,8 @@ the GUID.
         default="/opt/VoteTrackerPlus/demo.01",
         help="specify the location of VTP demo (def=/opt/VoteTrackerPlus/demo.01)",
     )
-    Common.add_verbosity(parser)
-    Common.add_printonly(parser)
+    Arguments.add_verbosity(parser)
+    Arguments.add_printonly(parser)
     parsed_args = parser.parse_args(argv)
     # Validate required args
     if parsed_args.scanners < 1 or parsed_args.scanners > 16:
