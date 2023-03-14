@@ -48,6 +48,7 @@ class CreateBlankBallotOperation:
         # Configure logging
         Common.configure_logging(verbosity)
 
+    # pylint: disable=duplicate-code
     def run(
         self,
         an_address: Address,

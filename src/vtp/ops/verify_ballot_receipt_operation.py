@@ -25,7 +25,6 @@ See 'verify_ballot_receipt.py -h' for usage information.
 """
 
 # Standard imports
-import argparse
 import json
 import logging
 import os
@@ -45,69 +44,13 @@ class VerifyBallotReceiptOperation:
     description (immediately below this) in the source file.
     """
 
-    @staticmethod
-    def parse_arguments(argv):
-        """Parse arguments from a command line or from the constructor"""
-
-        safe_args = Common.cast_thing_to_list(argv)
-        parser = argparse.ArgumentParser(
-            formatter_class=argparse.RawDescriptionHelpFormatter,
-            description="""
-Will read a voter's ballot receipt and validate all the digests
-contained therein.  If a contest has been merged to the main branch,
-will report the current ballot tally number (which ballot in the
-actula tally cound is the voter's).
-
-An address is also supported as an argument in which case the last
-ballot check is read from the default location for the specified
-address.
-
-Can also optionally print the ballot's CVRs when a specific ballot
-check row is provided.
-""",
-        )
-
-        Address.add_address_args(parser, True)
-        Common.add_election_data(parser)
-        parser.add_argument(
-            "-f",
-            "--receipt_file",
-            default="",
-            help="specify the ballot receipt location - overrides an address",
-        )
-        parser.add_argument(
-            "-r",
-            "--row",
-            default="",
-            help="specify a row to inspect that row (the first row is 1, not 0)",
-        )
-        parser.add_argument(
-            "-c",
-            "--cvr",
-            action="store_true",
-            help="display the contents of the content CVRs specifying a row",
-        )
-        parser.add_argument(
-            "-x",
-            "--do_not_pull",
-            action="store_true",
-            help="Before tallying the votes, pull the ElectionData repo",
-        )
-        Common.add_verbosity(parser)
-
-        parsed_args = parser.parse_args(safe_args)
-
-        # Validate required args
-        Common.verify_election_data(parsed_args)
-        if not (parsed_args.receipt_file or (parsed_args.state and parsed_args.town)):
-            raise ValueError(
-                "Either an explicit or implicit (via an address) receipt file must be provided"
-            )
-        return parsed_args
-
-    def __init__(self, unparsed_args):
+    def __init__(self, election_data_dir: str, verbosity: int, printonly: bool):
         """Only to module-ize the scripts and keep things simple and idiomatic."""
-        self.parsed_args = VerifyBallotReceiptOperation.parse_arguments(unparsed_args)
+        self.election_data_dir = election_data_dir
+        self.verbosity = verbosity
+        self.printonly = printonly
+        # Configure logging
+        Common.configure_logging(verbosity)
 
     # pylint: disable=too-many-arguments   # self is not technically an arg kind-of
     def validate_ballot_lines(self, lines, headers, uids, e_config, error_digests):
@@ -133,7 +76,7 @@ check row is provided.
                     input=input_data,
                     text=True,
                     check=True,
-                    verbosity=self.parsed_args.verbosity,
+                    verbosity=self.verbosity,
                     capture_output=True,
                 )
                 .stdout.strip()
@@ -190,7 +133,7 @@ check row is provided.
                     ["git", "log", "--no-walk", "--pretty=format:%H%B"] + row,
                     e_config,
                     grouped_by_uid=False,
-                    verbosity=self.parsed_args.verbosity - 1,
+                    verbosity=self.verbosity - 1,
                 )
             elif len(legit_row) > 0:
                 # Only some are legitimate
@@ -198,12 +141,12 @@ check row is provided.
                     ["git", "log", "--no-walk", "--pretty=format:%H%B"] + legit_row,
                     e_config,
                     grouped_by_uid=False,
-                    verbosity=self.parsed_args.verbosity - 1,
+                    verbosity=self.verbosity - 1,
                 )
             else:
                 # skip the row - it has no legitimate digests
                 continue
-            if self.parsed_args.row != "" and int(self.parsed_args.row) - 1 == index:
+            if row != "" and int(row) - 1 == index:
                 requested_row = cvrs
                 requested_digests = row
             column = -1
@@ -235,7 +178,14 @@ check row is provided.
                     continue
         return (requested_row, requested_digests)
 
-    def verify_ballot_receipt(self, receipt_file, e_config):
+# pylint: disable=too-many-locals
+    def verify_ballot_receipt(
+        self,
+        receipt_file,
+        e_config,
+        row,
+        cvr,
+            ):
         """Will verify all the rows in a ballot receipt"""
 
         # Need to get the heeder info as well as the specified row to
@@ -277,7 +227,7 @@ check row is provided.
             contest_batches = Shellout.cvr_parse_git_log_output(
                 ["git", "log", "--topo-order", "--no-merges", "--pretty=format:%H%B"],
                 e_config,
-                verbosity=self.parsed_args.verbosity - 1,
+                verbosity=self.verbosity - 1,
             )
             unmerged_uids = {}
             for u_count, uid in enumerate(uids):
@@ -305,21 +255,21 @@ check row is provided.
         # If a row is specified, will print the context index in the
         # actual contest tally - which basically tells the voter 'your
         # contest is in the tally at index N'
-        if self.parsed_args.row:
+        if row:
             valid_digests = []
-            for digest in lines[int(self.parsed_args.row) - 1]:
+            for digest in lines[int(row) - 1]:
                 if digest in error_digests:
                     logging.error(
                         "[ERROR]: cannot print CVR for %s (row %s) - it is invalid",
                         digest,
-                        self.parsed_args.row,
+                        row,
                     )
                     continue
                 valid_digests.append(digest)
                 logging.debug(
                     "%s", json.dumps(requested_row[digest], indent=5, sort_keys=True)
                 )
-            if self.parsed_args.cvr:
+            if cvr:
                 # Show the CVRs of the row
                 election_data_dir = os.path.join(
                     e_config.get("git_rootdir"),
@@ -345,52 +295,51 @@ check row is provided.
                 "[GOOD]: ballot receipt VALID - no digest errors found\n############"
             )
 
-    ################
-    # main
-    ################
     # pylint: disable=duplicate-code
-    def run(self):
+    def run(
+        self,
+        an_address: Address = None,
+        receipt_file: str = "",
+        row: str = "",
+        cvr: bool = True,
+        ):
         """Main function - see -h for more info"""
 
         # Configure logging
-        Common.configure_logging(self.parsed_args.verbosity)
+        Common.configure_logging(self.verbosity)
 
         # Create a VTP ElectionData object if one does not already exist
-        the_election_config = ElectionConfig.configure_election()
+        the_election_config = ElectionConfig.configure_election(self.election_data_dir)
 
         # git pull the ElectionData repo so to get the latest set of
         # remote CVRs branches
         a_ballot = Ballot()
         with Shellout.changed_cwd(a_ballot.get_cvr_parent_dir(the_election_config)):
             Shellout.run(
-                ["git", "pull"], verbosity=self.parsed_args.verbosity, check=True
+                ["git", "pull"], verbosity=self.verbosity, check=True
             )
 
         #    import pdb; pdb.set_trace()
-        if self.parsed_args.receipt_file:
+        if receipt_file:
             # Can read the receipt file directly without any Ballot info
             self.verify_ballot_receipt(
-                self.parsed_args.receipt_file, the_election_config
+                receipt_file,
+                the_election_config,
+                row,
+                cvr,
             )
         else:
             # Need to use the address to locate the last created receipt file
-            the_address = Address.create_address_from_args(
-                self.parsed_args,
-                [
-                    "cvr",
-                    "do_not_pull",
-                    "election_data",
-                    "receipt_file",
-                    "row",
-                    "verbosity",
-                ],
-                generic_address=True,
-            )
-            the_address.map_ggos(the_election_config, skip_ggos=True)
+            an_address.map_ggos(the_election_config, skip_ggos=True)
             receipt_file = Ballot.gen_receipt_location(
-                the_election_config, the_address.get("ballot_subdir")
+                the_election_config, an_address.get("ballot_subdir")
             )
-            self.verify_ballot_receipt(receipt_file, the_election_config)
+            self.verify_ballot_receipt(
+                receipt_file,
+                the_election_config,
+                row,
+                cvr,
+            )
 
     # End Of Class
 

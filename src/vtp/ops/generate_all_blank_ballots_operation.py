@@ -50,6 +50,7 @@ class GenerateAllBlankBallotsOperation:
         # Configure logging
         Common.configure_logging(verbosity)
 
+    # pylint: disable=duplicate-code
     def run(self):
         """Main function - see -h for more info"""
 
