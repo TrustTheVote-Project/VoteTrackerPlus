@@ -45,7 +45,7 @@ class CastBallotOperation:
     description (immediately below this) in the source file.
     """
 
-    def __init__(self, election_data_dir=str, verbosity=int, printonly=bool):
+    def __init__(self, election_data_dir: str, verbosity: int, printonly: bool):
         """Only to module-ize the scripts and keep things simple and idiomatic."""
         self.election_data_dir = election_data_dir
         self.verbosity = verbosity
@@ -224,9 +224,9 @@ class CastBallotOperation:
     def run(
             self,
             an_address: Address,
-            blank_ballot="",
-            demo_mode=False,
-            election_data="",
+            blank_ballot: str = "",
+            demo_mode: bool = False,
+            election_data: str = "",
             ) -> str:
         """Main function - see -h for more info"""
 

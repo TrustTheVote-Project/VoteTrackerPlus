@@ -42,7 +42,7 @@ class VoteOperation:
     description (immediately below this) in the source file.
     """
 
-    def __init__(self, election_data_dir=str, verbosity=int, printonly=bool):
+    def __init__(self, election_data_dir: str, verbosity: int, printonly: bool):
         """Only to module-ize the scripts and keep things simple and idiomatic."""
         self.election_data_dir = election_data_dir
         self.verbosity = verbosity
@@ -50,13 +50,12 @@ class VoteOperation:
         # Configure logging
         Common.configure_logging(verbosity)
 
-    ################
-    # main
-    ################
+
+# pylint: disable=duplicate-code
     def run(
         self,
         an_address: Address,
-        blank_ballot: str,
+        blank_ballot: str = ""
     ) -> tuple[dict, int]:
         """Main function - see -h for more info"""
 

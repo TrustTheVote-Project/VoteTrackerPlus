@@ -40,7 +40,7 @@ class CreateBlankBallotOperation:
     description (immediately below this) in the source file.
     """
 
-    def __init__(self, election_data_dir=str, verbosity=int, printonly=bool):
+    def __init__(self, election_data_dir: str, verbosity: int, printonly: bool):
         """Only to module-ize the scripts and keep things simple and idiomatic."""
         self.election_data_dir = election_data_dir
         self.verbosity = verbosity
@@ -51,8 +51,8 @@ class CreateBlankBallotOperation:
     def run(
         self,
         an_address: Address,
-        language: str,
-    ):
+        language: str = "",
+        ):
         """Main function - see -h for more info"""
 
         # Configure logging

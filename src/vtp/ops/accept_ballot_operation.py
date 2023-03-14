@@ -43,7 +43,7 @@ class AcceptBallotOperation:
     description (immediately below this) in the source file.
     """
 
-    def __init__(self, election_data_dir=str, verbosity=int, printonly=bool):
+    def __init__(self, election_data_dir: str, verbosity: int, printonly: bool):
         """Only to module-ize the scripts and keep things simple and idiomatic."""
         self.election_data_dir = election_data_dir
         self.verbosity = verbosity
@@ -305,8 +305,8 @@ class AcceptBallotOperation:
     # pylint: disable=duplicate-code
     def run(
         self,
-        an_address=Address,
-        cast_ballot="",
+        an_address: Address,
+        cast_ballot: str = "",
             ):
         """
         Main function - see -h for more info.  Will work with either

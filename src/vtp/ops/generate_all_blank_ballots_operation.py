@@ -42,7 +42,7 @@ class GenerateAllBlankBallotsOperation:
     description (immediately below this) in the source file.
     """
 
-    def __init__(self, election_data_dir=str, verbosity=int, printonly=bool):
+    def __init__(self, election_data_dir: str, verbosity: int, printonly: bool):
         """Only to module-ize the scripts and keep things simple and idiomatic."""
         self.election_data_dir = election_data_dir
         self.verbosity = verbosity
