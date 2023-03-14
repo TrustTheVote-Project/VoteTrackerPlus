@@ -66,18 +66,6 @@ class Globals:
         "REQUIRED_NG_ADDRESS_FIELDS": ["street", "number"],
         # Whether or not VTP has been locally installed
         "VTP_LOCAL_INSTALL": True,
-        # The Root/Parent Election Data directory.  As of 2022/10/17
-        # this repo is a submodule of the root election repo (which
-        # used to be a sibling symlink named ElectionData) with
-        # python's sys.path being one level above this utils directory
-        # for the scripts placed there.  Independent of the python
-        # sys.path gyrations, this repo is still one level below the
-        # outer most root/parent election repo.  Hence, one set of
-        # '..' here since git commands are using this.  As of
-        # 2023/01/19 and post the local install idiom, one can be
-        # anywhere to run VTP commands, so might as well be at the
-        # root of the ElectionData repo ...
-        "ROOT_ELECTION_DATA_SUBDIR": ".",
         # Where the bin directory is relative from the root of _this_ repo
         "BIN_DIR": "src/vtp",
         # How long to wait for a git shell command to complete - maybe a bad idea
@@ -106,12 +94,6 @@ class Globals:
         # The subdirectory where the mock scanner git workspaces are stored
         "MOCK_CLIENT_DIRNAME": "mock-clients",
     }
-
-    # Legitimate setters
-    @staticmethod
-    def set_electiondatadir(path: str):
-        """Will overwrite the default location of the ElectionData tree"""
-        Globals._config["ROOT_ELECTION_DATA_SUBDIR"] = path
 
     @staticmethod
     def get(name):
@@ -174,7 +156,7 @@ class Common:
     @staticmethod
     def add_election_data_dir(parser):
         """Add election_data option"""
-        defval = Globals.get("ROOT_ELECTION_DATA_SUBDIR")
+        defval = "."
         parser.add_argument(
             "-e",
             "--election_data_dir",
@@ -226,10 +208,7 @@ class Common:
     @staticmethod
     def verify_election_data_dir(election_data_dir: str):
         """
-        Verify election_data option.  Note that global constant
-        ROOT_ELECTION_DATA_SUBDIR is a default value while the actual
-        live election_data_dir value is stored in an upstream ops
-        object.
+        Verify that election_data_dir is an existing directory.
         """
         if not os.path.isdir(election_data_dir):
             raise ValueError(
@@ -334,12 +313,7 @@ class Shellout:
         # Will process all the CVR commits on the main branch and tally
         # all the contests found.
         git_log_cvrs = {}
-        with Shellout.changed_cwd(
-            os.path.join(
-                election_config.get("git_rootdir"),
-                Globals.get("ROOT_ELECTION_DATA_SUBDIR"),
-            )
-        ):
+        with Shellout.changed_cwd(election_config.get("git_rootdir")):
             if verbosity >= 3:
                 logging.info('Running "%s"', " ".join(git_log_command))
             with subprocess.Popen(

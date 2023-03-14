@@ -154,14 +154,8 @@ class SetupVtpDemoOperation(Operation):
         # Create a VTP ElectionData object if one does not already exist
         the_election_config = ElectionConfig.configure_election(self.election_data_dir)
 
-        # Get the ElectionData directory
-        election_data_dir = os.path.join(
-            the_election_config.get("git_rootdir"),
-            Globals.get("ROOT_ELECTION_DATA_SUBDIR"),
-        )
-
         # Get the election data native GitHub remote clone name from _here_
-        with Shellout.changed_cwd(election_data_dir):
+        with Shellout.changed_cwd(the_election_config.get("git_rootdir")):
             election_data_remote_url = Shellout.run(
                 ["git", "config", "--get", "remote.origin.url"],
                 check=True,

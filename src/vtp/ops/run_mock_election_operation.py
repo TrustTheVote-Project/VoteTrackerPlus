@@ -32,7 +32,7 @@ import time
 # Local libraries
 from vtp.core.address import Address
 from vtp.core.ballot import Ballot
-from vtp.core.common import Globals, Shellout
+from vtp.core.common import Shellout
 from vtp.core.election_config import ElectionConfig
 
 # Script modules
@@ -71,18 +71,13 @@ class RunMockElectionOperation(Operation):
     ):
         """Simulate a VTP scanner"""
 
-        election_data_dir = os.path.join(
-            the_election_config.get("git_rootdir"),
-            Globals.get("ROOT_ELECTION_DATA_SUBDIR"),
-        )
-
         # Get list of available blank ballots
         blank_ballots = []
         if ballot:
             # a blank ballot location was specified (either directly or via an address)
             blank_ballots.append(ballot)
         else:
-            with Shellout.changed_cwd(election_data_dir):
+            with Shellout.changed_cwd(the_election_config.get("git_rootdir")):
                 for dirpath, _, files in os.walk("."):
                     for filename in [
                         f
@@ -104,7 +99,7 @@ class RunMockElectionOperation(Operation):
                 )
                 # - cast a ballot
                 #            import pdb; pdb.set_trace()
-                with Shellout.changed_cwd(election_data_dir):
+                with Shellout.changed_cwd(the_election_config.get("git_rootdir")):
                     Shellout.run(
                         ["git", "pull"],
                         printonly=self.printonly,
@@ -209,13 +204,9 @@ class RunMockElectionOperation(Operation):
         start_time = time.time()
         # Loop for a day and sleep for 10 seconds
         seconds = 60 * duration
-        election_data_dir = os.path.join(
-            the_election_config.get("git_rootdir"),
-            Globals.get("ROOT_ELECTION_DATA_SUBDIR"),
-        )
 
         while True:
-            with Shellout.changed_cwd(election_data_dir):
+            with Shellout.changed_cwd(the_election_config.get("git_rootdir")):
                 Shellout.run(
                     ["git", "pull"],
                     self.printonly,

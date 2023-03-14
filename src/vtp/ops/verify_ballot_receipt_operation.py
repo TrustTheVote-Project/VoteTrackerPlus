@@ -27,13 +27,12 @@ See 'verify_ballot_receipt.py -h' for usage information.
 # Standard imports
 import json
 import logging
-import os
 import re
 
 # Local import
 from vtp.core.address import Address
 from vtp.core.ballot import Ballot
-from vtp.core.common import Common, Globals, Shellout
+from vtp.core.common import Common, Shellout
 from vtp.core.election_config import ElectionConfig
 
 from .operation import Operation
@@ -54,18 +53,16 @@ class VerifyBallotReceiptOperation(Operation):
         super().__init__(election_data_dir, verbosity, printonly)
 
     # pylint: disable=too-many-arguments   # self is not technically an arg kind-of
-    def validate_ballot_lines(self, lines, headers, uids, e_config, error_digests):
+    def validate_ballot_lines(
+        self, lines, headers, uids, the_election_config, error_digests
+    ):
         """Will scan the supplied ballot lines for invalid digests.  Will
         print and return the invalid digests.
         """
         input_data = ""
         for line in lines:
             input_data += "\n".join(line) + "\n"
-        with Shellout.changed_cwd(
-            os.path.join(
-                e_config.get("git_rootdir"), Globals.get("ROOT_ELECTION_DATA_SUBDIR")
-            )
-        ):
+        with Shellout.changed_cwd(the_election_config.get("git_rootdir")):
             results = (
                 Shellout.run(
                     [
@@ -115,7 +112,7 @@ class VerifyBallotReceiptOperation(Operation):
                 row += 1
 
     # pylint: disable=too-many-arguments   # self is not technically an arg kind-of
-    def vet_rows(self, lines, headers, uids, e_config, error_digests):
+    def vet_rows(self, lines, headers, uids, the_election_config, error_digests):
         """
         Will scan the main branch and validate that the receipt digests
         are there and that they are in the correct contest.
@@ -132,7 +129,7 @@ class VerifyBallotReceiptOperation(Operation):
                 # all the digests are legit
                 cvrs = Shellout.cvr_parse_git_log_output(
                     ["git", "log", "--no-walk", "--pretty=format:%H%B"] + row,
-                    e_config,
+                    the_election_config,
                     grouped_by_uid=False,
                     verbosity=self.verbosity - 1,
                 )
@@ -140,7 +137,7 @@ class VerifyBallotReceiptOperation(Operation):
                 # Only some are legitimate
                 cvrs = Shellout.cvr_parse_git_log_output(
                     ["git", "log", "--no-walk", "--pretty=format:%H%B"] + legit_row,
-                    e_config,
+                    the_election_config,
                     grouped_by_uid=False,
                     verbosity=self.verbosity - 1,
                 )
@@ -183,7 +180,7 @@ class VerifyBallotReceiptOperation(Operation):
     def verify_ballot_receipt(
         self,
         receipt_file,
-        e_config,
+        the_election_config,
         row,
         cvr,
     ):
@@ -203,18 +200,22 @@ class VerifyBallotReceiptOperation(Operation):
         #    import pdb; pdb.set_trace()
         # Create a ballot to read the receipt file
         a_ballot = Ballot()
-        lines = a_ballot.read_receipt_csv(e_config, receipt_file=receipt_file)
+        lines = a_ballot.read_receipt_csv(
+            the_election_config, receipt_file=receipt_file
+        )
         headers = lines.pop(0)
         uids = [re.match(r"([0-9]+)", column).group(0) for column in headers]
         error_digests = set()
 
         # Now scan all lines (minus the header) for valid digests
-        self.validate_ballot_lines(lines, headers, uids, e_config, error_digests)
+        self.validate_ballot_lines(
+            lines, headers, uids, the_election_config, error_digests
+        )
 
         # Next, make sure the digest are in the correct branch and have a
         # valid CVR content w.r.t. the uid, etc.
         requested_row, requested_digests = self.vet_rows(
-            lines, headers, uids, e_config, error_digests
+            lines, headers, uids, the_election_config, error_digests
         )
 
         def vet_a_row():
@@ -227,7 +228,7 @@ class VerifyBallotReceiptOperation(Operation):
             """
             contest_batches = Shellout.cvr_parse_git_log_output(
                 ["git", "log", "--topo-order", "--no-merges", "--pretty=format:%H%B"],
-                e_config,
+                the_election_config,
                 verbosity=self.verbosity - 1,
             )
             unmerged_uids = {}
@@ -272,11 +273,7 @@ class VerifyBallotReceiptOperation(Operation):
                 )
             if cvr:
                 # Show the CVRs of the row
-                election_data_dir = os.path.join(
-                    e_config.get("git_rootdir"),
-                    Globals.get("ROOT_ELECTION_DATA_SUBDIR"),
-                )
-                with Shellout.changed_cwd(election_data_dir):
+                with Shellout.changed_cwd(the_election_config.get("git_rootdir")):
                     Shellout.run(["git", "show", "-s"] + valid_digests, check=True)
             else:
                 # Just show the summary validation of the row

@@ -24,10 +24,9 @@ See 'show_contest.py -h' for usage information.
 
 # Standard imports
 import logging
-import os
 
 # Local libraries
-from vtp.core.common import Globals, Shellout
+from vtp.core.common import Shellout
 from vtp.core.election_config import ElectionConfig
 
 from .operation import Operation
@@ -99,20 +98,16 @@ class ShowContestsOperation(Operation):
         # Create a VTP ElectionData object if one does not already exist
         the_election_config = ElectionConfig.configure_election(self.election_data_dir)
 
-        # Check the ElectionData
-        election_data_dir = os.path.join(
-            the_election_config.get("git_rootdir"),
-            Globals.get("ROOT_ELECTION_DATA_SUBDIR"),
-        )
-
         # First validate the digests
         error_digests = set()
-        self.validate_digests(contest_check, election_data_dir, error_digests)
+        self.validate_digests(
+            contest_check, the_election_config.get("git_rootdir"), error_digests
+        )
         valid_digests = [
             digest for digest in contest_check.split(",") if digest not in error_digests
         ]
         # show/log the digests
-        with Shellout.changed_cwd(election_data_dir):
+        with Shellout.changed_cwd(the_election_config.get("git_rootdir")):
             Shellout.run(["git", "show", "-s"] + valid_digests, check=True)
 
 

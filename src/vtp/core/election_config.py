@@ -115,16 +115,19 @@ class ElectionConfig:
     @staticmethod
     def configure_election(election_data_dir: str):
         """
-        Return a/the existing ElectionData or parse a new one into
+        Return the existing ElectionData or parse a new one into
         existence.  This is the entrypoint/wrapper into/around the
         ElectionData class/instance.
         """
-        # Need to set the Global ElectionData directory first
+        # Safety check
         Common.verify_election_data_dir(election_data_dir)
-        # Then parse that one
+        # Only parse the tree if it hasn't been done yet
         if ElectionConfig._election_data is None:
-            ElectionConfig._election_data = ElectionConfig()
+            # Call the constrcutor - sets the absolute path to election_data_dir
+            ElectionConfig._election_data = ElectionConfig(election_data_dir)
+            # Parses the actual election_data_dir
             ElectionConfig._election_data.parse_configs()
+        # Returns self
         return ElectionConfig._election_data
 
     @staticmethod
@@ -216,27 +219,28 @@ class ElectionConfig:
                 Contest.set_uid(contest, ".")
         return config
 
-    def __init__(self):
-        """Stubbed out for now - returns an object reading to be
-        populated with _this_ election config data.
+    def __init__(self, election_data_dir: str = "."):
+        """Constructor for ElectionConfig.  If no election_data_dir is
+        supplied, then the CWD _MUST_ be in the current ElectionData
+        tree (the election_data_dir) where the election is happening -
+        where the CVRs are being processed and where the VTP code
+        resides.  The default is "." If specified, will cd into that
+        location to pick up the git ROOTDIR and will use that location
+        to read the tree.
         """
 
-        # Determine the directory of the root config.yaml file.
-        # 2022/05/02: there is no bin dir in any of the ElectionData
-        # repos, so this test is no longer interesting (and blocks a
-        # super parent repo to control multi scanner/server test
-        # jigs).
-        # result = Shellout.run(["git", "rev-parse", "--show-superproject-working-tree"],
-        #                               check=False, capture_output=True, text=True)
-        # if not result.stdout == "":
-        #     raise EnvironmentError(("The CWD of the current process is not in the superproject"
-        #                             f"working tree ({result.stdout})"))
-        result = Shellout.run(
-            ["git", "rev-parse", "--show-toplevel"],
-            check=True,
-            capture_output=True,
-            text=True,
-        )
+        # Determine the absolute PATH to the election_data_dir
+        if election_data_dir in ["", ".", None]:
+            self.git_rootdir = os.getcwd()
+        else:
+            self.git_rootdir = os.path.realpath(election_data_dir)
+        with Shellout.changed_cwd(self.git_rootdir):
+            result = Shellout.run(
+                ["git", "rev-parse", "--show-toplevel"],
+                check=True,
+                capture_output=True,
+                text=True,
+            )
         if result.stdout == "":
             raise EnvironmentError(
                 "Cannot determine workspace top level via 'git rev-parse'"
@@ -244,12 +248,10 @@ class ElectionConfig:
         self.git_rootdir = result.stdout.strip()
         self.root_config_file = os.path.join(
             self.git_rootdir,
-            Globals.get("ROOT_ELECTION_DATA_SUBDIR"),
             Globals.get("CONFIG_FILE"),
         )
         self.root_address_map_file = os.path.join(
             self.git_rootdir,
-            Globals.get("ROOT_ELECTION_DATA_SUBDIR"),
             Globals.get("ADDRESS_MAP_FILE"),
         )
         self.parsed_configs = ["."]
@@ -372,7 +374,6 @@ class ElectionConfig:
                         )
                     ggo_subdir_abspath = os.path.join(
                         self.git_rootdir,
-                        Globals.get("ROOT_ELECTION_DATA_SUBDIR"),
                         subdir,
                         ggo_kind,
                     )
@@ -462,7 +463,6 @@ class ElectionConfig:
         """Return the file location of a blank ballot"""
         return os.path.join(
             self.get("git_rootdir"),
-            Globals.get("ROOT_ELECTION_DATA_SUBDIR"),
             ballot_subdir,
             Globals.get("BLANK_BALLOT_SUBDIR"),
             style,

@@ -25,7 +25,6 @@ See 'cast_ballot.py -h' for usage information.
 
 # Standard imports
 import logging
-import os
 import pprint
 import random
 
@@ -34,7 +33,7 @@ import pyinputplus
 # Local imports
 from vtp.core.address import Address
 from vtp.core.ballot import Ballot, BlankBallot, Contests
-from vtp.core.common import Globals, Shellout
+from vtp.core.common import Shellout
 from vtp.core.election_config import ElectionConfig
 
 from .operation import Operation
@@ -239,12 +238,7 @@ class CastBallotOperation(Operation):
         # process the provided address
         if blank_ballot:
             # Read the specified blank_ballot
-            with Shellout.changed_cwd(
-                os.path.join(
-                    the_election_config.get("git_rootdir"),
-                    Globals.get("ROOT_ELECTION_DATA_SUBDIR"),
-                )
-            ):
+            with Shellout.changed_cwd(the_election_config.get("git_rootdir")):
                 a_ballot.read_a_blank_ballot("", the_election_config, blank_ballot)
         else:
             # Use the specified address

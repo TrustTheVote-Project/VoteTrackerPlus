@@ -126,7 +126,6 @@ class Ballot:
         """Return the file location of a cast ballot"""
         return os.path.join(
             config.get("git_rootdir"),
-            Globals.get("ROOT_ELECTION_DATA_SUBDIR"),
             subdir,
             Globals.get("CONTEST_FILE_SUBDIR"),
             Globals.get("BALLOT_FILE"),
@@ -137,7 +136,6 @@ class Ballot:
         """Return the contest.json file location"""
         return os.path.join(
             config.get("git_rootdir"),
-            Globals.get("ROOT_ELECTION_DATA_SUBDIR"),
             subdir,
             Globals.get("CONTEST_FILE_SUBDIR"),
             Globals.get("CONTEST_FILE"),
@@ -148,7 +146,6 @@ class Ballot:
         """Return the receipt.csv file location"""
         return os.path.join(
             config.get("git_rootdir"),
-            Globals.get("ROOT_ELECTION_DATA_SUBDIR"),
             subdir,
             Globals.get("CONTEST_FILE_SUBDIR"),
             Globals.get("RECEIPT_FILE"),
@@ -282,7 +279,6 @@ class Ballot:
         """Return the directory that contains the CVR directory for this ballot"""
         return os.path.join(
             config.get("git_rootdir"),
-            Globals.get("ROOT_ELECTION_DATA_SUBDIR"),
             self.ballot_subdir,
         )
 
