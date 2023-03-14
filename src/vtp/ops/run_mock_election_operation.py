@@ -32,7 +32,7 @@ import time
 # Local libraries
 from vtp.core.address import Address
 from vtp.core.ballot import Ballot
-from vtp.core.common import Common, Globals, Shellout
+from vtp.core.common import Globals, Shellout
 from vtp.core.election_config import ElectionConfig
 
 # Script modules
@@ -41,8 +41,10 @@ from vtp.ops.cast_ballot_operation import CastBallotOperation
 from vtp.ops.merge_contests_operation import MergeContestsOperation
 from vtp.ops.tally_contests_operation import TallyContestsOperation
 
+from .operation import Operation
 
-class RunMockElectionOperation:
+
+class RunMockElectionOperation(Operation):
     """
     A class to implememt the run-mock-election operation.  See the
     run-mock-election help output or read the parse_argument argparse
@@ -50,12 +52,11 @@ class RunMockElectionOperation:
     """
 
     def __init__(self, election_data_dir: str, verbosity: int, printonly: bool):
-        """Only to module-ize the scripts and keep things simple and idiomatic."""
-        self.election_data_dir = election_data_dir
-        self.verbosity = verbosity
-        self.printonly = printonly
-        # Configure logging
-        Common.configure_logging(verbosity)
+        """
+        Primarily to module-ize the scripts and keep things simple,
+        idiomatic, and in different namespaces.
+        """
+        super().__init__(election_data_dir, verbosity, printonly)
 
     # pylint: disable=too-many-arguments
     # pylint: disable=too-many-locals

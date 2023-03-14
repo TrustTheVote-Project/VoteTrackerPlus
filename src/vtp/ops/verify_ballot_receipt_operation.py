@@ -36,8 +36,10 @@ from vtp.core.ballot import Ballot
 from vtp.core.common import Common, Globals, Shellout
 from vtp.core.election_config import ElectionConfig
 
+from .operation import Operation
 
-class VerifyBallotReceiptOperation:
+
+class VerifyBallotReceiptOperation(Operation):
     """
     A class to implememt the verify-ballot-receipt operation.  See the
     verify-ballot-receipt help output or read the parse_argument argparse
@@ -45,12 +47,11 @@ class VerifyBallotReceiptOperation:
     """
 
     def __init__(self, election_data_dir: str, verbosity: int, printonly: bool):
-        """Only to module-ize the scripts and keep things simple and idiomatic."""
-        self.election_data_dir = election_data_dir
-        self.verbosity = verbosity
-        self.printonly = printonly
-        # Configure logging
-        Common.configure_logging(verbosity)
+        """
+        Primarily to module-ize the scripts and keep things simple,
+        idiomatic, and in different namespaces.
+        """
+        super().__init__(election_data_dir, verbosity, printonly)
 
     # pylint: disable=too-many-arguments   # self is not technically an arg kind-of
     def validate_ballot_lines(self, lines, headers, uids, e_config, error_digests):

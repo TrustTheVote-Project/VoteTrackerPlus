@@ -31,8 +31,10 @@ import secrets
 from vtp.core.common import Common, Globals, Shellout
 from vtp.core.election_config import ElectionConfig
 
+from .operation import Operation
 
-class SetupVtpDemoOperation:
+
+class SetupVtpDemoOperation(Operation):
     """
     A class to implememt the setup-vtp-demo operation.  See the
     setup-vtp-demo help output or read the parse_argument argparse
@@ -40,12 +42,11 @@ class SetupVtpDemoOperation:
     """
 
     def __init__(self, election_data_dir: str, verbosity: int, printonly: bool):
-        """Only to module-ize the scripts and keep things simple and idiomatic."""
-        self.election_data_dir = election_data_dir
-        self.verbosity = verbosity
-        self.printonly = printonly
-        # Configure logging
-        Common.configure_logging(verbosity)
+        """
+        Primarily to module-ize the scripts and keep things simple,
+        idiomatic, and in different namespaces.
+        """
+        super().__init__(election_data_dir, verbosity, printonly)
         # The absolute path to the local bare clone of the upstream
         # GitHub ElectionData remote repo
         self.tabulation_local_upstream_absdir = ""

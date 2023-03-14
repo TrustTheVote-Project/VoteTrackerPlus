@@ -34,11 +34,13 @@ import pyinputplus
 # Local imports
 from vtp.core.address import Address
 from vtp.core.ballot import Ballot, BlankBallot, Contests
-from vtp.core.common import Common, Globals, Shellout
+from vtp.core.common import Globals, Shellout
 from vtp.core.election_config import ElectionConfig
 
+from .operation import Operation
 
-class CastBallotOperation:
+
+class CastBallotOperation(Operation):
     """
     A class to implememt the cast-ballot operation.  See the
     cast-ballot help output or read the parse_argument argparse
@@ -46,12 +48,11 @@ class CastBallotOperation:
     """
 
     def __init__(self, election_data_dir: str, verbosity: int, printonly: bool):
-        """Only to module-ize the scripts and keep things simple and idiomatic."""
-        self.election_data_dir = election_data_dir
-        self.verbosity = verbosity
-        self.printonly = printonly
-        # Configure logging
-        Common.configure_logging(verbosity)
+        """
+        Primarily to module-ize the scripts and keep things simple,
+        idiomatic, and in different namespaces.
+        """
+        super().__init__(election_data_dir, verbosity, printonly)
 
     def make_random_selection(self, the_ballot, the_contest):
         """Will randomly make selections on a contest"""

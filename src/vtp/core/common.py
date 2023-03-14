@@ -225,12 +225,16 @@ class Common:
 
     @staticmethod
     def verify_election_data_dir(election_data_dir: str):
-        """Verify election_data option AND set it.  Note this critical side effect!"""
+        """
+        Verify election_data option.  Note that global constant
+        ROOT_ELECTION_DATA_SUBDIR is a default value while the actual
+        live election_data_dir value is stored in an upstream ops
+        object.
+        """
         if not os.path.isdir(election_data_dir):
             raise ValueError(
                 f"The provided --election_data value ({election_data_dir}) does not exist"
             )
-        Globals.set_electiondatadir(election_data_dir)
 
 
 # pylint: disable=too-few-public-methods   # ZZZ - remove this later

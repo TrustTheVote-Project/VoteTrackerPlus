@@ -27,11 +27,13 @@ import logging
 import os
 
 # Local libraries
-from vtp.core.common import Common, Globals, Shellout
+from vtp.core.common import Globals, Shellout
 from vtp.core.election_config import ElectionConfig
 
+from .operation import Operation
 
-class ShowContestsOperation:
+
+class ShowContestsOperation(Operation):
     """
     A class to implememt the show-contests operation.  See the
     show-contests help output or read the parse_argument argparse
@@ -39,12 +41,11 @@ class ShowContestsOperation:
     """
 
     def __init__(self, election_data_dir: str, verbosity: int, printonly: bool):
-        """Only to module-ize the scripts and keep things simple and idiomatic."""
-        self.election_data_dir = election_data_dir
-        self.verbosity = verbosity
-        self.printonly = printonly
-        # Configure logging
-        Common.configure_logging(verbosity)
+        """
+        Primarily to module-ize the scripts and keep things simple,
+        idiomatic, and in different namespaces.
+        """
+        super().__init__(election_data_dir, verbosity, printonly)
 
     def validate_digests(self, digests, election_data_dir, error_digests):
         """Will scan the supplied digests for validity.  Will print and

@@ -33,9 +33,11 @@ from vtp.core.ballot import BlankBallot
 from vtp.core.common import Common
 from vtp.core.election_config import ElectionConfig
 
+from .operation import Operation
+
 
 # pylint: disable=too-few-public-methods
-class GenerateAllBlankBallotsOperation:
+class GenerateAllBlankBallotsOperation(Operation):
     """
     A class to implememt the generate-all-blank-ballots operation.  See the
     generate-all-blank-ballots help output or read the parse_argument argparse
@@ -43,12 +45,11 @@ class GenerateAllBlankBallotsOperation:
     """
 
     def __init__(self, election_data_dir: str, verbosity: int, printonly: bool):
-        """Only to module-ize the scripts and keep things simple and idiomatic."""
-        self.election_data_dir = election_data_dir
-        self.verbosity = verbosity
-        self.printonly = printonly
-        # Configure logging
-        Common.configure_logging(verbosity)
+        """
+        Primarily to module-ize the scripts and keep things simple,
+        idiomatic, and in different namespaces.
+        """
+        super().__init__(election_data_dir, verbosity, printonly)
 
     # pylint: disable=duplicate-code
     def run(self):

@@ -29,14 +29,16 @@ import os
 import random
 import secrets
 
-# Local imports
+# Project imports
 from vtp.core.address import Address
 from vtp.core.ballot import Ballot, Contests
-from vtp.core.common import Common, Globals, Shellout
+from vtp.core.common import Globals, Shellout
 from vtp.core.election_config import ElectionConfig
 
+from .operation import Operation
 
-class AcceptBallotOperation:
+
+class AcceptBallotOperation(Operation):
     """
     A class to implememt the accept_ballot.py operation.  See the
     cast-ballot help output or read the parse_argument argparse
@@ -44,12 +46,11 @@ class AcceptBallotOperation:
     """
 
     def __init__(self, election_data_dir: str, verbosity: int, printonly: bool):
-        """Only to module-ize the scripts and keep things simple and idiomatic."""
-        self.election_data_dir = election_data_dir
-        self.verbosity = verbosity
-        self.printonly = printonly
-        # Configure logging
-        Common.configure_logging(verbosity)
+        """
+        Primarily to module-ize the scripts and keep things simple,
+        idiomatic, and in different namespaces.
+        """
+        super().__init__(election_data_dir, verbosity, printonly)
 
     def get_random_branchpoint(self, branch):
         """Return a random branchpoint on the supplied branch

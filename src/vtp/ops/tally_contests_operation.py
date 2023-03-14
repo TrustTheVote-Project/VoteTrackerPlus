@@ -34,9 +34,11 @@ from vtp.core.contest import Tally
 from vtp.core.election_config import ElectionConfig
 from vtp.core.exceptions import TallyException
 
+from .operation import Operation
+
 
 # pylint: disable=too-few-public-methods
-class TallyContestsOperation:
+class TallyContestsOperation(Operation):
     """
     A class to implememt the tally-contests operation.  See the
     tally-contests help output or read the parse_argument argparse
@@ -44,12 +46,11 @@ class TallyContestsOperation:
     """
 
     def __init__(self, election_data_dir: str, verbosity: int, printonly: bool):
-        """Only to module-ize the scripts and keep things simple and idiomatic."""
-        self.election_data_dir = election_data_dir
-        self.verbosity = verbosity
-        self.printonly = printonly
-        # Configure logging
-        Common.configure_logging(verbosity)
+        """
+        Primarily to module-ize the scripts and keep things simple,
+        idiomatic, and in different namespaces.
+        """
+        super().__init__(election_data_dir, verbosity, printonly)
 
     # pylint: disable=duplicate-code
     def run(

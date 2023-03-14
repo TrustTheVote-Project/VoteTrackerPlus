@@ -31,11 +31,13 @@ import random
 import re
 
 # Local import
-from vtp.core.common import Common, Globals, Shellout
+from vtp.core.common import Globals, Shellout
 from vtp.core.election_config import ElectionConfig
 
+from .operation import Operation
 
-class MergeContestsOperation:
+
+class MergeContestsOperation(Operation):
     """
     A class to implememt the merge-contests operation.  See the
     merge-contests help output or read the parse_argument argparse
@@ -43,12 +45,11 @@ class MergeContestsOperation:
     """
 
     def __init__(self, election_data_dir: str, verbosity: int, printonly: bool):
-        """Only to module-ize the scripts and keep things simple and idiomatic."""
-        self.election_data_dir = election_data_dir
-        self.verbosity = verbosity
-        self.printonly = printonly
-        # Configure logging
-        Common.configure_logging(verbosity)
+        """
+        Primarily to module-ize the scripts and keep things simple,
+        idiomatic, and in different namespaces.
+        """
+        super().__init__(election_data_dir, verbosity, printonly)
 
     def merge_contest_branch(self, branch: str, remote: bool):
         """Merge a specific branch"""

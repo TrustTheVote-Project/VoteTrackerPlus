@@ -26,16 +26,18 @@ See 'vote.py -h' for usage information.
 
 from vtp.core.address import Address
 from vtp.core.ballot import Ballot
-from vtp.core.common import Common, Shellout
+from vtp.core.common import Shellout
 from vtp.core.election_config import ElectionConfig
 
 # Local libraries
 from vtp.ops.accept_ballot_operation import AcceptBallotOperation
 from vtp.ops.cast_ballot_operation import CastBallotOperation
 
+from .operation import Operation
+
 
 # pylint: disable=too-few-public-methods
-class VoteOperation:
+class VoteOperation(Operation):
     """
     A class to implememt the vote operation.  See the
     vote help output or read the parse_argument argparse
@@ -43,12 +45,11 @@ class VoteOperation:
     """
 
     def __init__(self, election_data_dir: str, verbosity: int, printonly: bool):
-        """Only to module-ize the scripts and keep things simple and idiomatic."""
-        self.election_data_dir = election_data_dir
-        self.verbosity = verbosity
-        self.printonly = printonly
-        # Configure logging
-        Common.configure_logging(verbosity)
+        """
+        Primarily to module-ize the scripts and keep things simple,
+        idiomatic, and in different namespaces.
+        """
+        super().__init__(election_data_dir, verbosity, printonly)
 
     # pylint: disable=duplicate-code
     def run(self, an_address: Address, blank_ballot: str = "") -> tuple[dict, int]:
