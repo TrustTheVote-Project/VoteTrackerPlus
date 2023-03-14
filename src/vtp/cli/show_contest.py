@@ -23,11 +23,44 @@ See 'show_contest.py -h' for usage information.
 """
 
 # Standard imports
+import argparse
+import re
 import sys
 
 # Local imports
+from vtp.core.common import Common
 from vtp.ops.show_contests_operation import ShowContestsOperation
 
+
+def parse_arguments(argv):
+    """Parse arguments from a command line or from the constructor"""
+
+    parser = argparse.ArgumentParser(
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        description="""
+will print the CVRs (Cast Vote Records) for the supplied contest(s)
+""",
+    )
+    Common.add_election_data_dir(parser)
+    parser.add_argument(
+        "-c",
+        "--contest-check",
+        help="a comma separate list of contests digests to validate/display",
+    )
+
+    Common.add_verbosity(parser)
+    Common.add_printonly(parser)
+    parsed_args = parser.parse_args(argv)
+
+    # Validate required args
+    if not parsed_args.contest_check:
+        raise ValueError("The contest check is required")
+    if not bool(re.match("^[0-9a-f,]", parsed_args.contest_check)):
+        raise ValueError(
+            "The contest_check parameter only accepts a comma separated (no spaces) "
+            "list of contest checks/digests to track."
+        )
+    return parsed_args
 
 def main():
     """
@@ -38,9 +71,17 @@ def main():
     source file.
     """
 
+    # Parse args
+    parsed_args = parse_arguments(sys.argv)
+
     # do it
-    sco = ShowContestsOperation(sys.argv[1:])
-    sco.run()
+    sco = ShowContestsOperation(
+        parsed_args.election_data_dir,
+        parsed_args.verbosity,
+        parsed_args.printonly)
+    sco.run(
+        contest_check=parsed_args.contest_check,
+        )
 
 
 # If called directly via this file
