@@ -234,7 +234,7 @@ class AcceptBallotOperation(Operation):
 
     def create_ballot_receipt(
         self, the_ballot, contest_receipts, unmerged_cvrs, the_election_config
-    ):
+    ) -> tuple[list, int]:
         """
         Create the voter's receipt.  As of this writing this is basically
         a csv file with a header line with one row in particular being the
@@ -299,6 +299,8 @@ class AcceptBallotOperation(Operation):
         # print the voter's row to STDOUT for now
         print(f"############\n### Receipt file: {receipt_file}")
         print(f"### Voter's row: {voters_row}\n############")
+        # return both
+        return ballot_receipt, voters_row
 
     ################
     # main
@@ -308,7 +310,7 @@ class AcceptBallotOperation(Operation):
         self,
         an_address: Address = None,
         cast_ballot: str = "",
-    ):
+    ) -> tuple[list, int]:
         """
         Main function - see -h for more info.  Will work with either
         specific or an generic address.
@@ -439,10 +441,10 @@ class AcceptBallotOperation(Operation):
         # Create the ballot receipt
         if skip_receipt:
             logging.warning("Skipping ballot receipt due to lack of unmerged CVRs")
-        else:
-            self.create_ballot_receipt(
-                a_ballot, contest_receipts, unmerged_cvrs, the_election_config
-            )
+            return [], 0
+        return self.create_ballot_receipt(
+            a_ballot, contest_receipts, unmerged_cvrs, the_election_config
+        )
 
     # End Of Class
 

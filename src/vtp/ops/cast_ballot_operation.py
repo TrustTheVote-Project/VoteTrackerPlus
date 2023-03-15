@@ -271,6 +271,7 @@ class CastBallotOperation(Operation):
             logging.info("Cast ballot file: %s", ballot_file)
         # return the cast ballot location
         return ballot_file
+
     # End Of Class
 
 

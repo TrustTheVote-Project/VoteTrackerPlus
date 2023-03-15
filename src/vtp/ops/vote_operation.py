@@ -83,6 +83,7 @@ class VoteOperation(Operation):
         a_accept_ballot_operation = AcceptBallotOperation(
             self.election_data_dir, self.verbosity, self.printonly
         )
+        # return what accept_ballot returns
         a_accept_ballot_operation.run(
             an_address=an_address,
             cast_ballot=blank_ballot,
