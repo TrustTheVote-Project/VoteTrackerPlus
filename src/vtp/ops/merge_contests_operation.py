@@ -142,7 +142,7 @@ class MergeContestsOperation(Operation):
 
     # pylint: disable=too-many-arguments
     def randomly_merge_contests(
-        self, uid: int, batch: int, minimum_cast_cache: int, flush: bool, remote: bool
+        self, uid: str, batch: list, minimum_cast_cache: int, flush: bool, remote: bool
     ):
         """
         Will randomingly select (len(batch) - BALLOT_RECEIPT_ROWS) contest
@@ -235,7 +235,7 @@ class MergeContestsOperation(Operation):
             # Note - sorted alphanumerically on contest UID. Loop over
             # contests and randomly merge extras
             batch = []  # if ordered_set was native would probably use that
-            current_uid = None
+            current_uid = "-1"
             for this_branch in cvr_branches:
                 uid = re.search(cvr_regex, this_branch).group(1)
                 if current_uid == uid:

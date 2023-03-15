@@ -269,7 +269,8 @@ class CastBallotOperation(Operation):
                 "Casting a %s contest ballot at VC %s", contests.len(), vote_center
             )
             logging.info("Cast ballot file: %s", ballot_file)
-
+        # return the cast ballot location
+        return ballot_file
     # End Of Class
 
 
