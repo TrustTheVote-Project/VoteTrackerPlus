@@ -26,10 +26,11 @@ See 'accept_ballot.py -h' for usage information.
 import argparse
 import sys
 
-# Local imports
+# Project imports
 from vtp.core.address import Address
 from vtp.ops.accept_ballot_operation import AcceptBallotOperation
 
+# Local imports
 from ._arguments import Arguments
 
 
@@ -61,14 +62,9 @@ Either the location of the ballot_file or the associated address is required.
     return parser.parse_args(argv)
 
 
+# pylint: disable=duplicate-code
 def main():
-    """
-    Called via a python local install entrypoint or by running this
-    file.  Simply wraps the scripts constructor and calls the run
-    method.  See the script's help output or read the
-    vtp.ops.accept_ballot_operation.py (argparse) description in the
-    source file.
-    """
+    """Entry point for 'accept-ballot'."""
 
     # Parse args
     parsed_args = parse_arguments(sys.argv)

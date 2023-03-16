@@ -29,10 +29,11 @@ See ../../docs/tech/executable-overview.md for the context in which this file wa
 import argparse
 import sys
 
-# Local imports
+# Project imports
 from vtp.core.address import Address
 from vtp.ops.create_blank_ballot_operation import CreateBlankBallotOperation
 
+# Local imports
 from ._arguments import Arguments
 
 
@@ -60,14 +61,9 @@ supplied address.
     return parser.parse_args(argv)
 
 
+# pylint: disable=duplicate-code
 def main():
-    """
-    Called via a python local install entrypoint or by running this
-    file.  Simply wraps the scripts constructor and calls the run
-    method.  See the script's help output or read the
-    vtp.ops.create_blank_ballot_operation.py (argparse) description in
-    the source file.
-    """
+    """Entry point for 'create-blank-ballot'."""
 
     # Parse args
     parsed_args = parse_arguments(sys.argv)

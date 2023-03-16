@@ -31,9 +31,10 @@ import sys
 
 from vtp.core.common import Globals
 
-# Local imports
+# Project imports
 from vtp.ops.setup_vtp_demo_operation import SetupVtpDemoOperation
 
+# Local imports
 from ._arguments import Arguments
 
 
@@ -109,14 +110,9 @@ the GUID.
     return parsed_args
 
 
+# pylint: disable=duplicate-code
 def main():
-    """
-    Called via a python local install entrypoint or by running this
-    file.  Simply wraps the scripts constructor and calls the run
-    method.  See the script's help output or read the
-    vtp.ops.setup_vtp_demo_operation.py (argparse) description in the
-    source file.
-    """
+    """Entry point for 'setup-vtp-demo'."""
 
     # Parse args
     parsed_args = parse_arguments(sys.argv)

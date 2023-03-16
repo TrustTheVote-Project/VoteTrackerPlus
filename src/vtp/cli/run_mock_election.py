@@ -27,10 +27,11 @@ See 'run_mock_election.py -h' for usage information.
 import argparse
 import sys
 
-# Local import
+# Project imports
 from vtp.core.address import Address
 from vtp.ops.run_mock_election_operation import RunMockElectionOperation
 
+# Local imports
 from ._arguments import Arguments
 
 
@@ -124,14 +125,9 @@ mock to a single ballot N times.
     return parsed_args
 
 
+# pylint: disable=duplicate-code
 def main():
-    """
-    Called via a python local install entrypoint or by running this
-    file.  Simply wraps the scripts constructor and calls the run
-    method.  See the script's help output or read the
-    vtp.ops.run_mock_election_operation.py (argparse) description in the
-    source file.
-    """
+    """Entry point for 'run-mock-election'."""
 
     # Parse args
     parsed_args = parse_arguments(sys.argv)

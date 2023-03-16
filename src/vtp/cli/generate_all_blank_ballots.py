@@ -26,11 +26,12 @@ See 'generate_all_blank_ballots.py -h' for usage information.
 import argparse
 import sys
 
-# Local import
+# Project imports
 from vtp.ops.generate_all_blank_ballots_operation import (
     GenerateAllBlankBallotsOperation,
 )
 
+# Local imports
 from ._arguments import Arguments
 
 
@@ -52,14 +53,9 @@ blank-ballots subdir.
     return parser.parse_args(argv)
 
 
+# pylint: disable=duplicate-code
 def main():
-    """
-    Called via a python local install entrypoint or by running this
-    file.  Simply wraps the scripts constructor and calls the run
-    method.  See the script's help output or read the
-    vtp.ops.generate_all_blank_ballots_operation.py (argparse)
-    description in the source file.
-    """
+    """Entry point for 'generate-all-blank-ballots'."""
 
     # Parse args
     parsed_args = parse_arguments(sys.argv)

@@ -28,10 +28,11 @@ See 'vote.py -h' for usage information.
 import argparse
 import sys
 
-# Local imports
+# Project imports
 from vtp.core.address import Address
 from vtp.ops.vote_operation import VoteOperation
 
+# Local imports
 from ._arguments import Arguments
 
 
@@ -56,14 +57,9 @@ ballot is chosen.
     return parser.parse_args(argv)
 
 
+# pylint: disable=duplicate-code
 def main():
-    """
-    Called via a python local install entrypoint or by running this
-    file.  Simply wraps the scripts constructor and calls the run
-    method.  See the script's help output or read the
-    vtp.ops.vote_operation.py (argparse) description in the source
-    file.
-    """
+    """Entry point for 'vote'."""
 
     # Parse args
     parsed_args = parse_arguments(sys.argv)
