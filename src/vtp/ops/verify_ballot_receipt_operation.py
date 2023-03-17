@@ -21,7 +21,7 @@
 Library backend for command line level script to verify a
 voters ballot receipt.
 
-See 'verify_ballot_receipt.py -h' for usage information.
+See 'verify-ballot-receipt -h' for usage information.
 """
 
 # Standard imports
@@ -29,12 +29,13 @@ import json
 import logging
 import re
 
-# Local import
+# Project imports
 from vtp.core.address import Address
 from vtp.core.ballot import Ballot
 from vtp.core.common import Common, Shellout
 from vtp.core.election_config import ElectionConfig
 
+# Local imports
 from .operation import Operation
 
 

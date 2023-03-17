@@ -21,7 +21,7 @@
 Command line level script to merge CVR contest
 branches into the main branch
 
-See 'merge_contests.py -h' for usage information.
+See 'merge-contests -h' for usage information.
 """
 
 # Standard imports

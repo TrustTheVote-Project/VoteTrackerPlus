@@ -19,16 +19,17 @@
 
 """Library backend for command line level test script to automatically cast a ballot.
 
-See 'show_contest.py -h' for usage information.
+See 'show-contest -h' for usage information.
 """
 
 # Standard imports
 import logging
 
-# Local libraries
+# Project imports
 from vtp.core.common import Shellout
 from vtp.core.election_config import ElectionConfig
 
+# Local imports
 from .operation import Operation
 
 
@@ -88,9 +89,6 @@ class ShowContestsOperation(Operation):
         if errors:
             raise ValueError(f"Found {errors} invalid digest(s)")
 
-    ################
-    # main
-    ################
     # pylint: disable=duplicate-code
     def run(self, contest_check: str = ""):
         """Main function - see -h for more info"""

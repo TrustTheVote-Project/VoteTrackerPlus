@@ -21,7 +21,7 @@
 Library backend to command line level script to merge CVR contest
 branches into the main branch
 
-See './merge_contests.py -h' for usage information.
+See 'merge-contests -h' for usage information.
 """
 
 # Standard imports
@@ -30,10 +30,11 @@ import os
 import random
 import re
 
-# Local import
+# Project import
 from vtp.core.common import Globals, Shellout
 from vtp.core.election_config import ElectionConfig
 
+# Local imports
 from .operation import Operation
 
 

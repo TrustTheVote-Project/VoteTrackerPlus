@@ -18,9 +18,9 @@
 #   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 """
-LIbrary backend to command line level test script to automatically cast a ballot.
+Library backend to command line level test script to automatically cast a ballot.
 
-See 'cast_ballot.py -h' for usage information.
+See 'cast-ballot -h' for usage information.
 """
 
 # Standard imports
@@ -30,12 +30,13 @@ import random
 
 import pyinputplus
 
-# Local imports
+# Project imports
 from vtp.core.address import Address
 from vtp.core.ballot import Ballot, BlankBallot, Contests
 from vtp.core.common import Shellout
 from vtp.core.election_config import ElectionConfig
 
+# Local imports
 from .operation import Operation
 
 
@@ -218,9 +219,6 @@ class CastBallotOperation(Operation):
         # For a convenient side effect, return the contests
         return contests
 
-    ################
-    # main
-    ################
     def run(
         self,
         an_address: Address = None,

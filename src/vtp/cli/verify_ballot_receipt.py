@@ -20,7 +20,7 @@
 """
 Command line level script to verify a voters ballot receipt.  Supports several interesting options.
 
-See 'verify_ballot_receipt.py -h' for usage information.
+See 'verify-ballot-receipt -h' for usage information.
 """
 
 # Standard imports

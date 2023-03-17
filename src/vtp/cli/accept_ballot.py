@@ -17,9 +17,9 @@
 #   with this program; if not, write to the Free Software Foundation, Inc.,
 #   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
-"""accept_ballot.py - command line level script to accept a ballot.
+"""accept-ballot - command line level script to accept a ballot.
 
-See 'accept_ballot.py -h' for usage information.
+See 'accept-ballot -h' for usage information.
 """
 
 # Global imports

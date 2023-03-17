@@ -18,10 +18,10 @@
 #   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 """
-tally_contests.py - command line level script to tally the contests of
+tally-contests - command line level script to tally the contests of
 a election.
 
-See 'tally_contests.py -h' for usage information.
+See 'tally-contests -h' for usage information.
 """
 
 # Global imports

@@ -19,19 +19,20 @@
 
 """
 Library operation for command line level script set up a VTP demo
-See 'create_blank_ballot_operation.py -h' for usage information.
+See 'create-blank-ballot-operation -h' for usage information.
 """
 
 # Standard imports
 import logging
 import pprint
 
-# Local import
+# Project imports
 from vtp.core.address import Address
 from vtp.core.ballot import BlankBallot
 from vtp.core.common import Common
 from vtp.core.election_config import ElectionConfig
 
+# Local imports
 from .operation import Operation
 
 

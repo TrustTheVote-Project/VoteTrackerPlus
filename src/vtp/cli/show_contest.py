@@ -19,7 +19,7 @@
 
 """Command line level script to automatically cast a ballot.
 
-See 'show_contest.py -h' for usage information.
+See 'show-contest -h' for usage information.
 """
 
 # Standard imports

@@ -17,9 +17,9 @@
 #   with this program; if not, write to the Free Software Foundation, Inc.,
 #   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
-"""generate_all_blank_ballots.py - generate all possible blank ballots
+"""generate-all-blank-ballots - generate all possible blank ballots
 
-See 'generate_all_blank_ballots.py -h' for usage information.
+See 'generate-all-blank-ballots -h' for usage information.
 """
 
 # Standard imports
@@ -27,12 +27,13 @@ import logging
 import os
 import pprint
 
-# Local import
+# Project imports
 from vtp.core.address import Address
 from vtp.core.ballot import BlankBallot
 from vtp.core.common import Common
 from vtp.core.election_config import ElectionConfig
 
+# Local imports
 from .operation import Operation
 
 
@@ -40,8 +41,7 @@ from .operation import Operation
 class GenerateAllBlankBallotsOperation(Operation):
     """
     A class to implememt the generate-all-blank-ballots operation.  See the
-    generate-all-blank-ballots help output or read the parse_argument argparse
-    description (immediately below this) in the source file.
+    generate-all-blank-ballots help output.
     """
 
     def __init__(self, election_data_dir: str, verbosity: int, printonly: bool):

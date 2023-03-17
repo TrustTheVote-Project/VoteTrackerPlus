@@ -21,7 +21,7 @@
 Library backend for command line level script to merge CVR contest
 branches into the main branch
 
-See 'run_mock_election.py -h' for usage information.
+See 'run-mock-election -h' for usage information.
 """
 
 # Standard imports
@@ -29,18 +29,17 @@ import logging
 import os
 import time
 
-# Local libraries
+# Project imports
 from vtp.core.address import Address
 from vtp.core.ballot import Ballot
 from vtp.core.common import Shellout
 from vtp.core.election_config import ElectionConfig
-
-# Script modules
 from vtp.ops.accept_ballot_operation import AcceptBallotOperation
 from vtp.ops.cast_ballot_operation import CastBallotOperation
 from vtp.ops.merge_contests_operation import MergeContestsOperation
 from vtp.ops.tally_contests_operation import TallyContestsOperation
 
+# Local imports
 from .operation import Operation
 
 

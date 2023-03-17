@@ -21,19 +21,20 @@
 Library backend to command line level script to tally the contests of
 a election.
 
-See 'tally_contests.py -h' for usage information.
+See 'tally-contests -h' for usage information.
 """
 
 # Standard imports
 import logging
 
-# Local imports
+# Project imports
 from vtp.core.ballot import Ballot
 from vtp.core.common import Common, Shellout
 from vtp.core.contest import Tally
 from vtp.core.election_config import ElectionConfig
 from vtp.core.exceptions import TallyException
 
+# Local imports
 from .operation import Operation
 
 

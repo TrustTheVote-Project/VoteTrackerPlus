@@ -18,10 +18,10 @@
 #   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 """
-vote.py - command line level script to allow an end voter to vote - it
+vote - command line level script to allow an end voter to vote - it
 simply wraps a call to cast_ballot.py and accept_ballot.py.
 
-See 'vote.py -h' for usage information.
+See 'vote -h' for usage information.
 """
 
 # Global imports

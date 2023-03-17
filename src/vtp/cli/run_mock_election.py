@@ -20,7 +20,7 @@
 """
 Command line level script to run either a VTP ballot scanner or tabulator app
 
-See 'run_mock_election.py -h' for usage information.
+See 'run-mock-election -h' for usage information.
 """
 
 # Standard imports

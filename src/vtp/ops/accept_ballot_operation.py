@@ -19,7 +19,7 @@
 
 """Library backend to command line level script to accept a ballot.
 
-See 'accept_ballot.py -h' for usage information.
+See 'accept-ballot -h' for usage information.
 
 """
 
@@ -35,6 +35,7 @@ from vtp.core.ballot import Ballot, Contests
 from vtp.core.common import Globals, Shellout
 from vtp.core.election_config import ElectionConfig
 
+# Local imports
 from .operation import Operation
 
 
@@ -302,9 +303,6 @@ class AcceptBallotOperation(Operation):
         # return both
         return ballot_receipt, voters_row
 
-    ################
-    # main
-    ################
     # pylint: disable=duplicate-code
     def run(
         self,

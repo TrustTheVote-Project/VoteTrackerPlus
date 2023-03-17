@@ -17,9 +17,9 @@
 #   with this program; if not, write to the Free Software Foundation, Inc.,
 #   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
-"""create_blank_ballot.py - command line level test script to automatically cast a ballot.
+"""create-blank-ballot - command line level test script to automatically cast a ballot.
 
-See './create_blank_ballot.py -h' for usage information.
+See 'create-blank-ballot -h' for usage information.
 
 See ../../docs/tech/executable-overview.md for the context in which this file was created.
 

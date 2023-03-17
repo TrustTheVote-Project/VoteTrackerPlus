@@ -21,18 +21,18 @@
 Library backend to command line level script to allow an end voter to
 vote - it simply wraps a call to cast_ballot.py and accept_ballot.py.
 
-See 'vote.py -h' for usage information.
+See 'vote -h' for usage information.
 """
 
+# Project imports
 from vtp.core.address import Address
 from vtp.core.ballot import Ballot
 from vtp.core.common import Shellout
 from vtp.core.election_config import ElectionConfig
-
-# Local libraries
 from vtp.ops.accept_ballot_operation import AcceptBallotOperation
 from vtp.ops.cast_ballot_operation import CastBallotOperation
 
+# Local imports
 from .operation import Operation
 
 
