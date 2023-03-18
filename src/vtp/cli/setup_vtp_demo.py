@@ -27,7 +27,6 @@ See 'setup_vtp_demo -h' for usage information.
 # Global imports
 import argparse
 import os
-import sys
 
 from vtp.core.common import Globals
 
@@ -38,7 +37,7 @@ from vtp.ops.setup_vtp_demo_operation import SetupVtpDemoOperation
 from ._arguments import Arguments
 
 
-def parse_arguments(argv):
+def parse_arguments():
     """Parse arguments from a command line or from the constructor"""
 
     parser = argparse.ArgumentParser(
@@ -85,7 +84,7 @@ the GUID.
     )
     Arguments.add_verbosity(parser)
     Arguments.add_printonly(parser)
-    parsed_args = parser.parse_args(argv)
+    parsed_args = parser.parse_args()
     # Validate required args
     if parsed_args.scanners < 1 or parsed_args.scanners > 16:
         raise ValueError(
@@ -115,7 +114,7 @@ def main():
     """Entry point for 'setup-vtp-demo'."""
 
     # Parse args
-    parsed_args = parse_arguments(sys.argv)
+    parsed_args = parse_arguments()
 
     # do it
     svdo = SetupVtpDemoOperation(

@@ -25,7 +25,6 @@ See 'show-contest -h' for usage information.
 # Standard imports
 import argparse
 import re
-import sys
 
 # Project imports
 from vtp.ops.show_contests_operation import ShowContestsOperation
@@ -34,7 +33,7 @@ from vtp.ops.show_contests_operation import ShowContestsOperation
 from ._arguments import Arguments
 
 
-def parse_arguments(argv):
+def parse_arguments():
     """Parse arguments from a command line or from the constructor"""
 
     parser = argparse.ArgumentParser(
@@ -52,7 +51,7 @@ will print the CVRs (Cast Vote Records) for the supplied contest(s)
 
     Arguments.add_verbosity(parser)
     Arguments.add_printonly(parser)
-    parsed_args = parser.parse_args(argv)
+    parsed_args = parser.parse_args()
 
     # Validate required args
     if not parsed_args.contest_check:
@@ -70,7 +69,7 @@ def main():
     """Entry point for 'show-contests'."""
 
     # Parse args
-    parsed_args = parse_arguments(sys.argv)
+    parsed_args = parse_arguments()
 
     # do it
     sco = ShowContestsOperation(

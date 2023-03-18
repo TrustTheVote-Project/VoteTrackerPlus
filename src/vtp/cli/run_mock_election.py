@@ -25,7 +25,6 @@ See 'run-mock-election -h' for usage information.
 
 # Standard imports
 import argparse
-import sys
 
 # Project imports
 from vtp.core.address import Address
@@ -35,7 +34,7 @@ from vtp.ops.run_mock_election_operation import RunMockElectionOperation
 from ._arguments import Arguments
 
 
-def parse_arguments(argv):
+def parse_arguments():
     """Parse arguments from a command line or from the constructor"""
 
     parser = argparse.ArgumentParser(
@@ -109,7 +108,7 @@ mock to a single ballot N times.
     )
     Arguments.add_verbosity(parser)
     Arguments.add_printonly(parser)
-    parsed_args = parser.parse_args(argv)
+    parsed_args = parser.parse_args()
 
     # Validate required args
     if parsed_args.device not in ["scanner", "server", "both"]:
@@ -130,7 +129,7 @@ def main():
     """Entry point for 'run-mock-election'."""
 
     # Parse args
-    parsed_args = parse_arguments(sys.argv)
+    parsed_args = parse_arguments()
 
     # Convert the address args into an Address
     an_address = Address(

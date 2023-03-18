@@ -175,6 +175,7 @@ class CastBallotOperation(Operation):
             prompt = "Please enter in rank order the numbers of your choices separated by spaces: "
             pyinputplus.inputCustom(validate_multichoice, prompt=prompt, blank=True)
 
+    # pylint: disable=too-many-branches
     def loop_over_contests(self, a_ballot, demo_mode):
         """Will loop over the contests in a ballot and either ask the user
         for a choice or if in demo mode will randomly choose one.

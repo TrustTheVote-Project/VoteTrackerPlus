@@ -24,7 +24,6 @@ See 'generate-all-blank-ballots -h' for usage information.
 
 # Standard imports
 import argparse
-import sys
 
 # Project imports
 from vtp.ops.generate_all_blank_ballots_operation import (
@@ -35,7 +34,7 @@ from vtp.ops.generate_all_blank_ballots_operation import (
 from ._arguments import Arguments
 
 
-def parse_arguments(argv):
+def parse_arguments():
     """Parse arguments from a command line or from the constructor"""
 
     parser = argparse.ArgumentParser(
@@ -50,7 +49,7 @@ blank-ballots subdir.
     Arguments.add_election_data_dir(parser)
     Arguments.add_verbosity(parser)
     Arguments.add_printonly(parser)
-    return parser.parse_args(argv)
+    return parser.parse_args()
 
 
 # pylint: disable=duplicate-code
@@ -58,7 +57,7 @@ def main():
     """Entry point for 'generate-all-blank-ballots'."""
 
     # Parse args
-    parsed_args = parse_arguments(sys.argv)
+    parsed_args = parse_arguments()
 
     # do it
     gabbo = GenerateAllBlankBallotsOperation(

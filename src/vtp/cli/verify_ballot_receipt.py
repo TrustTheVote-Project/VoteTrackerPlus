@@ -25,7 +25,6 @@ See 'verify-ballot-receipt -h' for usage information.
 
 # Standard imports
 import argparse
-import sys
 
 # Project imports
 from vtp.core.address import Address
@@ -35,7 +34,7 @@ from vtp.ops.verify_ballot_receipt_operation import VerifyBallotReceiptOperation
 from ._arguments import Arguments
 
 
-def parse_arguments(argv):
+def parse_arguments():
     """Parse arguments from a command line or from the constructor"""
 
     parser = argparse.ArgumentParser(
@@ -77,7 +76,7 @@ check row is provided.
     )
     Arguments.add_verbosity(parser)
 
-    parsed_args = parser.parse_args(argv)
+    parsed_args = parser.parse_args()
 
     # Validate required args
     if not (parsed_args.receipt_file or (parsed_args.state and parsed_args.town)):
@@ -92,7 +91,7 @@ def main():
     """Entry point for 'verify-ballot-receipt'."""
 
     # Parse args
-    parsed_args = parse_arguments(sys.argv)
+    parsed_args = parse_arguments()
 
     # Convert the address args into an Address
     an_address = Address(

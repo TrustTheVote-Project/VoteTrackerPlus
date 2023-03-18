@@ -27,7 +27,6 @@ See 'tally-contests -h' for usage information.
 # Global imports
 import argparse
 import re
-import sys
 
 # Project imports
 from vtp.ops.tally_contests_operation import TallyContestsOperation
@@ -36,7 +35,7 @@ from vtp.ops.tally_contests_operation import TallyContestsOperation
 from ._arguments import Arguments
 
 
-def parse_arguments(argv):
+def parse_arguments():
     """Parse arguments from a command line or from the constructor"""
 
     parser = argparse.ArgumentParser(
@@ -72,7 +71,7 @@ tallying across git submodules/repos.
         help="a comma separated list of contests checks to track",
     )
     Arguments.add_verbosity(parser)
-    parsed_args = parser.parse_args(argv)
+    parsed_args = parser.parse_args()
 
     # Validate required args
     if parsed_args.track_contests:
@@ -92,7 +91,7 @@ def main():
     """Entry point for 'tally-contests'."""
 
     # Parse args
-    parsed_args = parse_arguments(sys.argv)
+    parsed_args = parse_arguments()
 
     # do it
     tco = TallyContestsOperation(

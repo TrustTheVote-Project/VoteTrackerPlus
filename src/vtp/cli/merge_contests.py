@@ -26,7 +26,6 @@ See 'merge-contests -h' for usage information.
 
 # Standard imports
 import argparse
-import sys
 
 # Project imports
 from vtp.ops.merge_contests_operation import MergeContestsOperation
@@ -35,7 +34,7 @@ from vtp.ops.merge_contests_operation import MergeContestsOperation
 from ._arguments import Arguments
 
 
-def parse_arguments(argv):
+def parse_arguments():
     """Parse arguments from a command line or from the constructor"""
 
     parser = argparse.ArgumentParser(
@@ -72,7 +71,7 @@ branch.
     )
     Arguments.add_verbosity(parser)
     Arguments.add_printonly(parser)
-    return parser.parse_args(argv)
+    return parser.parse_args()
 
 
 # pylint: disable=duplicate-code
@@ -80,7 +79,7 @@ def main():
     """Entry point for 'merge-contests'."""
 
     # Parse args
-    parsed_args = parse_arguments(sys.argv)
+    parsed_args = parse_arguments()
 
     # do it
     mco = MergeContestsOperation(

@@ -24,7 +24,6 @@ See 'accept-ballot -h' for usage information.
 
 # Global imports
 import argparse
-import sys
 
 # Project imports
 from vtp.core.address import Address
@@ -34,7 +33,7 @@ from vtp.ops.accept_ballot_operation import AcceptBallotOperation
 from ._arguments import Arguments
 
 
-def parse_arguments(argv):
+def parse_arguments():
     """Parse arguments from a command line or from the constructor"""
 
     parser = argparse.ArgumentParser(
@@ -59,7 +58,7 @@ Either the location of the ballot_file or the associated address is required.
     )
     Arguments.add_verbosity(parser)
     Arguments.add_printonly(parser)
-    return parser.parse_args(argv)
+    return parser.parse_args()
 
 
 # pylint: disable=duplicate-code
@@ -67,7 +66,7 @@ def main():
     """Entry point for 'accept-ballot'."""
 
     # Parse args
-    parsed_args = parse_arguments(sys.argv)
+    parsed_args = parse_arguments()
 
     # Convert the address args into an Address
     an_address = Address(
