@@ -34,6 +34,7 @@ import pyinputplus
 from vtp.core.address import Address
 from vtp.core.ballot import Ballot, BlankBallot, Contests
 from vtp.core.common import Shellout
+from vtp.core.contest import Tally
 from vtp.core.election_config import ElectionConfig
 
 # Local imports
@@ -88,19 +89,28 @@ class CastBallotOperation(Operation):
         if tally == "plurality":
             print(f"- This is a {tally} tally")
             print(
-                f"- The voting is for {max_votes} open position(s)/choice(s) - "
-                "only that number of selections can be choosen."
+                f"- The voting is for {max_votes} open "
+                f"position{'s'[:max_votes^1]}/choice{'s'[:max_votes^1]} - "
+                f"only {max_votes} selection{'s'[:max_votes^1]} can be choosen."
             )
         else:
             print(
-                f"- This is a {tally} tally with {max_votes} open position(s)/choice(s).  "
-                f"Regardless up to {len(choices)} selections can be rank choosen."
+                f"- This is a {tally} tally with {max_votes} open "
+                f"position{'s'[:max_votes^1]}/choice{'s'[:max_votes^1]}.  "
+                f"Up to {len(choices)} selection{'s'[:len(choices)^1]} can be rank choosen."
             )
 
         # Need to print the choices first up front
         count = 0
-        for choice in choices:
-            print(f"  [{count}] {choice}")
+        for choice_index, choice in enumerate(choices):
+            # If it is a ticket, need to pretty print the ticket
+            #            import pdb; pdb.set_trace()
+            if the_contest.is_contest_a_ticket_choice(choice_index):
+                print(
+                    f"  [{count}] {choice} - {the_contest.pretty_print_ticket(choice_index)}"
+                )
+            else:
+                print(f"  [{count}] {choice}")
             count += 1
 
         def validate_multichoice(text):
@@ -189,10 +199,17 @@ class CastBallotOperation(Operation):
             while True:
                 # Print the selections
                 for contest in contests:
-                    print(
-                        f"Contest {contest.get('uid')} - {contest.get('name')}: "
-                        f"{contest.get('selection')}"
-                    )
+                    print(f"Contest {contest.get('uid')} - {contest.get('name')}:")
+                    # Loop over selections - there can be more than
+                    # one but they are ALWAYS ordered
+                    for selection in contest.get("selection"):
+                        #                        import pdb; pdb.set_trace()
+                        offset = Tally.extract_offest_from_selection(selection)
+                        name = Tally.extract_name_from_selection(selection)
+                        if contest.is_contest_a_ticket_choice(offset):
+                            print(f"    {contest.pretty_print_ticket(offset)} - {name}")
+                        else:
+                            print(f"    {name}")
                 prompt = (
                     "Is this correct?  "
                     "Enter yes to accept the ballot, no to reject the ballot: "
