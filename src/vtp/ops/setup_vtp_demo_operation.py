@@ -141,7 +141,7 @@ class SetupVtpDemoOperation(Operation):
     def run(
         self,
         scanners: int = 4,
-        guid_client_store: bool = True,
+        guid_client_store: bool = False,
         location: str = "/opt/VoteTrackerPlus/demo.01",
     ):
         """Main function - see -h for more info"""

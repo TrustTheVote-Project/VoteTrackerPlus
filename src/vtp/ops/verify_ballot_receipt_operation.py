@@ -120,7 +120,7 @@ class VerifyBallotReceiptOperation(Operation):
         the_election_config,
         error_digests,
         row_index=None,
-        ):
+    ):
         """
         Will scan the main branch and validate that the receipt digests
         are there and that they are in the correct contest.
@@ -152,8 +152,8 @@ class VerifyBallotReceiptOperation(Operation):
             else:
                 # skip the row - it has no legitimate digests
                 continue
-#            import pdb; pdb.set_trace()
-            if isinstance(row_index, str) and int(row_index) - 1 == index:
+            #            import pdb; pdb.set_trace()
+            if row_index != "" and int(row_index) - 1 == index:
                 requested_row = cvrs
                 requested_digests = row
             column = -1
@@ -282,7 +282,7 @@ class VerifyBallotReceiptOperation(Operation):
                     logging.error(
                         "[ERROR]: cannot print CVR for %s (row %s) - it is invalid",
                         digest,
-                        row,
+                        row_index,
                     )
                     continue
                 valid_digests.append(digest)

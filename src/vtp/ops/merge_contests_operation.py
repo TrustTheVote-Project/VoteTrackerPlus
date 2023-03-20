@@ -177,8 +177,8 @@ class MergeContestsOperation(Operation):
     def run(
         self,
         branch: str = "",
-        flush: bool = True,
-        remote: bool = True,
+        flush: bool = False,
+        remote: bool = False,
         minimum_cast_cache: int = 100,
     ):
         """Main function - see -h for more info"""

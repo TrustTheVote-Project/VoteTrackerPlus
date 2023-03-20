@@ -97,7 +97,7 @@ def main():
     tco = TallyContestsOperation(
         parsed_args.election_data_dir,
         parsed_args.verbosity,
-        parsed_args.printonly,
+        False,
     )
     tco.run(
         contest_uid=parsed_args.contest_uid,

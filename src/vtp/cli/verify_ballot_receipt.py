@@ -78,9 +78,7 @@ check row is provided.
 
     # Validate required args
     if not parsed_args.receipt_file:
-        raise ValueError(
-            "A receipt file must be provided"
-        )
+        raise ValueError("A receipt file must be provided")
     return parsed_args
 
 
