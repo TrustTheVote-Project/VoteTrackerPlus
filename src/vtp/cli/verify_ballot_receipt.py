@@ -27,7 +27,6 @@ See 'verify-ballot-receipt -h' for usage information.
 import argparse
 
 # Project imports
-from vtp.core.address import Address
 from vtp.ops.verify_ballot_receipt_operation import VerifyBallotReceiptOperation
 
 # Local imports
@@ -54,7 +53,6 @@ check row is provided.
 """,
     )
 
-    Address.add_address_args(parser, True)
     Arguments.add_election_data_dir(parser)
     parser.add_argument(
         "-f",
@@ -66,22 +64,22 @@ check row is provided.
         "-r",
         "--row",
         default="",
-        help="specify a row to inspect that row (the first row is 1, not 0)",
+        help="specify a specific row to inspect (the first row is 1, not 0)",
     )
     parser.add_argument(
         "-c",
         "--cvr",
         action="store_true",
-        help="display the contents of the content CVRs specifying a row",
+        help="display the contents of the CVRs when specifying a row",
     )
     Arguments.add_verbosity(parser)
 
     parsed_args = parser.parse_args()
 
     # Validate required args
-    if not (parsed_args.receipt_file or (parsed_args.state and parsed_args.town)):
+    if not parsed_args.receipt_file:
         raise ValueError(
-            "Either an explicit or implicit (via an address) receipt file must be provided"
+            "A receipt file must be provided"
         )
     return parsed_args
 
@@ -93,14 +91,6 @@ def main():
     # Parse args
     parsed_args = parse_arguments()
 
-    # Convert the address args into an Address
-    an_address = Address(
-        address=parsed_args.address,
-        substreet=parsed_args.substreet,
-        town=parsed_args.town,
-        state=parsed_args.state,
-    )
-
     # do it
     vbro = VerifyBallotReceiptOperation(
         parsed_args.election_data_dir,
@@ -108,7 +98,6 @@ def main():
         False,
     )
     vbro.run(
-        an_address=an_address,
         receipt_file=parsed_args.receipt_file,
         row=parsed_args.row,
         cvr=parsed_args.cvr,

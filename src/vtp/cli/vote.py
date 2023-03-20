@@ -48,7 +48,7 @@ ballot is chosen.
 """,
     )
 
-    Address.add_address_args(parser)
+    Arguments.add_address_args(parser)
     Arguments.add_election_data_dir(parser)
     Arguments.add_blank_ballot(parser)
     Arguments.add_verbosity(parser)

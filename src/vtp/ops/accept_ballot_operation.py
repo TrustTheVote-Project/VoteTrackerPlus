@@ -371,6 +371,7 @@ class AcceptBallotOperation(Operation):
             unmerged_cvrs = self.get_unmerged_contests(the_election_config)
 
             for contest in contests:
+#                import pdb; pdb.set_trace()
                 with Shellout.changed_branch("main"):
                     # get N other values for each contest for this ballot
                     uid = contest.get("uid")

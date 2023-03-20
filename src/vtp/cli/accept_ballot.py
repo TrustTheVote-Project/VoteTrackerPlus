@@ -50,7 +50,7 @@ Either the location of the ballot_file or the associated address is required.
 """,
     )
 
-    Address.add_address_args(parser, True)
+    Arguments.add_address_args(parser, True)
     Arguments.add_election_data_dir(parser)
     parser.add_argument(
         "--cast_ballot",

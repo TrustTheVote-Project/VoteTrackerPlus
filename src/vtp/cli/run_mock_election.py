@@ -68,7 +68,7 @@ mock to a single ballot N times.
 """,
     )
 
-    Address.add_address_args(parser)
+    Arguments.add_address_args(parser)
     Arguments.add_election_data_dir(parser)
     Arguments.add_blank_ballot(parser)
     parser.add_argument(

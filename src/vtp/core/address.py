@@ -45,31 +45,6 @@ class Address:
         return re.split(r"\s+", address, 1)
 
     @staticmethod
-    def add_address_args(parser, generic_address=False):
-        """Helper function to add standard address program switches to argparse"""
-        #        parser.add_argument('-c', "--csv",
-        #                                help="a comma separated address")
-        #        parser.add_argument('-r', "--street",
-        #                                help="the street/road field of an address, \
-        #                                in which case the address is the number")
-        #        parser.add_argument('-z', "--zipcode",
-        #                                help="the zipcode field of an address")
-        if not generic_address:
-            parser.add_argument(
-                "-a",
-                "--address",
-                help="the number and name of the \
-                                    street address (space separated)",
-            )
-            parser.add_argument(
-                "-b", "--substreet", help="the substreet field of an address"
-            )
-        parser.add_argument("-t", "--town", help="the town field of an address")
-        parser.add_argument(
-            "-s", "--state", help="the state/province field of an address"
-        )
-
-    @staticmethod
     def create_generic_address(config, subdir, ggos):
         """Will create/return a generic address nominally from the list
         of ggos

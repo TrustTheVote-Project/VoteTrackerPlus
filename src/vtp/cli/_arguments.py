@@ -32,6 +32,42 @@ class Arguments:
     # located in that file.
 
     @staticmethod
+    def add_address_args(parser, generic_address=False):
+        """Helper function to add standard address program switches to argparse"""
+        #        parser.add_argument('-c', "--csv",
+        #                                help="a comma separated address")
+        #        parser.add_argument('-r', "--street",
+        #                                help="the street/road field of an address, \
+        #                                in which case the address is the number")
+        #        parser.add_argument('-z', "--zipcode",
+        #                                help="the zipcode field of an address")
+        if not generic_address:
+            parser.add_argument(
+                "-a",
+                "--address",
+                default="",
+                help="the number and name of the street address (space separated)",
+            )
+            parser.add_argument(
+                "-b",
+                "--substreet",
+                default="",
+                help="the substreet field of an address",
+            )
+        parser.add_argument(
+            "-t",
+            "--town",
+            default="",
+            help="the town field of an address",
+        )
+        parser.add_argument(
+            "-s",
+            "--state",
+            default="",
+            help="the state/province field of an address",
+        )
+
+    @staticmethod
     def add_blank_ballot(parser):
         """Add blank_ballot option"""
         parser.add_argument(

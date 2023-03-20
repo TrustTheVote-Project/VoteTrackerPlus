@@ -47,7 +47,7 @@ VTP ElectionData git tree and create a blank ballot based on the
 supplied address.
 """,
     )
-    Address.add_address_args(parser)
+    Arguments.add_address_args(parser)
     Arguments.add_election_data_dir(parser)
     parser.add_argument(
         "-l",
