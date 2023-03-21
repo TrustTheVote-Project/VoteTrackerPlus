@@ -19,6 +19,9 @@
 
 """Logic of operation for voting."""
 
+# Standard imports
+import logging
+
 # Project imports
 from vtp.core.address import Address
 from vtp.core.ballot import Ballot
@@ -47,7 +50,12 @@ class VoteOperation(Operation):
         super().__init__(election_data_dir, verbosity, printonly)
 
     # pylint: disable=duplicate-code
-    def run(self, an_address: Address, blank_ballot: str = "") -> tuple[dict, int]:
+    def run(
+        self,
+        an_address: Address,
+        blank_ballot: str = "",
+        merge_contests: bool = False,
+    ) -> tuple[dict, int]:
         """Main function - see -h for more info"""
 
         # Create a VTP ElectionData object if one does not already exist
@@ -70,6 +78,7 @@ class VoteOperation(Operation):
         a_cast_ballot_operation = CastBallotOperation(
             self.election_data_dir, self.verbosity, self.printonly
         )
+        logging.debug("Calling CastBallotOperation.run")
         a_cast_ballot_operation.run(
             an_address=an_address,
             blank_ballot=blank_ballot,
@@ -79,9 +88,11 @@ class VoteOperation(Operation):
             self.election_data_dir, self.verbosity, self.printonly
         )
         # return what accept_ballot returns
+        logging.debug("Calling AcceptBallotOperation.run")
         a_accept_ballot_operation.run(
             an_address=an_address,
             cast_ballot=blank_ballot,
+            merge_contests=merge_contests,
         )
 
 

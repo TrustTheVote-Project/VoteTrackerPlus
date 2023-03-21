@@ -417,6 +417,14 @@ class AcceptBallotOperation(Operation):
         # If in demo mode, optionally merge the branches now and avoid
         # calling merge-contests later. Note - this will serialize the
         # ballots in time, but this is ok in certain demo situations.
+        # Note - since the above git push/delete is trying to be
+        # automic, at the moment that is done in the above loop and
+        # then later (now) the merge into main is done.  Since the
+        # above deletes the local CVR branch reference, the
+        # merge-contests below needs to merge directly from the remote
+        # reference.  (One could also do the merge prior to the local
+        # branch reference deletion and let the merge operation itself
+        # delete both branch references.)
         if merge_contests:
             for branch in branches:
                 # Merge the branch (but since the local branch should be
@@ -426,6 +434,7 @@ class AcceptBallotOperation(Operation):
                 mco = MergeContestsOperation(
                     self.election_data_dir, self.verbosity, self.printonly
                 )
+                logging.debug("Calling MergeContestsOperation.run")
                 mco.run(
                     branch="remotes/origin/" + branch,
                     flush=False,

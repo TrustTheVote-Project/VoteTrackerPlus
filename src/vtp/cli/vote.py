@@ -51,6 +51,7 @@ ballot is chosen.
     Arguments.add_address_args(parser)
     Arguments.add_election_data_dir(parser)
     Arguments.add_blank_ballot(parser)
+    Arguments.add_merge_contests(parser)
     Arguments.add_verbosity(parser)
     Arguments.add_printonly(parser)
     return parser.parse_args()
@@ -78,6 +79,7 @@ def main():
     vote_op.run(
         an_address=an_address,
         blank_ballot=parsed_args.blank_ballot,
+        merge_contests=parsed_args.merge_contests,
     )
 
 
