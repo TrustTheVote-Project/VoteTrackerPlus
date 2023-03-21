@@ -38,6 +38,7 @@ It is a goal to create a development process that eventually includes the follow
 
 - Commits are required to be signed.  See [https://github.com/TrustTheVote-Project/VoteTrackerPlus/blob/main/docs/informal-security-overview.md](https://github.com/TrustTheVote-Project/VoteTrackerPlus/blob/main/docs/informal-security-overview.md)
 - Standard GitHub pull request (PR) development models are in play
+- ALl pull-requests are squashed-merged onto main - main maintains a linear history
 - All pull-requests pass isort, black, and pylint with a pylint score of 10.0
 - All pull-requests pass pytest (once tests have been written)
 - A TBD level of unit and functional test coverage (pytest coverage)

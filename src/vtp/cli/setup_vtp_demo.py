@@ -18,13 +18,13 @@
 #   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 """
-Command line level script script set up a VTP demo.  Can also set up
-individual GUID based ballot-stores and return the GUID
+Command line script set up a VTP demo.  Can also set up individual
+GUID based ballot-stores and return the GUID.
 
-See 'setup_vtp_demo -h' for usage information.
+Run with '--help' for usage information.
 """
 
-# Global imports
+# Standard imports
 import argparse
 import os
 

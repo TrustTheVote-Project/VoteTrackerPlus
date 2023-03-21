@@ -17,11 +17,9 @@
 #   with this program; if not, write to the Free Software Foundation, Inc.,
 #   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
-"""
-Command line level script to merge CVR contest
-branches into the main branch
+"""Command line script to merge CVR contest.
 
-See 'merge-contests -h' for usage information.
+Run with '--help' for usage information.
 """
 
 # Standard imports

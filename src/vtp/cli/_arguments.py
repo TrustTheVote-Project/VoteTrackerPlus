@@ -96,14 +96,14 @@ class Arguments:
         )
 
     @staticmethod
-    def add_minimum_cast_cache(parser):
+    def add_minimum_cast_cache(parser, cache=100):
         """Add minimum_cast_cache option"""
         parser.add_argument(
             "-m",
             "--minimum_cast_cache",
             type=int,
-            default=100,
-            help="the minimum number of cast ballots required prior to merging (def=100)",
+            default=cache,
+            help=f"the minimum number of cast ballots required prior to merging (def={cache})",
         )
 
     @staticmethod

@@ -17,12 +17,12 @@
 #   with this program; if not, write to the Free Software Foundation, Inc.,
 #   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
-"""cast-ballot - command line level test script to automatically cast a ballot.
+"""Command line script to automatically cast a ballot.
 
-See 'cast-ballot -h' for usage information.
+Run with '--help' for usage information.
 """
 
-# Global imports
+# Standard imports
 import argparse
 
 # Project imports

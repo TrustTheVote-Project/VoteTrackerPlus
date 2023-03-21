@@ -20,7 +20,7 @@
 """
 Command line level script to verify a voters ballot receipt.  Supports several interesting options.
 
-See 'verify-ballot-receipt -h' for usage information.
+Run with '--help' for usage information.
 """
 
 # Standard imports

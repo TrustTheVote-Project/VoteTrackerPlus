@@ -17,12 +17,9 @@
 #   with this program; if not, write to the Free Software Foundation, Inc.,
 #   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
-"""create-blank-ballot - command line level test script to automatically cast a ballot.
+"""Command line script to automatically cast a ballot.
 
-See 'create-blank-ballot -h' for usage information.
-
-See ../../docs/tech/executable-overview.md for the context in which this file was created.
-
+Run with '--help' for usage information.
 """
 
 # Standard imports
@@ -88,5 +85,3 @@ def main():
 # If called directly via this file
 if __name__ == "__main__":
     main()
-
-# EOF

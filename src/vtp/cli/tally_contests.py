@@ -17,14 +17,12 @@
 #   with this program; if not, write to the Free Software Foundation, Inc.,
 #   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
-"""
-tally-contests - command line level script to tally the contests of
-a election.
+"""Command line script to tally the contests of a election.
 
-See 'tally-contests -h' for usage information.
+Run with '--help' for usage information.
 """
 
-# Global imports
+# Standard imports
 import argparse
 import re
 

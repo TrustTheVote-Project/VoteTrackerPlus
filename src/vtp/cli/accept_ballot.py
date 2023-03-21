@@ -22,7 +22,7 @@
 See 'accept-ballot -h' for usage information.
 """
 
-# Global imports
+# Standard imports
 import argparse
 
 # Project imports

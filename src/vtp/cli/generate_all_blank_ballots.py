@@ -17,9 +17,9 @@
 #   with this program; if not, write to the Free Software Foundation, Inc.,
 #   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
-"""generate-all-blank-ballots - generate all possible blank ballots
+"""Command line script to generate all possible blank ballots.
 
-See 'generate-all-blank-ballots -h' for usage information.
+Run with '--help' for usage information.
 """
 
 # Standard imports
@@ -69,5 +69,3 @@ def main():
 # If called directly via this file
 if __name__ == "__main__":
     main()
-
-# EOF
