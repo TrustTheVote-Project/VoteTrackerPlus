@@ -229,7 +229,8 @@ class ElectionConfig:
         to read the tree.
         """
 
-        # Determine the absolute PATH to the election_data_dir
+        # Determine the absolute PATH to the election_data_dir and
+        # store the value in self.git_rootdir.
         if election_data_dir in ["", ".", None]:
             self.git_rootdir = os.getcwd()
         else:

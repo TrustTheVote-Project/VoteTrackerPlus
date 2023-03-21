@@ -18,8 +18,8 @@
 #   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 """
-Library operation for command line level script set up a VTP demo
-See 'setup_vtp_demo -h' for usage information.
+Logic of operation for setting up a VTP demo.  See the --help output
+or the README.md file in the src/vtp directory for details.
 """
 
 # Standard imports
@@ -246,7 +246,5 @@ class SetupVtpDemoOperation(Operation):
         # return something
         return None
 
-
-# End Of Class
 
 # EOF

@@ -17,12 +17,7 @@
 #   with this program; if not, write to the Free Software Foundation, Inc.,
 #   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
-"""
-Library backend to command line level script to allow an end voter to
-vote - it simply wraps a call to cast_ballot.py and accept_ballot.py.
-
-See 'vote -h' for usage information.
-"""
+"""Logic of operation for voting."""
 
 # Project imports
 from vtp.core.address import Address
@@ -88,8 +83,6 @@ class VoteOperation(Operation):
             an_address=an_address,
             cast_ballot=blank_ballot,
         )
-
-    # End Of Class
 
 
 # EOF

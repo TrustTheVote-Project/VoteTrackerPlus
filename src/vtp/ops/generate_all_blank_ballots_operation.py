@@ -17,10 +17,7 @@
 #   with this program; if not, write to the Free Software Foundation, Inc.,
 #   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
-"""generate-all-blank-ballots - generate all possible blank ballots
-
-See 'generate-all-blank-ballots -h' for usage information.
-"""
+"""Logic of operation for generating blank ballots."""
 
 # Standard imports
 import logging
@@ -103,7 +100,5 @@ class GenerateAllBlankBallotsOperation(Operation):
                         )
                     logging.info("Blank ballot file: %s", ballot_file)
 
-
-# End Of Class
 
 # EOF

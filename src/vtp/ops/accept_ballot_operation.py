@@ -17,10 +17,12 @@
 #   with this program; if not, write to the Free Software Foundation, Inc.,
 #   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
-"""Library backend to command line level script to accept a ballot.
-
-See 'accept-ballot -h' for usage information.
-
+"""
+The logic of operation for accepting a ballot - the operation of
+taking a filled in blank ballot and individually submitting each
+contest level CVR in its own unique local git branch.  The git
+branches are then pushed to the remote.  See merge-contest for the
+operation of merging the pushed CVR branches to the main branch.
 """
 
 # Standard imports
@@ -34,17 +36,14 @@ from vtp.core.address import Address
 from vtp.core.ballot import Ballot, Contests
 from vtp.core.common import Globals, Shellout
 from vtp.core.election_config import ElectionConfig
+from vtp.ops.merge_contests_operation import MergeContestsOperation
 
 # Local imports
 from .operation import Operation
 
 
 class AcceptBallotOperation(Operation):
-    """
-    A class to implememt the accept_ballot.py operation.  See the
-    cast-ballot help output or read the parse_argument argparse
-    description (immediately below this) in the source file.
-    """
+    """Implementation of 'accept-ballot'."""
 
     def __init__(self, election_data_dir: str, verbosity: int, printonly: bool):
         """
@@ -304,10 +303,12 @@ class AcceptBallotOperation(Operation):
         return ballot_receipt, voters_row
 
     # pylint: disable=duplicate-code
+    # pylint: disable=too-many-locals
     def run(
         self,
         an_address: Address = None,
         cast_ballot: str = "",
+        merge_contests: bool = False,
     ) -> tuple[list, int]:
         """
         Main function - see -h for more info.  Will work with either
@@ -325,12 +326,7 @@ class AcceptBallotOperation(Operation):
         # up in the same spot, nominally in the town subfolder.
         if cast_ballot:
             # Read the specified cast_ballot
-            with Shellout.changed_cwd(
-                os.path.join(
-                    the_election_config.get("git_rootdir"),
-                    self.election_data_dir,
-                )
-            ):
+            with Shellout.changed_cwd(the_election_config.get("git_rootdir")):
                 a_ballot.read_a_cast_ballot("", the_election_config, cast_ballot)
         else:
             an_address.map_ggos(the_election_config, skip_ggos=True)
@@ -418,6 +414,24 @@ class AcceptBallotOperation(Operation):
                     verbosity=self.verbosity,
                 )
 
+        # If in demo mode, optionally merge the branches now and avoid
+        # calling merge-contests later. Note - this will serialize the
+        # ballots in time, but this is ok in certain demo situations.
+        if merge_contests:
+            for branch in branches:
+                # Merge the branch (but since the local branch should be
+                # deleted at this point, merge the remote).  Note -
+                # 'origin' is already hardcoded in several places and
+                # 'remotes' is enough of a constant for this.
+                mco = MergeContestsOperation(
+                    self.election_data_dir, self.verbosity, self.printonly
+                )
+                mco.run(
+                    branch="remotes/origin/" + branch,
+                    flush=False,
+                    remote=True,
+                )
+
         logging.debug("Ballot's digests:\n%s", contest_receipts)
         # Shuffled the unmerged_cvrs (an inplace shuffle) - only need to
         # shuffle the uids for this ballot.
@@ -444,8 +458,6 @@ class AcceptBallotOperation(Operation):
         return self.create_ballot_receipt(
             a_ballot, contest_receipts, unmerged_cvrs, the_election_config
         )
-
-    # End Of Class
 
 
 # EOF

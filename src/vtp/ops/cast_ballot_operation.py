@@ -18,9 +18,11 @@
 #   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 """
-Library backend to command line level test script to automatically cast a ballot.
-
-See 'cast-ballot -h' for usage information.
+Logic of operation for casting a ballot.  Normally this is
+interactive, but it can also just return the blank ballot so that some
+other client/voter can fill it in.  If so, that file will need to be
+supplied to accept-ballot to generate the ballot check and add it to
+the Merkle tree.
 """
 
 # Standard imports
@@ -287,8 +289,6 @@ class CastBallotOperation(Operation):
             logging.info("Cast ballot file: %s", ballot_file)
         # return the cast ballot location
         return ballot_file
-
-    # End Of Class
 
 
 # EOF

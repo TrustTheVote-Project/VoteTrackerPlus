@@ -18,10 +18,8 @@
 #   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 """
-Library backend for command line level script to merge CVR contest
-branches into the main branch
-
-See 'run-mock-election -h' for usage information.
+Logic of operation for running a mock election.  See the --help output
+or the README.md file in the src/vtp directory for details.
 """
 
 # Standard imports
@@ -264,9 +262,6 @@ class RunMockElectionOperation(Operation):
         )
         tally_contests.run()
 
-    ################
-    # main
-    ################
     # pylint: disable=duplicate-code
     # pylint: disable=too-many-arguments
     def run(
@@ -325,8 +320,6 @@ class RunMockElectionOperation(Operation):
             )
         else:
             raise ValueError(f"an illegal value was supplied for device ({device})")
-
-    # End Of Class
 
 
 # EOF

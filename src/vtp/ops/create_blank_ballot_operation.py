@@ -17,10 +17,7 @@
 #   with this program; if not, write to the Free Software Foundation, Inc.,
 #   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
-"""
-Library operation for command line level script set up a VTP demo
-See 'create-blank-ballot-operation -h' for usage information.
-"""
+"""Logic of operation for creating a blank ballot."""
 
 # Standard imports
 import logging
@@ -96,7 +93,5 @@ class CreateBlankBallotOperation(Operation):
             ballot_file = the_ballot.write_blank_ballot(the_election_config)
             logging.info("Blank ballot file: %s", ballot_file)
 
-
-# End Of Class
 
 # EOF

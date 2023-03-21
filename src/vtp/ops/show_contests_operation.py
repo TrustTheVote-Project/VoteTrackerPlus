@@ -17,10 +17,7 @@
 #   with this program; if not, write to the Free Software Foundation, Inc.,
 #   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
-"""Library backend for command line level test script to automatically cast a ballot.
-
-See 'show-contest -h' for usage information.
-"""
+"""Logic of operation for showing contests."""
 
 # Standard imports
 import logging
@@ -47,13 +44,13 @@ class ShowContestsOperation(Operation):
         """
         super().__init__(election_data_dir, verbosity, printonly)
 
-    def validate_digests(self, digests, election_data_dir, error_digests):
+    def validate_digests(self, digests, the_election_config, error_digests):
         """Will scan the supplied digests for validity.  Will print and
         return the invalid digests.
         """
         errors = 0
         input_data = "\n".join(digests.split(",")) + "\n"
-        with Shellout.changed_cwd(election_data_dir):
+        with Shellout.changed_cwd(the_election_config.get("git_rootdir")):
             output_lines = (
                 Shellout.run(
                     [
@@ -98,9 +95,7 @@ class ShowContestsOperation(Operation):
 
         # First validate the digests
         error_digests = set()
-        self.validate_digests(
-            contest_check, the_election_config.get("git_rootdir"), error_digests
-        )
+        self.validate_digests(contest_check, the_election_config, error_digests)
         valid_digests = [
             digest for digest in contest_check.split(",") if digest not in error_digests
         ]
@@ -123,8 +118,5 @@ class ShowContestsOperation(Operation):
 #            text=True,
 #            check=True,
 #            verbosity=self.verbosity)
-
-# End Of Class
-
 
 # EOF

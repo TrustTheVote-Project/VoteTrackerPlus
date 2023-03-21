@@ -17,12 +17,7 @@
 #   with this program; if not, write to the Free Software Foundation, Inc.,
 #   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
-"""
-Library backend to command line level script to tally the contests of
-a election.
-
-See 'tally-contests -h' for usage information.
-"""
+"""Logic of operation for tallying contests."""
 
 # Standard imports
 import logging
@@ -113,8 +108,6 @@ class TallyContestsOperation(Operation):
                 logging.error(
                     "[ERROR]: %s\nContinuing with other contests ...", tally_error
                 )
-
-    # End Of Class
 
 
 # EOF

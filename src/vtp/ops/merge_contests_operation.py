@@ -18,10 +18,9 @@
 #   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 """
-Library backend to command line level script to merge CVR contest
-branches into the main branch
-
-See 'merge-contests -h' for usage information.
+Logic of operation for merging contests.  Contests are merged when the
+CVR branch is merged to main.  Note that the original commit digest
+for the CVR stays intact in a Merkle tree sense.
 """
 
 # Standard imports
@@ -174,6 +173,7 @@ class MergeContestsOperation(Operation):
         logging.debug("Merged %s %s contests", count, uid)
         return count
 
+    # pylint: disable=duplicate-code
     def run(
         self,
         branch: str = "",
@@ -195,12 +195,7 @@ class MergeContestsOperation(Operation):
         # tranverse the correct symlink or not), use the CWD as when
         # accepting the ballot (accept_ballot.py).
         merged = 0
-        with Shellout.changed_cwd(
-            os.path.join(
-                the_election_config.get("git_rootdir"),
-                self.election_data_dir,
-            )
-        ):
+        with Shellout.changed_cwd(the_election_config.get("git_rootdir")):
             # So, the CWD in this block is the state/town subfolder
             # Pull the remote
             Shellout.run(
@@ -268,8 +263,6 @@ class MergeContestsOperation(Operation):
                     minimum_cast_cache=minimum_cast_cache,
                 )
         logging.info("Merged %s contest branches", merged)
-
-    # End Of Class
 
 
 # EOF

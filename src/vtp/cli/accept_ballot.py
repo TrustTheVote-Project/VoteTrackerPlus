@@ -56,6 +56,7 @@ Either the location of the ballot_file or the associated address is required.
         "--cast_ballot",
         help="overrides an address - specifies a specific cast ballot",
     )
+    Arguments.add_merge_contests(parser)
     Arguments.add_verbosity(parser)
     Arguments.add_printonly(parser)
     return parser.parse_args()
@@ -83,6 +84,7 @@ def main():
     abo.run(
         an_address=an_address,
         cast_ballot=parsed_args.cast_ballot,
+        merge_contests=parsed_args.merge_contests,
     )
 
 

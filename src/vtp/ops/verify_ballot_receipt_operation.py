@@ -17,12 +17,7 @@
 #   with this program; if not, write to the Free Software Foundation, Inc.,
 #   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
-"""
-Library backend for command line level script to verify a
-voters ballot receipt.
-
-See 'verify-ballot-receipt -h' for usage information.
-"""
+"""Logic of operation for verifying receipt of a ballot."""
 
 # Standard imports
 import json
@@ -340,8 +335,6 @@ class VerifyBallotReceiptOperation(Operation):
             row_index=row,
             show_cvr=cvr,
         )
-
-    # End Of Class
 
 
 # EOF
