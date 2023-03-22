@@ -436,7 +436,7 @@ class AcceptBallotOperation(Operation):
                 )
                 logging.debug("Calling MergeContestsOperation.run")
                 mco.run(
-                    branch="remotes/origin/" + branch,
+                    branch="origin/" + branch,
                     flush=False,
                     remote=True,
                 )

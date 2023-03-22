@@ -196,6 +196,7 @@ class CastBallotOperation(Operation):
                 # this demo) as that is the long-term VTP vision.
                 count += 1
                 self.get_user_selection(a_ballot, contest, count, total_contests)
+        # pylint: disable=too-many-nested-blocks
         if not demo_mode:
             # UX wise replicate the self adjudication experince.  This is
             # basically another endless loop until done
@@ -205,14 +206,22 @@ class CastBallotOperation(Operation):
                     print(f"Contest {contest.get('uid')} - {contest.get('name')}:")
                     # Loop over selections - there can be more than
                     # one but they are ALWAYS ordered
-                    for selection in contest.get("selection"):
-                        #                        import pdb; pdb.set_trace()
-                        offset = Tally.extract_offest_from_selection(selection)
-                        name = Tally.extract_name_from_selection(selection)
-                        if contest.is_contest_a_ticket_choice(offset):
-                            print(f"    {contest.pretty_print_ticket(offset)} - {name}")
-                        else:
-                            print(f"    {name}")
+                    if len(contest.get("selection")) == 0:
+                        print(
+                            "    ATTENTION - no selection was made and "
+                            "you are casting an empty vote!"
+                        )
+                    else:
+                        for selection in contest.get("selection"):
+                            #                        import pdb; pdb.set_trace()
+                            offset = Tally.extract_offest_from_selection(selection)
+                            name = Tally.extract_name_from_selection(selection)
+                            if contest.is_contest_a_ticket_choice(offset):
+                                print(
+                                    f"    {contest.pretty_print_ticket(offset)} - {name}"
+                                )
+                            else:
+                                print(f"    {name}")
                 prompt = (
                     "Is this correct?  "
                     "Enter yes to accept the ballot, no to reject the ballot: "
