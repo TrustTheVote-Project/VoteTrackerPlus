@@ -106,7 +106,7 @@ class RunMockElectionOperation(Operation):
                         check=True,
                     )
                 cast_ballot = CastBallotOperation(
-                    the_election_config,
+                    self.election_data_dir,
                     self.verbosity,
                     self.printonly,
                 )
@@ -116,7 +116,7 @@ class RunMockElectionOperation(Operation):
                 )
                 # - accept the ballot
                 accept_ballot = AcceptBallotOperation(
-                    the_election_config,
+                    self.election_data_dir,
                     self.verbosity,
                     self.printonly,
                 )
@@ -129,7 +129,7 @@ class RunMockElectionOperation(Operation):
                         # Since casting and merging is basically
                         # synchronous, no need for an extra large timeout
                         merge_contests = MergeContestsOperation(
-                            the_election_config,
+                            self.election_data_dir,
                             self.verbosity,
                             self.printonly,
                         )
@@ -141,7 +141,7 @@ class RunMockElectionOperation(Operation):
                         # contests - also no need for an extra large
                         # timeout
                         merge_contests = MergeContestsOperation(
-                            the_election_config,
+                            self.election_data_dir,
                             self.verbosity,
                             self.printonly,
                         )
@@ -162,7 +162,7 @@ class RunMockElectionOperation(Operation):
             # merge the remaining contests
             # Note - this needs a longer timeout as it can take many seconds
             merge_contests = MergeContestsOperation(
-                the_election_config,
+                self.election_data_dir,
                 self.verbosity,
                 self.printonly,
             )
@@ -171,7 +171,7 @@ class RunMockElectionOperation(Operation):
             )
             # tally the contests
             tally_contests = TallyContestsOperation(
-                the_election_config,
+                self.election_data_dir,
                 self.verbosity,
                 self.printonly,
             )
@@ -192,6 +192,7 @@ class RunMockElectionOperation(Operation):
         flush_mode,
         duration,
         minimum_cast_cache,
+        iterations=None,
     ):
         """Simulate a VTP server"""
         # This is the VTP server simulation code.  In this case, the VTP
@@ -201,8 +202,10 @@ class RunMockElectionOperation(Operation):
         start_time = time.time()
         # Loop for a day and sleep for 10 seconds
         seconds = 60 * duration
+        count = 0
 
         while True:
+            count += 1
             with Shellout.changed_cwd(the_election_config.get("git_rootdir")):
                 Shellout.run(
                     ["git", "pull"],
@@ -214,7 +217,7 @@ class RunMockElectionOperation(Operation):
                 )
             if flush_mode == 2:
                 merge_contests = MergeContestsOperation(
-                    the_election_config,
+                    self.election_data_dir,
                     self.verbosity,
                     self.printonly,
                 )
@@ -223,14 +226,14 @@ class RunMockElectionOperation(Operation):
                     flush=True,
                 )
                 tally_contests = TallyContestsOperation(
-                    the_election_config,
+                    self.election_data_dir,
                     self.verbosity,
                     self.printonly,
                 )
                 tally_contests.run()
                 return
             merge_contests = MergeContestsOperation(
-                the_election_config,
+                self.election_data_dir,
                 self.verbosity,
                 self.printonly,
             )
@@ -238,7 +241,9 @@ class RunMockElectionOperation(Operation):
                 remote=True,
                 minimum_cast_cache=minimum_cast_cache,
             )
-            logging.info("Sleeping for 10")
+            if isinstance(iterations, int) and count > iterations:
+                break
+            logging.info("Sleeping for 10 (iteration=%s)", count)
             time.sleep(10)
             elapsed_time = time.time() - start_time
             if elapsed_time > seconds:
@@ -246,7 +251,7 @@ class RunMockElectionOperation(Operation):
         if flush_mode in [1, 2]:
             print("Cleaning up remaining unmerged ballots")
             merge_contests = MergeContestsOperation(
-                the_election_config,
+                self.election_data_dir,
                 self.verbosity,
                 self.printonly,
             )
@@ -256,7 +261,7 @@ class RunMockElectionOperation(Operation):
             )
         # tally the contests
         tally_contests = TallyContestsOperation(
-            the_election_config,
+            self.election_data_dir,
             self.verbosity,
             self.printonly,
         )

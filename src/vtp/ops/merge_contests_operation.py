@@ -110,9 +110,10 @@ class MergeContestsOperation(Operation):
             check=True,
         )
         # Note - apparently git places the commit msg on STDERR - hide it
-#        import pdb; pdb.set_trace()
         if not self.printonly:
-            logging.info("Running \"git commit -m 'auto commit - thank you for voting'\"")
+            logging.info(
+                "Running \"git commit -m 'auto commit - thank you for voting'\""
+            )
         Shellout.run(
             ["git", "commit", "-m", "auto commit - thank you for voting"],
             printonly=self.printonly,

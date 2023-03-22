@@ -96,14 +96,14 @@ mock to a single ballot N times.
         "--iterations",
         type=int,
         default=10,
-        help="the number of unique blank ballots for the scanner app to cast (def=10)",
+        help="the number of unique blank ballots for the mock scanner to cast (def=10)",
     )
     parser.add_argument(
         "-u",
         "--duration",
         type=int,
         default=10,
-        help="the number of minutes for the server app to run (def=10)",
+        help="the number of minutes for the mock server to run (def=10)",
     )
     Arguments.add_verbosity(parser)
     Arguments.add_printonly(parser)
@@ -140,7 +140,7 @@ def main():
 
     # do it
     rmeo = RunMockElectionOperation(
-        parsed_args.election_data, parsed_args.verbosity, parsed_args.printonly
+        parsed_args.election_data_dir, parsed_args.verbosity, parsed_args.printonly
     )
     rmeo.run(
         an_address=an_address,
