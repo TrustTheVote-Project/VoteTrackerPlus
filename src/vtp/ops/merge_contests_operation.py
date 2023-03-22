@@ -138,7 +138,7 @@ class MergeContestsOperation(Operation):
         else:
             # otherwise just delete the remote
             Shellout.run(
-                ["git", "push", "origin", "-d", branch.removeprefix("remotes/origin/")],
+                ["git", "push", "origin", "-d", branch.removeprefix("origin/")],
                 printonly=self.printonly,
                 verbosity=self.verbosity,
                 check=True,
@@ -185,7 +185,23 @@ class MergeContestsOperation(Operation):
         remote: bool = False,
         minimum_cast_cache: int = 100,
     ):
-        """Main function - see -h for more info"""
+        """
+        Main function - see -h for more info.  Note that the merge
+        operation is subtly different depending on whether remote is
+        False or True.
+
+        If False, that implies a git workspace that contains the
+        (local) branch, and both the local and remote branch will be
+        deleted when the merge-to-main occurs.
+
+        If True, there is no local branch (since the merge direction
+        is from the specified branch to the main branch which is the
+        branch that has been locally checkout'ed) and in this case
+        only the remote branch needs to be deleted.  Note that the
+        actual branch specification in this case contains an 'origin/'
+        prefix which needs to be stripped as git nominally does not
+        want that when deleting remote branches.
+        """
 
         # Create a VTP ElectionData object if one does not already exist
         the_election_config = ElectionConfig.configure_election(self.election_data_dir)
@@ -220,9 +236,10 @@ class MergeContestsOperation(Operation):
                 cvr_regex = "^origin/" + cvr_regex
             else:
                 cvr_regex = "^" + cvr_regex
-            # Note - the re.search will strip non CVRs lines
+            # Note - the re.search will strip non CVRs lines, and then
+            # after that each result is strip'ed
             cvr_branches = [
-                branch.strip()
+                this_branch.strip()
                 for this_branch in Shellout.run(
                     cmds,
                     verbosity=self.verbosity,
@@ -232,6 +249,7 @@ class MergeContestsOperation(Operation):
                 ).stdout.splitlines()
                 if re.search(cvr_regex, this_branch.strip())
             ]
+            #            import pdb; pdb.set_trace()
             # Note - sorted alphanumerically on contest UID. Loop over
             # contests and randomly merge extras
             batch = []  # if ordered_set was native would probably use that
@@ -245,7 +263,7 @@ class MergeContestsOperation(Operation):
                 # that does not match the current_uid then try to merge
                 # that contest uid set of branched.  Also try to merge the
                 # batch if this is the final iteration of the loop.
-                if current_uid:
+                if current_uid != "-1":
                     # see if previous batch can be merged
                     merged += self.randomly_merge_contests(
                         uid=current_uid,

@@ -57,14 +57,17 @@ class RunMockElectionOperation(Operation):
 
     # pylint: disable=too-many-arguments
     # pylint: disable=too-many-locals
+    # pylint: disable=too-many-branches
+    # problem child
     def scanner_mockup(
         self,
-        the_election_config,
-        ballot,
-        iterations,
-        device,
-        flush_mode,
-        minimum_cast_cache,
+        the_election_config: ElectionConfig,
+        ballot: str,
+        iterations: int,
+        device: str,
+        flush_mode: int,
+        minimum_cast_cache: int,
+        duration: int,
     ):
         """Simulate a VTP scanner"""
 
@@ -86,14 +89,25 @@ class RunMockElectionOperation(Operation):
         # Loop over the list N times
         if not blank_ballots:
             raise ValueError("found no blank ballots to cast")
-        for count in range(iterations):
+        start_time = time.time()
+        seconds = 60 * duration
+        count = 0
+        while True:
+            count += 1
             for blank_ballot in blank_ballots:
-                logging.debug(
-                    "Iteration %s of %s - processing %s",
-                    count,
-                    iterations,
-                    blank_ballot,
-                )
+                if duration:
+                    logging.info(
+                        "Iteration %s - processing %s",
+                        count,
+                        blank_ballot,
+                    )
+                else:
+                    logging.info(
+                        "Iteration %s of %s - processing %s",
+                        count,
+                        iterations,
+                        blank_ballot,
+                    )
                 # - cast a ballot
                 #            import pdb; pdb.set_trace()
                 with Shellout.changed_cwd(the_election_config.get("git_rootdir")):
@@ -158,6 +172,12 @@ class RunMockElectionOperation(Operation):
                             timeout=None,
                             check=True,
                         )
+            if iterations and count >= iterations:
+                break
+            if seconds:
+                elapsed_time = time.time() - start_time
+                if elapsed_time > seconds:
+                    break
         if device == "both":
             # merge the remaining contests
             # Note - this needs a longer timeout as it can take many seconds
@@ -188,11 +208,11 @@ class RunMockElectionOperation(Operation):
 
     def server_mockup(
         self,
-        the_election_config,
-        flush_mode,
-        duration,
-        minimum_cast_cache,
-        iterations=None,
+        the_election_config: ElectionConfig,
+        flush_mode: int,
+        duration: int,
+        minimum_cast_cache: int,
+        iterations: int,
     ):
         """Simulate a VTP server"""
         # This is the VTP server simulation code.  In this case, the VTP
@@ -241,7 +261,7 @@ class RunMockElectionOperation(Operation):
                 remote=True,
                 minimum_cast_cache=minimum_cast_cache,
             )
-            if isinstance(iterations, int) and count > iterations:
+            if iterations and count >= iterations:
                 break
             logging.info("Sleeping for 10 (iteration=%s)", count)
             time.sleep(10)
@@ -277,7 +297,7 @@ class RunMockElectionOperation(Operation):
         minimum_cast_cache: int = 100,
         flush_mode: int = 0,
         iterations: int = 10,
-        duration: int = 10,
+        duration: int = 0,
     ):
         """Main function - see -h for more info
 
@@ -315,6 +335,7 @@ class RunMockElectionOperation(Operation):
                 device=device,
                 flush_mode=flush_mode,
                 minimum_cast_cache=minimum_cast_cache,
+                duration=duration,
             )
         elif device == "server":
             self.server_mockup(
@@ -322,6 +343,7 @@ class RunMockElectionOperation(Operation):
                 flush_mode=flush_mode,
                 duration=duration,
                 minimum_cast_cache=minimum_cast_cache,
+                iterations=iterations,
             )
         else:
             raise ValueError(f"an illegal value was supplied for device ({device})")

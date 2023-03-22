@@ -96,14 +96,14 @@ mock to a single ballot N times.
         "--iterations",
         type=int,
         default=10,
-        help="the number of unique blank ballots for the mock scanner to cast (def=10)",
+        help="the number of blank ballots to cast or merges-to-main to perform (def=10)",
     )
     parser.add_argument(
         "-u",
         "--duration",
         type=int,
-        default=10,
-        help="the number of minutes for the mock server to run (def=10)",
+        default=0,
+        help="if supplied, will run for that number of minutes - overrides iterations",
     )
     Arguments.add_verbosity(parser)
     Arguments.add_printonly(parser)
