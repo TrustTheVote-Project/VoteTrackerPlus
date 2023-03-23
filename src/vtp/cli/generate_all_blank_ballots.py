@@ -61,7 +61,7 @@ def main():
 
     # do it
     gabbo = GenerateAllBlankBallotsOperation(
-        parsed_args.election_data, parsed_args.verbosity, parsed_args.printonly
+        parsed_args.election_data_dir, parsed_args.verbosity, parsed_args.printonly
     )
     gabbo.run()
 

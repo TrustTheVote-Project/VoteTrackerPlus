@@ -69,7 +69,17 @@ class CreateBlankBallotOperation(Operation):
         logging.debug("The election config ggos are: %s", the_election_config)
         logging.debug("And the address is: %s", str(an_address))
         logging.debug("And language is: %s", language)
-        node = "GGOs/states/California/GGOs/towns/Oakland"
+
+        # Construct a blank ballot
+        the_ballot = BlankBallot()
+        the_ballot.create_blank_ballot(an_address, the_election_config)
+        logging.info("Active GGOs: %s", the_ballot.get("active_ggos"))
+        logging.debug(
+            "And the blank ballot looks like:\n%s", pprint.pformat(the_ballot.dict())
+        )
+
+        # Maybe display some node info
+        node = the_ballot.get("ballot_node")
         logging.debug(
             "And a/the node (%s) looks like:\n%s",
             node,
@@ -80,18 +90,11 @@ class CreateBlankBallotOperation(Operation):
             pprint.pformat(the_election_config.get_dag("edges")),
         )
 
-        # Construct a blank ballot
-        the_ballot = BlankBallot()
-        the_ballot.create_blank_ballot(an_address, the_election_config)
-        logging.info("Active GGOs: %s", the_ballot.get("active_ggos"))
-        logging.debug(
-            "And the blank ballot looks like:\n%s", pprint.pformat(the_ballot.dict())
-        )
-
         # Write it out
-        if not self.printonly:
-            ballot_file = the_ballot.write_blank_ballot(the_election_config)
-            logging.info("Blank ballot file: %s", ballot_file)
+        ballot_file = the_ballot.write_blank_ballot(
+            the_election_config, printonly=self.printonly
+        )
+        logging.info("Blank ballot file: %s", ballot_file)
 
 
 # EOF
