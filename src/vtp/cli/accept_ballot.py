@@ -17,29 +17,75 @@
 #   with this program; if not, write to the Free Software Foundation, Inc.,
 #   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
-"""accept_ballot.py - command line level script to accept a ballot.
+"""accept-ballot - command line level script to accept a ballot.
 
-See 'accept_ballot.py -h' for usage information.
+See 'accept-ballot -h' for usage information.
 """
 
-import sys
+# Standard imports
+import argparse
 
+# Project imports
+from vtp.core.address import Address
 from vtp.ops.accept_ballot_operation import AcceptBallotOperation
+
+# Local imports
+from ._arguments import Arguments
+
+
+def parse_arguments():
+    """Parse arguments from a command line or from the constructor"""
+
+    parser = argparse.ArgumentParser(
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        description="""
+Will run the git based workflow on a VTP scanner node to accept the json
+rendering of the cast vote record of a voter's ballot. The json file is read,
+the contests are extraced and submitted to separate git branches, one per
+contest, and pushed back to the Voter Center's VTP remote.
+
+In addition a voter's ballot receipt and offset are optionally printed.
+
+Either the location of the ballot_file or the associated address is required.
+""",
+    )
+
+    Arguments.add_address_args(parser, True)
+    Arguments.add_election_data_dir(parser)
+    parser.add_argument(
+        "--cast_ballot",
+        help="overrides an address - specifies a specific cast ballot",
+    )
+    Arguments.add_merge_contests(parser)
+    Arguments.add_verbosity(parser)
+    Arguments.add_printonly(parser)
+    return parser.parse_args()
 
 
 # pylint: disable=duplicate-code
 def main():
-    """
-    Called via a python local install entrypoint or by running this
-    file.  Simply wraps the scripts constructor and calls the run
-    method.  See the script's help output or read the
-    vtp.ops.accept_ballot_operation.py (argparse) description in the
-    source file.
-    """
+    """Entry point for 'accept-ballot'."""
+
+    # Parse args
+    parsed_args = parse_arguments()
+
+    # Convert the address args into an Address
+    an_address = Address(
+        address=parsed_args.address,
+        substreet=parsed_args.substreet,
+        town=parsed_args.town,
+        state=parsed_args.state,
+    )
 
     # do it
-    abo = AcceptBallotOperation(sys.argv[1:])
-    abo.run()
+    abo = AcceptBallotOperation(
+        parsed_args.election_data_dir, parsed_args.verbosity, parsed_args.printonly
+    )
+    abo.run(
+        an_address=an_address,
+        cast_ballot=parsed_args.cast_ballot,
+        merge_contests=parsed_args.merge_contests,
+    )
 
 
 # If called directly via this file

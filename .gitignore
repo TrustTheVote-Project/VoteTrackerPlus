@@ -15,3 +15,6 @@ __pycache__
 pyproject.toml
 poetry.lock
 .venv
+
+# Ignore on purpose
+*.backup

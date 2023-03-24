@@ -17,73 +17,40 @@
 #   with this program; if not, write to the Free Software Foundation, Inc.,
 #   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
-"""Library backend for command line level test script to automatically cast a ballot.
-
-See 'show_contest.py -h' for usage information.
-"""
+"""Logic of operation for showing contests."""
 
 # Standard imports
-import argparse
 import logging
-import os
-import re
 
-# Local libraries
-from vtp.core.common import Common, Globals, Shellout
+# Project imports
+from vtp.core.common import Shellout
 from vtp.core.election_config import ElectionConfig
 
+# Local imports
+from .operation import Operation
 
-class ShowContestsOperation:
+
+class ShowContestsOperation(Operation):
     """
     A class to implememt the show-contests operation.  See the
     show-contests help output or read the parse_argument argparse
     description (immediately below this) in the source file.
     """
 
-    @staticmethod
-    def parse_arguments(argv):
-        """Parse arguments from a command line or from the constructor"""
+    def __init__(self, election_data_dir: str, verbosity: int, printonly: bool):
+        """
+        Primarily to module-ize the scripts and keep things simple,
+        idiomatic, and in different namespaces.
+        """
+        super().__init__(election_data_dir, verbosity, printonly)
 
-        safe_args = Common.cast_thing_to_list(argv)
-        parser = argparse.ArgumentParser(
-            formatter_class=argparse.RawDescriptionHelpFormatter,
-            description="""
-    will print the CVRs (Cast Vote Records) for the supplied contest(s)
-    """,
-        )
-        Common.add_election_data(parser)
-        parser.add_argument(
-            "-c",
-            "--contest-check",
-            help="a comma separate list of contests digests to validate/display",
-        )
-
-        Common.add_verbosity(parser)
-        Common.add_printonly(parser)
-        parsed_args = parser.parse_args(safe_args)
-
-        # Validate required args
-        Common.verify_election_data(parsed_args)
-        if not parsed_args.contest_check:
-            raise ValueError("The contest check is required")
-        if not bool(re.match("^[0-9a-f,]", parsed_args.contest_check)):
-            raise ValueError(
-                "The contest_check parameter only accepts a comma separated (no spaces) "
-                "list of contest checks/digests to track."
-            )
-        return parsed_args
-
-    def __init__(self, unparsed_args):
-        """Only to module-ize the scripts and keep things simple and idiomatic."""
-        self.parsed_args = ShowContestsOperation.parse_arguments(unparsed_args)
-
-    def validate_digests(self, digests, election_data_dir, error_digests):
+    def validate_digests(self, digests, the_election_config, error_digests):
         """Will scan the supplied digests for validity.  Will print and
         return the invalid digests.
         """
         errors = 0
         input_data = "\n".join(digests.split(",")) + "\n"
-        with Shellout.changed_cwd(election_data_dir):
+        with Shellout.changed_cwd(the_election_config.get("git_rootdir")):
             output_lines = (
                 Shellout.run(
                     [
@@ -92,7 +59,7 @@ class ShowContestsOperation:
                         "--batch-check=%(objectname) %(objecttype)",
                         "--buffer",
                     ],
-                    verbosity=self.parsed_args.verbosity,
+                    verbosity=self.verbosity,
                     input=input_data,
                     text=True,
                     check=True,
@@ -119,56 +86,37 @@ class ShowContestsOperation:
         if errors:
             raise ValueError(f"Found {errors} invalid digest(s)")
 
-    ################
-    # main
-    ################
     # pylint: disable=duplicate-code
-    def run(self):
+    def run(self, contest_check: str = ""):
         """Main function - see -h for more info"""
 
-        # Configure logging
-        Common.configure_logging(self.parsed_args.verbosity)
-
         # Create a VTP ElectionData object if one does not already exist
-        the_election_config = ElectionConfig.configure_election()
-
-        # Check the ElectionData
-        election_data_dir = os.path.join(
-            the_election_config.get("git_rootdir"),
-            Globals.get("ROOT_ELECTION_DATA_SUBDIR"),
-        )
+        the_election_config = ElectionConfig.configure_election(self.election_data_dir)
 
         # First validate the digests
         error_digests = set()
-        self.validate_digests(
-            self.parsed_args.contest_check, election_data_dir, error_digests
-        )
+        self.validate_digests(contest_check, the_election_config, error_digests)
         valid_digests = [
-            digest
-            for digest in self.parsed_args.contest_check.split(",")
-            if digest not in error_digests
+            digest for digest in contest_check.split(",") if digest not in error_digests
         ]
         # show/log the digests
-        with Shellout.changed_cwd(election_data_dir):
+        with Shellout.changed_cwd(the_election_config.get("git_rootdir")):
             Shellout.run(["git", "show", "-s"] + valid_digests, check=True)
 
 
 # For future reference just in case . . .
 # this is a loop of shell commands
-#        for digest in self.parsed_args.contest_check.split(','):
+#        for digest in contest_check.split(','):
 #            if digest not in error_digests:
 #                Shellout.run(['git', 'log', '-1', digest], check=True)
 
 # this does not work well enough either
-#        input_data = '\n'.join(self.parsed_args.contest_check.split(',')) + '\n'
+#        input_data = '\n'.join(contest_check.split(',')) + '\n'
 #        Shellout.run(
 #            ['git', 'cat-file', '--batch=%(objectname)'],
 #            input=input_data,
 #            text=True,
 #            check=True,
-#            verbosity=self.parsed_args.verbosity)
-
-# End Of Class
-
+#            verbosity=self.verbosity)
 
 # EOF

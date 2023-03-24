@@ -18,82 +18,44 @@
 #   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 """
-LIbrary backend to command line level test script to automatically cast a ballot.
-
-See 'cast_ballot.py -h' for usage information.
+Logic of operation for casting a ballot.  Normally this is
+interactive, but it can also just return the blank ballot so that some
+other client/voter can fill it in.  If so, that file will need to be
+supplied to accept-ballot to generate the ballot check and add it to
+the Merkle tree.
 """
 
 # Standard imports
-import argparse
 import logging
-import os
 import pprint
 import random
 
 import pyinputplus
 
-# Local imports
+# Project imports
 from vtp.core.address import Address
 from vtp.core.ballot import Ballot, BlankBallot, Contests
-from vtp.core.common import Common, Globals, Shellout
+from vtp.core.common import Shellout
+from vtp.core.contest import Tally
 from vtp.core.election_config import ElectionConfig
 
+# Local imports
+from .operation import Operation
 
-class CastBallotOperation:
+
+class CastBallotOperation(Operation):
     """
     A class to implememt the cast-ballot operation.  See the
     cast-ballot help output or read the parse_argument argparse
     description (immediately below this) in the source file.
     """
 
-    @staticmethod
-    def parse_arguments(argv):
+    def __init__(self, election_data_dir: str, verbosity: int, printonly: bool):
         """
-        Parse command line arguments.  This can be called either with
-        sys.argv sans the first arg which is the 'script name', in
-        which case argv is a list of strings, or with a dictionary, in
-        which case is converted to a list of strings.
-
-        So to match native argparse argv parsing, if a dict value is a
-        boolean, the value is removed from the list and the key is
-        either kept (True) or deleted (False).  If the value is None,
-        the key is removed.
+        Primarily to module-ize the scripts and keep things simple,
+        idiomatic, and in different namespaces.
         """
-
-        safe_args = Common.cast_thing_to_list(argv)
-        parser = argparse.ArgumentParser(
-            formatter_class=argparse.RawDescriptionHelpFormatter,
-            description="""
-Given either an address or a specific blank ballot, will either read a
-blank ballot and allow a user to manually select choices or when in
-demo mode, cast_ballot.py will randominly select choices.
-""",
-        )
-
-        Address.add_address_args(parser)
-        # ZZZ - cloaked contests are enabled at cast_ballot time
-        #    parser.add_argument('-k', "--cloak", action="store_true",
-        #                            help="if possible provide a cloaked ballot offset")
-        Common.add_election_data(parser)
-        parser.add_argument(
-            "--demo_mode",
-            action="store_true",
-            help="set demo mode to automatically cast random ballots",
-        )
-        Common.add_blank_ballot(parser)
-        Common.add_verbosity(parser)
-        Common.add_printonly(parser)
-        parsed_args = parser.parse_args(safe_args)
-        # Verify arguments
-        Common.verify_election_data(parsed_args)
-        return parsed_args
-
-    def __init__(self, unparsed_args):
-        """
-        Only to module-ize the scripts and keep things simple and
-        idiomatic.  parsed_args is an argparse Namespace object.
-        """
-        self.parsed_args = CastBallotOperation.parse_arguments(unparsed_args)
+        super().__init__(election_data_dir, verbosity, printonly)
 
     def make_random_selection(self, the_ballot, the_contest):
         """Will randomly make selections on a contest"""
@@ -129,19 +91,28 @@ demo mode, cast_ballot.py will randominly select choices.
         if tally == "plurality":
             print(f"- This is a {tally} tally")
             print(
-                f"- The voting is for {max_votes} open position(s)/choice(s) - "
-                "only that number of selections can be choosen."
+                f"- The voting is for {max_votes} open "
+                f"position{'s'[:max_votes^1]}/choice{'s'[:max_votes^1]} - "
+                f"only {max_votes} selection{'s'[:max_votes^1]} can be choosen."
             )
         else:
             print(
-                f"- This is a {tally} tally with {max_votes} open position(s)/choice(s).  "
-                f"Regardless up to {len(choices)} selections can be rank choosen."
+                f"- This is a {tally} tally with {max_votes} open "
+                f"position{'s'[:max_votes^1]}/choice{'s'[:max_votes^1]}.  "
+                f"Up to {len(choices)} selection{'s'[:len(choices)^1]} can be rank choosen."
             )
 
         # Need to print the choices first up front
         count = 0
-        for choice in choices:
-            print(f"  [{count}] {choice}")
+        for choice_index, choice in enumerate(choices):
+            # If it is a ticket, need to pretty print the ticket
+            #            import pdb; pdb.set_trace()
+            if the_contest.is_contest_a_ticket_choice(choice_index):
+                print(
+                    f"  [{count}] {choice} - {the_contest.pretty_print_ticket(choice_index)}"
+                )
+            else:
+                print(f"  [{count}] {choice}")
             count += 1
 
         def validate_multichoice(text):
@@ -206,7 +177,8 @@ demo mode, cast_ballot.py will randominly select choices.
             prompt = "Please enter in rank order the numbers of your choices separated by spaces: "
             pyinputplus.inputCustom(validate_multichoice, prompt=prompt, blank=True)
 
-    def loop_over_contests(self, a_ballot):
+    # pylint: disable=too-many-branches
+    def loop_over_contests(self, a_ballot, demo_mode):
         """Will loop over the contests in a ballot and either ask the user
         for a choice or if in demo mode will randomly choose one.
         """
@@ -216,7 +188,7 @@ demo mode, cast_ballot.py will randominly select choices.
         contest_uids = []
         for contest in contests:
             contest_uids.append(contest.get("uid"))
-            if self.parsed_args.demo_mode:
+            if demo_mode:
                 self.make_random_selection(a_ballot, contest)
             else:
                 # Display the tally type and choices and allow the user to manually
@@ -224,16 +196,32 @@ demo mode, cast_ballot.py will randominly select choices.
                 # this demo) as that is the long-term VTP vision.
                 count += 1
                 self.get_user_selection(a_ballot, contest, count, total_contests)
-        if not self.parsed_args.demo_mode:
+        # pylint: disable=too-many-nested-blocks
+        if not demo_mode:
             # UX wise replicate the self adjudication experince.  This is
             # basically another endless loop until done
             while True:
                 # Print the selections
                 for contest in contests:
-                    print(
-                        f"Contest {contest.get('uid')} - {contest.get('name')}: "
-                        f"{contest.get('selection')}"
-                    )
+                    print(f"Contest {contest.get('uid')} - {contest.get('name')}:")
+                    # Loop over selections - there can be more than
+                    # one but they are ALWAYS ordered
+                    if len(contest.get("selection")) == 0:
+                        print(
+                            "    ATTENTION - no selection was made and "
+                            "you are casting an empty vote!"
+                        )
+                    else:
+                        for selection in contest.get("selection"):
+                            #                        import pdb; pdb.set_trace()
+                            offset = Tally.extract_offest_from_selection(selection)
+                            name = Tally.extract_name_from_selection(selection)
+                            if contest.is_contest_a_ticket_choice(offset):
+                                print(
+                                    f"    {contest.pretty_print_ticket(offset)} - {name}"
+                                )
+                            else:
+                                print(f"    {name}")
                 prompt = (
                     "Is this correct?  "
                     "Enter yes to accept the ballot, no to reject the ballot: "
@@ -260,57 +248,39 @@ demo mode, cast_ballot.py will randominly select choices.
         # For a convenient side effect, return the contests
         return contests
 
-    ################
-    # main
-    ################
-    def run(self):
+    def run(
+        self,
+        an_address: Address = None,
+        blank_ballot: str = "",
+        demo_mode: bool = False,
+    ) -> str:
         """Main function - see -h for more info"""
 
-        # Configure logging
-        Common.configure_logging(self.parsed_args.verbosity)
-
         # Create a VTP ElectionData object if one does not already exist
-        the_election_config = ElectionConfig.configure_election()
+        the_election_config = ElectionConfig.configure_election(self.election_data_dir)
 
         # Create a ballot
         a_ballot = BlankBallot()
 
         # process the provided address
-        if self.parsed_args.blank_ballot:
+        if blank_ballot:
             # Read the specified blank_ballot
-            with Shellout.changed_cwd(
-                os.path.join(
-                    the_election_config.get("git_rootdir"),
-                    Globals.get("ROOT_ELECTION_DATA_SUBDIR"),
-                )
-            ):
-                a_ballot.read_a_blank_ballot(
-                    "", the_election_config, self.parsed_args.blank_ballot
-                )
+            with Shellout.changed_cwd(the_election_config.get("git_rootdir")):
+                a_ballot.read_a_blank_ballot("", the_election_config, blank_ballot)
         else:
             # Use the specified address
-            the_address = Address.create_address_from_args(
-                self.parsed_args,
-                [
-                    "blank_ballot",
-                    "demo_mode",
-                    "election_data",
-                    "printonly",
-                    "verbosity",
-                ],
-            )
-            the_address.map_ggos(the_election_config)
+            an_address.map_ggos(the_election_config)
             # get the ballot for the specified address
-            a_ballot.read_a_blank_ballot(the_address, the_election_config)
+            a_ballot.read_a_blank_ballot(an_address, the_election_config)
 
-        contests = self.loop_over_contests(a_ballot)
+        contests = self.loop_over_contests(a_ballot, demo_mode)
         logging.debug("And the ballot looks like:\n%s", pprint.pformat(a_ballot.dict()))
 
         # ZZZ - for this program there is no call to verify_cast_ballot to
         # verify that the ballot has been filled out correctly and offer
         # to the voter a chance to redo it.
 
-        if self.parsed_args.printonly:
+        if self.printonly:
             ballot_file = Ballot.gen_cast_ballot_location(
                 the_election_config, a_ballot.get("ballot_subdir")
             )
@@ -326,8 +296,8 @@ demo mode, cast_ballot.py will randominly select choices.
                 "Casting a %s contest ballot at VC %s", contests.len(), vote_center
             )
             logging.info("Cast ballot file: %s", ballot_file)
-
-    # End Of Class
+        # return the cast ballot location
+        return ballot_file
 
 
 # EOF

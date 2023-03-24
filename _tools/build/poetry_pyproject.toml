@@ -22,10 +22,13 @@ pyyaml = "^6.0"
 
 [tool.poetry.group.dev.dependencies]
 black = "^23.1.0"
+isort = "^5.12.0"
 pylint = "^2.16.2"
+mypy = "^1.1.1"
 pytest = "^7.2.1"
 pytest-cov = "^4.0.0"
 sphinx = "^5.3.0"
+types-pyyaml = "^6.0.12.8"
 
 [tool.poetry.scripts]
 accept-ballot = "vtp.cli.accept_ballot:main"

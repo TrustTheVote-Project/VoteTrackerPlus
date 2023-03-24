@@ -17,74 +17,40 @@
 #   with this program; if not, write to the Free Software Foundation, Inc.,
 #   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
-"""Library backend to command line level script to accept a ballot.
-
-See 'accept_ballot.py -h' for usage information.
-
+"""
+The logic of operation for accepting a ballot - the operation of
+taking a filled in blank ballot and individually submitting each
+contest level CVR in its own unique local git branch.  The git
+branches are then pushed to the remote.  See merge-contest for the
+operation of merging the pushed CVR branches to the main branch.
 """
 
 # Standard imports
-import argparse
 import logging
 import os
 import random
 import secrets
 
-# Local imports
+# Project imports
 from vtp.core.address import Address
 from vtp.core.ballot import Ballot, Contests
-from vtp.core.common import Common, Globals, Shellout
+from vtp.core.common import Globals, Shellout
 from vtp.core.election_config import ElectionConfig
+from vtp.ops.merge_contests_operation import MergeContestsOperation
+
+# Local imports
+from .operation import Operation
 
 
-class AcceptBallotOperation:
-    """
-    A class to implememt the accept_ballot.py operation.  See the
-    cast-ballot help output or read the parse_argument argparse
-    description (immediately below this) in the source file.
-    """
+class AcceptBallotOperation(Operation):
+    """Implementation of 'accept-ballot'."""
 
-    @staticmethod
-    def parse_arguments(argv):
-        """Parse arguments from a command line or from the constructor"""
-
-        safe_args = Common.cast_thing_to_list(argv)
-        parser = argparse.ArgumentParser(
-            formatter_class=argparse.RawDescriptionHelpFormatter,
-            description="""
-Will run the git based workflow on a VTP scanner node to accept the json
-rendering of the cast vote record of a voter's ballot. The json file is read,
-the contests are extraced and submitted to separate git branches, one per
-contest, and pushed back to the Voter Center's VTP remote.
-
-In addition a voter's ballot receipt and offset are optionally printed.
-
-Either the location of the ballot_file or the associated address is required.
-""",
-        )
-
-        Address.add_address_args(parser, True)
-        Common.add_election_data(parser)
-        parser.add_argument(
-            "-m",
-            "--merge_contests",
-            action="store_true",
-            help="Will immediately merge the ballot contests (to main)",
-        )
-        parser.add_argument(
-            "--cast_ballot",
-            help="overrides an address - specifies a specific cast ballot",
-        )
-        Common.add_verbosity(parser)
-        Common.add_printonly(parser)
-        parsed_args = parser.parse_args(safe_args)
-        # Verify arguments
-        Common.verify_election_data(parsed_args)
-        return parsed_args
-
-    def __init__(self, unparsed_args):
-        """Only to module-ize the scripts and keep things simple and idiomatic."""
-        self.parsed_args = AcceptBallotOperation.parse_arguments(unparsed_args)
+    def __init__(self, election_data_dir: str, verbosity: int, printonly: bool):
+        """
+        Primarily to module-ize the scripts and keep things simple,
+        idiomatic, and in different namespaces.
+        """
+        super().__init__(election_data_dir, verbosity, printonly)
 
     def get_random_branchpoint(self, branch):
         """Return a random branchpoint on the supplied branch
@@ -138,15 +104,15 @@ Either the location of the ballot_file or the associated address is required.
         for _ in [0, 1, 2]:
             cmd1 = Shellout.run(
                 ["git", "checkout", "-b", branch, branchpoint],
-                printonly=self.parsed_args.printonly,
-                verbosity=self.parsed_args.verbosity,
+                printonly=self.printonly,
+                verbosity=self.verbosity,
             )
             if cmd1.returncode == 0:
                 # Created the local branch - see if it is push-able
                 cmd2 = Shellout.run(
                     ["git", "push", "-u", "origin", branch],
-                    printonly=self.parsed_args.printonly,
-                    verbosity=self.parsed_args.verbosity,
+                    printonly=self.printonly,
+                    verbosity=self.verbosity,
                 )
                 if cmd2.returncode == 0:
                     # success
@@ -156,14 +122,14 @@ Either the location of the ballot_file or the associated address is required.
                 Shellout.run(
                     ["git", "checkout", current_branch],
                     check=True,
-                    printonly=self.parsed_args.printonly,
-                    verbosity=self.parsed_args.verbosity,
+                    printonly=self.printonly,
+                    verbosity=self.verbosity,
                 )
                 Shellout.run(
                     ["git", "branch", "-D", branch],
                     check=True,
-                    printonly=self.parsed_args.printonly,
-                    verbosity=self.parsed_args.verbosity,
+                    printonly=self.printonly,
+                    verbosity=self.verbosity,
                 )
             # At this point the local did not get created - try again
             branch = contest.get("uid") + "/" + secrets.token_hex(5)
@@ -206,7 +172,7 @@ Either the location of the ballot_file or the associated address is required.
         return Shellout.cvr_parse_git_log_output(
             ["git", "log", "--no-walk", "--pretty=format:%H%B"] + head_commits,
             config,
-            verbosity=self.parsed_args.verbosity - 1,
+            verbosity=self.verbosity - 1,
         )
 
     def get_cloaked_contests(self, contest, branch):
@@ -247,19 +213,19 @@ Either the location of the ballot_file or the associated address is required.
         )
         Shellout.run(
             ["git", "add", contest_file],
-            printonly=self.parsed_args.printonly,
-            verbosity=self.parsed_args.verbosity,
+            printonly=self.printonly,
+            verbosity=self.verbosity,
         )
         # Note - apparently git place the commit msg on STDERR - hide it
         Shellout.run(
             ["git", "commit", "-F", contest_file],
-            printonly=self.parsed_args.printonly,
+            printonly=self.printonly,
             verbosity=1,
         )
         # Capture the digest
         digest = Shellout.run(
             ["git", "log", branch, "-1", "--pretty=format:%H"],
-            printonly=self.parsed_args.printonly,
+            printonly=self.printonly,
             check=True,
             capture_output=True,
             text=True,
@@ -268,7 +234,7 @@ Either the location of the ballot_file or the associated address is required.
 
     def create_ballot_receipt(
         self, the_ballot, contest_receipts, unmerged_cvrs, the_election_config
-    ):
+    ) -> tuple[list, int]:
         """
         Create the voter's receipt.  As of this writing this is basically
         a csv file with a header line with one row in particular being the
@@ -333,19 +299,24 @@ Either the location of the ballot_file or the associated address is required.
         # print the voter's row to STDOUT for now
         print(f"############\n### Receipt file: {receipt_file}")
         print(f"### Voter's row: {voters_row}\n############")
+        # return both
+        return ballot_receipt, voters_row
 
-    ################
-    # main
-    ################
     # pylint: disable=duplicate-code
-    def run(self):
-        """Main function - see -h for more info"""
-
-        # Configure logging
-        Common.configure_logging(self.parsed_args.verbosity)
+    # pylint: disable=too-many-locals
+    def run(
+        self,
+        an_address: Address = None,
+        cast_ballot: str = "",
+        merge_contests: bool = False,
+    ) -> tuple[list, int]:
+        """
+        Main function - see -h for more info.  Will work with either
+        specific or an generic address.
+        """
 
         # Create a VTP ElectionData object if one does not already exist
-        the_election_config = ElectionConfig.configure_election()
+        the_election_config = ElectionConfig.configure_election(self.election_data_dir)
 
         # Create a ballot
         a_ballot = Ballot()
@@ -353,37 +324,18 @@ Either the location of the ballot_file or the associated address is required.
         # Note - accept_ballot.py currently only deals with generic
         # addresses since all cast ballots, regardless of active ggos, end
         # up in the same spot, nominally in the town subfolder.
-        if self.parsed_args.cast_ballot:
+        if cast_ballot:
             # Read the specified cast_ballot
-            with Shellout.changed_cwd(
-                os.path.join(
-                    the_election_config.get("git_rootdir"),
-                    Globals.get("ROOT_ELECTION_DATA_SUBDIR"),
-                )
-            ):
-                a_ballot.read_a_cast_ballot(
-                    "", the_election_config, self.parsed_args.cast_ballot
-                )
+            with Shellout.changed_cwd(the_election_config.get("git_rootdir")):
+                a_ballot.read_a_cast_ballot("", the_election_config, cast_ballot)
         else:
-            # Use the specified address
-            the_address = Address.create_address_from_args(
-                self.parsed_args,
-                [
-                    "cast_ballot",
-                    "election_data",
-                    "merge_contests",
-                    "printonly",
-                    "verbosity",
-                ],
-                generic_address=True,
-            )
-            the_address.map_ggos(the_election_config, skip_ggos=True)
+            an_address.map_ggos(the_election_config, skip_ggos=True)
             # Get the ballot for the specified address.  Note that reading
             # the cast ballot will define the active ggos etc for the
             # ballot even though those fields are not defined for the
             # address.  However, reading a ballot still needs the
             # ballot_subdir field of the address.
-            a_ballot.read_a_cast_ballot(the_address, the_election_config)
+            a_ballot.read_a_cast_ballot(an_address, the_election_config)
 
         # the voter's row of digests (indexed by contest uid)
         contest_receipts = {}
@@ -415,6 +367,7 @@ Either the location of the ballot_file or the associated address is required.
             unmerged_cvrs = self.get_unmerged_contests(the_election_config)
 
             for contest in contests:
+                #                import pdb; pdb.set_trace()
                 with Shellout.changed_branch("main"):
                     # get N other values for each contest for this ballot
                     uid = contest.get("uid")
@@ -450,39 +403,42 @@ Either the location of the ballot_file or the associated address is required.
             for branch in branches:
                 Shellout.run(
                     ["git", "push", "origin", branch],
-                    printonly=self.parsed_args.printonly,
-                    verbosity=self.parsed_args.verbosity,
+                    printonly=self.printonly,
+                    verbosity=self.verbosity,
                 )
                 # Delete the local as they build up too much.  The local
                 # reflog keeps track of the local branches
                 Shellout.run(
                     ["git", "branch", "-d", branch],
-                    printonly=self.parsed_args.printonly,
-                    verbosity=self.parsed_args.verbosity,
+                    printonly=self.printonly,
+                    verbosity=self.verbosity,
                 )
 
-        # If in demo mode, optionally merge the branches
-        if self.parsed_args.merge_contests:
+        # If in demo mode, optionally merge the branches now and avoid
+        # calling merge-contests later. Note - this will serialize the
+        # ballots in time, but this is ok in certain demo situations.
+        # Note - since the above git push/delete is trying to be
+        # automic, at the moment that is done in the above loop and
+        # then later (now) the merge into main is done.  Since the
+        # above deletes the local CVR branch reference, the
+        # merge-contests below needs to merge directly from the remote
+        # reference.  (One could also do the merge prior to the local
+        # branch reference deletion and let the merge operation itself
+        # delete both branch references.)
+        if merge_contests:
             for branch in branches:
                 # Merge the branch (but since the local branch should be
                 # deleted at this point, merge the remote).  Note -
                 # 'origin' is already hardcoded in several places and
                 # 'remotes' is enough of a constant for this.
-                Shellout.run(
-                    [
-                        Shellout.get_script_name(
-                            "merge_contests.py", the_election_config
-                        ),
-                        "-v",
-                        self.parsed_args.verbosity,
-                        "-b",
-                        "remotes/origin/" + branch,
-                        "-r",
-                    ]
-                    + (["-n"] if self.parsed_args.printonly else []),
-                    check=True,
-                    no_touch_stds=True,
-                    timeout=None,
+                mco = MergeContestsOperation(
+                    self.election_data_dir, self.verbosity, self.printonly
+                )
+                logging.debug("Calling MergeContestsOperation.run")
+                mco.run(
+                    branch="origin/" + branch,
+                    flush=False,
+                    remote=True,
                 )
 
         logging.debug("Ballot's digests:\n%s", contest_receipts)
@@ -507,12 +463,10 @@ Either the location of the ballot_file or the associated address is required.
         # Create the ballot receipt
         if skip_receipt:
             logging.warning("Skipping ballot receipt due to lack of unmerged CVRs")
-        else:
-            self.create_ballot_receipt(
-                a_ballot, contest_receipts, unmerged_cvrs, the_election_config
-            )
-
-    # End Of Class
+            return [], 0
+        return self.create_ballot_receipt(
+            a_ballot, contest_receipts, unmerged_cvrs, the_election_config
+        )
 
 
 # EOF

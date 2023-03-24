@@ -94,4 +94,4 @@ etags: ${ETAG_SRCS}
 
 # Generate a requirements.txt for dependabot (ignoring the symlinks)
 requirements.txt: ${BUILD_DIR}/poetry_pyproject.toml ${BUILD_DIR}/poetry_poetry.lock
-	poetry export --dev -f requirements.txt --output requirements.txt
+	poetry export --with dev -f requirements.txt --output requirements.txt

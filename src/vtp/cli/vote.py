@@ -18,32 +18,69 @@
 #   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 """
-vote.py - command line level script to allow an end voter to vote - it
-simply wraps a call to cast_ballot.py and accept_ballot.py.
+Command line script to allow an end voter to vote.  Simply wraps a
+call to cast_ballot.py and accept_ballot.py.
 
-See 'vote.py -h' for usage information.
+Run with '--help' for usage information.
 """
 
-# Global imports
-import sys
+# Standard imports
+import argparse
+
+# Project imports
+from vtp.core.address import Address
+from vtp.ops.vote_operation import VoteOperation
 
 # Local imports
-from vtp.ops.vote_operation import VoteOperation
+from ._arguments import Arguments
+
+
+def parse_arguments():
+    """Parse arguments from a command line or from the constructor"""
+
+    parser = argparse.ArgumentParser(
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        description="""
+Will interactively allow a voter to vote.  Internally it first calls
+cast_balloy.py followed by accept_ballot.py.  If a specific election
+address or a specific blank ballot is not specified, a random blank
+ballot is chosen.
+""",
+    )
+
+    Arguments.add_address_args(parser)
+    Arguments.add_election_data_dir(parser)
+    Arguments.add_blank_ballot(parser)
+    Arguments.add_merge_contests(parser)
+    Arguments.add_verbosity(parser)
+    Arguments.add_printonly(parser)
+    return parser.parse_args()
 
 
 # pylint: disable=duplicate-code
 def main():
-    """
-    Called via a python local install entrypoint or by running this
-    file.  Simply wraps the scripts constructor and calls the run
-    method.  See the script's help output or read the
-    vtp.ops.vote_operation.py (argparse) description in the source
-    file.
-    """
+    """Entry point for 'vote'."""
+
+    # Parse args
+    parsed_args = parse_arguments()
+
+    # Convert the address args into an Address
+    an_address = Address(
+        address=parsed_args.address,
+        substreet=parsed_args.substreet,
+        town=parsed_args.town,
+        state=parsed_args.state,
+    )
 
     # do it
-    vote_op = VoteOperation(sys.argv[1:])
-    vote_op.run()
+    vote_op = VoteOperation(
+        parsed_args.election_data_dir, parsed_args.verbosity, parsed_args.printonly
+    )
+    vote_op.run(
+        an_address=an_address,
+        blank_ballot=parsed_args.blank_ballot,
+        merge_contests=parsed_args.merge_contests,
+    )
 
 
 # If called directly via this file

@@ -20,28 +20,86 @@
 """
 Command line level script to verify a voters ballot receipt.  Supports several interesting options.
 
-See 'verify_ballot_receipt.py -h' for usage information.
+Run with '--help' for usage information.
 """
 
 # Standard imports
-import sys
+import argparse
 
-# Local imports
+# Project imports
 from vtp.ops.verify_ballot_receipt_operation import VerifyBallotReceiptOperation
 
+# Local imports
+from ._arguments import Arguments
 
+
+def parse_arguments():
+    """Parse arguments from a command line or from the constructor"""
+
+    parser = argparse.ArgumentParser(
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        description="""
+Will read a voter's ballot receipt and validate all the digests
+contained therein.  If a contest has been merged to the main branch,
+will report the current ballot tally number (which ballot in the
+actula tally cound is the voter's).
+
+An address is also supported as an argument in which case the last
+ballot check is read from the default location for the specified
+address.
+
+Can also optionally print the ballot's CVRs when a specific ballot
+check row is provided.
+""",
+    )
+
+    Arguments.add_election_data_dir(parser)
+    parser.add_argument(
+        "-f",
+        "--receipt_file",
+        default="",
+        help="specify the ballot receipt location - overrides an address",
+    )
+    parser.add_argument(
+        "-r",
+        "--row",
+        default="",
+        help="specify a specific row to inspect (the first row is 1, not 0)",
+    )
+    parser.add_argument(
+        "-c",
+        "--cvr",
+        action="store_true",
+        help="display the contents of the CVRs when specifying a row",
+    )
+    Arguments.add_verbosity(parser)
+
+    parsed_args = parser.parse_args()
+
+    # Validate required args
+    if not parsed_args.receipt_file:
+        raise ValueError("A receipt file must be provided")
+    return parsed_args
+
+
+# pylint: disable=duplicate-code
 def main():
-    """
-    Called via a python local install entrypoint or by running this
-    file.  Simply wraps the scripts constructor and calls the run
-    method.  See the script's help output or read the
-    vtp.ops.verify_ballot_receipt_operation.py (argparse) description
-    in the source file.
-    """
+    """Entry point for 'verify-ballot-receipt'."""
+
+    # Parse args
+    parsed_args = parse_arguments()
 
     # do it
-    vbro = VerifyBallotReceiptOperation(sys.argv[1:])
-    vbro.run()
+    vbro = VerifyBallotReceiptOperation(
+        parsed_args.election_data_dir,
+        parsed_args.verbosity,
+        False,
+    )
+    vbro.run(
+        receipt_file=parsed_args.receipt_file,
+        row=parsed_args.row,
+        cvr=parsed_args.cvr,
+    )
 
 
 # If called directly via this file

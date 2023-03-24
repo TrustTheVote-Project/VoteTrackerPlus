@@ -66,18 +66,6 @@ class Globals:
         "REQUIRED_NG_ADDRESS_FIELDS": ["street", "number"],
         # Whether or not VTP has been locally installed
         "VTP_LOCAL_INSTALL": True,
-        # The Root/Parent Election Data directory.  As of 2022/10/17
-        # this repo is a submodule of the root election repo (which
-        # used to be a sibling symlink named ElectionData) with
-        # python's sys.path being one level above this utils directory
-        # for the scripts placed there.  Independent of the python
-        # sys.path gyrations, this repo is still one level below the
-        # outer most root/parent election repo.  Hence, one set of
-        # '..' here since git commands are using this.  As of
-        # 2023/01/19 and post the local install idiom, one can be
-        # anywhere to run VTP commands, so might as well be at the
-        # root of the ElectionData repo ...
-        "ROOT_ELECTION_DATA_SUBDIR": ".",
         # Where the bin directory is relative from the root of _this_ repo
         "BIN_DIR": "src/vtp",
         # How long to wait for a git shell command to complete - maybe a bad idea
@@ -106,12 +94,6 @@ class Globals:
         # The subdirectory where the mock scanner git workspaces are stored
         "MOCK_CLIENT_DIRNAME": "mock-clients",
     }
-
-    # Legitimate setters
-    @staticmethod
-    def set_electiondatadir(path):
-        """Will overwrite the default location of the ElectionData tree"""
-        Globals._config["ROOT_ELECTION_DATA_SUBDIR"] = path
 
     @staticmethod
     def get(name):
@@ -146,91 +128,14 @@ class Common:
         Common._configured = True
 
     @staticmethod
-    def cast_thing_to_list(argv):
-        """Primarly used by the argparse function in the operation classes"""
-        if isinstance(argv, dict):
-            new_argv = []
-            for key, value in argv.items():
-                if isinstance(value, bool):
-                    if value:
-                        new_argv.append("--" + key)
-                elif value is not None:
-                    new_argv.extend(["--" + key, str(value)])
-            return new_argv
-        return argv
-
-    # Tbe below are options that are shared across the various
-    # operations.  Options that are unique to one operation are
-    # located in that file.
-
-    @staticmethod
-    def add_blank_ballot(parser):
-        """Add blank_ballot option"""
-        parser.add_argument(
-            "--blank_ballot",
-            help="overrides an address - specifies the specific blank ballot",
-        )
-
-    @staticmethod
-    def add_election_data(parser):
-        """Add election_data option"""
-        defval = Globals.get("ROOT_ELECTION_DATA_SUBDIR")
-        parser.add_argument(
-            "-e",
-            "--election_data",
-            default=defval,
-            help=f"specify a absolute or relative path to the ElectionData tree (def={defval})",
-        )
-
-    @staticmethod
-    def add_merge_contests(parser):
-        """Add merge_contests option"""
-        parser.add_argument(
-            "-m",
-            "--merge_contests",
-            action="store_true",
-            help="Will immediately merge the ballot contests (to main)",
-        )
-
-    @staticmethod
-    def add_minimum_cast_cache(parser):
-        """Add minimum_cast_cache option"""
-        parser.add_argument(
-            "--minimum_cast_cache",
-            type=int,
-            default=100,
-            help="the minimum number of cast ballots required prior to merging (def=100)",
-        )
-
-    @staticmethod
-    def add_printonly(parser):
-        """Add printonly option"""
-        parser.add_argument(
-            "-n",
-            "--printonly",
-            action="store_true",
-            help="will printonly and not write to disk (def=True)",
-        )
-
-    @staticmethod
-    def add_verbosity(parser):
-        """Add verbosity option"""
-        parser.add_argument(
-            "-v",
-            "--verbosity",
-            type=int,
-            default=3,
-            help="0 critical, 1 error, 2 warning, 3 info, 4 debug (def=3)",
-        )
-
-    @staticmethod
-    def verify_election_data(parsed_args):
-        """Verify election_data option"""
-        if not os.path.isdir(parsed_args.election_data):
+    def verify_election_data_dir(election_data_dir: str):
+        """
+        Verify that election_data_dir is an existing directory.
+        """
+        if not os.path.isdir(election_data_dir):
             raise ValueError(
-                f"The provided --election_data value ({parsed_args.election_data}) does not exist"
+                f"The provided --election_data value ({election_data_dir}) does not exist"
             )
-        Globals.set_electiondatadir(parsed_args.election_data)
 
 
 # pylint: disable=too-few-public-methods   # ZZZ - remove this later
@@ -330,12 +235,7 @@ class Shellout:
         # Will process all the CVR commits on the main branch and tally
         # all the contests found.
         git_log_cvrs = {}
-        with Shellout.changed_cwd(
-            os.path.join(
-                election_config.get("git_rootdir"),
-                Globals.get("ROOT_ELECTION_DATA_SUBDIR"),
-            )
-        ):
+        with Shellout.changed_cwd(election_config.get("git_rootdir")):
             if verbosity >= 3:
                 logging.info('Running "%s"', " ".join(git_log_command))
             with subprocess.Popen(

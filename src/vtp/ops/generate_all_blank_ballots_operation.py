@@ -17,68 +17,46 @@
 #   with this program; if not, write to the Free Software Foundation, Inc.,
 #   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
-"""generate_all_blank_ballots.py - generate all possible blank ballots
-
-See 'generate_all_blank_ballots.py -h' for usage information.
-"""
+"""Logic of operation for generating blank ballots."""
 
 # Standard imports
-import argparse
 import logging
 import os
 import pprint
 
-# Local import
+# Project imports
 from vtp.core.address import Address
 from vtp.core.ballot import BlankBallot
 from vtp.core.common import Common
 from vtp.core.election_config import ElectionConfig
 
+# Local imports
+from .operation import Operation
+
 
 # pylint: disable=too-few-public-methods
-class GenerateAllBlankBallotsOperation:
+class GenerateAllBlankBallotsOperation(Operation):
     """
     A class to implememt the generate-all-blank-ballots operation.  See the
-    generate-all-blank-ballots help output or read the parse_argument argparse
-    description (immediately below this) in the source file.
+    generate-all-blank-ballots help output.
     """
 
-    @staticmethod
-    def parse_arguments(argv):
-        """Parse arguments from a command line or from the constructor"""
+    def __init__(self, election_data_dir: str, verbosity: int, printonly: bool):
+        """
+        Primarily to module-ize the scripts and keep things simple,
+        idiomatic, and in different namespaces.
+        """
+        super().__init__(election_data_dir, verbosity, printonly)
 
-        safe_args = Common.cast_thing_to_list(argv)
-        parser = argparse.ArgumentParser(
-            formatter_class=argparse.RawDescriptionHelpFormatter,
-            description="""
-    Will crawl the ElectionData tree and determine all possible blank
-    ballots and generate them.  They will be placed in the town's
-    blank-ballots subdir.
-    """,
-        )
-
-        Common.add_election_data(parser)
-        Common.add_verbosity(parser)
-        Common.add_printonly(parser)
-        parsed_args = parser.parse_args(safe_args)
-        # Verify arguments
-        Common.verify_election_data(parsed_args)
-        return parsed_args
-
-    def __init__(self, unparsed_args):
-        """Only to module-ize the scripts and keep things simple and idiomatic."""
-        self.parsed_args = GenerateAllBlankBallotsOperation.parse_arguments(
-            unparsed_args
-        )
-
+    # pylint: disable=duplicate-code
     def run(self):
         """Main function - see -h for more info"""
 
         # Configure logging
-        Common.configure_logging(self.parsed_args.verbosity)
+        Common.configure_logging(self.verbosity)
 
         # Create a VTP ElectionData object if one does not already exist
-        the_election_config = ElectionConfig.configure_election()
+        the_election_config = ElectionConfig.configure_election(self.election_data_dir)
 
         # Walk a topo sort of the DAG and for any node with
         # 'unique-ballots', add them all.  If the subdir does not match
@@ -110,7 +88,7 @@ class GenerateAllBlankBallotsOperation:
                         pprint.pformat(generic_ballot.dict()),
                     )
                     # Write it out
-                    if self.parsed_args.printonly:
+                    if self.printonly:
                         ballot_file = the_election_config.gen_blank_ballot_location(
                             generic_address.active_ggos,
                             generic_address.ballot_subdir,
@@ -122,7 +100,5 @@ class GenerateAllBlankBallotsOperation:
                         )
                     logging.info("Blank ballot file: %s", ballot_file)
 
-
-# End Of Class
 
 # EOF

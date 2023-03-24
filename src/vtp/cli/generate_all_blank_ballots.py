@@ -17,39 +17,55 @@
 #   with this program; if not, write to the Free Software Foundation, Inc.,
 #   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
-"""generate_all_blank_ballots.py - generate all possible blank ballots
+"""Command line script to generate all possible blank ballots.
 
-See 'generate_all_blank_ballots.py -h' for usage information.
+Run with '--help' for usage information.
 """
 
 # Standard imports
-import sys
+import argparse
 
-# Local import
+# Project imports
 from vtp.ops.generate_all_blank_ballots_operation import (
     GenerateAllBlankBallotsOperation,
 )
 
+# Local imports
+from ._arguments import Arguments
 
-################
-# main
-################
+
+def parse_arguments():
+    """Parse arguments from a command line or from the constructor"""
+
+    parser = argparse.ArgumentParser(
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        description="""
+Will crawl the ElectionData tree and determine all possible blank
+ballots and generate them.  They will be placed in the town's
+blank-ballots subdir.
+""",
+    )
+
+    Arguments.add_election_data_dir(parser)
+    Arguments.add_verbosity(parser)
+    Arguments.add_printonly(parser)
+    return parser.parse_args()
+
+
+# pylint: disable=duplicate-code
 def main():
-    """
-    Called via a python local install entrypoint or by running this
-    file.  Simply wraps the scripts constructor and calls the run
-    method.  See the script's help output or read the
-    vtp.ops.generate_all_blank_ballots_operation.py (argparse)
-    description in the source file.
-    """
+    """Entry point for 'generate-all-blank-ballots'."""
+
+    # Parse args
+    parsed_args = parse_arguments()
 
     # do it
-    gabbo = GenerateAllBlankBallotsOperation(sys.argv[1:])
+    gabbo = GenerateAllBlankBallotsOperation(
+        parsed_args.election_data_dir, parsed_args.verbosity, parsed_args.printonly
+    )
     gabbo.run()
 
 
 # If called directly via this file
 if __name__ == "__main__":
     main()
-
-# EOF

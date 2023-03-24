@@ -83,7 +83,7 @@ class Contest:
                         )
                     if not isinstance(choice["ticket_names"], list):
                         raise KeyError("the key 'ticket_names' can only be a list")
-                    if not isinstance(choice["ticket_choices"], list):
+                    if not isinstance(choice["ticket_offices"], list):
                         raise KeyError("the key 'ticket_names' can only be a list")
                 continue
             if isinstance(choice, bool):
@@ -207,6 +207,35 @@ class Contest:
         )
         return json.dumps(contest_dict, sort_keys=True, indent=4, ensure_ascii=False)
 
+    def is_contest_a_ticket_choice(self, choice_index=0):
+        """Returns whether or not the contest is ticket based"""
+        if (
+            isinstance(self.contest["choices"][choice_index], dict)
+            and "ticket_names" in self.contest["choices"][choice_index]
+        ):
+            return True
+        return False
+
+    def get_ticket_info(self, choice_index):
+        """Returns the ticket info as a 'ticket_names', 'ticket_offices' dictionary"""
+        # ticket info
+        if "ticket_names" in self.contest["choices"][choice_index]:
+            return {
+                "ticket_names": self.contest["choices"][choice_index]["ticket_names"],
+                "ticket_offices": self.contest["choices"][choice_index][
+                    "ticket_offices"
+                ],
+            }
+        return None
+
+    def pretty_print_ticket(self, choice_index):
+        """Will pretty print a ticket to allow a voter to choose."""
+        ticket = []
+        ticket_info = self.get_ticket_info(choice_index)
+        for ticket_index, name in enumerate(ticket_info["ticket_names"]):
+            ticket.append(f"{name} ({ticket_info['ticket_offices'][ticket_index]})")
+        return "; ".join(ticket)
+
     def get(self, name):
         """Generic getter - can raise KeyError"""
         # Return the choices
@@ -229,6 +258,13 @@ class Contest:
         # max is optional still
         if name == "max":
             return self.contest["max"] if "max" in self.contest else 1
+        # Note - a 'selection' is a aggregated string of the selected
+        # offset and the 'name', which for a ticket based contest is
+        # not useful.  So support the extraction of just the offset.
+        if name == "selection-offset":
+            return Tally.extract_offest_from_selection(
+                getattr(self, "contest")["selection"]
+            )
         # Else return contest data indexed by name
         return getattr(self, "contest")[name]
 
@@ -255,6 +291,14 @@ class Tally:
         selection string
         """
         return int(re.search("(^[0-9]+)", selection).group(1))
+
+    @staticmethod
+    def extract_name_from_selection(selection):
+        """
+        Will extract the name selection choice from the verbose
+        selection string
+        """
+        return re.search(r"^[0-9]+:\s+(.+)", selection).group(1)
 
     @staticmethod
     def get_choices_from_round(choices, what=""):

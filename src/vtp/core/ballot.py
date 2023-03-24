@@ -126,7 +126,6 @@ class Ballot:
         """Return the file location of a cast ballot"""
         return os.path.join(
             config.get("git_rootdir"),
-            Globals.get("ROOT_ELECTION_DATA_SUBDIR"),
             subdir,
             Globals.get("CONTEST_FILE_SUBDIR"),
             Globals.get("BALLOT_FILE"),
@@ -137,7 +136,6 @@ class Ballot:
         """Return the contest.json file location"""
         return os.path.join(
             config.get("git_rootdir"),
-            Globals.get("ROOT_ELECTION_DATA_SUBDIR"),
             subdir,
             Globals.get("CONTEST_FILE_SUBDIR"),
             Globals.get("CONTEST_FILE"),
@@ -148,7 +146,6 @@ class Ballot:
         """Return the receipt.csv file location"""
         return os.path.join(
             config.get("git_rootdir"),
-            Globals.get("ROOT_ELECTION_DATA_SUBDIR"),
             subdir,
             Globals.get("CONTEST_FILE_SUBDIR"),
             Globals.get("RECEIPT_FILE"),
@@ -282,7 +279,6 @@ class Ballot:
         """Return the directory that contains the CVR directory for this ballot"""
         return os.path.join(
             config.get("git_rootdir"),
-            Globals.get("ROOT_ELECTION_DATA_SUBDIR"),
             self.ballot_subdir,
         )
 
@@ -418,7 +414,7 @@ class BlankBallot(Ballot):
         # cache the active ggos as well
         self.active_ggos = address.get("active_ggos")
 
-    def write_blank_ballot(self, config, ballot_file="", style="json"):
+    def write_blank_ballot(self, config, ballot_file="", style="json", printonly=False):
         """
         will write out a blank ballot to a file in some format.
         """
@@ -426,7 +422,10 @@ class BlankBallot(Ballot):
             ballot_file = config.gen_blank_ballot_location(
                 self.active_ggos, self.ballot_subdir, style
             )
-            os.makedirs(os.path.dirname(ballot_file), exist_ok=True)
+            if not printonly:
+                os.makedirs(os.path.dirname(ballot_file), exist_ok=True)
+        if printonly:
+            return ballot_file
         if style == "json":
             # When the style is json, print all three dictionaries as one
             the_aggregate = {
