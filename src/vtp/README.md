@@ -282,7 +282,7 @@ New development should use a feature branch directly in this repo.  New Election
 1) Create a well named feature git branch
 2) Develop code/tests
 3) Maybe update the requirements.txt and environment.yml files
-4) Validate pylint and pytest
+4) Run "make pylint"
 5) Validate the mock election tests
 6) Push code
 7) Create a pull request
