@@ -196,7 +196,7 @@ class ElectionConfig:
         if os.path.isfile(filename):
             logging.debug("Reading %s", filename)
             with open(filename, "r", encoding="utf8") as map_file:
-                this_address_map = yaml.load(map_file, Loader=yaml.FullLoader)
+                this_address_map = yaml.load(map_file, Loader=yaml.BaseLoader)
             # sanity-check it
             ElectionConfig.check_address_map_syntax(this_address_map, filename)
             return this_address_map
@@ -209,7 +209,7 @@ class ElectionConfig:
         """
         logging.debug("Reading %s", filename)
         with open(filename, "r", encoding="utf8") as config_file:
-            config = yaml.load(config_file, Loader=yaml.FullLoader)
+            config = yaml.load(config_file, Loader=yaml.BaseLoader)
         # sanity-check it
         ElectionConfig.check_config_syntax(config, filename)
         # should really sanity check the contests too
@@ -217,6 +217,7 @@ class ElectionConfig:
             for contest in config["contests"]:
                 Contest.check_contest_blob_syntax(contest, filename)
                 Contest.set_uid(contest, ".")
+        #        import pdb; pdb.set_trace()
         return config
 
     def __init__(self, election_data_dir: str = "."):
