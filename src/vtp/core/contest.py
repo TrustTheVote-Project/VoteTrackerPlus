@@ -74,14 +74,17 @@ class Contest:
         ticket_names.  A a_c_blob can be either a_contest_blob or
         a_cvr_blob.
         """
-        # a_c_blob is a length one dict keyed on contest name - need the
-        # value for just about everything.
-        contest_value = next(iter(a_c_blob.values()))
+        # Note - a a_contest_blob is a length one dict keyed on
+        # contest name - the desired dict is the value of this one and
+        # only key.  But if the a_c_blob is a a_contest_blob, then it
+        # is already the desired dict.  Sorry.
+        if "cast_branch" in a_c_blob:
+            contest_dict = a_c_blob
+        else:
+            contest_dict = next(iter(a_c_blob.values()))
         # if this is a ticket contest, need to validate uber ticket syntax
         check_ticket = (
-            True
-            if "contest_type" in contest_value and "ticket" == contest_value["contest_type"]
-            else False
+            "contest_type" in contest_dict and contest_dict["contest_type"] == "ticket"
         )
         for choice in choices:
             if isinstance(choice, str):
@@ -98,7 +101,9 @@ class Contest:
                         raise KeyError(
                             "Contest type is a ticket contest but does not contain ticket_names"
                         )
-                    if len(choice["ticket_names"]) != len(contest_value["ticket_offices"]):
+                    if len(choice["ticket_names"]) != len(
+                        contest_dict["ticket_offices"]
+                    ):
                         raise KeyError(
                             "when either 'ticket_names' or 'ticket_offices' are specified"
                             "the length of each array mush match - "
@@ -106,7 +111,7 @@ class Contest:
                         )
                     if not isinstance(choice["ticket_names"], list):
                         raise KeyError("the key 'ticket_names' can only be a list")
-                    if not isinstance(contest_value["ticket_offices"], list):
+                    if not isinstance(contest_dict["ticket_offices"], list):
                         raise KeyError("the key 'ticket_names' can only be a list")
                 elif "ticket_names" in choice:
                     raise KeyError(
