@@ -66,6 +66,7 @@ class Contest:
         Contest._nextuid += 1
 
     @staticmethod
+    # pylint: disable=too-many-branches
     def check_contest_choices(choices: list, a_c_blob: dict):
         """
         Will validate the syntax of the contest choices.  To validate
