@@ -475,16 +475,19 @@ class Tally:
         """
         logging.info("%s", self.rcv_round[current_round])
 
+        # Note - current_round is 0 indexed from left, which means it
+        # needs an additional decrement when indexing from the right
         if (
             Tally.get_choices_from_round(self.rcv_round[current_round], "count")[
-                -current_round
+                -current_round - 1
             ]
             == Tally.get_choices_from_round(self.rcv_round[current_round], "count")[
-                -current_round - 1
+                -current_round - 2
             ]
         ):
             # There are two last_place_name choices - will need
             # more code to handle this situation post the MVP demo
+            # import pdb; pdb.set_trace()
             raise TallyException(
                 f"There are two last place choices in contest {self.contest['name']} "
                 f"(uid={self.contest['uid']}) in round {current_round}.  "
@@ -504,11 +507,13 @@ class Tally:
                     f"has ended with a tie in round {current_round}: "
                     f"{self.rcv_round[current_round][0]} and {self.rcv_round[current_round][1]}\n"
                 )
-            raise TallyException(
-                "There are only two surviving RCV choices remaining and no winner."
-                f"There are two last place choices in contest {self.contest['name']} "
-                f"(uid={self.contest['uid']}) in round {current_round}."
-            )
+            # However, when there are only two selections left in the
+            # last round, the one with the greater count still wins
+            # raise TallyException(
+            #     "There are only two surviving RCV choices remaining and no winner."
+            #     f"There are two last place choices in contest {self.contest['name']} "
+            #     f"(uid={self.contest['uid']}) in round {current_round}."
+            # )
         # loop over the current round and try to find a legit
         # last_place_name
         offset = len(self.rcv_round[current_round])
