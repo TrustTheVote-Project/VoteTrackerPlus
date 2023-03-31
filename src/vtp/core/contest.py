@@ -32,10 +32,19 @@ class Contest:
 
     # Legitimate Contest keys.  Note 'selection', 'uid', 'cloak', and
     # 'name' are not legitimate keys for blank ballots
-    _config_keys = ["choices", "tally", "win-by", "max", "write-in", "description"]
+    _config_keys = [
+        "choices",
+        "tally",
+        "win-by",
+        "max",
+        "write-in",
+        "description",
+        "contest_type",
+        "ticket_offices",
+    ]
     _blank_ballot_keys = _config_keys + ["uid"]
     _cast_keys = _blank_ballot_keys + ["selection", "name", "cast_branch", "ggo"]
-    _choice_keys = ["name", "party", "ticket_names", "ticket_offices"]
+    _choice_keys = ["name", "party", "ticket_names"]
 
     # A simple numerical n digit uid
     _uids = {}
@@ -57,8 +66,27 @@ class Contest:
         Contest._nextuid += 1
 
     @staticmethod
-    def check_contest_choices(choices):
-        """Will validate the syntax of the contest choice"""
+    # pylint: disable=too-many-branches
+    def check_contest_choices(choices: list, a_c_blob: dict):
+        """
+        Will validate the syntax of the contest choices.  To validate
+        a ticket contest, the outer context node now contains the
+        ticket_offices while the inner node choice contains the paired
+        ticket_names.  A a_c_blob can be either a_contest_blob or
+        a_cvr_blob.
+        """
+        # Note - a a_contest_blob is a length one dict keyed on
+        # contest name - the desired dict is the value of this one and
+        # only key.  But if the a_c_blob is a a_contest_blob, then it
+        # is already the desired dict.  Sorry.
+        if "cast_branch" in a_c_blob:
+            contest_dict = a_c_blob
+        else:
+            contest_dict = next(iter(a_c_blob.values()))
+        # if this is a ticket contest, need to validate uber ticket syntax
+        check_ticket = (
+            "contest_type" in contest_dict and contest_dict["contest_type"] == "ticket"
+        )
         for choice in choices:
             if isinstance(choice, str):
                 continue
@@ -69,22 +97,27 @@ class Contest:
                         "the following keys are not valid Contest choice keys: "
                         f"{','.join(bad_keys)}"
                     )
-                if "ticket_names" in choice or "ticket_offices" in choice:
-                    if len(choice["ticket_names"]) != len(choice["ticket_names"]):
+                if check_ticket:
+                    if "ticket_names" not in choice:
+                        raise KeyError(
+                            "Contest type is a ticket contest but does not contain ticket_names"
+                        )
+                    if len(choice["ticket_names"]) != len(
+                        contest_dict["ticket_offices"]
+                    ):
                         raise KeyError(
                             "when either 'ticket_names' or 'ticket_offices' are specified"
                             "the length of each array mush match - "
                             f"{len(choice['ticket_names'])} != {len(choice['ticket_names'])}"
                         )
-                    if "ticket_names" not in choice or "ticket_offices" not in choice:
-                        raise KeyError(
-                            "both 'ticket_names' and 'ticket_offices' "
-                            "are required if either is specified"
-                        )
                     if not isinstance(choice["ticket_names"], list):
                         raise KeyError("the key 'ticket_names' can only be a list")
-                    if not isinstance(choice["ticket_offices"], list):
+                    if not isinstance(contest_dict["ticket_offices"], list):
                         raise KeyError("the key 'ticket_names' can only be a list")
+                elif "ticket_names" in choice:
+                    raise KeyError(
+                        "Contest type is not a ticket contest but contains ticket_names"
+                    )
                 continue
             if isinstance(choice, bool):
                 continue
@@ -125,7 +158,7 @@ class Contest:
                 f"{','.join(bad_keys)}"
             )
         # Need to validate choices sub data structure as well
-        Contest.check_contest_choices(a_contest_blob[name]["choices"])
+        Contest.check_contest_choices(a_contest_blob[name]["choices"], a_contest_blob)
         # good enough
         return name
 
@@ -153,7 +186,7 @@ class Contest:
                 f"{','.join(bad_keys)}"
             )
         # Need to validate choices sub data structure as well
-        Contest.check_contest_choices(a_cvr_blob["choices"])
+        Contest.check_contest_choices(a_cvr_blob["choices"], a_cvr_blob)
 
     @staticmethod
     def get_choices_from_contest(choices):
@@ -168,7 +201,7 @@ class Contest:
         if isinstance(choices[0], dict):
             return [entry["name"] for entry in choices]
         if isinstance(choices[0], bool):
-            return ["yes", "no"] if choices[0] else ["no", "yes"]
+            return ["True", "False"] if choices[0] else ["False", "True"]
         raise ValueError(
             f"unknown/unsupported contest choices data structure ({choices})"
         )
@@ -222,9 +255,7 @@ class Contest:
         if "ticket_names" in self.contest["choices"][choice_index]:
             return {
                 "ticket_names": self.contest["choices"][choice_index]["ticket_names"],
-                "ticket_offices": self.contest["choices"][choice_index][
-                    "ticket_offices"
-                ],
+                "ticket_offices": self.contest["ticket_offices"],
             }
         return None
 
@@ -397,7 +428,7 @@ class Tally:
         if isinstance(pick, dict):
             return pick["name"]
         if isinstance(pick, bool):
-            return "yes" if pick else "no"
+            return "True" if pick else "False"
         raise ValueError(f"unknown/unsupported contest choices data structure ({pick})")
 
     def tally_a_plurality_contest(self, contest, provenance_digest):
