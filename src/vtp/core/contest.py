@@ -556,23 +556,40 @@ class Tally:
             for choice in Tally.get_choices_from_round(self.rcv_round[this_round])
         )
 
-    def handle_another_rcv_round(
-        self, this_round: int, last_place_names: list, contest_batch: list, checks: list
-    ):
-        """For the lowest vote getter, for those CVR's that have
-        that as their current first/active-round choice, will
-        slice off that choice off and re-count the now first
-        selection choice (if there is one)
+    def next_rcv_round_precheck(self, last_place_names: list):
         """
-        logging.info("RCV: round %s", this_round)
+        Run the checks against the incoming last_place_names to make
+        sure that it is ok to have another RCV round
+        """
+        # 1) if len(last_place_names) happens to be zero, raise an
+        # error.  However, though raising an error 'could be' the best
+        # test prior to entering another round (calling this function
+        # here), not raising an error and allowing such edge case tp
+        # print the condition and simply return might be the better
+        # design option.  Doing that.
+
+        # 2) if len(last_place_names) results in no choices left, as
+        # in the next round results in all choices becoming OBE, call
+        # it a tie and return now.
+
+        # 3) if len(last_place_names) leaves the exact number of max
+        # choices left, this is a runner-up tie which is still ok -
+        # return and print that.
+
+        # 4) if len(last_place_names) leaves less than the max but one
+        # or more choices left, this is a tie on losing.  Not sure
+        # what to do, so print that and return.
+
+    def recast_votes(self, last_place_names: list, contest_batch: list, checks: list):
+        """
+        Loops over the list of CVRs of interest (a contest worth) and
+        recasts a voter's selection if that selection is a loser in
+        this RCV round.  If there is no next choice, the there is no
+        recast and the vote is dropped.
+        """
         # ZZZ - VTP is not yet defining a logger and still using RootLogger
         loglevel = re.search(r"\((.+)\)", str(logging.getLogger())).group(1)
-        # Safety check
-        if this_round > 64:
-            raise TallyException("RCV rounds exceeded safety limit of 64 rounds")
-        if this_round >= len(self.rcv_round[0]):
-            logging.info("No more RCV rounds")
-            return
+        # Loop over CVRs
         for uid in contest_batch:
             contest = uid["CVR"]
             digest = uid["digest"]
@@ -621,6 +638,34 @@ class Tally:
                                 contest["name"],
                                 last_place_name,
                             )
+
+    def handle_another_rcv_round(
+        self, this_round: int, last_place_names: list, contest_batch: list, checks: list
+    ):
+        """For the lowest vote getter, for those CVR's that have
+        that as their current first/active-round choice, will
+        slice off that choice off and re-count the now first
+        selection choice (if there is one)
+        """
+        logging.info("RCV: round %s", this_round)
+
+        # ZZZ - create a function to validate incoming last place
+        # names and call that.  Maybe in the furure once more is know
+        # support GLOBAL configs to determine how edge cases are
+        # handled.  That function can cause a return if the the
+        # current RCV tally should not proceed to more rounds.  Or
+        # raise an RCV-tally error (which can be handled by the caller
+        # when printing - prints a warning).
+        self.next_rcv_round_precheck(last_place_names)
+
+        # Safety check
+        if this_round > 64:
+            raise TallyException("RCV rounds exceeded safety limit of 64 rounds")
+        if this_round >= len(self.rcv_round[0]):
+            logging.info("No more RCV rounds")
+            return
+        # Loop over contest_batch and actually re-cast votes
+        self.recast_votes(last_place_names, contest_batch, checks)
         # Order the winners of this round.  This is a tuple, not a
         # list or dict.  Note - the rcv round losers should not be
         # re-ordered as there is value to retaining that order
