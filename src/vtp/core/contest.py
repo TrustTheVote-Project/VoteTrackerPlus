@@ -658,8 +658,8 @@ class Tally:
                 # contest["selection"]'s will get trimmed to an empty
                 # list.  Once empty, the vote/voter is done.
                 if (
-                    contest["selection"] and
-                    self.select_name_from_choices(contest["selection"][0])
+                    contest["selection"]
+                    and self.select_name_from_choices(contest["selection"][0])
                     == last_place_name
                 ):
                     # Safely pop the current first choice and reset

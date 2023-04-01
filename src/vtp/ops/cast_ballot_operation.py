@@ -253,6 +253,7 @@ class CastBallotOperation(Operation):
         an_address: Address = None,
         blank_ballot: str = "",
         demo_mode: bool = False,
+        return_bb: bool = False,
     ) -> str:
         """Main function - see -h for more info"""
 
@@ -272,6 +273,9 @@ class CastBallotOperation(Operation):
             an_address.map_ggos(the_election_config)
             # get the ballot for the specified address
             a_ballot.read_a_blank_ballot(an_address, the_election_config)
+
+        if return_bb:
+            return str(a_ballot)
 
         contests = self.loop_over_contests(a_ballot, demo_mode)
         logging.debug("And the ballot looks like:\n%s", pprint.pformat(a_ballot.dict()))
