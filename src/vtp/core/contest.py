@@ -654,7 +654,11 @@ class Tally:
             if not contest["selection"]:
                 continue
             for last_place_name in last_place_names:
+                # Note - as the rounds go by, the
+                # contest["selection"]'s will get trimmed to an empty
+                # list.  Once empty, the vote/voter is done.
                 if (
+                    contest["selection"] and
                     self.select_name_from_choices(contest["selection"][0])
                     == last_place_name
                 ):
