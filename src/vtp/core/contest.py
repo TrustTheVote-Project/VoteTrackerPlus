@@ -556,29 +556,84 @@ class Tally:
             for choice in Tally.get_choices_from_round(self.rcv_round[this_round])
         )
 
-    def next_rcv_round_precheck(self, last_place_names: list):
+    # pylint: disable=too-many-return-statements # what is a poor man to do
+    def next_rcv_round_precheck(self, last_place_names: list, this_round: int) -> int:
         """
         Run the checks against the incoming last_place_names to make
-        sure that it is ok to have another RCV round
+        sure that it is ok to have another RCV round.  Returns non 0
+        if no more rounds should be performed.
         """
-        # 1) if len(last_place_names) happens to be zero, raise an
-        # error.  However, though raising an error 'could be' the best
-        # test prior to entering another round (calling this function
+
+        # 'this_round' is actually the 'next round' with the very
+        # first round being round 0.  So, the first time this can be
+        # called is the beginning of the second round (this_round =
+        # 1).
+        non_zero_count_choices = 0
+        for choice in self.rcv_round[this_round - 1]:
+            non_zero_count_choices += 1 if choice[1] else 0
+
+        # If len(last_place_names) happens to be zero, raise an error.
+        # However, though raising an error 'could be' the best test
+        # prior to entering another round (calling this function
         # here), not raising an error and allowing such edge case tp
         # print the condition and simply return might be the better
         # design option.  Doing that.
+        if not last_place_names:
+            logging.info("No more choices/candidates to recast - no more RCV rounds")
+            return 1
+        if this_round > 64:
+            raise TallyException("RCV rounds exceeded safety limit of 64 rounds")
+        if this_round >= len(self.rcv_round[0]):
+            logging.info("There are no more RCV rounds")
+            return 1
+        if not non_zero_count_choices:
+            logging.info("There are no votes for any choice")
+            return 1
+        if non_zero_count_choices < self.get("max"):
+            logging.info(
+                "There are only %s viable choices left which is less than the contest max (%s)",
+                non_zero_count_choices,
+                self.get("max"),
+            )
+            return 1
+        if non_zero_count_choices == self.get("max"):
+            logging.info(
+                "The contest max number of choices (%s)has been reached",
+                self.get("max"),
+            )
+            return 1
+        if non_zero_count_choices == 1:
+            logging.info(
+                "There is only one remaining viable choice left - halting more RCV rounds",
+            )
+            return 1
 
-        # 2) if len(last_place_names) results in no choices left, as
-        # in the next round results in all choices becoming OBE, call
-        # it a tie and return now.
+        # Note - by the time the execution gets here, this rcv_round have been
+        # vote count ordered.  But there could be any number of zero count
+        # choices depending on the (edge case) details.
 
-        # 3) if len(last_place_names) leaves the exact number of max
+        # If len(last_place_names) leaves the exact number of max
         # choices left, this is a runner-up tie which is still ok -
         # return and print that.
+        if non_zero_count_choices - len(last_place_names) == 0:
+            logging.info("This contest ends in a %s way tie", non_zero_count_choices)
+            return 1
 
-        # 4) if len(last_place_names) leaves less than the max but one
-        # or more choices left, this is a tie on losing.  Not sure
-        # what to do, so print that and return.
+        # If len(last_place_names) leaves less than the max but one or
+        # more choices left, this is a tie on losing.  Not sure what
+        # to do, so print that and return.
+        if non_zero_count_choices - len(last_place_names) < self.get("max"):
+            logging.info(
+                "There is a last place tie (%s way) which results "
+                "in LESS THAN the max (%s) of choices",
+                len(last_place_names),
+                non_zero_count_choices,
+            )
+            return 1
+
+        # And, the recursive stack here should probably be returning a
+        # success/failure back out of the Contest.tallyho...
+        return 0
 
     def recast_votes(self, last_place_names: list, contest_batch: list, checks: list):
         """
@@ -621,7 +676,6 @@ class Tally:
                         # set-in-stone ordering w.r.t. selection
                         new_choice_name = self.select_name_from_choices(new_selection)
                         self.selection_counts[new_choice_name] += 1
-                        #                    import pdb; pdb.set_trace()
                         if digest in checks or loglevel == "DEBUG":
                             logging.info(
                                 "RCV: %s (contest=%s) last place pop and count (%s -> %s)",
@@ -656,14 +710,9 @@ class Tally:
         # current RCV tally should not proceed to more rounds.  Or
         # raise an RCV-tally error (which can be handled by the caller
         # when printing - prints a warning).
-        self.next_rcv_round_precheck(last_place_names)
-
-        # Safety check
-        if this_round > 64:
-            raise TallyException("RCV rounds exceeded safety limit of 64 rounds")
-        if this_round >= len(self.rcv_round[0]):
-            logging.info("No more RCV rounds")
+        if self.next_rcv_round_precheck(last_place_names, this_round):
             return
+
         # Loop over contest_batch and actually re-cast votes
         self.recast_votes(last_place_names, contest_batch, checks)
         # Order the winners of this round.  This is a tuple, not a
@@ -815,6 +864,7 @@ class Tally:
             self.obe_choices[name] = 0
         # Go.  handle_another_rcv_round will return somehow at some point
         self.handle_another_rcv_round(1, last_place_names, contest_batch, checks)
+        return
 
     def print_results(self):
         """Will print the results of the tally"""
