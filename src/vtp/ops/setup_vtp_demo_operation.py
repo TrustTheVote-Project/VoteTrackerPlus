@@ -143,7 +143,7 @@ class SetupVtpDemoOperation(Operation):
         scanners: int = 4,
         guid_client_store: bool = False,
         location: str = "/opt/VoteTrackerPlus/demo.01",
-    ):
+    ) -> str:
         """Main function - see -h for more info"""
 
         # Configure logging
@@ -244,7 +244,7 @@ class SetupVtpDemoOperation(Operation):
         self.create_client_repos(clone_dirs, self.tabulation_local_upstream_absdir)
 
         # return something
-        return None
+        return ""
 
 
 # EOF
