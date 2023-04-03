@@ -121,6 +121,16 @@ class Ballot:
     files.
     """
 
+    # Legitimate Ballot keys.  Note - valid Contest keys are defined in
+    # the Contest class
+    _ballot_keys = [
+        "contests",
+        "active_ggos",
+        "ballot_subdir",
+        "ballot_node",
+        "ballot_filename",
+    ]
+
     @staticmethod
     def gen_cast_ballot_location(config, subdir):
         """Return the file location of a cast ballot"""
@@ -163,14 +173,80 @@ class Ballot:
             Globals.get("BALLOT_FILE"),
         )
 
+    @staticmethod
+    def verify_ballot_outer_keys(ballot):
+        """Will verify the outermost keys of a blank or cast ballot"""
+        bad_keys = [key for key in ballot if key not in Ballot._ballot_keys]
+        if bad_keys:
+            raise KeyError(
+                "the following keys are not valid Ballot keys: " f"{','.join(bad_keys)}"
+            )
+        missing_keys = [key for key in Ballot._ballot_keys if key not in ballot]
+        if missing_keys:
+            raise KeyError(
+                "the following required Ballot keys are missing: "
+                f"{','.join(missing_keys)}"
+            )
+
     def __init__(self):
         """Constructor - just creates the dictionary and returns the
-        object
+        object.
         """
         self.contests = {}
         self.active_ggos = []
         self.ballot_subdir = ""
         self.ballot_node = ""
+        self.ballot_filename = ""
+
+    def verify_cast_ballot_data(self, incoming_cast_ballot):
+        """Will validate an incoming cast ballot (a ballot CVR, not a
+        contest CVR) against the upstream blank ballot.  This is done
+        by first verifying the ballot syntax, including the selection
+        node.  Then after del'ing the selection node from the
+        incoming_cast_ballot, a key sorted json.dump of that against
+        the source blank ballot is performed.
+
+        If incoming_cast_ballot is not JSON or broken, this function
+        will raise an error.
+        """
+        # 0) just for safety
+        Ballot.verify_ballot_outer_keys(incoming_cast_ballot)
+
+        # 1) Loop over contests and a) validate the selection, b) that
+        # the blank_ballot is legit, and c) that it matches
+        for contest in Contests(incoming_cast_ballot):
+            if "selection" not in contest:
+                raise KeyError(
+                    "the incoming cast ballot does not have a selection JSON node"
+                )
+            if not isinstance(contest["selection"], list):
+                raise KeyError(
+                    "the incoming cast ballot selection is not a list (it can be empty)"
+                )
+            # Validate the specific contest (this is redundant with the
+            # string check below)
+            Contest.check_contest_choices(contest[1], incoming_cast_ballot)
+            # Validate the selection
+            for pick in contest[1]["selection"]:
+                index, name = Contest.split_selection(pick)
+                # Does the index equal the name
+                if contest[1][index]["name"] != name:
+                    raise KeyError(
+                        f"the selection index ({index}) name ({name}) "
+                        f"does not match the choice name ({contest[1][index]['name']})"
+                    )
+
+        # 2) Compare incoming_cast_ballot minus selection to the source
+        # blank_ballot
+
+    def set_ballot_data(self, ballot):
+        """Will set the ballot data"""
+        Ballot.verify_ballot_outer_keys(ballot)
+        self.contests = ballot["contests"]
+        self.active_ggos = ballot["active_ggos"]
+        self.ballot_subdir = ballot["ballot_subdir"]
+        self.ballot_node = ballot["ballot_node"]
+        self.ballot_filename = ballot["ballot_filename"]
 
     def get(self, name):
         """A generic getter - will raise a NameError if name is invalid"""
@@ -182,6 +258,8 @@ class Ballot:
             return self.ballot_subdir
         if name == "ballot_node":
             return self.ballot_node
+        if name == "ballot_filename":
+            return self.ballot_filename
         raise NameError(f"Name {name} not accepted/defined for Ballot.get()")
 
     def get_contest_name_by_uid(self, uid):
@@ -204,6 +282,7 @@ class Ballot:
                 "active_ggos": self.active_ggos,
                 "ballot_node": self.ballot_node,
                 "ballot_subdir": self.ballot_subdir,
+                "ballot_filename": self.ballot_filename,
             }
         )
 
@@ -214,6 +293,7 @@ class Ballot:
             "active_ggos": self.active_ggos,
             "ballot_node": self.ballot_node,
             "ballot_subdir": self.ballot_subdir,
+            "ballot_filename": self.ballot_filename,
         }
         return json.dumps(ballot, sort_keys=True, indent=4, ensure_ascii=False)
 
@@ -267,14 +347,6 @@ class Ballot:
             str(selection_offset) + ": " + contest.get("choices")[selection_offset]
         )
 
-    # def verify_cast_ballot(self):
-    #     """Will validate the ballot contest choices are legitimate.
-    #     Will raise an error with the list of invalid contests and
-    #     returns the number of contests with either blank of less than
-    #     legal selections.
-    #     """
-    #     raise NotImplementedError("verify_cast_ballot is not yet implemented")
-
     def get_cvr_parent_dir(self, config):
         """Return the directory that contains the CVR directory for this ballot"""
         return os.path.join(
@@ -299,6 +371,7 @@ class Ballot:
             self.active_ggos = json_doc["active_ggos"]
             self.ballot_subdir = json_doc["ballot_subdir"]
             self.ballot_node = json_doc["ballot_node"]
+            self.ballot_filename = json_doc["ballot_filename"]
 
     def write_a_cast_ballot(self, config):
         """
@@ -312,6 +385,7 @@ class Ballot:
             "active_ggos": self.active_ggos,
             "ballot_subdir": self.ballot_subdir,
             "ballot_node": self.ballot_node,
+            "ballot_filename": self.ballot_filename,
         }
         with open(ballot_file, "w", encoding="utf8") as outfile:
             json.dump(
@@ -413,6 +487,9 @@ class BlankBallot(Ballot):
         self.ballot_node = address.get("ballot_node")
         # cache the active ggos as well
         self.active_ggos = address.get("active_ggos")
+        self.ballot_filename = config.gen_unique_ggo_name(
+            self.active_ggos, Globals.get("BALLOT_FILE")
+        )
 
     def write_blank_ballot(self, config, ballot_file="", style="json", printonly=False):
         """
@@ -433,6 +510,7 @@ class BlankBallot(Ballot):
                 "active_ggos": self.active_ggos,
                 "ballot_subdir": self.ballot_subdir,
                 "ballot_node": self.ballot_node,
+                "ballot_filename": self.ballot_filename,
             }
             with open(ballot_file, "w", encoding="utf8") as outfile:
                 json.dump(
@@ -472,6 +550,7 @@ class BlankBallot(Ballot):
                 self.active_ggos = json_doc["active_ggos"]
                 self.ballot_subdir = json_doc["ballot_subdir"]
                 self.ballot_node = json_doc["ballot_node"]
+                self.ballot_filename = json_doc["ballot_filename"]
         else:
             raise NotImplementedError(f"Unsupported Ballot type ({style}) for reading")
 

@@ -36,7 +36,7 @@ import pyinputplus
 from vtp.core.address import Address
 from vtp.core.ballot import Ballot, BlankBallot, Contests
 from vtp.core.common import Shellout
-from vtp.core.contest import Tally
+from vtp.core.contest import Contest
 from vtp.core.election_config import ElectionConfig
 
 # Local imports
@@ -214,8 +214,7 @@ class CastBallotOperation(Operation):
                     else:
                         for selection in contest.get("selection"):
                             #                        import pdb; pdb.set_trace()
-                            offset = Tally.extract_offest_from_selection(selection)
-                            name = Tally.extract_name_from_selection(selection)
+                            offset, name = Contest.split_selection(selection)
                             if contest.is_contest_a_ticket_choice(offset):
                                 print(
                                     f"    {contest.pretty_print_ticket(offset)} - {name}"

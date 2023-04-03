@@ -234,12 +234,36 @@ class AcceptBallotOperation(Operation):
 
     def create_ballot_receipt(
         self, the_ballot, contest_receipts, unmerged_cvrs, the_election_config
-    ) -> tuple[list, int]:
+    ) -> tuple[list, int, str]:
         """
         Create the voter's receipt.  As of this writing this is basically
         a csv file with a header line with one row in particular being the
         voter's.
         """
+        logging.debug("Ballot's digests:\n%s", contest_receipts)
+        # Shuffled the unmerged_cvrs (an inplace shuffle) - only need to
+        # shuffle the uids for this ballot.
+        #    import pdb; pdb.set_trace()
+        skip_receipt = False
+        for uid in contest_receipts:
+            # if there are no unmerged_cvrs, just warn
+            if uid not in unmerged_cvrs:
+                logging.warning("Warning - no unmerged_cvrs yet for contest %s", uid)
+                skip_receipt = True
+                continue
+            if len(unmerged_cvrs[uid]) < Globals.get("BALLOT_RECEIPT_ROWS"):
+                logging.warning(
+                    "Warning - not enough unmerged CVRs (%s) to print receipt for contest %s",
+                    len(unmerged_cvrs[uid]),
+                    uid,
+                )
+                skip_receipt = True
+            random.shuffle(unmerged_cvrs[uid])
+        # Create the ballot receipt
+        if skip_receipt:
+            logging.warning("Skipping ballot receipt due to lack of unmerged CVRs")
+            return [], 0, ""
+
         ballot_receipt = []
         #    import pdb; pdb.set_trace()
         # Not 0 based
@@ -257,6 +281,7 @@ class AcceptBallotOperation(Operation):
                 + '"'
             )
         ballot_receipt.append(",".join(next_row))
+
         # Loop BALLOT_RECEIPT_ROWS times (the rows) filling in the ballots
         # uids as the columns.  Two notes: the range is the full
         # BALLOT_RECEIPT_ROWS because even though the voter's row is
@@ -264,43 +289,45 @@ class AcceptBallotOperation(Operation):
         # unmerged_cvrs list.  When that happens, that digest needs to be
         # skipped and the voter's row digest from unmerged_cvrs used
         # instead.
-        for row in range(Globals.get("BALLOT_RECEIPT_ROWS")):
-            if row == voters_row - 1:
-                # Include the voter's receipts instead
-                ballot_receipt.append(",".join(contest_receipts.values()))
-                continue
-            next_row = []
-            # Note - these are the voter's uids and digests
-            for uid, digest in contest_receipts.items():
-                if uid not in unmerged_cvrs:
-                    # Actually, there are _no_ other such cast uid's in
-                    # this case
-                    redacted_uids.add(uid)
-                    next_row.append("INSUFFICIENT_CVRS")
-                elif row > len(unmerged_cvrs[uid]):
-                    redacted_uids.add(uid)
-                    next_row.append("INSUFFICIENT_CVRS")
-                elif digest == unmerged_cvrs[uid][row]["digest"]:
-                    # This is the voter's own digest!
-                    if voters_row - 1 > len(unmerged_cvrs[uid]):
+        def inner_loop():
+            for row in range(Globals.get("BALLOT_RECEIPT_ROWS")):
+                if row == voters_row - 1:
+                    # Include the voter's receipts instead
+                    ballot_receipt.append(",".join(contest_receipts.values()))
+                    continue
+                next_row = []
+                # Note - these are the voter's uids and digests
+                for uid, digest in contest_receipts.items():
+                    if uid not in unmerged_cvrs:
+                        # Actually, there are _no_ other such cast uid's in
+                        # this case
                         redacted_uids.add(uid)
                         next_row.append("INSUFFICIENT_CVRS")
+                    elif row > len(unmerged_cvrs[uid]):
+                        redacted_uids.add(uid)
+                        next_row.append("INSUFFICIENT_CVRS")
+                    elif digest == unmerged_cvrs[uid][row]["digest"]:
+                        # This is the voter's own digest!
+                        if voters_row - 1 > len(unmerged_cvrs[uid]):
+                            redacted_uids.add(uid)
+                            next_row.append("INSUFFICIENT_CVRS")
+                        else:
+                            next_row.append(
+                                unmerged_cvrs[uid][voters_row - 1]["digest"]
+                            )
                     else:
-                        next_row.append(unmerged_cvrs[uid][voters_row - 1]["digest"])
-                else:
-                    next_row.append(unmerged_cvrs[uid][row]["digest"])
-            ballot_receipt.append(",".join(next_row))
+                        next_row.append(unmerged_cvrs[uid][row]["digest"])
+                ballot_receipt.append(",".join(next_row))
+
+        inner_loop()
         # Now need to redact any uid column that contains one or more
         # INSUFFICIENT_CVRS
 
         # Now write out the ballot_receipt in csv for now - can deal with
         # html (URL links) and a pdf (printable) later - both still a TBD.
         receipt_file = the_ballot.write_receipt_csv(ballot_receipt, the_election_config)
-        # print the voter's row to STDOUT for now
-        print(f"############\n### Receipt file: {receipt_file}")
-        print(f"### Voter's row: {voters_row}\n############")
-        # return both
-        return ballot_receipt, voters_row
+        # return all three
+        return ballot_receipt, voters_row, receipt_file
 
     # pylint: disable=duplicate-code
     # pylint: disable=too-many-locals
@@ -308,11 +335,20 @@ class AcceptBallotOperation(Operation):
         self,
         an_address: Address = None,
         cast_ballot: str = "",
+        cast_ballot_json: dict = "",
         merge_contests: bool = False,
     ) -> tuple[list, int]:
         """
         Main function - see -h for more info.  Will work with either
         specific or an generic address.
+
+        Via the CLI nominally cast_ballot is specified as that is the
+        only reasonable way to pass in a serialized or non-serialized
+        JSON object.  However when called from within python,
+        nominally cast_ballot_json is specified which is the python
+        dict of the JSON.
+
+        Incoming cast ballots are verified.
         """
 
         # Create a VTP ElectionData object if one does not already exist
@@ -321,6 +357,17 @@ class AcceptBallotOperation(Operation):
         # Create a ballot
         a_ballot = Ballot()
 
+        # Note - it probably makes the most sense to validate an
+        # incoming_cast_ballot against the set of target blank_ballots
+        # for the precinct (twon) so to catch the case of the wrong
+        # cast_ballot being cast as well as malformed cast ballots.
+        # However, that would imply that the ballot casting point
+        # knows the specific address, which in reality is not the
+        # case.  But, the precinct knows the range of legal addresses
+        # - it knows which blank_ballots are legit.  So, the
+        # verification can be against all the possible blank_ballots
+        # of a precinct/town.
+
         # Note - accept_ballot.py currently only deals with generic
         # addresses since all cast ballots, regardless of active ggos, end
         # up in the same spot, nominally in the town subfolder.
@@ -328,7 +375,12 @@ class AcceptBallotOperation(Operation):
             # Read the specified cast_ballot
             with Shellout.changed_cwd(the_election_config.get("git_rootdir")):
                 a_ballot.read_a_cast_ballot("", the_election_config, cast_ballot)
+        elif cast_ballot_json:
+            a_ballot.verify_cast_ballot_data(cast_ballot_json)
+            a_ballot.set_ballot_data(cast_ballot_json)
         else:
+            # The json was not supplied - in this case read the cast
+            # ballot from the default location.
             an_address.map_ggos(the_election_config, skip_ggos=True)
             # Get the ballot for the specified address.  Note that reading
             # the cast ballot will define the active ggos etc for the
@@ -441,32 +493,16 @@ class AcceptBallotOperation(Operation):
                     remote=True,
                 )
 
-        logging.debug("Ballot's digests:\n%s", contest_receipts)
-        # Shuffled the unmerged_cvrs (an inplace shuffle) - only need to
-        # shuffle the uids for this ballot.
-        #    import pdb; pdb.set_trace()
-        skip_receipt = False
-        for uid in contest_receipts:
-            # if there are no unmerged_cvrs, just warn
-            if uid not in unmerged_cvrs:
-                logging.warning("Warning - no unmerged_cvrs yet for contest %s", uid)
-                skip_receipt = True
-                continue
-            if len(unmerged_cvrs[uid]) < Globals.get("BALLOT_RECEIPT_ROWS"):
-                logging.warning(
-                    "Warning - not enough unmerged CVRs (%s) to print receipt for contest %s",
-                    len(unmerged_cvrs[uid]),
-                    uid,
-                )
-                skip_receipt = True
-            random.shuffle(unmerged_cvrs[uid])
-        # Create the ballot receipt
-        if skip_receipt:
-            logging.warning("Skipping ballot receipt due to lack of unmerged CVRs")
-            return [], 0
-        return self.create_ballot_receipt(
+        # Create the ballot check
+        ballot_check, index, receipt_file = self.create_ballot_receipt(
             a_ballot, contest_receipts, unmerged_cvrs, the_election_config
         )
+
+        # For now, print the location and the voter's index
+        print(f"############\n### Receipt file: {receipt_file}")
+        print(f"### Voter's row: {index}\n############")
+        # And return two
+        return ballot_check, index
 
 
 # EOF
