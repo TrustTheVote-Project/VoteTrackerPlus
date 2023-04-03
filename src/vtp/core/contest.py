@@ -209,7 +209,8 @@ class Contest:
     @staticmethod
     def split_selection(selection):
         """Will split the selection into (2) parts again."""
-        return re.split(r":\s+", selection, 1)
+        offset, name = re.split(r":\s+", selection, 1)
+        return int(offset), name
 
     @staticmethod
     def extract_offest_from_selection(selection):

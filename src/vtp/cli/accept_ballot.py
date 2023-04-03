@@ -71,10 +71,9 @@ def main():
 
     # Convert the address args into an Address
     an_address = Address(
-        address=parsed_args.address,
-        substreet=parsed_args.substreet,
         town=parsed_args.town,
         state=parsed_args.state,
+        generic_address=True,
     )
 
     # do it

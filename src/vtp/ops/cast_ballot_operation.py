@@ -276,12 +276,9 @@ class CastBallotOperation(Operation):
         if return_bb:
             return str(a_ballot)
 
+        # If still here, prompt the user to vote for each contest
         contests = self.loop_over_contests(a_ballot, demo_mode)
         logging.debug("And the ballot looks like:\n%s", pprint.pformat(a_ballot.dict()))
-
-        # ZZZ - for this program there is no call to verify_cast_ballot to
-        # verify that the ballot has been filled out correctly and offer
-        # to the voter a chance to redo it.
 
         if self.printonly:
             ballot_file = Ballot.gen_cast_ballot_location(
