@@ -468,65 +468,45 @@ class Tally:
             if provenance_digest:
                 logging.info("No vote %s: BLANK", provenance_digest)
 
-    def safely_determine_last_place_name(self, current_round):
-        """Safely determine the next last_place_name for which to
-        re-distribute the next RCV round of voting.  Can raise various
-        exceptions.  If possible will return the last_place_name.
+    def safely_determine_last_place_names(self, current_round: int) -> list:
+        """Safely determine the next set of last_place_names for which
+        to re-distribute the next RCV round of voting.  Can raise
+        various exceptions.  If possible will return the
+        last_place_names (which can be greater than length 1 if there
+        is tie amongst the losers of a round).
+
+        Note - it is up to the caller to resolve RCV edge cases such
+        as multiple and simultaneous losers, a N-way tie of all
+        remaining choices, returning a tie which undercuts the max
+        number of votes (as in, pick 3 of 5 and a RCV round tie
+        results in 1 or 2 choices instead of 3).
         """
         logging.info("%s", self.rcv_round[current_round])
 
-        if (
-            Tally.get_choices_from_round(self.rcv_round[current_round], "count")[
-                -current_round
-            ]
-            == Tally.get_choices_from_round(self.rcv_round[current_round], "count")[
-                -current_round - 1
-            ]
-        ):
-            # There are two last_place_name choices - will need
-            # more code to handle this situation post the MVP demo
-            raise TallyException(
-                f"There are two last place choices in contest {self.contest['name']} "
-                f"(uid={self.contest['uid']}) in round {current_round}.  "
-                "The code for this is not yet implemented."
-            )
-        if current_round + 2 == len(self.selection_counts):
-            #  Mmm, this is RCV and this was the last round - and
-            #  there was no winner.  This is not good unless it is a
-            #  tie.
-            if (
-                self.rcv_round[current_round][0][1]
-                == self.rcv_round[current_round][1][1]
-            ):
-                # a tie
-                raise TallyException(
-                    f"Contest uid={self.contest['uid']} "
-                    f"has ended with a tie in round {current_round}: "
-                    f"{self.rcv_round[current_round][0]} and {self.rcv_round[current_round][1]}\n"
-                )
-            raise TallyException(
-                "There are only two surviving RCV choices remaining and no winner."
-                f"There are two last place choices in contest {self.contest['name']} "
-                f"(uid={self.contest['uid']}) in round {current_round}."
-            )
-        # loop over the current round and try to find a legit
-        # last_place_name
-        offset = len(self.rcv_round[current_round])
-        for round_tuple in reversed(self.rcv_round[current_round]):
-            offset -= 1
-            if round_tuple[1] > 0:
-                last_place_name = round_tuple[0]
-                break
-        # Validate next round conditions
-        if offset <= 0:
-            raise TallyException(
-                f"There are no votes for contest {self.contest['name']} "
-                f"(uid={self.contest['uid']})."
-            )
-        # in theory it should be good to go
-        return last_place_name
+        # Step 1: remove self.obe_choices from current round
+        working_copy = []
+        for a_tuple in self.rcv_round[current_round]:
+            if a_tuple[0] not in self.obe_choices:
+                working_copy.append(a_tuple)
 
-    def safely_remove_obe_selections(self, contest):
+        # tep 2: walk the list backwards returning the set of counts
+        # with the same minimum count.
+        last_place_names = []
+        previous_count = 0
+        for offset, a_tuple in enumerate(reversed(working_copy)):
+            # Note - current_round is 0 indexed from left, which means
+            # it needs an additional decrement when indexing from the
+            # right
+            current_count = a_tuple[1]
+            if offset == 0 or current_count == previous_count:
+                last_place_names.append(a_tuple[0])
+                previous_count = current_count
+            else:
+                break
+        # import pdb; pdb.set_trace()
+        return last_place_names
+
+    def safely_remove_obe_selections(self, contest: dict):
         """For the specified contest, will 'pop' the current first place
         selection.  If the next selection is already a loser, will pop
         that as well.  self.contest['selection'] may or may not have any
@@ -537,20 +517,19 @@ class Tally:
         """
         a_copy = contest["selection"].copy()
         for selection in a_copy:
-            #            import pdb; pdb.set_trace()
             if (
                 self.select_name_from_choices(selection) in self.obe_choices
                 and selection in contest["selection"]
             ):
                 contest["selection"].remove(selection)
 
-    def restore_proper_rcv_round_ordering(self, this_round):
+    def restore_proper_rcv_round_ordering(self, this_round: int):
         """Restore the 'proper' ordering of the losers in the current
         and previous rcv rounds.  Note: at this point the
         self.rcv_round has been sorted by count with the obe_choices
         effectively randomized.  Also note that new incoming
-        last_place_name is not yet in self.obe_choices and will not be
-        until post the self.safely_determine_last_place_name call
+        last_place_names are not yet in self.obe_choices and will not
+        be until post the safely_determine_last_place_names call
         below.
         """
         loser_order = []
@@ -565,7 +544,7 @@ class Tally:
             for index, item in enumerate(reversed(loser_order)):
                 self.rcv_round[this_round][-index - 1] = (item[0], 0)
 
-    def get_total_vote_count(self, this_round):
+    def get_total_vote_count(self, this_round: int):
         """
         To get the correct denominator to determine the minimum
         required win amount, all the _current_ candidate counts need
@@ -577,22 +556,95 @@ class Tally:
             for choice in Tally.get_choices_from_round(self.rcv_round[this_round])
         )
 
-    def handle_another_rcv_round(
-        self, this_round, last_place_name, contest_batch, checks
-    ):
-        """For the lowest vote getter, for those CVR's that have
-        that as their current first/active-round choice, will
-        slice off that choice off and re-count the now first
-        selection choice (if there is one)
+    # pylint: disable=too-many-return-statements # what is a poor man to do
+    def next_rcv_round_precheck(self, last_place_names: list, this_round: int) -> int:
         """
-        logging.info("RCV: round %s", this_round)
-        # ZZZ - VTP is not yet defining a logger and still using RootLogger
-        loglevel = re.search(r"\((.+)\)", str(logging.getLogger())).group(1)
-        # Safety check
+        Run the checks against the incoming last_place_names to make
+        sure that it is ok to have another RCV round.  Returns non 0
+        if no more rounds should be performed.
+        """
+
+        # 'this_round' is actually the 'next round' with the very
+        # first round being round 0.  So, the first time this can be
+        # called is the beginning of the second round (this_round =
+        # 1).
+        non_zero_count_choices = 0
+        for choice in self.rcv_round[this_round - 1]:
+            non_zero_count_choices += 1 if choice[1] else 0
+
+        # If len(last_place_names) happens to be zero, raise an error.
+        # However, though raising an error 'could be' the best test
+        # prior to entering another round (calling this function
+        # here), not raising an error and allowing such edge case tp
+        # print the condition and simply return might be the better
+        # design option.  Doing that.
+        if not last_place_names:
+            logging.info("No more choices/candidates to recast - no more RCV rounds")
+            return 1
         if this_round > 64:
             raise TallyException("RCV rounds exceeded safety limit of 64 rounds")
-        if last_place_name in [None, ""]:
-            raise TallyException("RCV rounds error - cannot pop null")
+        if this_round >= len(self.rcv_round[0]):
+            logging.info("There are no more RCV rounds")
+            return 1
+        if not non_zero_count_choices:
+            logging.info("There are no votes for any choice")
+            return 1
+        if non_zero_count_choices < self.get("max"):
+            logging.info(
+                "There are only %s viable choices left which is less than the contest max (%s)",
+                non_zero_count_choices,
+                self.get("max"),
+            )
+            return 1
+        if non_zero_count_choices == self.get("max"):
+            logging.info(
+                "The contest max number of choices (%s)has been reached",
+                self.get("max"),
+            )
+            return 1
+        if non_zero_count_choices == 1:
+            logging.info(
+                "There is only one remaining viable choice left - halting more RCV rounds",
+            )
+            return 1
+
+        # Note - by the time the execution gets here, this rcv_round have been
+        # vote count ordered.  But there could be any number of zero count
+        # choices depending on the (edge case) details.
+
+        # If len(last_place_names) leaves the exact number of max
+        # choices left, this is a runner-up tie which is still ok -
+        # return and print that.
+        if non_zero_count_choices - len(last_place_names) == 0:
+            logging.info("This contest ends in a %s way tie", non_zero_count_choices)
+            return 1
+
+        # If len(last_place_names) leaves less than the max but one or
+        # more choices left, this is a tie on losing.  Not sure what
+        # to do, so print that and return.
+        if non_zero_count_choices - len(last_place_names) < self.get("max"):
+            logging.info(
+                "There is a last place tie (%s way) which results "
+                "in LESS THAN the max (%s) of choices",
+                len(last_place_names),
+                non_zero_count_choices,
+            )
+            return 1
+
+        # And, the recursive stack here should probably be returning a
+        # success/failure back out of the Contest.tallyho...
+        return 0
+
+    def recast_votes(self, last_place_names: list, contest_batch: list, checks: list):
+        """
+        Loops over the list of CVRs of interest (a contest worth) and
+        recasts a voter's selection if that selection is a loser in
+        this RCV round.  If there is no next choice, the there is no
+        recast and the vote is dropped.
+        """
+        # ZZZ - VTP is not yet defining a logger and still using RootLogger
+        loglevel = re.search(r"\((.+)\)", str(logging.getLogger())).group(1)
+        # Loop over CVRs
         for uid in contest_batch:
             contest = uid["CVR"]
             digest = uid["digest"]
@@ -601,45 +653,72 @@ class Tally:
             # Note - if there is no selection, there is no selection
             if not contest["selection"]:
                 continue
-            if (
-                self.select_name_from_choices(contest["selection"][0])
-                == last_place_name
-            ):
-                # Safely pop the current first choice and reset
-                # contest['selection'].  Note that self.obe_choices has
-                # _already_ been updated with this_round's OBE (in the
-                # caller) such that safely_remove_obe_selections will
-                # effectively remove last_place_name from
-                # contest['selection']
-                self.safely_remove_obe_selections(contest)
-                # Regardless of the next choice, the current choice is decremented
-                self.selection_counts[last_place_name] -= 1
-                # Either retarget the vote or let it drop
-                if len(contest["selection"]):
-                    # The voter can still leave a RCV contest blank
-                    # Note - selection is the new selection for this contest
-                    new_selection = contest["selection"][0]
-                    # Select from self.contest['choices'] as that is the
-                    # set-in-stone ordering w.r.t. selection
-                    new_choice_name = self.select_name_from_choices(new_selection)
-                    self.selection_counts[new_choice_name] += 1
-                    #                    import pdb; pdb.set_trace()
-                    if digest in checks or loglevel == "DEBUG":
-                        logging.info(
-                            "RCV: %s (contest=%s) last place pop and count (%s -> %s)",
-                            digest,
-                            contest["name"],
-                            last_place_name,
-                            new_choice_name,
-                        )
-                else:
-                    if digest in checks or loglevel == "DEBUG":
-                        logging.info(
-                            "RCV: %s (contest=%s) last place pop and drop (%s -> BLANK)",
-                            digest,
-                            contest["name"],
-                            last_place_name,
-                        )
+            for last_place_name in last_place_names:
+                # Note - as the rounds go by, the
+                # contest["selection"]'s will get trimmed to an empty
+                # list.  Once empty, the vote/voter is done.
+                if (
+                    contest["selection"] and
+                    self.select_name_from_choices(contest["selection"][0])
+                    == last_place_name
+                ):
+                    # Safely pop the current first choice and reset
+                    # contest['selection'].  Note that
+                    # self.obe_choices has _already_ been updated with
+                    # this_round's OBE in the caller such that
+                    # safely_remove_obe_selections will effectively
+                    # remove last_place_name from contest['selection']
+                    self.safely_remove_obe_selections(contest)
+                    # Regardless of the next choice, the current choice is decremented
+                    self.selection_counts[last_place_name] -= 1
+                    # Either retarget the vote or let it drop
+                    if len(contest["selection"]):
+                        # The voter can still leave a RCV contest blank
+                        # Note - selection is the new selection for this contest
+                        new_selection = contest["selection"][0]
+                        # Select from self.contest['choices'] as that is the
+                        # set-in-stone ordering w.r.t. selection
+                        new_choice_name = self.select_name_from_choices(new_selection)
+                        self.selection_counts[new_choice_name] += 1
+                        if digest in checks or loglevel == "DEBUG":
+                            logging.info(
+                                "RCV: %s (contest=%s) last place pop and count (%s -> %s)",
+                                digest,
+                                contest["name"],
+                                last_place_name,
+                                new_choice_name,
+                            )
+                    else:
+                        if digest in checks or loglevel == "DEBUG":
+                            logging.info(
+                                "RCV: %s (contest=%s) last place pop and drop (%s -> BLANK)",
+                                digest,
+                                contest["name"],
+                                last_place_name,
+                            )
+
+    def handle_another_rcv_round(
+        self, this_round: int, last_place_names: list, contest_batch: list, checks: list
+    ):
+        """For the lowest vote getter, for those CVR's that have
+        that as their current first/active-round choice, will
+        slice off that choice off and re-count the now first
+        selection choice (if there is one)
+        """
+        logging.info("RCV: round %s", this_round)
+
+        # ZZZ - create a function to validate incoming last place
+        # names and call that.  Maybe in the furure once more is know
+        # support GLOBAL configs to determine how edge cases are
+        # handled.  That function can cause a return if the the
+        # current RCV tally should not proceed to more rounds.  Or
+        # raise an RCV-tally error (which can be handled by the caller
+        # when printing - prints a warning).
+        if self.next_rcv_round_precheck(last_place_names, this_round):
+            return
+
+        # Loop over contest_batch and actually re-cast votes
+        self.recast_votes(last_place_names, contest_batch, checks)
         # Order the winners of this round.  This is a tuple, not a
         # list or dict.  Note - the rcv round losers should not be
         # re-ordered as there is value to retaining that order
@@ -666,17 +745,18 @@ class Tally:
         # If there are anough winners, stop and return
         if len(self.winner_order) >= self.defaults["max"]:
             return
-        # If not, safely determine the next last_place_name and
+        # If not, safely determine the next set of last_place_names and
         # execute another RCV round.
-        last_place_name = self.safely_determine_last_place_name(this_round)
+        last_place_names = self.safely_determine_last_place_names(this_round)
         # Add this loser to the obe record
-        self.obe_choices[last_place_name] = this_round
+        for last_place_name in last_place_names:
+            self.obe_choices[last_place_name] = this_round
         self.handle_another_rcv_round(
-            this_round + 1, last_place_name, contest_batch, checks
+            this_round + 1, last_place_names, contest_batch, checks
         )
         return
 
-    def parse_all_contests(self, contest_batch, checks):
+    def parse_all_contests(self, contest_batch: list, checks: list):
         """Will parse all the contests validating each"""
         errors = {}
         for a_git_cvr in contest_batch:
@@ -726,10 +806,12 @@ class Tally:
                 "The following CVRs have structural errors:" f"{errors}"
             )
 
-    def tallyho(self, contest_batch, checks):
+    def tallyho(self, contest_batch: list, checks: list):
         """
         Will verify and tally the suppllied unique contest across all
-        the CVRs.
+        the CVRs.  contest_batch is the list of contest CVRs from git
+        and checks is a list of optional CVR digests (from the voter)
+        to check.
         """
         # Read all the contests, validate, and count votes
         if self.contest["tally"] == "plurality":
@@ -778,16 +860,15 @@ class Tally:
         # More RCV rounds are needed.  Loop until we have enough RCV
         # winners.
 
-        # Safely determine the next last_place_name and execute a RCV
-        # round However, if the last_place_name has no votes, then it
-        # needs to be skipped.  Note that any choice that has no votes
-        # needs to be skipped as RCV round will not re-assign any votes
-        # in this case.  Also note that all zero vote choices will
+        # Safely determine the next set of last_place_names and
+        # execute a RCV round.  Note that all zero vote choices will
         # already be sorted last in self.rcv_round[0].
-        last_place_name = self.safely_determine_last_place_name(0)
-        self.obe_choices[last_place_name] = 0
-        # go
-        self.handle_another_rcv_round(1, last_place_name, contest_batch, checks)
+        last_place_names = self.safely_determine_last_place_names(0)
+        for name in last_place_names:
+            self.obe_choices[name] = 0
+        # Go.  handle_another_rcv_round will return somehow at some point
+        self.handle_another_rcv_round(1, last_place_names, contest_batch, checks)
+        return
 
     def print_results(self):
         """Will print the results of the tally"""
