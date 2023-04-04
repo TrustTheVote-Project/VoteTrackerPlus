@@ -198,7 +198,7 @@ class Ballot:
         self.ballot_node = ""
         self.ballot_filename = ""
 
-    def verify_cast_ballot_data(self, incoming_cast_ballot):
+    def verify_cast_ballot_data(self, config):
         """Will validate an incoming cast ballot (a ballot CVR, not a
         contest CVR) against the upstream blank ballot.  This is done
         by first verifying the ballot syntax, including the selection
@@ -209,35 +209,48 @@ class Ballot:
         If incoming_cast_ballot is not JSON or broken, this function
         will raise an error.
         """
+
         # 0) just for safety
-        Ballot.verify_ballot_outer_keys(incoming_cast_ballot)
+        # Ballot.verify_ballot_outer_keys(self)
+
+        # Get the blank ballot
+        the_bb = BlankBallot()
+        the_bb.read_a_blank_ballot(
+            None,
+            config,
+            config.gen_blank_ballot_location_from_filename(
+                self.ballot_subdir,
+                self.ballot_filename,
+            ),
+        )
 
         # 1) Loop over contests and a) validate the selection, b) that
         # the blank_ballot is legit, and c) that it matches
-        for contest in Contests(incoming_cast_ballot):
-            if "selection" not in contest:
-                raise KeyError(
-                    "the incoming cast ballot does not have a selection JSON node"
-                )
-            if not isinstance(contest["selection"], list):
+        contests = Contests(self)
+        for contest in contests:
+            # Note - if selection is not a valid key, a KeyError will be raised
+            if not isinstance(contest.get("selection"), list):
                 raise KeyError(
                     "the incoming cast ballot selection is not a list (it can be empty)"
                 )
-            # Validate the specific contest (this is redundant with the
-            # string check below)
-            Contest.check_contest_choices(contest[1], incoming_cast_ballot)
-            # Validate the selection
-            for pick in contest[1]["selection"]:
+            # Validate the selection node
+            # import pdb; pdb.set_trace()
+            for pick in contest.get("selection"):
                 index, name = Contest.split_selection(pick)
                 # Does the index equal the name
-                if contest[1][index]["name"] != name:
+                if contest.get("choices")[index] != name:
                     raise KeyError(
                         f"the selection index ({index}) name ({name}) "
                         f"does not match the choice name ({contest[1][index]['name']})"
                     )
+            # add the selection to the blank ballot (so it can be
+            # compared below)
 
-        # 2) Compare incoming_cast_ballot minus selection to the source
-        # blank_ballot
+        # 2) Compare incoming_cast_ballot to the associated blank
+        # ballot.  Since the blank ballot needs to be read in, it is
+        # easier to add the selection node to that than to make a deep
+        # copy of the cast ballot and remove the selection node from
+        # that.
 
     def set_ballot_data(self, ballot):
         """Will set the ballot data"""

@@ -376,7 +376,6 @@ class AcceptBallotOperation(Operation):
             with Shellout.changed_cwd(the_election_config.get("git_rootdir")):
                 a_ballot.read_a_cast_ballot("", the_election_config, cast_ballot)
         elif cast_ballot_json:
-            a_ballot.verify_cast_ballot_data(cast_ballot_json)
             a_ballot.set_ballot_data(cast_ballot_json)
         else:
             # The json was not supplied - in this case read the cast
@@ -388,6 +387,9 @@ class AcceptBallotOperation(Operation):
             # address.  However, reading a ballot still needs the
             # ballot_subdir field of the address.
             a_ballot.read_a_cast_ballot(an_address, the_election_config)
+
+        # Validate it
+        a_ballot.verify_cast_ballot_data(the_election_config)
 
         # the voter's row of digests (indexed by contest uid)
         contest_receipts = {}

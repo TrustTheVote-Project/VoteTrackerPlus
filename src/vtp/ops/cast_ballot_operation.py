@@ -280,6 +280,9 @@ class CastBallotOperation(Operation):
         contests = self.loop_over_contests(a_ballot, demo_mode)
         logging.debug("And the ballot looks like:\n%s", pprint.pformat(a_ballot.dict()))
 
+        # Validate at least something
+        a_ballot.verify_cast_ballot_data(the_election_config)
+
         if self.printonly:
             ballot_file = Ballot.gen_cast_ballot_location(
                 the_election_config, a_ballot.get("ballot_subdir")
