@@ -21,6 +21,9 @@ import csv
 import json
 import logging
 import os
+from copy import deepcopy
+
+from deepdiff import DeepDiff
 
 # Local imports
 from .common import Globals
@@ -224,17 +227,21 @@ class Ballot:
             ),
         )
 
+        # ... and make a dict out of it
+        blank = the_bb.dict()
+        # Create a local dict copy that we can manipulate
+        cast = deepcopy(self.dict())
+
         # 1) Loop over contests and a) validate the selection, b) that
         # the blank_ballot is legit, and c) that it matches
-        contests = Contests(self)
-        for contest in contests:
+        contests = Contests(cast)
+        for count, contest in enumerate(contests):
             # Note - if selection is not a valid key, a KeyError will be raised
             if not isinstance(contest.get("selection"), list):
                 raise KeyError(
                     "the incoming cast ballot selection is not a list (it can be empty)"
                 )
             # Validate the selection node
-            # import pdb; pdb.set_trace()
             for pick in contest.get("selection"):
                 index, name = Contest.split_selection(pick)
                 # Does the index equal the name
@@ -243,14 +250,27 @@ class Ballot:
                         f"the selection index ({index}) name ({name}) "
                         f"does not match the choice name ({contest[1][index]['name']})"
                     )
-            # add the selection to the blank ballot (so it can be
-            # compared below)
+            # Now remove the selection
+            contest.delete_contest_field("selection")
+            # Rats - the absence of 'max' is allowed and is
+            # interpreted as 1.  So in cast if max is 1, delete it so
+            # it can match the parent blank ballot
+            if contest.get("max") == 1:
+                contest.delete_contest_field("max")
 
         # 2) Compare incoming_cast_ballot to the associated blank
         # ballot.  Since the blank ballot needs to be read in, it is
         # easier to add the selection node to that than to make a deep
         # copy of the cast ballot and remove the selection node from
         # that.
+        result = DeepDiff(blank, cast)
+        # import pdb; pdb.set_trace()
+        if result:
+            raise KeyError(
+                "the incoming cast ballot does not match the upstream blank ballot"
+                "the diff follows:\n"
+                f"{result}"
+            )
 
     def set_ballot_data(self, ballot):
         """Will set the ballot data"""

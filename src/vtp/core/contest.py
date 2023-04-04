@@ -328,6 +328,14 @@ class Contest:
             return
         raise ValueError(f"Illegal value for Contest attribute ({name})")
 
+    def delete_contest_field(self, name):
+        """Generic deleter - need to be able to delete nodes"""
+        if name in Contest._cast_keys:
+            if name in self.contest:
+                del self.contest[name]
+            return
+        raise ValueError(f"Illegal value for Contest attribute ({name})")
+
 
 # pylint: disable=too-many-instance-attributes # (8/7 - not worth it at this time)
 class Tally:
