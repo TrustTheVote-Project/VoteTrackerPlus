@@ -50,12 +50,18 @@ class CastBallotOperation(Operation):
     description (immediately below this) in the source file.
     """
 
-    def __init__(self, election_data_dir: str, verbosity: int, printonly: bool):
+    def __init__(
+        self,
+        election_data_dir: str = "",
+        guid: str = "",
+        verbosity: int = 3,
+        printonly: bool = False,
+    ):
         """
         Primarily to module-ize the scripts and keep things simple,
         idiomatic, and in different namespaces.
         """
-        super().__init__(election_data_dir, verbosity, printonly)
+        super().__init__(election_data_dir, verbosity, printonly, guid)
 
     def make_random_selection(self, the_ballot, the_contest):
         """Will randomly make selections on a contest"""

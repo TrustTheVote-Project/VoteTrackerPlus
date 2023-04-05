@@ -235,7 +235,7 @@ class Ballot:
         # 1) Loop over contests and a) validate the selection, b) that
         # the blank_ballot is legit, and c) that it matches
         contests = Contests(cast)
-        for count, contest in enumerate(contests):
+        for contest in contests:
             # Note - if selection is not a valid key, a KeyError will be raised
             if not isinstance(contest.get("selection"), list):
                 raise KeyError(

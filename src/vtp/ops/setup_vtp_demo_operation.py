@@ -42,12 +42,18 @@ class SetupVtpDemoOperation(Operation):
     description (immediately below this) in the source file.
     """
 
-    def __init__(self, election_data_dir: str, verbosity: int, printonly: bool):
+    def __init__(
+        self,
+        election_data_dir: str = "",
+        guid: str = "",
+        verbosity: int = 3,
+        printonly: bool = False,
+    ):
         """
         Primarily to module-ize the scripts and keep things simple,
         idiomatic, and in different namespaces.
         """
-        super().__init__(election_data_dir, verbosity, printonly)
+        super().__init__(election_data_dir, verbosity, printonly, guid)
         # The absolute path to the local bare clone of the upstream
         # GitHub ElectionData remote repo
         self.tabulation_local_upstream_absdir = ""
@@ -142,7 +148,7 @@ class SetupVtpDemoOperation(Operation):
         self,
         scanners: int = 4,
         guid_client_store: bool = False,
-        location: str = "/opt/VoteTrackerPlus/demo.01",
+        location: str = Globals.get("DEFAULT_RUNTIME_LOCATION"),
     ) -> str:
         """Main function - see -h for more info"""
 

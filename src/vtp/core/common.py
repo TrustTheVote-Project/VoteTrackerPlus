@@ -93,6 +93,8 @@ class Globals:
         "TABULATION_SERVER_DIRNAME": "tabulation-server",
         # The subdirectory where the mock scanner git workspaces are stored
         "MOCK_CLIENT_DIRNAME": "mock-clients",
+        # Default runtime location of everything
+        "DEFAULT_RUNTIME_LOCATION": "/opt/VoteTrackerPlus/demo.01",
     }
 
     @staticmethod
@@ -136,6 +138,17 @@ class Common:
             raise ValueError(
                 f"The provided --election_data value ({election_data_dir}) does not exist"
             )
+
+    @staticmethod
+    def get_guid_dir(guid: str) -> str:
+        """Return the default runtime location for a guid based workspace"""
+        if len(guid) != 40:
+            raise ValueError(f"The provided guid ({guid}) is not 40 characters long")
+        if not re.match("^[0-9a-f]+$", guid):
+            raise ValueError(
+                f"The provided guid ({guid}) contains characters other than [0-9a-f]"
+            )
+        return os.path.join(Globals.get("DEFAULT_RUNTIME_LOCATION"), guid[:2], guid[2:])
 
 
 # pylint: disable=too-few-public-methods   # ZZZ - remove this later

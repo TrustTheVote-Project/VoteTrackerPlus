@@ -41,12 +41,18 @@ class CreateBlankBallotOperation(Operation):
     description (immediately below this) in the source file.
     """
 
-    def __init__(self, election_data_dir: str, verbosity: int, printonly: bool):
+    def __init__(
+        self,
+        election_data_dir: str = "",
+        guid: str = "",
+        verbosity: int = 3,
+        printonly: bool = False,
+    ):
         """
         Primarily to module-ize the scripts and keep things simple,
         idiomatic, and in different namespaces.
         """
-        super().__init__(election_data_dir, verbosity, printonly)
+        super().__init__(election_data_dir, verbosity, printonly, guid)
 
     # pylint: disable=duplicate-code
     def run(

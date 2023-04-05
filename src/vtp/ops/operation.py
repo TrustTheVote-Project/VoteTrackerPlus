@@ -29,12 +29,19 @@ class Operation:
     """
 
     def __init__(
-        self, election_data_dir: str = "", verbosity: int = 3, printonly: bool = False
+        self,
+        election_data_dir: str = "",
+        verbosity: int = 3,
+        printonly: bool = False,
+        guid: str = "",
     ):
-        self.election_data_dir = election_data_dir
+        if guid:
+            self.election_data_dir = Common.get_guid_dir(guid)
+        else:
+            self.election_data_dir = election_data_dir
         self.printonly = printonly
         self.verbosity = verbosity
         # Configure logging
         Common.configure_logging(verbosity)
         # Validate the election_data_dir arg here and now
-        Common.verify_election_data_dir(election_data_dir)
+        Common.verify_election_data_dir(self.election_data_dir)
