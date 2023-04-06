@@ -81,7 +81,9 @@ def main():
 
     # do it
     mco = MergeContestsOperation(
-        parsed_args.election_data_dir, parsed_args.verbosity, parsed_args.printonly
+        election_data_dir=parsed_args.election_data_dir,
+        verbosity=parsed_args.verbosity,
+        printonly=parsed_args.printonly,
     )
     mco.run(
         branch=parsed_args.branch,

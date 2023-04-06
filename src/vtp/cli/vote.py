@@ -74,7 +74,9 @@ def main():
 
     # do it
     vote_op = VoteOperation(
-        parsed_args.election_data_dir, parsed_args.verbosity, parsed_args.printonly
+        election_data_dir=parsed_args.election_data_dir,
+        verbosity=parsed_args.verbosity,
+        printonly=parsed_args.printonly,
     )
     vote_op.run(
         an_address=an_address,

@@ -140,7 +140,9 @@ def main():
 
     # do it
     rmeo = RunMockElectionOperation(
-        parsed_args.election_data_dir, parsed_args.verbosity, parsed_args.printonly
+        election_data_dir=parsed_args.election_data_dir,
+        verbosity=parsed_args.verbosity,
+        printonly=parsed_args.printonly,
     )
     rmeo.run(
         an_address=an_address,

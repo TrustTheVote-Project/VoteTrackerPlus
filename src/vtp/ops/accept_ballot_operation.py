@@ -492,7 +492,9 @@ class AcceptBallotOperation(Operation):
                 # 'origin' is already hardcoded in several places and
                 # 'remotes' is enough of a constant for this.
                 mco = MergeContestsOperation(
-                    self.election_data_dir, self.verbosity, self.printonly
+                    election_data_dir=self.election_data_dir,
+                    verbosity=self.verbosity,
+                    printonly=self.printonly
                 )
                 logging.debug("Calling MergeContestsOperation.run")
                 mco.run(

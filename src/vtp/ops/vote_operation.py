@@ -82,7 +82,9 @@ class VoteOperation(Operation):
         # followed by accept_ballot.py
         # Cast a ballot
         a_cast_ballot_operation = CastBallotOperation(
-            self.election_data_dir, self.verbosity, self.printonly
+            election_data_dir=self.election_data_dir,
+            verbosity=self.verbosity,
+            printonly=self.printonly,
         )
         logging.debug("Calling CastBallotOperation.run")
         a_cast_ballot_operation.run(
@@ -91,7 +93,9 @@ class VoteOperation(Operation):
         )
         # Accept a ballot
         a_accept_ballot_operation = AcceptBallotOperation(
-            self.election_data_dir, self.verbosity, self.printonly
+            election_data_dir=self.election_data_dir,
+            verbosity=self.verbosity,
+            printonly=self.printonly,
         )
         # return what accept_ballot returns
         logging.debug("Calling AcceptBallotOperation.run")
