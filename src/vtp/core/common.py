@@ -148,7 +148,12 @@ class Common:
             raise ValueError(
                 f"The provided guid ({guid}) contains characters other than [0-9a-f]"
             )
-        return os.path.join(Globals.get("DEFAULT_RUNTIME_LOCATION"), guid[:2], guid[2:])
+        return os.path.join(
+            Globals.get("DEFAULT_RUNTIME_LOCATION"),
+            Globals.get("GUID_CLIENT_DIRNAME"),
+            guid[:2],
+            guid[2:],
+        )
 
 
 # pylint: disable=too-few-public-methods   # ZZZ - remove this later
