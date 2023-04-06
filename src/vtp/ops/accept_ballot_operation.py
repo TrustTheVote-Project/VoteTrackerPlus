@@ -494,7 +494,7 @@ class AcceptBallotOperation(Operation):
                 mco = MergeContestsOperation(
                     election_data_dir=self.election_data_dir,
                     verbosity=self.verbosity,
-                    printonly=self.printonly
+                    printonly=self.printonly,
                 )
                 logging.debug("Calling MergeContestsOperation.run")
                 mco.run(
