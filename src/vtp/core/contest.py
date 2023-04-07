@@ -206,6 +206,28 @@ class Contest:
             f"unknown/unsupported contest choices data structure ({choices})"
         )
 
+    @staticmethod
+    def split_selection(selection):
+        """Will split the selection into (2) parts again."""
+        offset, name = re.split(r":\s+", selection, 1)
+        return int(offset), name
+
+    @staticmethod
+    def extract_offest_from_selection(selection):
+        """
+        Will extract the int selection choice from the verbose
+        selection string
+        """
+        return int(Contest.split_selection(selection)[0])
+
+    @staticmethod
+    def extract_name_from_selection(selection):
+        """
+        Will extract the name selection choice from the verbose
+        selection string
+        """
+        return Contest.split_selection(selection)[1]
+
     def __init__(self, a_contest_blob, ggo, contests_index, accept_all_keys=False):
         """Construct the object placing the contest info in an attribute
         while recording the meta data
@@ -293,7 +315,7 @@ class Contest:
         # offset and the 'name', which for a ticket based contest is
         # not useful.  So support the extraction of just the offset.
         if name == "selection-offset":
-            return Tally.extract_offest_from_selection(
+            return Contest.extract_offest_from_selection(
                 getattr(self, "contest")["selection"]
             )
         # Else return contest data indexed by name
@@ -306,6 +328,14 @@ class Contest:
             return
         raise ValueError(f"Illegal value for Contest attribute ({name})")
 
+    def delete_contest_field(self, name):
+        """Generic deleter - need to be able to delete nodes"""
+        if name in Contest._cast_keys:
+            if name in self.contest:
+                del self.contest[name]
+            return
+        raise ValueError(f"Illegal value for Contest attribute ({name})")
+
 
 # pylint: disable=too-many-instance-attributes # (8/7 - not worth it at this time)
 class Tally:
@@ -314,22 +344,6 @@ class Tally:
     functions of the class are the contructor, a tally function, and a
     print-the-tally function.
     """
-
-    @staticmethod
-    def extract_offest_from_selection(selection):
-        """
-        Will extract the int selection choice from the verbose
-        selection string
-        """
-        return int(re.search("(^[0-9]+)", selection).group(1))
-
-    @staticmethod
-    def extract_name_from_selection(selection):
-        """
-        Will extract the name selection choice from the verbose
-        selection string
-        """
-        return re.search(r"^[0-9]+:\s+(.+)", selection).group(1)
 
     @staticmethod
     def get_choices_from_round(choices, what=""):
@@ -422,7 +436,7 @@ class Tally:
         """Will smartly return just the pure selection name sans all
         values and sub dictionaries from a round
         """
-        pick = self.contest["choices"][Tally.extract_offest_from_selection(selection)]
+        pick = self.contest["choices"][Contest.extract_offest_from_selection(selection)]
         if isinstance(pick, str):
             return pick
         if isinstance(pick, dict):
@@ -441,7 +455,7 @@ class Tally:
                 selection = contest["selection"][count]
                 # depending on version, selection could be an int or a string
                 if isinstance(selection, str):
-                    selection = Tally.extract_offest_from_selection(selection)
+                    selection = Contest.extract_offest_from_selection(selection)
                 choice = Contest.get_choices_from_contest(contest["choices"])[selection]
                 self.selection_counts[choice] += 1
                 self.vote_count += 1
@@ -458,7 +472,7 @@ class Tally:
             selection = contest["selection"][0]
             # depending on version, selection could be an int or a string
             if isinstance(selection, str):
-                selection = Tally.extract_offest_from_selection(selection)
+                selection = Contest.extract_offest_from_selection(selection)
             choice = Contest.get_choices_from_contest(contest["choices"])[selection]
             self.selection_counts[choice] += 1
             self.vote_count += 1
@@ -658,8 +672,8 @@ class Tally:
                 # contest["selection"]'s will get trimmed to an empty
                 # list.  Once empty, the vote/voter is done.
                 if (
-                    contest["selection"] and
-                    self.select_name_from_choices(contest["selection"][0])
+                    contest["selection"]
+                    and self.select_name_from_choices(contest["selection"][0])
                     == last_place_name
                 ):
                     # Safely pop the current first choice and reset

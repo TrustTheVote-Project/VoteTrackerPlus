@@ -91,9 +91,9 @@ def main():
 
     # do it
     vbro = VerifyBallotReceiptOperation(
-        parsed_args.election_data_dir,
-        parsed_args.verbosity,
-        False,
+        election_data_dir=parsed_args.election_data_dir,
+        verbosity=parsed_args.verbosity,
+        printonly=False,
     )
     vbro.run(
         receipt_file=parsed_args.receipt_file,

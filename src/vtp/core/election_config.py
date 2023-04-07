@@ -471,5 +471,17 @@ class ElectionConfig:
             self.gen_unique_ggo_name(active_ggos, Globals.get("BALLOT_FILE")),
         )
 
+    def gen_blank_ballot_location_from_filename(
+        self, ballot_subdir, filename, style="json"
+    ):
+        """Return the file location of a blank ballot given a blank ballot filename"""
+        return os.path.join(
+            self.get("git_rootdir"),
+            ballot_subdir,
+            Globals.get("BLANK_BALLOT_SUBDIR"),
+            style,
+            filename,
+        )
+
 
 # EOF

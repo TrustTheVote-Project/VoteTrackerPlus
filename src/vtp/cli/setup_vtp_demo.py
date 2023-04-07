@@ -118,9 +118,9 @@ def main():
 
     # do it
     svdo = SetupVtpDemoOperation(
-        parsed_args.election_data_dir,
-        parsed_args.verbosity,
-        parsed_args.printonly,
+        election_data_dir=parsed_args.election_data_dir,
+        verbosity=parsed_args.verbosity,
+        printonly=parsed_args.printonly,
     )
     guid = svdo.run(
         scanners=parsed_args.scanners,

@@ -65,6 +65,12 @@ demo mode, cast_ballot.py will randominly select choices.
         action="store_true",
         help="set demo mode to automatically cast random ballots",
     )
+    parser.add_argument(
+        "-r",
+        "--return_blank_ballot",
+        action="store_true",
+        help="Will return the blank JSON ballot",
+    )
     Arguments.add_blank_ballot(parser)
     Arguments.add_verbosity(parser)
     Arguments.add_printonly(parser)
@@ -88,13 +94,17 @@ def main():
 
     # do it
     cbo = CastBallotOperation(
-        parsed_args.election_data_dir, parsed_args.verbosity, parsed_args.printonly
+        election_data_dir=parsed_args.election_data_dir,
+        verbosity=parsed_args.verbosity,
+        printonly=parsed_args.printonly,
     )
-    cbo.run(
+    return_string = cbo.run(
         an_address=an_address,
         blank_ballot=parsed_args.blank_ballot,
         demo_mode=parsed_args.demo_mode,
+        return_bb=parsed_args.return_blank_ballot,
     )
+    print(return_string)
 
 
 # If called directly via this file

@@ -48,12 +48,18 @@ class RunMockElectionOperation(Operation):
     description (immediately below this) in the source file.
     """
 
-    def __init__(self, election_data_dir: str, verbosity: int, printonly: bool):
+    def __init__(
+        self,
+        election_data_dir: str = "",
+        guid: str = "",
+        verbosity: int = 3,
+        printonly: bool = False,
+    ):
         """
         Primarily to module-ize the scripts and keep things simple,
         idiomatic, and in different namespaces.
         """
-        super().__init__(election_data_dir, verbosity, printonly)
+        super().__init__(election_data_dir, verbosity, printonly, guid)
 
     # pylint: disable=too-many-arguments
     # pylint: disable=too-many-locals
@@ -120,9 +126,9 @@ class RunMockElectionOperation(Operation):
                         check=True,
                     )
                 cast_ballot = CastBallotOperation(
-                    self.election_data_dir,
-                    self.verbosity,
-                    self.printonly,
+                    election_data_dir=self.election_data_dir,
+                    verbosity=self.verbosity,
+                    printonly=self.printonly,
                 )
                 cast_ballot.run(
                     blank_ballot=blank_ballot,
@@ -130,9 +136,9 @@ class RunMockElectionOperation(Operation):
                 )
                 # - accept the ballot
                 accept_ballot = AcceptBallotOperation(
-                    self.election_data_dir,
-                    self.verbosity,
-                    self.printonly,
+                    election_data_dir=self.election_data_dir,
+                    verbosity=self.verbosity,
+                    printonly=self.printonly,
                 )
                 accept_ballot.run(
                     cast_ballot=Ballot.get_cast_from_blank(blank_ballot),
@@ -143,9 +149,9 @@ class RunMockElectionOperation(Operation):
                         # Since casting and merging is basically
                         # synchronous, no need for an extra large timeout
                         merge_contests = MergeContestsOperation(
-                            self.election_data_dir,
-                            self.verbosity,
-                            self.printonly,
+                            election_data_dir=self.election_data_dir,
+                            verbosity=self.verbosity,
+                            printonly=self.printonly,
                         )
                         merge_contests.run(
                             flush=True,
@@ -155,9 +161,9 @@ class RunMockElectionOperation(Operation):
                         # contests - also no need for an extra large
                         # timeout
                         merge_contests = MergeContestsOperation(
-                            self.election_data_dir,
-                            self.verbosity,
-                            self.printonly,
+                            election_data_dir=self.election_data_dir,
+                            verbosity=self.verbosity,
+                            printonly=self.printonly,
                         )
                         merge_contests.run(
                             minimum_cast_cache=minimum_cast_cache,
@@ -182,18 +188,18 @@ class RunMockElectionOperation(Operation):
             # merge the remaining contests
             # Note - this needs a longer timeout as it can take many seconds
             merge_contests = MergeContestsOperation(
-                self.election_data_dir,
-                self.verbosity,
-                self.printonly,
+                election_data_dir=self.election_data_dir,
+                verbosity=self.verbosity,
+                printonly=self.printonly,
             )
             merge_contests.run(
                 flush=True,
             )
             # tally the contests
             tally_contests = TallyContestsOperation(
-                self.election_data_dir,
-                self.verbosity,
-                self.printonly,
+                election_data_dir=self.election_data_dir,
+                verbosity=self.verbosity,
+                printonly=self.printonly,
             )
             tally_contests.run()
         # clean up git just in case
@@ -237,25 +243,25 @@ class RunMockElectionOperation(Operation):
                 )
             if flush_mode == 2:
                 merge_contests = MergeContestsOperation(
-                    self.election_data_dir,
-                    self.verbosity,
-                    self.printonly,
+                    election_data_dir=self.election_data_dir,
+                    verbosity=self.verbosity,
+                    printonly=self.printonly,
                 )
                 merge_contests.run(
                     remote=True,
                     flush=True,
                 )
                 tally_contests = TallyContestsOperation(
-                    self.election_data_dir,
-                    self.verbosity,
-                    self.printonly,
+                    election_data_dir=self.election_data_dir,
+                    verbosity=self.verbosity,
+                    printonly=self.printonly,
                 )
                 tally_contests.run()
                 return
             merge_contests = MergeContestsOperation(
-                self.election_data_dir,
-                self.verbosity,
-                self.printonly,
+                election_data_dir=self.election_data_dir,
+                verbosity=self.verbosity,
+                printonly=self.printonly,
             )
             merge_contests.run(
                 remote=True,
@@ -271,9 +277,9 @@ class RunMockElectionOperation(Operation):
         if flush_mode in [1, 2]:
             print("Cleaning up remaining unmerged ballots")
             merge_contests = MergeContestsOperation(
-                self.election_data_dir,
-                self.verbosity,
-                self.printonly,
+                election_data_dir=self.election_data_dir,
+                verbosity=self.verbosity,
+                printonly=self.printonly,
             )
             merge_contests.run(
                 remote=True,
@@ -281,9 +287,9 @@ class RunMockElectionOperation(Operation):
             )
         # tally the contests
         tally_contests = TallyContestsOperation(
-            self.election_data_dir,
-            self.verbosity,
-            self.printonly,
+            election_data_dir=self.election_data_dir,
+            verbosity=self.verbosity,
+            printonly=self.printonly,
         )
         tally_contests.run()
 

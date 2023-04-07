@@ -36,7 +36,7 @@ import pyinputplus
 from vtp.core.address import Address
 from vtp.core.ballot import Ballot, BlankBallot, Contests
 from vtp.core.common import Shellout
-from vtp.core.contest import Tally
+from vtp.core.contest import Contest
 from vtp.core.election_config import ElectionConfig
 
 # Local imports
@@ -50,12 +50,18 @@ class CastBallotOperation(Operation):
     description (immediately below this) in the source file.
     """
 
-    def __init__(self, election_data_dir: str, verbosity: int, printonly: bool):
+    def __init__(
+        self,
+        election_data_dir: str = "",
+        guid: str = "",
+        verbosity: int = 3,
+        printonly: bool = False,
+    ):
         """
         Primarily to module-ize the scripts and keep things simple,
         idiomatic, and in different namespaces.
         """
-        super().__init__(election_data_dir, verbosity, printonly)
+        super().__init__(election_data_dir, verbosity, printonly, guid)
 
     def make_random_selection(self, the_ballot, the_contest):
         """Will randomly make selections on a contest"""
@@ -214,8 +220,7 @@ class CastBallotOperation(Operation):
                     else:
                         for selection in contest.get("selection"):
                             #                        import pdb; pdb.set_trace()
-                            offset = Tally.extract_offest_from_selection(selection)
-                            name = Tally.extract_name_from_selection(selection)
+                            offset, name = Contest.split_selection(selection)
                             if contest.is_contest_a_ticket_choice(offset):
                                 print(
                                     f"    {contest.pretty_print_ticket(offset)} - {name}"
@@ -253,6 +258,7 @@ class CastBallotOperation(Operation):
         an_address: Address = None,
         blank_ballot: str = "",
         demo_mode: bool = False,
+        return_bb: bool = False,
     ) -> str:
         """Main function - see -h for more info"""
 
@@ -273,12 +279,15 @@ class CastBallotOperation(Operation):
             # get the ballot for the specified address
             a_ballot.read_a_blank_ballot(an_address, the_election_config)
 
+        if return_bb:
+            return str(a_ballot)
+
+        # If still here, prompt the user to vote for each contest
         contests = self.loop_over_contests(a_ballot, demo_mode)
         logging.debug("And the ballot looks like:\n%s", pprint.pformat(a_ballot.dict()))
 
-        # ZZZ - for this program there is no call to verify_cast_ballot to
-        # verify that the ballot has been filled out correctly and offer
-        # to the voter a chance to redo it.
+        # Validate at least something
+        a_ballot.verify_cast_ballot_data(the_election_config)
 
         if self.printonly:
             ballot_file = Ballot.gen_cast_ballot_location(

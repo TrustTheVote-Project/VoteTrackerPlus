@@ -12,7 +12,7 @@
 # Variables
 DOC_DIR     := docs
 SRC_DIR     := src/vtp
-TEST_DIR    := test
+TEST_DIR    := tests
 BUILD_DIR   := _tools/build
 BUILD_FILES := pyproject.toml poetry.lock setup.cfg 
 
