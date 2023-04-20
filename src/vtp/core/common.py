@@ -140,20 +140,40 @@ class Common:
             )
 
     @staticmethod
-    def get_guid_dir(guid: str) -> str:
-        """Return the default runtime location for a guid based workspace"""
+    def get_guid_based_edf_dir(guid: str) -> str:
+        """
+        Return the default runtime location for a guid based
+        workspace.  The actual ElectionData clone directory can be
+        named anything.  HOWEVER it is assumed (REQUIRED) that there
+        is only one clone in this directory, which is reasonable given
+        that the whole tree from '/' is nominally created by the
+        setup-vtp-demo operation.
+        """
         if len(guid) != 40:
             raise ValueError(f"The provided guid ({guid}) is not 40 characters long")
         if not re.match("^[0-9a-f]+$", guid):
             raise ValueError(
                 f"The provided guid ({guid}) contains characters other than [0-9a-f]"
             )
-        return os.path.join(
+        edf_path = os.path.join(
             Globals.get("DEFAULT_RUNTIME_LOCATION"),
             Globals.get("GUID_CLIENT_DIRNAME"),
             guid[:2],
             guid[2:],
         )
+        # Need to verify that the _only_ directory in edf_path is a
+        # valid EDF tree via some clone
+        dirs = [
+            name
+            for name in os.listdir(edf_path)
+            if os.path.isdir(os.path.join(edf_path, name))
+        ]
+        if len(dirs) > 1:
+            raise ValueError(
+                f"The provided guid ({guid}) based path ({edf_path}) ",
+                "contains multiple subdirs - there can only be one",
+            )
+        return os.path.join(edf_path, dirs[0])
 
 
 # pylint: disable=too-few-public-methods   # ZZZ - remove this later

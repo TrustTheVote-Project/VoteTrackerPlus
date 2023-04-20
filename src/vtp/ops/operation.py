@@ -24,8 +24,9 @@ from vtp.core.common import Common
 class Operation:
     """
     Generic operation base class constructor - covers
-    election_data_dir, verbosity, and printonly.  Also will configure
-    (glbal) logging and validate the existance of election_data_dir.
+    election_data_dir, guid, verbosity, and printonly.  Also will
+    configure (global) logging and validate the existance of
+    election_data_dir.
     """
 
     def __init__(
@@ -33,12 +34,8 @@ class Operation:
         election_data_dir: str = "",
         verbosity: int = 3,
         printonly: bool = False,
-        guid: str = "",
     ):
-        if guid:
-            self.election_data_dir = Common.get_guid_dir(guid)
-        else:
-            self.election_data_dir = election_data_dir
+        self.election_data_dir = election_data_dir
         self.printonly = printonly
         self.verbosity = verbosity
         # Configure logging

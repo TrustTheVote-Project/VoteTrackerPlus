@@ -46,20 +46,9 @@ class RunMockElectionOperation(Operation):
     A class to implememt the run-mock-election operation.  See the
     run-mock-election help output or read the parse_argument argparse
     description (immediately below this) in the source file.
-    """
 
-    def __init__(
-        self,
-        election_data_dir: str = "",
-        guid: str = "",
-        verbosity: int = 3,
-        printonly: bool = False,
-    ):
-        """
-        Primarily to module-ize the scripts and keep things simple,
-        idiomatic, and in different namespaces.
-        """
-        super().__init__(election_data_dir, verbosity, printonly, guid)
+    Has the same signature as the super class.
+    """
 
     # pylint: disable=too-many-arguments
     # pylint: disable=too-many-locals

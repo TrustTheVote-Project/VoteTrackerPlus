@@ -39,20 +39,9 @@ class GenerateAllBlankBallotsOperation(Operation):
     """
     A class to implememt the generate-all-blank-ballots operation.  See the
     generate-all-blank-ballots help output.
-    """
 
-    def __init__(
-        self,
-        election_data_dir: str = "",
-        guid: str = "",
-        verbosity: int = 3,
-        printonly: bool = False,
-    ):
-        """
-        Primarily to module-ize the scripts and keep things simple,
-        idiomatic, and in different namespaces.
-        """
-        super().__init__(election_data_dir, verbosity, printonly, guid)
+    Has the same signature as the super class.
+    """
 
     # pylint: disable=duplicate-code
     def run(self):

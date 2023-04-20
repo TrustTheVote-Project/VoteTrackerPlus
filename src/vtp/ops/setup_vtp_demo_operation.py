@@ -45,7 +45,6 @@ class SetupVtpDemoOperation(Operation):
     def __init__(
         self,
         election_data_dir: str = "",
-        guid: str = "",
         verbosity: int = 3,
         printonly: bool = False,
     ):
@@ -53,7 +52,7 @@ class SetupVtpDemoOperation(Operation):
         Primarily to module-ize the scripts and keep things simple,
         idiomatic, and in different namespaces.
         """
-        super().__init__(election_data_dir, verbosity, printonly, guid)
+        super().__init__(election_data_dir, verbosity, printonly)
         # The absolute path to the local bare clone of the upstream
         # GitHub ElectionData remote repo
         self.tabulation_local_upstream_absdir = ""
