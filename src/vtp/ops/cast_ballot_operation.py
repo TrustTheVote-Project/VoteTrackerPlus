@@ -263,13 +263,16 @@ class CastBallotOperation(Operation):
             with Shellout.changed_cwd(the_election_config.get("git_rootdir")):
                 a_ballot.read_a_blank_ballot("", the_election_config, blank_ballot)
         else:
+            if isinstance(an_address, str):
+                # need to convert the csv string to an Address
+                an_address = Address(csv=an_address)
             # Use the specified address
             an_address.map_ggos(the_election_config)
             # get the ballot for the specified address
             a_ballot.read_a_blank_ballot(an_address, the_election_config)
 
         if return_bb:
-            return str(a_ballot)
+            return a_ballot
 
         # If still here, prompt the user to vote for each contest
         contests = self.loop_over_contests(a_ballot, demo_mode)

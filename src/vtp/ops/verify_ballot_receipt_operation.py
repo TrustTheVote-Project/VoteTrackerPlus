@@ -178,10 +178,11 @@ class VerifyBallotReceiptOperation(Operation):
     # pylint: disable=too-many-locals
     def verify_ballot_receipt(
         self,
-        receipt_file,
-        the_election_config,
-        row_index,
-        show_cvr,
+        receipt_file: str,
+        receipt_data: list,
+        the_election_config: ElectionConfig,
+        row_index: str,
+        show_cvr: bool,
     ):
         """Will verify all the rows in a ballot receipt"""
 
@@ -198,10 +199,18 @@ class VerifyBallotReceiptOperation(Operation):
 
         #    import pdb; pdb.set_trace()
         # Create a ballot to read the receipt file
-        a_ballot = Ballot()
-        lines = a_ballot.read_receipt_csv(
-            the_election_config, receipt_file=receipt_file
-        )
+        if receipt_file:
+            a_ballot = Ballot()
+            lines = a_ballot.read_receipt_csv(
+                the_election_config, receipt_file=receipt_file
+            )
+        elif receipt_data:
+            lines = receipt_data
+        else:
+            raise ValueError(
+                "verify_ballot_receipt: requires either a receipt_file or receipt_data "
+                "- neither was supplied"
+            )
         headers = lines.pop(0)
         uids = [re.match(r"([0-9]+)", column).group(0) for column in headers]
         error_digests = set()
@@ -305,6 +314,7 @@ class VerifyBallotReceiptOperation(Operation):
     def run(
         self,
         receipt_file: str = "",
+        receipt_data: list = None,
         row: str = "",
         cvr: bool = False,
     ):
@@ -326,6 +336,7 @@ class VerifyBallotReceiptOperation(Operation):
         # Can read the receipt file directly without any Ballot info
         self.verify_ballot_receipt(
             receipt_file=receipt_file,
+            receipt_data=receipt_data,
             the_election_config=the_election_config,
             row_index=row,
             show_cvr=cvr,

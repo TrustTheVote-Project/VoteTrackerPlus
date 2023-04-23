@@ -140,6 +140,40 @@ class Common:
             )
 
     @staticmethod
+    def get_generic_ro_edf_dir() -> str:
+        """
+        Will return a generic EDF workspace so to be able to execute
+        generic/readonly commands.  It is 'readonly' because any
+        number of processes could be executing in this one git
+        workspace at the same time and if any them wrote anything, it
+        would be bad.
+        """
+        edf_path = os.path.join(
+            Globals.get("DEFAULT_RUNTIME_LOCATION"),
+            Globals.get("MOCK_CLIENT_DIRNAME"),
+            "scanner.00",
+        )
+        # Need to verify that there is only _one_ directory in the edf_path
+        dirs = [
+            name
+            for name in os.listdir(edf_path)
+            if os.path.isdir(os.path.join(edf_path, name))
+        ]
+        if len(dirs) > 1:
+            raise ValueError(
+                f"The mock client directory ({edf_path}) ",
+                "contains multiple subdirs - there can only be one ",
+                "as there should only be one EDF clone in this directory",
+            )
+        if not dirs:
+            raise ValueError(
+                f"The mock client directory ({edf_path}) ",
+                "is empty - there needs to be exactly one git clone ",
+                "of a ElectionData repo",
+            )
+        return os.path.join(edf_path, dirs[0])
+
+    @staticmethod
     def get_guid_based_edf_dir(guid: str) -> str:
         """
         Return the default runtime location for a guid based
@@ -172,6 +206,12 @@ class Common:
             raise ValueError(
                 f"The provided guid ({guid}) based path ({edf_path}) ",
                 "contains multiple subdirs - there can only be one",
+            )
+        if not dirs:
+            raise ValueError(
+                f"The guid directory ({edf_path}) ",
+                "is empty - there needs to be exactly one git clone ",
+                "of a ElectionData repo",
             )
         return os.path.join(edf_path, dirs[0])
 
