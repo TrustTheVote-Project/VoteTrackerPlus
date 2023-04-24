@@ -18,9 +18,9 @@
 """A kitchen sync for VTP classes for the moment"""
 
 # pylint: disable=too-few-public-methods
-import json
 
-#  Other imports:  critical, error, warning, info, debug
+# standard imports
+import json
 import logging
 import os
 import re

@@ -34,6 +34,7 @@ class Operation:
         election_data_dir: str = "",
         verbosity: int = 3,
         printonly: bool = False,
+        stdout_printing: bool = True,
     ):
         self.election_data_dir = election_data_dir
         self.printonly = printonly
@@ -42,3 +43,19 @@ class Operation:
         Common.configure_logging(verbosity)
         # Validate the election_data_dir arg here and now
         Common.verify_election_data_dir(self.election_data_dir)
+        # Configure printing
+        self.stdout_printing = stdout_printing
+        self.stdout_output = []
+
+    def imprimir(self, a_line: str, incoming_printlevel: int = 3):
+        """Either prints a line of text to STDOUT or appends it to a list"""
+        if incoming_printlevel <= self.verbosity:
+            if self.stdout_printing:
+                print(a_line)
+            else:
+                self.stdout_output.append(a_line)
+        return self.verbosity
+
+    def get_imprimir(self) -> list:
+        """Return the stored output string"""
+        return self.stdout_output

@@ -499,8 +499,10 @@ class AcceptBallotOperation(Operation):
         )
 
         # For now, print the location and the voter's index
-        print(f"############\n### Receipt file: {receipt_file}")
-        print(f"### Voter's row: {index}\n############")
+        print("############")
+        print(f"### Receipt file: {receipt_file}")
+        print(f"### Voter's row: {index}")
+        print("############")
         # And return two
         return ballot_check, index
 

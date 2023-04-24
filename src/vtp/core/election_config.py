@@ -17,9 +17,8 @@
 
 """The VTP ElectionConfig class - everything needed to parse the config.yaml tree."""
 
-import logging
-
 # standard imports
+import logging
 import os
 import os.path
 import re

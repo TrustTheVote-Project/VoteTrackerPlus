@@ -18,7 +18,8 @@
 """How to manage a VTP specific contest"""
 
 import json
-import logging
+
+# import logging
 import operator
 import re
 from fractions import Fraction
@@ -354,7 +355,7 @@ class Tally:
             return [choice[1] for choice in choices]
         return [choice[0] for choice in choices]
 
-    def __init__(self, a_git_cvr):
+    def __init__(self, a_git_cvr, printmethod):
         """Given a contest as parsed from the git log, a.k.a the
         contest digest and CVR json payload, will construct a Tally.
         A tally object can validate and tally a contest.
@@ -363,6 +364,7 @@ class Tally:
         results of the contest are stored in an attribute of the
         object.
         """
+        self.printmethod = printmethod
         self.digest = a_git_cvr["digest"]
         self.contest = a_git_cvr["CVR"]
         Contest.check_cvr_blob_syntax(self.contest, digest=self.digest)
@@ -460,10 +462,10 @@ class Tally:
                 self.selection_counts[choice] += 1
                 self.vote_count += 1
                 if provenance_digest:
-                    logging.info("Counted %s: choice=%s", provenance_digest, choice)
+                    self.printmethod(f"Counted {provenance_digest}: choice={choice}")
             else:
                 if provenance_digest:
-                    logging.info("No-vote %s: BLANK", provenance_digest)
+                    self.printmethod(f"No-vote {provenance_digest}: BLANK")
 
     def tally_a_rcv_contest(self, contest, provenance_digest):
         """RCV tally"""
@@ -477,10 +479,10 @@ class Tally:
             self.selection_counts[choice] += 1
             self.vote_count += 1
             if provenance_digest:
-                logging.info("Counted %s: choice=%s", provenance_digest, choice)
+                self.printmethod(f"Counted {provenance_digest}: choice={choice}")
         else:
             if provenance_digest:
-                logging.info("No vote %s: BLANK", provenance_digest)
+                self.printmethod(f"No vote {provenance_digest}: BLANK")
 
     def safely_determine_last_place_names(self, current_round: int) -> list:
         """Safely determine the next set of last_place_names for which
@@ -495,7 +497,7 @@ class Tally:
         number of votes (as in, pick 3 of 5 and a RCV round tie
         results in 1 or 2 choices instead of 3).
         """
-        logging.info("%s", self.rcv_round[current_round])
+        self.printmethod(f"{self.rcv_round[current_round]}")
 
         # Step 1: remove self.obe_choices from current round
         working_copy = []
@@ -593,31 +595,31 @@ class Tally:
         # print the condition and simply return might be the better
         # design option.  Doing that.
         if not last_place_names:
-            logging.info("No more choices/candidates to recast - no more RCV rounds")
+            self.printmethod(
+                "No more choices/candidates to recast - no more RCV rounds"
+            )
             return 1
         if this_round > 64:
             raise TallyException("RCV rounds exceeded safety limit of 64 rounds")
         if this_round >= len(self.rcv_round[0]):
-            logging.info("There are no more RCV rounds")
+            self.printmethod("There are no more RCV rounds")
             return 1
         if not non_zero_count_choices:
-            logging.info("There are no votes for any choice")
+            self.printmethod("There are no votes for any choice")
             return 1
         if non_zero_count_choices < self.get("max"):
-            logging.info(
-                "There are only %s viable choices left which is less than the contest max (%s)",
-                non_zero_count_choices,
-                self.get("max"),
+            self.printmethod(
+                f"There are only {non_zero_count_choices} viable choices "
+                f"left which is less than the contest max ({self.get('max')})"
             )
             return 1
         if non_zero_count_choices == self.get("max"):
-            logging.info(
-                "The contest max number of choices (%s)has been reached",
-                self.get("max"),
+            self.printmethod(
+                f"The contest max number of choices ({self.get('max')}) has been reached"
             )
             return 1
         if non_zero_count_choices == 1:
-            logging.info(
+            self.printmethod(
                 "There is only one remaining viable choice left - halting more RCV rounds",
             )
             return 1
@@ -630,18 +632,16 @@ class Tally:
         # choices left, this is a runner-up tie which is still ok -
         # return and print that.
         if non_zero_count_choices - len(last_place_names) == 0:
-            logging.info("This contest ends in a %s way tie", non_zero_count_choices)
+            self.printmethod(f"This contest ends in a {non_zero_count_choices} way tie")
             return 1
 
         # If len(last_place_names) leaves less than the max but one or
         # more choices left, this is a tie on losing.  Not sure what
         # to do, so print that and return.
         if non_zero_count_choices - len(last_place_names) < self.get("max"):
-            logging.info(
-                "There is a last place tie (%s way) which results "
-                "in LESS THAN the max (%s) of choices",
-                len(last_place_names),
-                non_zero_count_choices,
+            self.printmethod(
+                f"There is a last place tie ({len(last_place_names)} way) which results "
+                f"in LESS THAN the max ({non_zero_count_choices}) of choices"
             )
             return 1
 
@@ -656,14 +656,18 @@ class Tally:
         this RCV round.  If there is no next choice, the there is no
         recast and the vote is dropped.
         """
+
         # ZZZ - VTP is not yet defining a logger and still using RootLogger
-        loglevel = re.search(r"\((.+)\)", str(logging.getLogger())).group(1)
+        # loglevel = re.search(r"\((.+)\)", str(logging.getLogger())).group(1)
+        # note: loglevel is set to INFO, DEBUG, etc and was used originally
+        # used below to optionally print more debugging info
+
         # Loop over CVRs
         for uid in contest_batch:
             contest = uid["CVR"]
             digest = uid["digest"]
             if digest in checks:
-                logging.debug("INSPECTING: %s (contest=%s)", digest, contest["name"])
+                self.printmethod(f"INSPECTING: {digest} (contest={contest['name']})", 4)
             # Note - if there is no selection, there is no selection
             if not contest["selection"]:
                 continue
@@ -694,21 +698,17 @@ class Tally:
                         # set-in-stone ordering w.r.t. selection
                         new_choice_name = self.select_name_from_choices(new_selection)
                         self.selection_counts[new_choice_name] += 1
-                        if digest in checks or loglevel == "DEBUG":
-                            logging.info(
-                                "RCV: %s (contest=%s) last place pop and count (%s -> %s)",
-                                digest,
-                                contest["name"],
-                                last_place_name,
-                                new_choice_name,
+                        # original variant: if digest in checks or loglevel == "DEBUG":
+                        if digest in checks or self.printmethod("", 9) >= 4:
+                            self.printmethod(
+                                f"RCV: {digest} (contest={contest['name']}) last place "
+                                f"pop and count ({last_place_name} -> {new_choice_name})"
                             )
                     else:
-                        if digest in checks or loglevel == "DEBUG":
-                            logging.info(
-                                "RCV: %s (contest=%s) last place pop and drop (%s -> BLANK)",
-                                digest,
-                                contest["name"],
-                                last_place_name,
+                        if digest in checks or self.printmethod("", 9) >= 4:
+                            self.printmethod(
+                                f"RCV: {digest} (contest={contest['name']}) last place "
+                                f"pop and drop ({last_place_name} -> BLANK)"
                             )
 
     def handle_another_rcv_round(
@@ -719,7 +719,7 @@ class Tally:
         slice off that choice off and re-count the now first
         selection choice (if there is one)
         """
-        logging.info("RCV: round %s", this_round)
+        self.printmethod(f"RCV: round {this_round}")
 
         # ZZZ - create a function to validate incoming last place
         # names and call that.  Maybe in the furure once more is know
@@ -744,7 +744,7 @@ class Tally:
         self.rcv_round.append([])
         # Get the correct current total vote count for this round
         total_current_vote_count = self.get_total_vote_count(this_round)
-        logging.info("Total vote count: %s", total_current_vote_count)
+        self.printmethod(f"Total vote count: {total_current_vote_count}")
         for choice in Tally.get_choices_from_round(self.rcv_round[this_round]):
             # Note the test is '>' and NOT '>='
             if (
@@ -820,7 +820,11 @@ class Tally:
                 "The following CVRs have structural errors:" f"{errors}"
             )
 
-    def tallyho(self, contest_batch: list, checks: list):
+    def tallyho(
+        self,
+        contest_batch: list,
+        checks: list,
+    ):
         """
         Will verify and tally the suppllied unique contest across all
         the CVRs.  contest_batch is the list of contest CVRs from git
@@ -829,9 +833,9 @@ class Tally:
         """
         # Read all the contests, validate, and count votes
         if self.contest["tally"] == "plurality":
-            logging.info("Plurality - one round")
+            self.printmethod("Plurality - one round")
         else:
-            logging.info("RCV: round 0")
+            self.printmethod("RCV: round 0")
         self.parse_all_contests(contest_batch, checks)
 
         # For all tallies order what has been counted so far (a tuple)
@@ -855,7 +859,7 @@ class Tally:
 
         # Get the correct current total vote count for this round
         total_current_vote_count = self.get_total_vote_count(0)
-        logging.info("Total vote count: %s", total_current_vote_count)
+        self.printmethod(f"Total vote count: {total_current_vote_count}")
 
         # Determine winners if any ...
         for choice in Tally.get_choices_from_round(self.rcv_round[0]):
@@ -886,13 +890,15 @@ class Tally:
 
     def print_results(self):
         """Will print the results of the tally"""
-        print(f"Contest {self.contest['name']} (uid={self.contest['uid']}):")
+        self.printmethod(
+            f"Final results for contest {self.contest['name']} (uid={self.contest['uid']}):"
+        )
         #        import pdb; pdb.set_trace()
         # Note - better to print the last self.rcv_round than
         # self.winner_order since the former is a full count across all
         # choices while the latter is a partial list
         for result in self.rcv_round[-2]:
-            print(f"  {result}")
+            self.printmethod(f"  {result}")
 
 
 # EOF
