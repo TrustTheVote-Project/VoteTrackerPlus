@@ -106,10 +106,10 @@ class ShowContestsOperation(Operation):
                 .stdout.strip()
                 .splitlines()
             )
-        for line in output_lines:
-            self.imprimir(line)
-        # can always return the output
-        return self.stdout_output
+        if self.stdout_printing:
+            for line in output_lines:
+                self.imprimir(line)
+        return Shellout.convert_show_output(output_lines)
 
 
 # For future reference just in case . . .

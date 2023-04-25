@@ -355,5 +355,18 @@ class Shellout:
                             recording = False
         return git_log_cvrs
 
+    @staticmethod
+    def convert_show_output(output_lines: list) -> dict:
+        """
+        Will convert the native text output of a CVR git commit to a
+        dictionary with a header key and a payload key.  The header is
+        the default three text lines and the payload is the CVS JSON
+        payload.
+        """
+        contest_cvr = {}
+        contest_cvr["header"] = output_lines[:3]
+        contest_cvr["payload"] = json.loads("".join(output_lines[4:]))
+        return contest_cvr
+
 
 # EOF
