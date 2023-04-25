@@ -299,7 +299,7 @@ class VerifyBallotReceiptOperation(Operation):
         receipt_data: list = None,
         row: str = "",
         cvr: bool = False,
-    ):
+    ) -> list:
         """Main function - see -h for more info"""
 
         # Create a VTP ElectionData object if one does not already exist
@@ -320,6 +320,8 @@ class VerifyBallotReceiptOperation(Operation):
             row_index=row,
             show_cvr=cvr,
         )
+        # can always return the output
+        return self.stdout_output
 
 
 # EOF

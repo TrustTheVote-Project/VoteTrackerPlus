@@ -47,7 +47,7 @@ class TallyContestsOperation(Operation):
         self,
         contest_uid: str = "",
         track_contests: str = "",
-    ):
+    ) -> list:
         """Main function - see -h for more info"""
 
         # Create a VTP ElectionData object if one does not already exist
@@ -97,6 +97,8 @@ class TallyContestsOperation(Operation):
             except TallyException as tally_error:
                 self.imprimir(f"[ERROR]: {tally_error}")
                 self.imprimir("Continuing with other contests ...")
+        # can always return the output
+        return self.stdout_output
 
 
 # EOF

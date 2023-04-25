@@ -82,7 +82,7 @@ class ShowContestsOperation(Operation):
             raise ValueError(f"Found {errors} invalid digest(s)")
 
     # pylint: disable=duplicate-code
-    def run(self, contest_check: str = ""):
+    def run(self, contest_check: str = "") -> list:
         """Main function - see -h for more info"""
 
         # Create a VTP ElectionData object if one does not already exist
@@ -96,7 +96,20 @@ class ShowContestsOperation(Operation):
         ]
         # show/log the digests
         with Shellout.changed_cwd(the_election_config.get("git_rootdir")):
-            Shellout.run(["git", "show", "-s"] + valid_digests, check=True)
+            output_lines = (
+                Shellout.run(
+                    ["git", "show", "-s"] + valid_digests,
+                    text=True,
+                    check=True,
+                    capture_output=True,
+                )
+                .stdout.strip()
+                .splitlines()
+            )
+        for line in output_lines:
+            self.imprimir(line)
+        # can always return the output
+        return self.stdout_output
 
 
 # For future reference just in case . . .
