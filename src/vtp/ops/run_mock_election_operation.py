@@ -261,7 +261,7 @@ class RunMockElectionOperation(Operation):
             logging.info("Sleeping for 10 (iteration=%s)", count)
             time.sleep(10)
             elapsed_time = time.time() - start_time
-            if elapsed_time > seconds:
+            if not iterations and elapsed_time > seconds:
                 break
         if flush_mode in [1, 2]:
             print("Cleaning up remaining unmerged ballots")

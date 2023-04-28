@@ -109,7 +109,7 @@ class ShowContestsOperation(Operation):
         if self.stdout_printing:
             for line in output_lines:
                 self.imprimir(line)
-        return Shellout.convert_show_output(output_lines)
+        return output_lines
 
 
 # For future reference just in case . . .
