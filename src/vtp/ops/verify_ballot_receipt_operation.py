@@ -297,7 +297,7 @@ class VerifyBallotReceiptOperation(Operation):
         receipt_data: list = None,
         row: str = "",
         cvr: bool = False,
-    ) -> list:
+    ) -> list[str]:
         """Main function - see -h for more info"""
 
         # Create a VTP ElectionData object if one does not already exist
