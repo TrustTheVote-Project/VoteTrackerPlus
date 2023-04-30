@@ -48,8 +48,6 @@ class CastBallotOperation(Operation):
     A class to implememt the cast-ballot operation.  See the
     cast-ballot help output or read the parse_argument argparse
     description (immediately below this) in the source file.
-
-    Has the same signature as the super class.
     """
 
     def make_random_selection(self, the_ballot, the_contest):

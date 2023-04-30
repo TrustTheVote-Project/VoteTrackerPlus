@@ -40,8 +40,6 @@ class VoteOperation(Operation):
     A class to implememt the vote operation.  See the
     vote help output or read the parse_argument argparse
     description (immediately below this) in the source file.
-
-    Has the same signature as the super class.
     """
 
     # pylint: disable=duplicate-code

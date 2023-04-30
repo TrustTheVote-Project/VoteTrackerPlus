@@ -38,8 +38,6 @@ class TallyContestsOperation(Operation):
     A class to implememt the tally-contests operation.  See the
     tally-contests help output or read the parse_argument argparse
     description (immediately below this) in the source file.
-
-    Has the same signature as the super class.
     """
 
     # pylint: disable=duplicate-code

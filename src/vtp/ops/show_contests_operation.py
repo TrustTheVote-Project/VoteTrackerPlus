@@ -35,8 +35,6 @@ class ShowContestsOperation(Operation):
     A class to implememt the show-contests operation.  See the
     show-contests help output or read the parse_argument argparse
     description (immediately below this) in the source file.
-
-    Has the same signature as the super class.
     """
 
     def validate_digests(self, digests, the_election_config, error_digests):

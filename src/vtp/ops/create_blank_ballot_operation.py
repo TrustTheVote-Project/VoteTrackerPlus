@@ -39,8 +39,6 @@ class CreateBlankBallotOperation(Operation):
     A class to implememt the create-blank-ballot operation.  See the
     create-blank-ballot help output or read the parse_argument argparse
     description (immediately below this) in the source file.
-
-    Has the same signature as the super class.
     """
 
     # pylint: disable=duplicate-code

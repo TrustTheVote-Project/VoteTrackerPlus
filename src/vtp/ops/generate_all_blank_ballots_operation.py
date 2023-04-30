@@ -39,8 +39,6 @@ class GenerateAllBlankBallotsOperation(Operation):
     """
     A class to implememt the generate-all-blank-ballots operation.  See the
     generate-all-blank-ballots help output.
-
-    Has the same signature as the super class.
     """
 
     # pylint: disable=duplicate-code

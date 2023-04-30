@@ -42,8 +42,6 @@ class MergeContestsOperation(Operation):
     A class to implememt the merge-contests operation.  See the
     merge-contests help output or read the parse_argument argparse
     description (immediately below this) in the source file.
-
-    Has the same signature as the super class.
     """
 
     def merge_contest_branch(self, branch: str, remote: bool):

@@ -46,8 +46,6 @@ class RunMockElectionOperation(Operation):
     A class to implememt the run-mock-election operation.  See the
     run-mock-election help output or read the parse_argument argparse
     description (immediately below this) in the source file.
-
-    Has the same signature as the super class.
     """
 
     # pylint: disable=too-many-arguments

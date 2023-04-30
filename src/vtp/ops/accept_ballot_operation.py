@@ -44,14 +44,13 @@ from .operation import Operation
 
 class AcceptBallotOperation(Operation):
     """
-    Implementation of the 'accept-ballot' operation.  Note -
-    AcceptBallotOperation has the same signature as the super class
+    Implementation of the 'accept-ballot' operation.
     """
 
     def get_random_branchpoint(self, branch):
-        """Return a random branchpoint on the supplied branch
-
-        Requires the CWD to be the parent of the CVRs directory.
+        """
+        Return a random branchpoint on the supplied branch Requires
+        the CWD to be the parent of the CVRs directory.
         """
         result = Shellout.run(
             ["git", "log", branch, "--pretty=format:'%h'"],
