@@ -187,7 +187,7 @@ class Common:
             raise ValueError(f"The provided guid is not 40 characters long: {guid}")
         if not re.match("^[0-9a-f]+$", guid):
             raise ValueError(
-                f"The provided guid ({guid}) contains characters other than [0-9a-f]"
+                f"The provided guid contains characters other than [0-9a-f]: {guid}"
             )
         edf_path = os.path.join(
             Globals.get("DEFAULT_RUNTIME_LOCATION"),
