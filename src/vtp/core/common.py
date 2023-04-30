@@ -184,7 +184,7 @@ class Common:
         setup-vtp-demo operation.
         """
         if len(guid) != 40:
-            raise ValueError(f"The provided guid ({guid}) is not 40 characters long")
+            raise ValueError(f"The provided guid is not 40 characters long: {guid}")
         if not re.match("^[0-9a-f]+$", guid):
             raise ValueError(
                 f"The provided guid ({guid}) contains characters other than [0-9a-f]"
