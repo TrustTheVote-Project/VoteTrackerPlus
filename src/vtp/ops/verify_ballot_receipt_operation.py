@@ -164,7 +164,7 @@ class VerifyBallotReceiptOperation(Operation):
     def verify_ballot_receipt(
         self,
         receipt_file: str,
-        receipt_data: list,
+        receipt_data: list[list[str]],
         the_election_config: ElectionConfig,
         row_index: str,
         show_cvr: bool,
@@ -294,7 +294,7 @@ class VerifyBallotReceiptOperation(Operation):
     def run(
         self,
         receipt_file: str = "",
-        receipt_data: list = None,
+        receipt_data: list[list[str]] = None,
         row: str = "",
         cvr: bool = False,
     ) -> list[str]:
