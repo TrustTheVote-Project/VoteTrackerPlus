@@ -165,7 +165,7 @@ class Common:
                 "contains multiple subdirs - there can only be one ",
                 "as there should only be one EDF clone in this directory",
             )
-        if not dirs:
+        if len(dirs) == 0:
             raise ValueError(
                 f"The mock client directory ({edf_path}) ",
                 "is empty - there needs to be exactly one git clone ",
