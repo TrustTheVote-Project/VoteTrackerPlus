@@ -207,7 +207,7 @@ class Common:
                 f"The provided guid ({guid}) based path ({edf_path}) ",
                 "contains multiple subdirs - there can only be one",
             )
-        if not dirs:
+        if len(dirs) == 0:
             raise ValueError(
                 f"The guid directory ({edf_path}) ",
                 "is empty - there needs to be exactly one git clone ",
