@@ -26,6 +26,7 @@ operation of merging the pushed CVR branches to the main branch.
 """
 
 # Standard imports
+import csv
 import logging
 import os
 import random
@@ -324,6 +325,13 @@ class AcceptBallotOperation(Operation):
         # return all three
         return ballot_receipt, voters_row, receipt_file
 
+    def convert_csv_to_2d_list(self, ballot_check_cvs: list) -> list[list[str]]:
+        """Convert a 1-D csv format list to a 2-D list of list format"""
+        my_list = []
+        for row in csv.reader(ballot_check_cvs, delimiter=",", quotechar='"'):
+            my_list.append(row)
+        return my_list
+
     # pylint: disable=duplicate-code
     # pylint: disable=too-many-locals
     def run(
@@ -502,8 +510,11 @@ class AcceptBallotOperation(Operation):
         print(f"### Receipt file: {receipt_file}")
         print(f"### Voter's row: {index}")
         print("############")
-        # And return two
-        return ballot_check, index
+        # And return them.  Note that ballot_check is in csv format
+        # when writing to a file.  However, when returning is it more
+        # convenient for it to be normal 2-D array -
+        # list[list[str]]. So convert it first.
+        return self.convert_csv_to_2d_list(ballot_check), index
 
 
 # EOF
