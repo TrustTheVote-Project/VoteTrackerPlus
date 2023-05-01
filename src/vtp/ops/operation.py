@@ -24,8 +24,9 @@ from vtp.core.common import Common
 class Operation:
     """
     Generic operation base class constructor - covers
-    election_data_dir, verbosity, and printonly.  Also will configure
-    (glbal) logging and validate the existance of election_data_dir.
+    election_data_dir, guid, verbosity, and printonly.  Also will
+    configure (global) logging and validate the existance of
+    election_data_dir.
     """
 
     def __init__(
@@ -33,15 +34,28 @@ class Operation:
         election_data_dir: str = "",
         verbosity: int = 3,
         printonly: bool = False,
-        guid: str = "",
+        stdout_printing: bool = True,
     ):
-        if guid:
-            self.election_data_dir = Common.get_guid_dir(guid)
-        else:
-            self.election_data_dir = election_data_dir
+        self.election_data_dir = election_data_dir
         self.printonly = printonly
         self.verbosity = verbosity
         # Configure logging
         Common.configure_logging(verbosity)
         # Validate the election_data_dir arg here and now
         Common.verify_election_data_dir(self.election_data_dir)
+        # Configure printing
+        self.stdout_printing = stdout_printing
+        self.stdout_output = []
+
+    def imprimir(self, a_line: str, incoming_printlevel: int = 3):
+        """Either prints a line of text to STDOUT or appends it to a list"""
+        if incoming_printlevel <= self.verbosity:
+            if self.stdout_printing:
+                print(a_line)
+            else:
+                self.stdout_output.append(a_line)
+        return self.verbosity
+
+    def get_imprimir(self) -> list:
+        """Return the stored output string"""
+        return self.stdout_output

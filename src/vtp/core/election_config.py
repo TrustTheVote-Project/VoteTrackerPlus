@@ -17,9 +17,8 @@
 
 """The VTP ElectionConfig class - everything needed to parse the config.yaml tree."""
 
-import logging
-
 # standard imports
+import logging
 import os
 import os.path
 import re
@@ -101,15 +100,9 @@ class ElectionConfig:
     _uids = {}
     _nextuid = 0
 
-    # Hrmph - for the moment let there be only one ElectionData tree
-    # (or Election Data File - EDF) configuration per VTP execution.
-    # This may need to changed later.  Note that this is NOT the same
-    # requirement as one and only one election_data_dir.  There can be
-    # many of those - and there needs to be many since there needs to
-    # be many git clones/workspaces.  But all the git
-    # clones/workspaces need to be exact (same commit) clones.  Since
-    # they are all the same clone, any instance needs only to be
-    # scanned once and only once.
+    # A private cache of ElectionConfig data of length one so that
+    # repeatably hitting the same EDF (Election Data File) is
+    # optimized.
     _election_data = None
 
     @staticmethod
@@ -121,12 +114,32 @@ class ElectionConfig:
         """
         # Safety check
         Common.verify_election_data_dir(election_data_dir)
-        # Only parse the tree if it hasn't been done yet
-        if ElectionConfig._election_data is None:
-            # Call the constrcutor - sets the absolute path to election_data_dir
-            ElectionConfig._election_data = ElectionConfig(election_data_dir)
-            # Parses the actual election_data_dir
-            ElectionConfig._election_data.parse_configs()
+        # Always call the constructor - sets the absolute path to
+        # election_data_dir.  It will call git rev-parse but at the
+        # moment that is required to determine the exact root of the
+        # ElectionData tree (as the CWD can move around etc).
+        incoming_ec = ElectionConfig(election_data_dir)
+        # Now, if the git_rootdir is different than the previous
+        # constructor call, parse the new tree even though the EDF is
+        # the same.  Two design notes: 1) if the git_rootdir is stored
+        # some place else or differently other than in the
+        # ElectionConfig object, then different EDF workspaces could
+        # share the same EDF data while supporting multiple EDF git
+        # workspaces (required with the web-api interface); and 2)
+        # caching the last constructor call avoids multiple scans of
+        # the same ElectionData tree.  But if in a web based demo, the
+        # incoming requests will be dynamically varying over different
+        # guid based workspaces etc, so either keep a stack of them
+        # which all could consume memory or just optimize for repeated
+        # hits by the same client (into the same workspace).  So, for
+        # now, implementing the latter.
+        if ElectionConfig._election_data is not None and (
+            incoming_ec.git_rootdir == ElectionConfig._election_data.git_rootdir
+        ):
+            return ElectionConfig._election_data
+        # Parses the actual election_data_dir
+        ElectionConfig._election_data = incoming_ec
+        ElectionConfig._election_data.parse_configs()
         # Returns self
         return ElectionConfig._election_data
 

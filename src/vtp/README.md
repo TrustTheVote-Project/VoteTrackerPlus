@@ -118,49 +118,89 @@ $ conda activate vtp.01
 To run a mock election, run the setup_vtp_demo.py script (which per python's local install described above is installed in the python environment as _setup-vtp-demo_).  This script will nominally create a mock election with four VTP scanner _apps_ and one VTP tabulation server _app_ as if all ballots were being cast in a single voting center with four separate and independent ballot scanners.  By default it will place the git repos in /opt/VotetrackerPlus with the 5 clients (the four scanner apps and one server app) in the _clients_ folder with the two local git upstream bare repositories in the _tabulation-server_ folder.
 
 ```
-% setup-vtp-demo -l /opt/VoteTrackerPlus/demo.10   
+% setup-vtp-demo -e ../VTP-mock-election.US.14
 Running "git rev-parse --show-toplevel"
 Running "git config --get remote.origin.url"
-Running "git config --get remote.origin.url"
-Running "git clone --bare git@github.com:TrustTheVote-Project/VTP-mock-election.US.10.git"
-Running "git clone --bare git@github.com:TrustTheVote-Project/VTP-root-repo.git"
-Running "git clone --recurse-submodules /opt/VoteTrackerPlus/demo.10/tabulation-server/VTP-mock-election.US.10.git"
-Submodule path 'VoteTrackerPlus': checked out 'bfa814d1577b77d2bb4e5d685823333fdc4a0b38'
-Running "git clone --recurse-submodules /opt/VoteTrackerPlus/demo.10/tabulation-server/VTP-mock-election.US.10.git"
-Submodule path 'VoteTrackerPlus': checked out 'bfa814d1577b77d2bb4e5d685823333fdc4a0b38'
-Running "git clone --recurse-submodules /opt/VoteTrackerPlus/demo.10/tabulation-server/VTP-mock-election.US.10.git"
-Submodule path 'VoteTrackerPlus': checked out 'bfa814d1577b77d2bb4e5d685823333fdc4a0b38'
-Running "git clone --recurse-submodules /opt/VoteTrackerPlus/demo.10/tabulation-server/VTP-mock-election.US.10.git"
-Submodule path 'VoteTrackerPlus': checked out 'bfa814d1577b77d2bb4e5d685823333fdc4a0b38'
-Running "git clone --recurse-submodules /opt/VoteTrackerPlus/demo.10/tabulation-server/VTP-mock-election.US.10.git"
-Submodule path 'VoteTrackerPlus': checked out 'bfa814d1577b77d2bb4e5d685823333fdc4a0b38'
-Running "git init"
-Initialized empty Git repository in /opt/VoteTrackerPlus/demo.10/.git/
-Running "git submodule add /opt/VoteTrackerPlus/demo.10/tabulation-server/VTP-mock-election.US.10.git clients/scanner.00/VTP-mock-election.US.10"
-Adding existing repo at 'clients/scanner.00/VTP-mock-election.US.10' to the index
-Running "git submodule add /opt/VoteTrackerPlus/demo.10/tabulation-server/VTP-mock-election.US.10.git clients/scanner.01/VTP-mock-election.US.10"
-Adding existing repo at 'clients/scanner.01/VTP-mock-election.US.10' to the index
-Running "git submodule add /opt/VoteTrackerPlus/demo.10/tabulation-server/VTP-mock-election.US.10.git clients/scanner.02/VTP-mock-election.US.10"
-Adding existing repo at 'clients/scanner.02/VTP-mock-election.US.10' to the index
-Running "git submodule add /opt/VoteTrackerPlus/demo.10/tabulation-server/VTP-mock-election.US.10.git clients/scanner.03/VTP-mock-election.US.10"
-Adding existing repo at 'clients/scanner.03/VTP-mock-election.US.10' to the index
-Running "git submodule add /opt/VoteTrackerPlus/demo.10/tabulation-server/VTP-mock-election.US.10.git clients/server/VTP-mock-election.US.10"
-Adding existing repo at 'clients/server/VTP-mock-election.US.10' to the index
-Adding a .gitignore
-Running "git add .gitignore"
-
+Running "git clone --bare git@github.com:TrustTheVote-Project/VTP-mock-election.US.14.git"
+Running "git clone /opt/VoteTrackerPlus/demo.01/tabulation-server/VTP-mock-election.US.14.git"
+Running "git clone /opt/VoteTrackerPlus/demo.01/tabulation-server/VTP-mock-election.US.14.git"
+Running "git clone /opt/VoteTrackerPlus/demo.01/tabulation-server/VTP-mock-election.US.14.git"
+Running "git clone /opt/VoteTrackerPlus/demo.01/tabulation-server/VTP-mock-election.US.14.git"
+Running "git clone /opt/VoteTrackerPlus/demo.01/tabulation-server/VTP-mock-election.US.14.git"
 ```
 
 The resulting directory tree looks like this:
 
 ```
-/opt/VotetrackerPlus/demo.01/clients/scanner.00/VTP-mock-election.US.<nn>/VoteTrackerPlus
-                                     scanner.01/VTP-mock-election.US.<nn>/VoteTrackerPlus
-                                     scanner.02/VTP-mock-election.US.<nn>/VoteTrackerPlus
-                                     scanner.03/VTP-mock-election.US.<nn>/VoteTrackerPlus
-                                     server/VTP-mock-election.US.<nn>/VoteTrackerPlus
-/opt/VotetrackerPlus/demo.01/tabulation-server/VTP-mock-election.US.<nn>.git
-                                                 VoteTrackerPlus.git
+% cd /opt/VoteTrackerPlus/demo.01
+% tree
+.
+├── guid-client-store
+├── mock-clients
+│   ├── scanner.00
+│   │   └── VTP-mock-election.US.14
+│   │       ├── GGOs
+│   │       │   └── states
+│   │       │       └── Massachusetts
+│   │       │           ├── GGOs
+│   │       │           │   ├── counties
+│   │       │           │   │   └── Middlesex
+│   │       │           │   │       └── config.yaml
+│   │       │           │   └── towns
+│   │       │           │       └── Concord
+│   │       │           │           ├── CVRs
+│   │       │           │           │   └── contest.json
+│   │       │           │           ├── address_map.yaml
+│   │       │           │           └── config.yaml
+│   │       │           └── config.yaml
+│   │       ├── LICENSE
+│   │       ├── Makefile
+│   │       ├── README.md
+│   │       └── config.yaml
+│   ├── scanner.01
+│   │   └── VTP-mock-election.US.14
+[... ditto ...]
+│   ├── scanner.02
+│   │   └── VTP-mock-election.US.14
+[... ditto ...]
+│   ├── scanner.03
+│   │   └── VTP-mock-election.US.14
+[... ditto ...]
+│   └── server
+│       └── VTP-mock-election.US.14
+[... ditto ...]
+└── tabulation-server
+    └── VTP-mock-election.US.14.git
+        ├── HEAD
+        ├── config
+        ├── description
+        ├── hooks
+        │   ├── applypatch-msg.sample
+        │   ├── commit-msg.sample
+        │   ├── fsmonitor-watchman.sample
+        │   ├── post-update.sample
+        │   ├── pre-applypatch.sample
+        │   ├── pre-commit.sample
+        │   ├── pre-merge-commit.sample
+        │   ├── pre-push.sample
+        │   ├── pre-rebase.sample
+        │   ├── pre-receive.sample
+        │   ├── prepare-commit-msg.sample
+        │   ├── push-to-checkout.sample
+        │   └── update.sample
+        ├── info
+        │   └── exclude
+        ├── objects
+        │   ├── info
+        │   └── pack
+        │       ├── pack-036a7570a9631e18f0435e1070dc5258af19a6a3.idx
+        │       └── pack-036a7570a9631e18f0435e1070dc5258af19a6a3.pack
+        ├── packed-refs
+        └── refs
+            ├── heads
+            └── tags
+
+67 directories, 65 files
 ```
 
 The git repositories in the _clients_ subfolder all have workspaces as that is where the various commands run to simulate an individual ballot scanner application.  The two bare repostitories in tabulation-server mimick the actual voting center local (bare) git remote repositories for both the VTP scanner and server apps.
@@ -172,40 +212,40 @@ Here is an example of running a 4 VTP scanner and 1 VTP server app mock demo ele
 ```bash
 # In terminal window #1, run a VTP tabulation server
 # Note - this assumes the explicit setup steps above - note the poetry pyproject.toml location
-$ cd repos/VTP-mock-election.US.10/VoteTrackerPlus
+$ cd repos/VTP-mock-election.US.14/VoteTrackerPlus
 $ poetry shell
 $ cd /opt/VotetrackerPlus/demo.01/clients/server/VoteTrackerPlus
-$ run-mock-election -s California -t Alameda -a "123 Main Street" -d server
+$ run-mock-election -s Massachusetts -t Concord -a "123 Main Street" -d server
 
 # In terminal window #2, run a VTP scanner in mock election mode
-$ cd repos/VTP-mock-election.US.10/VoteTrackerPlus
+$ cd repos/VTP-mock-election.US.14/VoteTrackerPlus
 $ poetry shell
 $ cd /opt/VotetrackerPlus/demo.01/clients/scanner.01/VoteTrackerPlus
 # Auto cast 100 random ballots
-$ run-mock-election -s California -t Alameda -a "123 Main Street" -d scanner -i 100
+$ run-mock-election -s Massachusetts -t Concord -a "123 Main Street" -d scanner -i 100
 
 # In terminal window #3, run a second VTP scanner in mock election mode
-$ cd repos/VTP-mock-election.US.10/VoteTrackerPlus
+$ cd repos/VTP-mock-election.US.14/VoteTrackerPlus
 $ poetry shell
 $ cd /opt/VotetrackerPlus/demo.01/clients/scanner.02/VoteTrackerPlus
 # Auto cast 100 random ballots
-$ run-mock-election -s California -t Alameda -a "123 Main Street" -d scanner -i 100
+$ run-mock-election -s Massachusetts -t Concord -a "123 Main Street" -d scanner -i 100
 
 # In terminal window #4, run an interactive VTP scanner to cast ballots
-$ cd repos/VTP-mock-election.US.10/VoteTrackerPlus
+$ cd repos/VTP-mock-election.US.14/VoteTrackerPlus
 $ poetry shell
 $ cd /opt/VotetrackerPlus/demo.01/clients/scanner.00/VoteTrackerPlus
 
 # To manually vote and cast one ballot, run vote.py.  The receipt.csv will be printed to a file
 # and the row offset will be printed to the screen (STDOUT).
-$ vote -s California -t Alameda -a "123 Main Street"
+$ vote -s Massachusetts -t Concord -a "123 Main Street"
 ```
 
 The last few lines printed by ./vote.py should look something like this:
 
 ```
 ############
-### Receipt file: /opt/VoteTrackerPlus/demo.01/clients/scanner.00/VoteTrackerPlus/ElectionData/GGOs/states/California/GGOs/towns/Alameda/CVRs/receipt.csv
+### Receipt file: /opt/VoteTrackerPlus/demo.01/clients/scanner.00/VoteTrackerPlus/ElectionData/GGOs/states/Massachusetts/GGOs/towns/Concord/CVRs/receipt.csv
 ### Voter's row: 78
 ############
 ```
@@ -213,25 +253,24 @@ The last few lines printed by ./vote.py should look something like this:
 See [../../docs/E2EV.md][E2EV.md] for more details regarding casting and inspecting ballots.  To validate the digests on/in the ballot receipt (use your row, not 78):
 
 ```
-$ verify-ballot-receipt -f /opt/VoteTrackerPlus/demo.01/clients/scanner.00/VoteTrackerPlus/ElectionData/GGOs/states/California/GGOs/towns/Alameda/CVRs/receipt.csv -r 78
+$ verify-ballot-receipt -f /opt/VoteTrackerPlus/demo.01/clients/scanner.00/VoteTrackerPlus/ElectionData/GGOs/states/Massachusetts/GGOs/towns/Concord/CVRs/receipt.csv -r 78
 ```
 
 An random example ballot is saved off in ElectionData/receipts/receipt.74.csv.  When that receipt is verified, the output currently looks like the following:
 
 ```
-$ verify-ballot-receipt -f ../ElectionData/receipts/receipt.74.csv -r 74
+% verify-ballot-receipt -f receipts/receipt.59.csv -r 59
 Running "git rev-parse --show-toplevel"
+Running "git pull"
+Already up to date.
 Running "git cat-file --buffer --batch-check=%(objectname) %(objecttype)"
-Contest '0000 - US president' (fad4eb1c97b5f547a921c377d8d683d0837f7ff8) is vote 71 out of 146 votes
-Contest '0003 - County Clerk' (7d3e7f992628931d416de2095e0420436ce8f53f) is vote 100 out of 146 votes
-Contest '0005 - mayor' (c9734a3be4ef3533b4c1df0f14305bebe118b031) is vote 96 out of 146 votes
-Contest '0006 - Question 1 - school budget override' (92b70d29cbd677418ffd6166e5c455dedcf4033b) is vote 45 out of 146 votes
-Contest '0007 - Question 2 - new firehouse land purchase' (e4ae73730cf6d00e499af328d17c41f88599711c) is vote 65 out of 146 votes
-The following contests are not merged to main yet:
-0001 - US senate (0a9682dccf6ab5cb83d8a5ce43786e74514ce3ef)
-0002 - governor (ef1b88c931222669997639a0c45f26a4ff0a7342)
+Contest '0000 - U.S. President' (20ec3a9080ce8d4167b41843b1ffc6905a172263) is vote 304 out of 304 votes
+Contest '0001 - U.S. Senate' (8bef5f87658c40bbe7dcda814422a59e844b204d) is vote 303 out of 303 votes
+Contest '0002 - Governor' (f088442581dfac4332d8633239c0272f83f8ee2a) is vote 303 out of 303 votes
+Contest '0003 - County Clerk' (dacba213d14d28e5fb6dc4c5d8be88d37b6c8166) is vote 304 out of 304 votes
+Contest '0004 - Question 1 - should the starting time of the annual town meeting be moved to 6:30 PM?' (2cbf5011576f0a6dc49817c5619df237726358e0) is vote 304 out of 304 votes
 ############
-### Ballot receipt VALID - no digest errors found
+[GOOD]: ballot receipt VALID - no digest errors found
 ############
 ```
 
@@ -250,28 +289,30 @@ $ tally-contests
 tally_contests.py can be restricted to a single contest or report on all the contests that span all the ballot types.  It also supports a verbose switch so that one can see details about the tally.  This is helpful with RCV as one can then inspect the RCV rounds and what is happening to the candidates:
 
 ```bash
-% tally-contests -c 0000 -v 3
+% tally-contests -c 0001
 Running "git rev-parse --show-toplevel"
 Running "git pull"
 Already up to date.
 Running "git log --topo-order --no-merges --pretty=format:%H%B"
-Scanned 186 contests for contest (US president) uid=0000, tally=rcv, max=1, win-by>0.5
+Scanned 303 contests for contest (U.S. Senate) uid=0001, tally=rcv, max=1, win-by>0.5
 RCV: round 0
-[('Phil Scott', 38), ('Mitt Romney', 36), ('Kamala Harris', 34), ("Beta O'rourke", 30), ('Cory Booker', 28), ('Ron DeSantis', 20)]
+Total vote count: 303
+[('Gloria Gamma', 65), ('Anthony Alpha', 53), ('David Delta', 47), ('Emily Echo', 47), ('Francis Foxtrot', 47), ('Betty Beta', 44)]
 RCV: round 1
-[('Phil Scott', 41), ('Mitt Romney', 40), ('Kamala Harris', 38), ("Beta O'rourke", 37), ('Cory Booker', 30), ('Ron DeSantis', 0)]
+Total vote count: 303
+[('Gloria Gamma', 71), ('Anthony Alpha', 65), ('Francis Foxtrot', 57), ('David Delta', 55), ('Emily Echo', 55), ('Betty Beta', 0)]
 RCV: round 2
-[('Mitt Romney', 49), ('Kamala Harris', 47), ("Beta O'rourke", 46), ('Phil Scott', 44), ('Cory Booker', 0), ('Ron DeSantis', 0)]
+Total vote count: 303
+[('Anthony Alpha', 106), ('Gloria Gamma', 102), ('Francis Foxtrot', 95), ('Emily Echo', 0), ('David Delta', 0), ('Betty Beta', 0)]
 RCV: round 3
-[("Beta O'rourke", 64), ('Mitt Romney', 62), ('Kamala Harris', 60), ('Phil Scott', 0), ('Cory Booker', 0), ('Ron DeSantis', 0)]
-RCV: round 4
-Contest US president (uid=0000):
-  ('Mitt Romney', 94)
-  ("Beta O'rourke", 92)
-  ('Kamala Harris', 0)
-  ('Phil Scott', 0)
-  ('Cory Booker', 0)
-  ('Ron DeSantis', 0)
+Total vote count: 303
+Final results for contest U.S. Senate (uid=0001):
+  ('Gloria Gamma', 152)
+  ('Anthony Alpha', 151)
+  ('Francis Foxtrot', 0)
+  ('Emily Echo', 0)
+  ('David Delta', 0)
+  ('Betty Beta', 0)
 ```
 FYI - with -v4 and RCV contests, how each specific voter's ranked choice selection gets re-directed from their last place loosing candidate to their next choice candidate is printed, offering full transparency to RVC contests.  See [../../docs/E2EV.md][E2EV.md] for more details.
 

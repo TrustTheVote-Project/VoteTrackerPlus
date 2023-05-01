@@ -26,6 +26,7 @@ operation of merging the pushed CVR branches to the main branch.
 """
 
 # Standard imports
+import csv
 import logging
 import os
 import random
@@ -43,25 +44,14 @@ from .operation import Operation
 
 
 class AcceptBallotOperation(Operation):
-    """Implementation of 'accept-ballot'."""
-
-    def __init__(
-        self,
-        election_data_dir: str = "",
-        guid: str = "",
-        verbosity: int = 3,
-        printonly: bool = False,
-    ):
-        """
-        Primarily to module-ize the scripts and keep things simple,
-        idiomatic, and in different namespaces.
-        """
-        super().__init__(election_data_dir, verbosity, printonly, guid)
+    """
+    Implementation of the 'accept-ballot' operation.
+    """
 
     def get_random_branchpoint(self, branch):
-        """Return a random branchpoint on the supplied branch
-
-        Requires the CWD to be the parent of the CVRs directory.
+        """
+        Return a random branchpoint on the supplied branch Requires
+        the CWD to be the parent of the CVRs directory.
         """
         result = Shellout.run(
             ["git", "log", branch, "--pretty=format:'%h'"],
@@ -335,6 +325,13 @@ class AcceptBallotOperation(Operation):
         # return all three
         return ballot_receipt, voters_row, receipt_file
 
+    def convert_csv_to_2d_list(self, ballot_check_cvs: list) -> list[list[str]]:
+        """Convert a 1-D csv format list to a 2-D list of list format"""
+        my_list = []
+        for row in csv.reader(ballot_check_cvs, delimiter=",", quotechar='"'):
+            my_list.append(row)
+        return my_list
+
     # pylint: disable=duplicate-code
     # pylint: disable=too-many-locals
     def run(
@@ -509,10 +506,15 @@ class AcceptBallotOperation(Operation):
         )
 
         # For now, print the location and the voter's index
-        print(f"############\n### Receipt file: {receipt_file}")
-        print(f"### Voter's row: {index}\n############")
-        # And return two
-        return ballot_check, index
+        print("############")
+        print(f"### Receipt file: {receipt_file}")
+        print(f"### Voter's row: {index}")
+        print("############")
+        # And return them.  Note that ballot_check is in csv format
+        # when writing to a file.  However, when returning is it more
+        # convenient for it to be normal 2-D array -
+        # list[list[str]]. So convert it first.
+        return self.convert_csv_to_2d_list(ballot_check), index
 
 
 # EOF

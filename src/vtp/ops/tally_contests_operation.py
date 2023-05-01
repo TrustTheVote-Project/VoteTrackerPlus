@@ -20,11 +20,10 @@
 """Logic of operation for tallying contests."""
 
 # Standard imports
-import logging
 
 # Project imports
 from vtp.core.ballot import Ballot
-from vtp.core.common import Common, Shellout
+from vtp.core.common import Shellout
 from vtp.core.contest import Tally
 from vtp.core.election_config import ElectionConfig
 from vtp.core.exceptions import TallyException
@@ -41,29 +40,13 @@ class TallyContestsOperation(Operation):
     description (immediately below this) in the source file.
     """
 
-    def __init__(
-        self,
-        election_data_dir: str = "",
-        guid: str = "",
-        verbosity: int = 3,
-        printonly: bool = False,
-    ):
-        """
-        Primarily to module-ize the scripts and keep things simple,
-        idiomatic, and in different namespaces.
-        """
-        super().__init__(election_data_dir, verbosity, printonly, guid)
-
     # pylint: disable=duplicate-code
     def run(
         self,
         contest_uid: str = "",
         track_contests: str = "",
-    ):
+    ) -> list:
         """Main function - see -h for more info"""
-
-        # Configure logging
-        Common.configure_logging(self.verbosity)
 
         # Create a VTP ElectionData object if one does not already exist
         the_election_config = ElectionConfig.configure_election(self.election_data_dir)
@@ -94,15 +77,14 @@ class TallyContestsOperation(Operation):
                 if contest_batches[contest_batch][0]["CVR"]["uid"] != contest_uid:
                     continue
             # Create a Tally object for this specific contest
-            the_tally = Tally(contest_batches[contest_batch][0])
-            logging.info(
-                "Scanned %s contests for contest (%s) uid=%s, tally=%s, max=%s, win-by>%s",
-                len(contest_batches[contest_batch]),
-                contest_batches[contest_batch][0]["CVR"]["name"],
-                contest_batches[contest_batch][0]["CVR"]["uid"],
-                contest_batches[contest_batch][0]["CVR"]["tally"],
-                the_tally.get("max"),
-                the_tally.get("win-by"),
+            the_tally = Tally(contest_batches[contest_batch][0], self.imprimir)
+            self.imprimir(
+                f"Scanned {len(contest_batches[contest_batch])} contests "
+                f"for contest ({contest_batches[contest_batch][0]['CVR']['name']}) "
+                f"uid={contest_batches[contest_batch][0]['CVR']['uid']}, "
+                f"tally={contest_batches[contest_batch][0]['CVR']['tally']}, "
+                f"max={the_tally.get('max')}, "
+                f"win-by>{the_tally.get('win-by')}"
             )
             # Tally all the contests for this contest
             #        import pdb; pdb.set_trace()
@@ -111,9 +93,10 @@ class TallyContestsOperation(Operation):
                 # Print stuff
                 the_tally.print_results()
             except TallyException as tally_error:
-                logging.error(
-                    "[ERROR]: %s\nContinuing with other contests ...", tally_error
-                )
+                self.imprimir(f"[ERROR]: {tally_error}")
+                self.imprimir("Continuing with other contests ...")
+        # can always return the output
+        return self.stdout_output
 
 
 # EOF

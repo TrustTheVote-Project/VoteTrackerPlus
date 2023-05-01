@@ -37,19 +37,6 @@ class ShowContestsOperation(Operation):
     description (immediately below this) in the source file.
     """
 
-    def __init__(
-        self,
-        election_data_dir: str = "",
-        guid: str = "",
-        verbosity: int = 3,
-        printonly: bool = False,
-    ):
-        """
-        Primarily to module-ize the scripts and keep things simple,
-        idiomatic, and in different namespaces.
-        """
-        super().__init__(election_data_dir, verbosity, printonly, guid)
-
     def validate_digests(self, digests, the_election_config, error_digests):
         """Will scan the supplied digests for validity.  Will print and
         return the invalid digests.
@@ -93,7 +80,7 @@ class ShowContestsOperation(Operation):
             raise ValueError(f"Found {errors} invalid digest(s)")
 
     # pylint: disable=duplicate-code
-    def run(self, contest_check: str = ""):
+    def run(self, contest_check: str = "") -> list:
         """Main function - see -h for more info"""
 
         # Create a VTP ElectionData object if one does not already exist
@@ -107,7 +94,20 @@ class ShowContestsOperation(Operation):
         ]
         # show/log the digests
         with Shellout.changed_cwd(the_election_config.get("git_rootdir")):
-            Shellout.run(["git", "show", "-s"] + valid_digests, check=True)
+            output_lines = (
+                Shellout.run(
+                    ["git", "show", "-s"] + valid_digests,
+                    text=True,
+                    check=True,
+                    capture_output=True,
+                )
+                .stdout.strip()
+                .splitlines()
+            )
+        if self.stdout_printing:
+            for line in output_lines:
+                self.imprimir(line)
+        return output_lines
 
 
 # For future reference just in case . . .

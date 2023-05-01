@@ -48,19 +48,6 @@ class RunMockElectionOperation(Operation):
     description (immediately below this) in the source file.
     """
 
-    def __init__(
-        self,
-        election_data_dir: str = "",
-        guid: str = "",
-        verbosity: int = 3,
-        printonly: bool = False,
-    ):
-        """
-        Primarily to module-ize the scripts and keep things simple,
-        idiomatic, and in different namespaces.
-        """
-        super().__init__(election_data_dir, verbosity, printonly, guid)
-
     # pylint: disable=too-many-arguments
     # pylint: disable=too-many-locals
     # pylint: disable=too-many-branches
@@ -272,7 +259,7 @@ class RunMockElectionOperation(Operation):
             logging.info("Sleeping for 10 (iteration=%s)", count)
             time.sleep(10)
             elapsed_time = time.time() - start_time
-            if elapsed_time > seconds:
+            if not iterations and elapsed_time > seconds:
                 break
         if flush_mode in [1, 2]:
             print("Cleaning up remaining unmerged ballots")

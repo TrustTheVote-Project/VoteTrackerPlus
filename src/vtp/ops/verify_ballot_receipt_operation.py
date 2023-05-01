@@ -26,7 +26,7 @@ import re
 
 # Project imports
 from vtp.core.ballot import Ballot
-from vtp.core.common import Common, Shellout
+from vtp.core.common import Shellout
 from vtp.core.election_config import ElectionConfig
 
 # Local imports
@@ -39,19 +39,6 @@ class VerifyBallotReceiptOperation(Operation):
     verify-ballot-receipt help output or read the parse_argument argparse
     description (immediately below this) in the source file.
     """
-
-    def __init__(
-        self,
-        election_data_dir: str = "",
-        guid: str = "",
-        verbosity: int = 3,
-        printonly: bool = False,
-    ):
-        """
-        Primarily to module-ize the scripts and keep things simple,
-        idiomatic, and in different namespaces.
-        """
-        super().__init__(election_data_dir, verbosity, printonly, guid)
 
     # pylint: disable=too-many-arguments   # self is not technically an arg kind-of
     def validate_ballot_lines(
@@ -89,22 +76,15 @@ class VerifyBallotReceiptOperation(Operation):
         for line in results:
             digest, commit_type = line.split()
             if commit_type == "missing":
-                logging.error(
-                    "[ERROR]: missing digest: row %s column %s contest=%s digest=%s",
-                    row,
-                    column,
-                    headers[column - 1],
-                    digest,
+                self.imprimir(
+                    f"[ERROR]: missing digest: row {row} column {column} "
+                    f"contest={headers[column - 1]} digest={digest}"
                 )
                 error_digests.add(digest)
             elif commit_type != "commit":
-                logging.error(
-                    "[ERROR]: invalid digest type: row %s column %s contest=%s digest=%s type=%s",
-                    row,
-                    column,
-                    headers[column - 1],
-                    digest,
-                    commit_type,
+                self.imprimir(
+                    f"[ERROR]: invalid digest type: row {row} column {column} "
+                    f"contest={headers[column - 1]} digest={digest} type={commit_type}"
                 )
                 error_digests.add(digest)
             column += 1
@@ -165,22 +145,16 @@ class VerifyBallotReceiptOperation(Operation):
                     # keep incrementing column regardless
                     continue
                 if digest not in cvrs:
-                    logging.error(
-                        "[ERROR]: missing digest in main branch: row %s contest=%s digest=%s",
-                        index,
-                        headers[column],
-                        digest,
+                    self.imprimir(
+                        f"[ERROR]: missing digest in main branch: row {index} "
+                        f"contest={headers[column]} digest={digest}"
                     )
                     error_digests.add(digest)
                     continue
                 if cvrs[digest]["CVR"]["uid"] != uids[column]:
-                    logging.error(
-                        "[ERROR]: bad contest uid: row %s column %s contest %s != %s digest=%s",
-                        row,
-                        column,
-                        headers[column],
-                        cvrs[digest]["CVR"]["uid"],
-                        digest,
+                    self.imprimir(
+                        f"[ERROR]: bad contest uid: row {row} column {column} contest "
+                        f"{headers[column]} != {cvrs[digest]['CVR']['uid']} digest={digest}"
                     )
                     error_digests.add(digest)
                     continue
@@ -189,10 +163,11 @@ class VerifyBallotReceiptOperation(Operation):
     # pylint: disable=too-many-locals
     def verify_ballot_receipt(
         self,
-        receipt_file,
-        the_election_config,
-        row_index,
-        show_cvr,
+        receipt_file: str,
+        receipt_data: list[list[str]],
+        the_election_config: ElectionConfig,
+        row_index: str,
+        show_cvr: bool,
     ):
         """Will verify all the rows in a ballot receipt"""
 
@@ -209,10 +184,18 @@ class VerifyBallotReceiptOperation(Operation):
 
         #    import pdb; pdb.set_trace()
         # Create a ballot to read the receipt file
-        a_ballot = Ballot()
-        lines = a_ballot.read_receipt_csv(
-            the_election_config, receipt_file=receipt_file
-        )
+        if receipt_file:
+            a_ballot = Ballot()
+            lines = a_ballot.read_receipt_csv(
+                the_election_config, receipt_file=receipt_file
+            )
+        elif receipt_data:
+            lines = receipt_data
+        else:
+            raise ValueError(
+                "verify_ballot_receipt: requires either a receipt_file or receipt_data "
+                "- neither was supplied"
+            )
         headers = lines.pop(0)
         uids = [re.match(r"([0-9]+)", column).group(0) for column in headers]
         error_digests = set()
@@ -259,7 +242,7 @@ class VerifyBallotReceiptOperation(Operation):
                 found = False
                 for c_count, contest in enumerate(contest_batches[uid]):
                     if contest["digest"] in requested_row:
-                        print(
+                        self.imprimir(
                             f"Contest '{contest['CVR']['uid']} - {contest['CVR']['name']}' "
                             f"({contest['digest']}) is vote {contest_votes - c_count} out "
                             f"of {contest_votes} votes"
@@ -269,9 +252,9 @@ class VerifyBallotReceiptOperation(Operation):
                 if found is False:
                     unmerged_uids[uid] = u_count
             if unmerged_uids:
-                print("The following contests are not merged to main yet:")
+                self.imprimir("The following contests are not merged to main yet:")
                 for uid, offset in unmerged_uids.items():
-                    print(f"{headers[offset]} ({requested_digests[offset]})")
+                    self.imprimir(f"{headers[offset]} ({requested_digests[offset]})")
 
         # If a row is specified, will print the context index in the
         # actual contest tally - which basically tells the voter 'your
@@ -280,10 +263,8 @@ class VerifyBallotReceiptOperation(Operation):
             valid_digests = []
             for digest in lines[int(row_index) - 1]:
                 if digest in error_digests:
-                    logging.error(
-                        "[ERROR]: cannot print CVR for %s (row %s) - it is invalid",
-                        digest,
-                        row_index,
+                    self.imprimir(
+                        "[ERROR]: cannot print CVR for {digest} (row {row_index}) - it is invalid"
                     )
                     continue
                 valid_digests.append(digest)
@@ -299,30 +280,25 @@ class VerifyBallotReceiptOperation(Operation):
                 vet_a_row()
 
         # Summerize
+        self.imprimir("############")
         if error_digests:
-            logging.error(
-                "############\n"
+            self.imprimir(
                 "[ERROR]: ballot receipt INVALID - the supplied ballot receipt has "
-                "%s errors.\n############",
-                len(error_digests),
+                "{len(error_digests)} errors."
             )
         else:
-            print(
-                "############\n"
-                "[GOOD]: ballot receipt VALID - no digest errors found\n############"
-            )
+            self.imprimir("[GOOD]: ballot receipt VALID - no digest errors found")
+        self.imprimir("############")
 
     # pylint: disable=duplicate-code
     def run(
         self,
         receipt_file: str = "",
+        receipt_data: list[list[str]] = None,
         row: str = "",
         cvr: bool = False,
-    ):
+    ) -> list[str]:
         """Main function - see -h for more info"""
-
-        # Configure logging
-        Common.configure_logging(self.verbosity)
 
         # Create a VTP ElectionData object if one does not already exist
         the_election_config = ElectionConfig.configure_election(self.election_data_dir)
@@ -337,10 +313,13 @@ class VerifyBallotReceiptOperation(Operation):
         # Can read the receipt file directly without any Ballot info
         self.verify_ballot_receipt(
             receipt_file=receipt_file,
+            receipt_data=receipt_data,
             the_election_config=the_election_config,
             row_index=row,
             show_cvr=cvr,
         )
+        # can always return the output
+        return self.stdout_output
 
 
 # EOF

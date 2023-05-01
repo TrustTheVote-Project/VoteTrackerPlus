@@ -25,6 +25,7 @@ or the README.md file in the src/vtp directory for details.
 # Standard imports
 import logging
 import os
+import re
 import secrets
 
 # Project imports
@@ -42,10 +43,31 @@ class SetupVtpDemoOperation(Operation):
     description (immediately below this) in the source file.
     """
 
+    @staticmethod
+    def get_all_guid_workspaces() -> list:
+        """
+        Will return a list of all the existing guid workspaces
+        """
+        guid_dir = os.path.join(
+            Globals.get("DEFAULT_RUNTIME_LOCATION"),
+            Globals.get("GUID_CLIENT_DIRNAME"),
+        )
+        file_list = os.listdir(guid_dir)
+        guids = []
+        for thing in file_list:
+            path = os.path.join(guid_dir, thing)
+            if not os.path.isdir(path) or not re.match("^[0-9a-f]{2}$", thing):
+                continue
+            for subdir in os.listdir(path):
+                if os.path.isdir(os.path.join(path, subdir)) and re.match(
+                    "^[0-9a-f]{38}$", subdir
+                ):
+                    guids.append(thing + subdir)
+        return guids
+
     def __init__(
         self,
         election_data_dir: str = "",
-        guid: str = "",
         verbosity: int = 3,
         printonly: bool = False,
     ):
@@ -53,7 +75,7 @@ class SetupVtpDemoOperation(Operation):
         Primarily to module-ize the scripts and keep things simple,
         idiomatic, and in different namespaces.
         """
-        super().__init__(election_data_dir, verbosity, printonly, guid)
+        super().__init__(election_data_dir, verbosity, printonly)
         # The absolute path to the local bare clone of the upstream
         # GitHub ElectionData remote repo
         self.tabulation_local_upstream_absdir = ""
