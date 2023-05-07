@@ -334,12 +334,15 @@ class AcceptBallotOperation(Operation):
 
     # pylint: disable=duplicate-code
     # pylint: disable=too-many-locals
+    # pylint: disable=too-many-arguments
     def run(
         self,
         an_address: Address = None,
         cast_ballot: str = "",
         cast_ballot_json: dict = "",
         merge_contests: bool = False,
+        version_receipts: bool = False,
+        demo_mode: bool = False,
     ) -> tuple[list, int]:
         """
         Main function - see -h for more info.  Will work with either
@@ -471,6 +474,22 @@ class AcceptBallotOperation(Operation):
                     verbosity=self.verbosity,
                 )
 
+        # Create the ballot check
+        ballot_check, index, receipt_file = self.create_ballot_receipt(
+            a_ballot, contest_receipts, unmerged_cvrs, the_election_config
+        )
+
+        # Optionally version the ballot check
+        if version_receipts:
+            # ZZZ code to create the branch and checkin the receipt.md
+            # file (as with the contest above) but in the receipts
+            # subdir
+
+            # ZZZ code to store UNVERSIONED the QR code, index, and
+            # cast_ballot file for demo or testing purposes
+            if demo_mode:
+                pass
+
         # If in demo mode, optionally merge the branches now and avoid
         # calling merge-contests later. Note - this will serialize the
         # ballots in time, but this is ok in certain demo situations.
@@ -499,11 +518,10 @@ class AcceptBallotOperation(Operation):
                     flush=False,
                     remote=True,
                 )
-
-        # Create the ballot check
-        ballot_check, index, receipt_file = self.create_ballot_receipt(
-            a_ballot, contest_receipts, unmerged_cvrs, the_election_config
-        )
+            # If merging also merge the receipt file
+            if version_receipts:
+                # ZZZ code to merge
+                pass
 
         # For now, print the location and the voter's index
         print("############")

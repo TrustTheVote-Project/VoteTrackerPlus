@@ -165,6 +165,16 @@ class Ballot:
         )
 
     @staticmethod
+    def gen_qr_data_location(config, subdir):
+        """Return the non-versioned QR location when in demo record mode"""
+        return os.path.join(
+            config.get("git_rootdir"),
+            subdir,
+            Globals.get("MOCK_DEMO_DATA_SUBDIR"),
+            Globals.get("QR_DATA_SUBDIR"),
+        )
+
+    @staticmethod
     def get_cast_from_blank(blank_ballot):
         """Given a blank ballot relative or absolute path, will map that
         to the state/town cast ballot location, which is basically up
@@ -446,6 +456,42 @@ class Ballot:
         with open(receipt_file, "w", encoding="utf8") as outfile:
             for line in lines:
                 outfile.write(f"{line}\n")
+        return receipt_file
+
+    def write_receipt_md(
+        self,
+        lines: list,
+        config: dict,
+        receipt_file: str = "",
+    ) -> str:
+        """Write out the voter's ballot receipt as a markdown table with hyperlinks"""
+        if not receipt_file:
+            receipt_file = (
+                Ballot.gen_receipt_location(config, self.ballot_subdir).rstrip("csv")
+                + ".md"
+            )
+        #            receipt_file += "." + str(index) + ".md"
+        # The parent directory better exist or something is wrong
+        with open(receipt_file, "w", encoding="utf8") as outfile:
+            header = ""
+            url = "/".join(
+                [
+                    "https://github.com/TrustTheVote-Project",
+                    os.path.basename(config.get("election_data_dir")),
+                    "commits",
+                ]
+            )
+            for col in lines[0].split(","):
+                uid, title = col.split(" - ")
+                header += "| " + uid[1:] + "<br>" + title[:-1] + " "
+            outfile.write(f"| Index {header}|\n")
+            outfile.write("|:---:" * len(lines[1].split(",")) + "|\n")
+            for index, line in lines[1:]:
+                newline = ""
+                digests = line.split(",")
+                for dig in digests:
+                    newline += f"| [{dig[0:8]}...]({url}/{dig}) "
+                outfile.write(f"| {index + 1} {newline}|\n")
         return receipt_file
 
     def read_receipt_csv(self, config, receipt_file="", address=""):

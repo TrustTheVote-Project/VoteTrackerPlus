@@ -50,6 +50,20 @@ class Globals:
         "ADDRESS_MAP_FILE": "address_map.yaml",
         # The location of the contest cvr file
         "CONTEST_FILE_SUBDIR": "CVRs",
+        # The location of the ballot receipts
+        "RECEIPT_FILE_SUBDIR": "receipts",
+        # The location of the QR data files when recording them for
+        # demo/testing purposes.  This is the non-versioned location
+        # of the QR code, index, and the associated cast ballot file
+        # (sans digests which is copied to here from its ephemeral
+        # cast location as is).  The ballot receipt is being stored
+        # the RECEIPT_FILE_SUBDIR (versioned) above.  The QR code is
+        # not versioned anywhere (no need to spend the storage and
+        # bandwidth) and instead only printed/returned on the ballot
+        # receipt.  This directory is also not versioned and contains
+        # subdirectories which are the git commit digests for the
+        # receipt file.
+        "QR_DATA_SUBDIR": "QR-data",
         # The required address fields for an address. To get around
         # the difficulty of creating a completely generic
         # address-to-ballot function at this time, these fields are
