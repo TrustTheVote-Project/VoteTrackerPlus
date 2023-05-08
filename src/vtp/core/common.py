@@ -51,7 +51,7 @@ class Globals:
         # The location of the contest cvr file
         "CONTEST_FILE_SUBDIR": "CVRs",
         # The location of the ballot receipts
-        "RECEIPT_FILE_SUBDIR": "receipts",
+        "RECEIPT_FILE_SUBDIR": "RECEIPTs",
         # The location of the QR data files when recording them for
         # demo/testing purposes.  This is the non-versioned location
         # of the QR code, index, and the associated cast ballot file
