@@ -162,13 +162,24 @@ class Ballot:
         style: str,
     ) -> str:
         """
-        Return either a csv or md receipt file location.
+        Return either a csv or md receipt file location.  Note that
+        the receipt.csv version is stored next to the unversioned
+        ballot.json and the ephemeral contest.json files in the CVRs
+        subdirectory while the version receipt.md is stored in the
+        RECEIPT_FILE_SUBDIR tree.
         """
+        if style == "csv":
+            return os.path.join(
+                config.get("git_rootdir"),
+                subdir,
+                Globals.get("CONTEST_FILE_SUBDIR"),
+                Globals.get("RECEIPT_FILE"),
+            )
         return os.path.join(
             config.get("git_rootdir"),
             subdir,
-            f"{branch if branch else Globals.get('RECEIPT_FILE_SUBDIR')}",
-            f"{Globals.get('RECEIPT_FILE') if style == 'csv' else Globals.get('RECEIPT_FILE_MD')}",
+            branch,
+            Globals.get("RECEIPT_FILE_MD"),
         )
 
     @staticmethod
@@ -457,37 +468,61 @@ class Ballot:
                 outfile.write(f"{line}\n")
         return receipt_file
 
+    # pylint: disable=too-many-arguments
+    # pylint: disable=too-many-locals
     def write_receipt_md(
         self,
         lines: list,
         config: dict,
         receipt_branch: str,
-        receipt_file: str = "",
+        demo_mode: bool = False,
+        voter_index: int = 0,
+        qr_file: str = "",
+        qr_url: str = "",
     ) -> str:
         """Write out the voter's ballot receipt as a markdown table with hyperlinks"""
-        if not receipt_file:
-            receipt_file = Ballot.gen_receipt_location(
-                config, self.ballot_subdir, receipt_branch, "md"
-            )
+        receipt_file = Ballot.gen_receipt_location(
+            config, self.ballot_subdir, receipt_branch, "md"
+        )
+        if demo_mode:
+            receipt_file = receipt_file.rstrip("md") + "demo.md"
         url_root = "/".join(
             [
                 Globals.get("QR_ENDPOINT_ROOT"),
-                os.path.basename(config.get("election_data_dir")),
+                os.path.basename(config.get("git_rootdir")),
                 "commits",
             ]
         )
-        # The parent directory better exist or something is wrong
+        # The directory will rarely exist in this case as receipt_file
+        # will be the first file to be placed there
+        if not os.path.isdir(
+            os.path.dirname(
+                os.path.dirname(os.path.dirname(os.path.dirname(receipt_file)))
+            )
+        ):
+            raise OSError(
+                f"the receipt markdown file is being placed someplace outside the expected tree"
+                f"{receipt_file}"
+            )
+        os.makedirs(os.path.dirname(receipt_file), exist_ok=True)
         with open(receipt_file, "w", encoding="utf8") as outfile:
+            if demo_mode:
+                # add the voter's index and QR code to the markdown
+                outfile.write(f"### Voter's Index:  {voter_index}\n\n")
+                outfile.write(f"![{qr_url}]({qr_file} 'Ballot Voucer')\n\n")
             header = ""
             for col in lines[0].split(","):
-                uid, title = col.split(" - ")
+                uid, title = col.split(" - ", 1)
                 header += "| " + uid[1:] + "<br>" + title[:-1] + " "
             outfile.write(f"| Index {header}|\n")
-            outfile.write("|:---:" * len(lines[1].split(",")) + "|\n")
+            outfile.write("|:---:" * len(lines[1].split(",")) + "|:---:|\n")
             for index, line in enumerate(lines[1:]):
                 newline = ""
                 for dig in line.split(","):
-                    newline += f"| [{dig[0:8]}...]({url_root}/{dig}) "
+                    if demo_mode:
+                        newline += f"| [{dig[0:8]}...]({url_root}/{dig}) "
+                    else:
+                        newline += f"| [{dig[0:8]}...]({url_root}/{dig}) "
                 outfile.write(f"| {index + 1} {newline}|\n")
         return receipt_file
 

@@ -434,12 +434,14 @@ class AcceptBallotOperation(Operation):
                 )
         return contest_receipts, branches, unmerged_cvrs, cloak_receipts
 
+    # pylint: disable=too-many-arguments
     def main_handle_receipt(
         self,
         a_ballot: dict,
         ballot_check: list,
         the_election_config: dict,
         demo_mode: bool,
+        voter_index: int,
     ):
         """Called only by main.  Handles the receipt git dance"""
         # When here the actual voucher file on disk wants to be a
@@ -449,7 +451,10 @@ class AcceptBallotOperation(Operation):
             # Create a unique branch for the receipt
             receipt_branch = self.checkout_new_branch("", "main", "receipt")
             # Write out the receipt there as a markdown file
-            a_ballot.write_receipt_md(ballot_check, the_election_config)
+            receipt_file_md = a_ballot.write_receipt_md(
+                ballot_check, the_election_config, receipt_branch
+            )
+            self.imprimir(f"Created markdown: file://{receipt_file_md}")
             # Commit the voter's ballot voucher
             self.contest_add_and_commit(receipt_branch, "receipt")
             # Push the voucher
@@ -464,31 +469,34 @@ class AcceptBallotOperation(Operation):
             f"{Globals.get('QR_ENDPOINT_ROOT')}/"
             f"{os.path.basename(the_election_config.get('git_rootdir'))}"
             f"/tree/main/{a_ballot.get('ballot_subdir')}/"
-            f"{Globals.get('RECEIPT_FILE_SUBDIR')}/"
             f"{receipt_branch}/{Globals.get('RECEIPT_FILE').rstrip('csv')}md"
         )
         qr_img = qrcode.make(
             qr_url,
             image_factory=qrcode.image.svg.SvgImage,
         )
+        # add the QR code for this receipt in the same directory
+        with open(
+            os.path.join(os.path.dirname(receipt_file_md), "qr.svg"), "wb"
+        ) as qr_fh:
+            qr_img.save(qr_fh)
 
-        # ZZZ code to store UNVERSIONED the QR code, index, and
-        # cast_ballot file for demo or testing purposes
+        # breakpoint()
         if demo_mode:
-            # When here the receipt_file_csv, index, and
-            # cast_ballot are all set to be copied into place
-
-            # Create the QR unique subdir based off the still
-            # existing unique receipt receipt_branch. The subdir will
-            # exist as is when merged to main - the QR code points
-            # to that.
-
-            # Create the QR image file
-
-            # Add a text file with the index so it can be printed later
-
-            # Write out a_ballot in some reasonable text syntax
-            pass
+            # In demo mode we want to be able to manually print a
+            # ballot receipt with the QR code and index.  So create an
+            # extra file like that which can be printed from a brwoser
+            # that can hand GFM tables and pcitures.
+            demo_receipt = a_ballot.write_receipt_md(
+                lines=ballot_check,
+                config=the_election_config,
+                receipt_branch=receipt_branch,
+                demo_mode=demo_mode,
+                voter_index=voter_index,
+                qr_file="qr.svg",
+                qr_url=qr_url,
+            )
+            self.imprimir(f"Created markdown: file://{demo_receipt}")
 
         # At this point the local receipt_branch can be deleted as
         # the local branched build up too much. The local reflog
@@ -583,6 +591,7 @@ class AcceptBallotOperation(Operation):
         )
 
         # Create the ballot check
+        # breakpoint()
         ballot_check, index, receipt_file_csv = self.create_ballot_receipt(
             a_ballot, contest_receipts, unmerged_cvrs, the_election_config
         )
@@ -594,6 +603,7 @@ class AcceptBallotOperation(Operation):
                 ballot_check=ballot_check,
                 the_election_config=the_election_config,
                 demo_mode=demo_mode,
+                voter_index=index,
             )
 
         # Optionally merge the branches now and avoid calling
