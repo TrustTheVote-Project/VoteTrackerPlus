@@ -155,23 +155,20 @@ class Ballot:
         )
 
     @staticmethod
-    def gen_receipt_location(config, subdir):
-        """Return the receipt.csv file location"""
+    def gen_receipt_location(
+        config,
+        subdir: str,
+        branch: str,
+        style: str,
+    ) -> str:
+        """
+        Return either a csv or md receipt file location.
+        """
         return os.path.join(
             config.get("git_rootdir"),
             subdir,
-            Globals.get("CONTEST_FILE_SUBDIR"),
-            Globals.get("RECEIPT_FILE"),
-        )
-
-    @staticmethod
-    def gen_qr_data_location(config, subdir):
-        """Return the non-versioned QR location when in demo record mode"""
-        return os.path.join(
-            config.get("git_rootdir"),
-            subdir,
-            Globals.get("MOCK_DEMO_DATA_SUBDIR"),
-            Globals.get("QR_DATA_SUBDIR"),
+            f"{branch if branch else Globals.get('RECEIPT_FILE_SUBDIR')}",
+            f"{Globals.get('RECEIPT_FILE') if style == 'csv' else Globals.get('RECEIPT_FILE_MD')}",
         )
 
     @staticmethod
@@ -451,7 +448,9 @@ class Ballot:
     def write_receipt_csv(self, lines, config, receipt_file=""):
         """Write out the voter's ballot receipt"""
         if not receipt_file:
-            receipt_file = Ballot.gen_receipt_location(config, self.ballot_subdir)
+            receipt_file = Ballot.gen_receipt_location(
+                config, self.ballot_subdir, "", "csv"
+            )
         # The parent directory better exist or something is wrong
         with open(receipt_file, "w", encoding="utf8") as outfile:
             for line in lines:
@@ -462,35 +461,33 @@ class Ballot:
         self,
         lines: list,
         config: dict,
+        receipt_branch: str,
         receipt_file: str = "",
     ) -> str:
         """Write out the voter's ballot receipt as a markdown table with hyperlinks"""
         if not receipt_file:
-            receipt_file = (
-                Ballot.gen_receipt_location(config, self.ballot_subdir).rstrip("csv")
-                + ".md"
+            receipt_file = Ballot.gen_receipt_location(
+                config, self.ballot_subdir, receipt_branch, "md"
             )
-        #            receipt_file += "." + str(index) + ".md"
+        url_root = "/".join(
+            [
+                Globals.get("QR_ENDPOINT_ROOT"),
+                os.path.basename(config.get("election_data_dir")),
+                "commits",
+            ]
+        )
         # The parent directory better exist or something is wrong
         with open(receipt_file, "w", encoding="utf8") as outfile:
             header = ""
-            url = "/".join(
-                [
-                    "https://github.com/TrustTheVote-Project",
-                    os.path.basename(config.get("election_data_dir")),
-                    "commits",
-                ]
-            )
             for col in lines[0].split(","):
                 uid, title = col.split(" - ")
                 header += "| " + uid[1:] + "<br>" + title[:-1] + " "
             outfile.write(f"| Index {header}|\n")
             outfile.write("|:---:" * len(lines[1].split(",")) + "|\n")
-            for index, line in lines[1:]:
+            for index, line in enumerate(lines[1:]):
                 newline = ""
-                digests = line.split(",")
-                for dig in digests:
-                    newline += f"| [{dig[0:8]}...]({url}/{dig}) "
+                for dig in line.split(","):
+                    newline += f"| [{dig[0:8]}...]({url_root}/{dig}) "
                 outfile.write(f"| {index + 1} {newline}|\n")
         return receipt_file
 
@@ -498,7 +495,7 @@ class Ballot:
         """Read the voter's ballot receipt"""
         if not receipt_file:
             receipt_file = Ballot.gen_receipt_location(
-                config, address.get("ballot_subdir")
+                config, address.get("ballot_subdir"), "", "cvs"
             )
         # The parent directory better exist or something is wrong
         lines = []

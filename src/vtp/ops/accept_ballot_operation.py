@@ -73,6 +73,19 @@ class AcceptBallotOperation(Operation):
         # ZZZ - need to deal with a rolling 100 window
         return random.choice(commits)
 
+    def new_branch_name(self, contest, style: str) -> str:
+        """Return the new branch name for contest CVRs and ballot receipts"""
+        if style == "contest":
+            # branch = contest.get('uid') + "/" + str(uuid.uuid1().hex)[0:10]
+            return (
+                f"{Globals.get('CONTEST_FILE_SUBDIR')}/{contest.get('uid')}/"
+                f"{secrets.token_hex(5)}"
+            )
+        return (
+            f"{Globals.get('RECEIPT_FILE_SUBDIR')}/{secrets.token_hex(1)}/"
+            f"{secrets.token_hex(5)}"
+        )
+
     def checkout_new_branch(self, contest, ref_branch, style="contest"):
         """Will checkout a new branch for a specific contest or
         receipt.  Since there is no code yet to coordinate the
@@ -83,18 +96,10 @@ class AcceptBallotOperation(Operation):
         Requires the CWD to be the parent of the CVRs directory.
         """
 
-        def new_branch_name() -> str:
-            if style == "contest":
-                branch = Globals.get("CONTEST_FILE_SUBDIR")
-                branch += "/" + contest.get("uid") + "/" + secrets.token_hex(5)
-                # branch = contest.get('uid') + "/" + str(uuid.uuid1().hex)[0:10]
-                return branch
-            return Globals.get("RECEIPT_FILE_SUBDIR") + "/" + secrets.token_hex(5)
-
         # select a branchpoint
         branchpoint = self.get_random_branchpoint(ref_branch)
         # and attempt at a new unique branch
-        branch = new_branch_name()
+        branch = self.new_branch_name(contest, style)
         # Get the current branch for reference
         current_branch = Shellout.run(
             ["git", "rev-parse", "--abbrev-ref", "HEAD"],
@@ -134,7 +139,7 @@ class AcceptBallotOperation(Operation):
                     verbosity=self.verbosity,
                 )
             # At this point the local did not get created - try again
-            branch = new_branch_name()
+            branch = self.new_branch_name(contest, style)
 
         # At this point the remote branch was never created and in theory the local
         # tries have also deleted(?)
@@ -223,13 +228,9 @@ class AcceptBallotOperation(Operation):
             )
         else:
             # when handling receipts, there is no destructive merge
-            payload_name = (
-                os.path.join(
-                    branch,
-                    Globals.get("RECEIPT_FILE_SUBDIR"),
-                    Globals.get("RECEIPT_FILE"),
-                ).rstrip("csv")
-                + ".md"
+            payload_name = os.path.join(
+                branch,
+                Globals.get("RECEIPT_FILE_MD"),
             )
         Shellout.run(
             ["git", "add", payload_name],
@@ -459,8 +460,15 @@ class AcceptBallotOperation(Operation):
             )
 
         # Create the QR image
+        qr_url = (
+            f"{Globals.get('QR_ENDPOINT_ROOT')}/"
+            f"{os.path.basename(the_election_config.get('git_rootdir'))}"
+            f"/tree/main/{a_ballot.get('ballot_subdir')}/"
+            f"{Globals.get('RECEIPT_FILE_SUBDIR')}/"
+            f"{receipt_branch}/{Globals.get('RECEIPT_FILE').rstrip('csv')}md"
+        )
         qr_img = qrcode.make(
-            "http://www.google.com/",
+            qr_url,
             image_factory=qrcode.image.svg.SvgImage,
         )
 
@@ -591,7 +599,7 @@ class AcceptBallotOperation(Operation):
         # Optionally merge the branches now and avoid calling
         # merge-contests later. Note - this will serialize the ballots
         # in time, but this is ok in certain demo situations. Note -
-        # since the above git push/delete is trying to be automic, at
+        # since the above git push/delete is trying to be atomic, at
         # the moment that is done in the above loop and then later
         # (now) the merge into main is done. Since the above deletes
         # the local CVR branch reference, the merge-contests below
