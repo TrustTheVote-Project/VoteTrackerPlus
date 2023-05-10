@@ -48,6 +48,7 @@ class VoteOperation(Operation):
         an_address: Address,
         blank_ballot: str = "",
         merge_contests: bool = False,
+        demo_mode: bool = False,
     ) -> tuple[dict, int]:
         """Main function - see -h for more info"""
 
@@ -90,6 +91,7 @@ class VoteOperation(Operation):
             an_address=an_address,
             cast_ballot=blank_ballot,
             merge_contests=merge_contests,
+            demo_mode=demo_mode,
         )
 
 

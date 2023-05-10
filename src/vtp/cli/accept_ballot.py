@@ -64,7 +64,7 @@ Either the location of the ballot_file or the associated address is required.
     parser.add_argument(
         "--demo_mode",
         action="store_true",
-        help="when set will also cache the receipt QR code and cast ballot",
+        help="when set will also cache the receipt QR code",
     )
     Arguments.add_merge_contests(parser)
     Arguments.add_verbosity(parser)

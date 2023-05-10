@@ -236,16 +236,26 @@ class AcceptBallotOperation(Operation):
             ["git", "add", payload_name],
             printonly=self.printonly,
             verbosity=self.verbosity,
+            check=True,
         )
-        # Note - apparently git place the commit msg on STDERR - hide it
-        Shellout.run(
-            ["git", "commit", "-F", payload_name],
-            printonly=self.printonly,
-            verbosity=1,
-        )
+        # Note - apparently git places the commit msg on STDERR - hide it
+        if style == "contest":
+            Shellout.run(
+                ["git", "commit", "-F", payload_name],
+                printonly=self.printonly,
+                verbosity=1,
+                check=True,
+            )
+        else:
+            Shellout.run(
+                ["git", "commit", "-m", "Ballot Voucher"],
+                printonly=self.printonly,
+                verbosity=1,
+                check=True,
+            )
         # Capture the digest
         digest = Shellout.run(
-            ["git", "log", branch, "-1", "--pretty=format:%H"],
+            ["git", "log", "-1", "--pretty=format:%H"],
             printonly=self.printonly,
             check=True,
             capture_output=True,
@@ -447,56 +457,66 @@ class AcceptBallotOperation(Operation):
         # When here the actual voucher file on disk wants to be a
         # markdown file for a web-api endpoint rather than the
         # original csv file defined above.
-        with Shellout.changed_branch("main"):
-            # Create a unique branch for the receipt
-            receipt_branch = self.checkout_new_branch("", "main", "receipt")
-            # Write out the receipt there as a markdown file
-            receipt_file_md = a_ballot.write_receipt_md(
-                ballot_check, the_election_config, receipt_branch
-            )
-            self.imprimir(f"Created markdown: file://{receipt_file_md}")
-            # Commit the voter's ballot voucher
-            self.contest_add_and_commit(receipt_branch, "receipt")
-            # Push the voucher
-            Shellout.run(
-                ["git", "push", "origin", receipt_branch],
-                printonly=self.printonly,
-                verbosity=self.verbosity,
-            )
+        with Shellout.changed_cwd(a_ballot.get_cvr_parent_dir(the_election_config)):
+            with Shellout.changed_branch("main"):
+                # Create a unique branch for the receipt
+                receipt_branch = self.checkout_new_branch("", "main", "receipt")
+                # Write out the receipt there as a markdown file
+                receipt_file_md = a_ballot.write_receipt_md(
+                    ballot_check, the_election_config, receipt_branch
+                )
+                self.imprimir("########")
+                self.imprimir(f"Created markdown: file://{receipt_file_md}")
+                # Commit the voter's ballot voucher
+                self.contest_add_and_commit(receipt_branch, "receipt")
+                # Push the voucher
+                Shellout.run(
+                    ["git", "push", "origin", receipt_branch],
+                    printonly=self.printonly,
+                    verbosity=self.verbosity,
+                )
 
-        # Create the QR image
-        qr_url = (
-            f"{Globals.get('QR_ENDPOINT_ROOT')}/"
-            f"{os.path.basename(the_election_config.get('git_rootdir'))}"
-            f"/tree/main/{a_ballot.get('ballot_subdir')}/"
-            f"{receipt_branch}/{Globals.get('RECEIPT_FILE').rstrip('csv')}md"
-        )
-        qr_img = qrcode.make(
-            qr_url,
-            image_factory=qrcode.image.svg.SvgImage,
-        )
-        # add the QR code for this receipt in the same directory
-        with open(
-            os.path.join(os.path.dirname(receipt_file_md), "qr.svg"), "wb"
-        ) as qr_fh:
-            qr_img.save(qr_fh)
+                # Create the QR image while still in the branch as exiting the
+                # above with will nominally delete it
+                qr_url = (
+                    f"{Globals.get('QR_ENDPOINT_ROOT')}/"
+                    f"{os.path.basename(the_election_config.get('git_rootdir'))}"
+                    f"/tree/main/{a_ballot.get('ballot_subdir')}/"
+                    f"{receipt_branch}/{Globals.get('RECEIPT_FILE').rstrip('csv')}md"
+                )
+                qr_img = qrcode.make(
+                    qr_url,
+                    image_factory=qrcode.image.svg.SvgImage,
+                )
+                qr_file = os.path.join(os.path.dirname(receipt_file_md), "qr.svg")
+                with open(qr_file, "wb") as qr_fh:
+                    qr_img.save(qr_fh)
+                self.imprimir(f"Created QR code: {qr_file}\n")
+                self.imprimir("########")
 
-        # breakpoint()
         if demo_mode:
             # In demo mode we want to be able to manually print a
-            # ballot receipt with the QR code and index.  So create an
-            # extra file like that which can be printed from a brwoser
-            # that can hand GFM tables and pcitures.
+            # ballot receipt with the QR code and separately print an
+            # index on a sticky.  So create an extra file like that
+            # which can be printed from a brwoser that can hand GFM
+            # tables and pcitures.
             demo_receipt = a_ballot.write_receipt_md(
                 lines=ballot_check,
                 config=the_election_config,
                 receipt_branch=receipt_branch,
                 demo_mode=demo_mode,
-                voter_index=voter_index,
                 qr_file="qr.svg",
                 qr_url=qr_url,
             )
+            self.imprimir("########")
             self.imprimir(f"Created markdown: file://{demo_receipt}")
+            # also write out the index so that it can be printed on a
+            # sticky
+            index_file = os.path.join(os.path.dirname(receipt_file_md), "index.txt")
+            with open(index_file, "w", encoding="utf8") as outfile:
+                outfile.write(f"{voter_index}\n")
+            self.imprimir(f"Created index file: {index_file}\n")
+            self.imprimir("########")
 
         # At this point the local receipt_branch can be deleted as
         # the local branched build up too much. The local reflog
@@ -591,7 +611,6 @@ class AcceptBallotOperation(Operation):
         )
 
         # Create the ballot check
-        # breakpoint()
         ballot_check, index, receipt_file_csv = self.create_ballot_receipt(
             a_ballot, contest_receipts, unmerged_cvrs, the_election_config
         )

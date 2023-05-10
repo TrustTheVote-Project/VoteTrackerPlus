@@ -476,7 +476,6 @@ class Ballot:
         config: dict,
         receipt_branch: str,
         demo_mode: bool = False,
-        voter_index: int = 0,
         qr_file: str = "",
         qr_url: str = "",
     ) -> str:
@@ -490,7 +489,7 @@ class Ballot:
             [
                 Globals.get("QR_ENDPOINT_ROOT"),
                 os.path.basename(config.get("git_rootdir")),
-                "commits",
+                "commit",
             ]
         )
         # The directory will rarely exist in this case as receipt_file
@@ -508,7 +507,6 @@ class Ballot:
         with open(receipt_file, "w", encoding="utf8") as outfile:
             if demo_mode:
                 # add the voter's index and QR code to the markdown
-                outfile.write(f"### Voter's Index:  {voter_index}\n\n")
                 outfile.write(f"![{qr_url}]({qr_file} 'Ballot Voucer')\n\n")
             header = ""
             for col in lines[0].split(","):

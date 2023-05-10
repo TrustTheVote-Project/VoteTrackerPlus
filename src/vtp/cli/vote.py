@@ -52,6 +52,11 @@ ballot is chosen.
     Arguments.add_election_data_dir(parser)
     Arguments.add_blank_ballot(parser)
     Arguments.add_merge_contests(parser)
+    parser.add_argument(
+        "--demo_mode",
+        action="store_true",
+        help="when set will also cache the receipt QR code",
+    )
     Arguments.add_verbosity(parser)
     Arguments.add_printonly(parser)
     return parser.parse_args()
@@ -82,6 +87,7 @@ def main():
         an_address=an_address,
         blank_ballot=parsed_args.blank_ballot,
         merge_contests=parsed_args.merge_contests,
+        demo_mode=parsed_args.demo_mode,
     )
 
 
