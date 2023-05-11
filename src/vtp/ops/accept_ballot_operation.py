@@ -679,6 +679,7 @@ class AcceptBallotOperation(Operation):
                     branch="origin/" + receipt_branch,
                     flush=False,
                     remote=True,
+                    style="receipt",
                 )
 
         # For now, print the location and the voter's index
