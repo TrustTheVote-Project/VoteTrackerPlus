@@ -86,7 +86,15 @@ class AcceptBallotOperation(Operation):
             f"{secrets.token_hex(5)}"
         )
 
-    def checkout_new_branch(self, contest, ref_branch, style="contest"):
+    # pylint: disable=too-many-arguments
+    def checkout_new_branch(
+        self,
+        the_election_config: dict,
+        contest: str,
+        ref_branch: str,
+        style: str = "contest",
+        initial: bool = True,
+    ):
         """Will checkout a new branch for a specific contest or
         receipt.  Since there is no code yet to coordinate the
         potentially multiple scanners pushing to the same VC VTP git
@@ -97,7 +105,11 @@ class AcceptBallotOperation(Operation):
         """
 
         # select a branchpoint
-        branchpoint = self.get_random_branchpoint(ref_branch)
+        branchpoint = (
+            the_election_config.get("git_initial_commit")
+            if initial
+            else self.get_random_branchpoint(ref_branch)
+        )
         # and attempt at a new unique branch
         branch = self.new_branch_name(contest, style)
         # Get the current branch for reference
@@ -398,7 +410,9 @@ class AcceptBallotOperation(Operation):
                     uid = contest.get("uid")
                     # atomically create the branch locally and remotely
                     branches.append(
-                        self.checkout_new_branch(contest, "main", "contest")
+                        self.checkout_new_branch(
+                            the_election_config, contest, "main", "contest"
+                        )
                     )
                     # Add the cast_branch to the contest json payload
                     contest.set("cast_branch", branches[-1])
@@ -460,13 +474,16 @@ class AcceptBallotOperation(Operation):
         with Shellout.changed_cwd(a_ballot.get_cvr_parent_dir(the_election_config)):
             with Shellout.changed_branch("main"):
                 # Create a unique branch for the receipt
-                receipt_branch = self.checkout_new_branch("", "main", "receipt")
+                receipt_branch = self.checkout_new_branch(
+                    the_election_config, "", "main", "receipt"
+                )
                 # Write out the receipt there as a markdown file
                 receipt_file_md = a_ballot.write_receipt_md(
                     ballot_check, the_election_config, receipt_branch
                 )
-                self.imprimir("########")
-                self.imprimir(f"Created markdown: file://{receipt_file_md}")
+                self.imprimir("############")
+                self.imprimir(f"#### Created markdown: file://{receipt_file_md}")
+                self.imprimir("############")
                 # Commit the voter's ballot voucher
                 self.contest_add_and_commit(receipt_branch, "receipt")
                 # Push the voucher
@@ -491,8 +508,9 @@ class AcceptBallotOperation(Operation):
                 qr_file = os.path.join(os.path.dirname(receipt_file_md), "qr.svg")
                 with open(qr_file, "wb") as qr_fh:
                     qr_img.save(qr_fh)
-                self.imprimir(f"Created QR code: {qr_file}\n")
-                self.imprimir("########")
+                self.imprimir("############")
+                self.imprimir(f"#### Created QR code: {qr_file}")
+                self.imprimir("############")
 
         if demo_mode:
             # In demo mode we want to be able to manually print a
@@ -508,15 +526,15 @@ class AcceptBallotOperation(Operation):
                 qr_file="qr.svg",
                 qr_url=qr_url,
             )
-            self.imprimir("########")
-            self.imprimir(f"Created markdown: file://{demo_receipt}")
+            self.imprimir("############")
+            self.imprimir(f"#### Created markdown: file://{demo_receipt}")
             # also write out the index so that it can be printed on a
             # sticky
             index_file = os.path.join(os.path.dirname(receipt_file_md), "index.txt")
             with open(index_file, "w", encoding="utf8") as outfile:
                 outfile.write(f"{voter_index}\n")
-            self.imprimir(f"Created index file: {index_file}\n")
-            self.imprimir("########")
+            self.imprimir(f"#### Created index file: {index_file}\n")
+            self.imprimir("############")
 
         # At this point the local receipt_branch can be deleted as
         # the local branched build up too much. The local reflog
@@ -665,8 +683,8 @@ class AcceptBallotOperation(Operation):
 
         # For now, print the location and the voter's index
         print("############")
-        print(f"### Receipt file: {receipt_file_csv}")
-        print(f"### Voter's row: {index}")
+        print(f"#### Receipt file: {receipt_file_csv}")
+        print(f"#### Voter's row: {index}")
         print("############")
         # And return them.  Note that ballot_check is in csv format
         # when writing to a file.  However, when returning is it more
