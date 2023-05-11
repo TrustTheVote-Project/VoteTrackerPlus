@@ -634,7 +634,7 @@ class AcceptBallotOperation(Operation):
         )
 
         # Optionally version the ballot check
-        if version_receipts:
+        if receipt_file_csv and version_receipts:
             receipt_branch, qr_img = self.main_handle_receipt(
                 a_ballot=a_ballot,
                 ballot_check=ballot_check,
@@ -642,6 +642,9 @@ class AcceptBallotOperation(Operation):
                 demo_mode=demo_mode,
                 voter_index=index,
             )
+        else:
+            receipt_branch = None
+            qr_img = None
 
         # Optionally merge the branches now and avoid calling
         # merge-contests later. Note - this will serialize the ballots
@@ -672,7 +675,7 @@ class AcceptBallotOperation(Operation):
                     remote=True,
                 )
             # If merging also merge the receipt file
-            if version_receipts:
+            if receipt_file_csv and version_receipts:
                 # ZZZ code to merge
                 logging.debug("Calling MergeContestsOperation.run (receipt)")
                 mco.run(
