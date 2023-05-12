@@ -483,7 +483,7 @@ class Ballot:
             config, self.ballot_subdir, receipt_branch, "md"
         )
         if qr_file:
-            receipt_file = receipt_file.rstrip("md") + "-qr.md"
+            receipt_file = receipt_file.rstrip(".md") + "-qr.md"
         url_root = "/".join(
             [
                 Globals.get("QR_ENDPOINT_ROOT"),
