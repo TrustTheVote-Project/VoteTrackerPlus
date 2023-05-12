@@ -479,9 +479,7 @@ class AcceptBallotOperation(Operation):
                 receipt_file_md = a_ballot.write_receipt_md(
                     ballot_check, the_election_config, receipt_branch
                 )
-                self.imprimir("############")
                 self.imprimir(f"#### Created markdown: file://{receipt_file_md}")
-                self.imprimir("############")
                 # Commit the voter's ballot voucher
                 self.contest_add_and_commit(receipt_branch, "receipt")
                 # Push the voucher
@@ -506,9 +504,7 @@ class AcceptBallotOperation(Operation):
                 qr_file = os.path.join(os.path.dirname(receipt_file_md), "qr.svg")
                 with open(qr_file, "wb") as qr_fh:
                     qr_img.save(qr_fh)
-                self.imprimir("############")
                 self.imprimir(f"#### Created QR code: {qr_file}")
-                self.imprimir("############")
 
                 # Create a markdown version of the receipt that contains the QR code.
                 demo_receipt = a_ballot.write_receipt_md(
@@ -518,9 +514,7 @@ class AcceptBallotOperation(Operation):
                     qr_file="qr.svg",
                     qr_url=qr_url,
                 )
-                self.imprimir("############")
                 self.imprimir(f"#### Created markdown: file://{demo_receipt}")
-                self.imprimir("############")
 
         # At this point the local receipt_branch can be deleted as
         # the local branches build up too much. The local reflog
@@ -675,10 +669,8 @@ class AcceptBallotOperation(Operation):
             #     )
 
         # For now, print the location and the voter's index
-        print("############")
         print(f"#### Receipt file: {receipt_file_csv}")
         print(f"#### Voter's row: {index}")
-        print("############")
         # And return them.  Note that ballot_check is in csv format
         # when writing to a file.  However, when returning is it more
         # convenient for it to be normal 2-D array -
