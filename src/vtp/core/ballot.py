@@ -468,14 +468,13 @@ class Ballot:
                 outfile.write(f"{line}\n")
         return receipt_file
 
-    # pylint: disable=too-many-arguments
     # pylint: disable=too-many-locals
+    # pylint: disable=too-many-arguments
     def write_receipt_md(
         self,
         lines: list,
         config: dict,
         receipt_branch: str,
-        demo_mode: bool = False,
         qr_file: str = "",
         qr_url: str = "",
     ) -> str:
@@ -483,8 +482,8 @@ class Ballot:
         receipt_file = Ballot.gen_receipt_location(
             config, self.ballot_subdir, receipt_branch, "md"
         )
-        if demo_mode:
-            receipt_file = receipt_file.rstrip("md") + "demo.md"
+        if qr_file:
+            receipt_file = receipt_file.rstrip("md") + "-qr.md"
         url_root = "/".join(
             [
                 Globals.get("QR_ENDPOINT_ROOT"),
@@ -505,7 +504,7 @@ class Ballot:
             )
         os.makedirs(os.path.dirname(receipt_file), exist_ok=True)
         with open(receipt_file, "w", encoding="utf8") as outfile:
-            if demo_mode:
+            if qr_file:
                 # add the voter's index and QR code to the markdown
                 outfile.write(f"![{qr_url}]({qr_file} 'Ballot Voucer')\n\n")
             header = ""
@@ -517,7 +516,7 @@ class Ballot:
             for index, line in enumerate(lines[1:]):
                 newline = ""
                 for dig in line.split(","):
-                    if demo_mode:
+                    if qr_file:
                         newline += f"| [{dig[0:8]}...]({url_root}/{dig}) "
                     else:
                         newline += f"| [{dig[0:8]}...]({url_root}/{dig}) "

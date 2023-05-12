@@ -43,12 +43,13 @@ class VoteOperation(Operation):
     """
 
     # pylint: disable=duplicate-code
+    # pylint: disable=too-many-arguments
     def run(
         self,
         an_address: Address,
         blank_ballot: str = "",
         merge_contests: bool = False,
-        demo_mode: bool = False,
+        version_receipts: bool = False,
     ) -> tuple[dict, int]:
         """Main function - see -h for more info"""
 
@@ -91,7 +92,7 @@ class VoteOperation(Operation):
             an_address=an_address,
             cast_ballot=blank_ballot,
             merge_contests=merge_contests,
-            demo_mode=demo_mode,
+            version_receipts=version_receipts,
         )
 
 

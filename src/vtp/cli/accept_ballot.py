@@ -61,11 +61,6 @@ Either the location of the ballot_file or the associated address is required.
         action="store_true",
         help="when set will capture and version the ballot receipts",
     )
-    parser.add_argument(
-        "--demo_mode",
-        action="store_true",
-        help="when set will also cache the receipt QR code",
-    )
     Arguments.add_merge_contests(parser)
     Arguments.add_verbosity(parser)
     Arguments.add_printonly(parser)
@@ -98,7 +93,6 @@ def main():
         cast_ballot=parsed_args.cast_ballot,
         merge_contests=parsed_args.merge_contests,
         version_receipts=parsed_args.version_receipts,
-        demo_mode=parsed_args.demo_mode,
     )
 
 

@@ -464,7 +464,6 @@ class AcceptBallotOperation(Operation):
         a_ballot: dict,
         ballot_check: list,
         the_election_config: dict,
-        demo_mode: bool,
         voter_index: int,
     ):
         """Called only by main.  Handles the receipt git dance"""
@@ -512,32 +511,26 @@ class AcceptBallotOperation(Operation):
                 self.imprimir(f"#### Created QR code: {qr_file}")
                 self.imprimir("############")
 
-        if demo_mode:
-            # In demo mode we want to be able to manually print a
-            # ballot receipt with the QR code and separately print an
-            # index on a sticky.  So create an extra file like that
-            # which can be printed from a brwoser that can hand GFM
-            # tables and pcitures.
-            demo_receipt = a_ballot.write_receipt_md(
-                lines=ballot_check,
-                config=the_election_config,
-                receipt_branch=receipt_branch,
-                demo_mode=demo_mode,
-                qr_file="qr.svg",
-                qr_url=qr_url,
-            )
-            self.imprimir("############")
-            self.imprimir(f"#### Created markdown: file://{demo_receipt}")
-            # also write out the index so that it can be printed on a
-            # sticky
-            index_file = os.path.join(os.path.dirname(receipt_file_md), "index.txt")
-            with open(index_file, "w", encoding="utf8") as outfile:
-                outfile.write(f"{voter_index}\n")
-            self.imprimir(f"#### Created index file: {index_file}\n")
-            self.imprimir("############")
+                # Create a markdown version of the receipt that contains the QR code.
+                demo_receipt = a_ballot.write_receipt_md(
+                    lines=ballot_check,
+                    config=the_election_config,
+                    receipt_branch=receipt_branch,
+                    qr_file="qr.svg",
+                    qr_url=qr_url,
+                )
+                self.imprimir("############")
+                self.imprimir(f"#### Created markdown: file://{demo_receipt}")
+                # also write out the index so that it can be printed on a
+                # sticky
+                index_file = os.path.join(os.path.dirname(receipt_file_md), "index.txt")
+                with open(index_file, "w", encoding="utf8") as outfile:
+                    outfile.write(f"{voter_index}\n")
+                self.imprimir(f"#### Created index file: {index_file}\n")
+                self.imprimir("############")
 
         # At this point the local receipt_branch can be deleted as
-        # the local branched build up too much. The local reflog
+        # the local branches build up too much. The local reflog
         # keeps track of the local branches
         Shellout.run(
             ["git", "branch", "-d", receipt_branch],
@@ -555,8 +548,7 @@ class AcceptBallotOperation(Operation):
         cast_ballot: str = "",
         cast_ballot_json: dict = "",
         merge_contests: bool = False,
-        version_receipts: bool = True,
-        demo_mode: bool = False,
+        version_receipts: bool = False,
     ) -> tuple[list, int]:
         """
         Main function - see -h for more info.  Will work with either
@@ -639,7 +631,6 @@ class AcceptBallotOperation(Operation):
                 a_ballot=a_ballot,
                 ballot_check=ballot_check,
                 the_election_config=the_election_config,
-                demo_mode=demo_mode,
                 voter_index=index,
             )
         else:
@@ -674,16 +665,22 @@ class AcceptBallotOperation(Operation):
                     flush=False,
                     remote=True,
                 )
+            # Note - since the receipts are stored by file content and
+            # not by git commit, and since they are referenced by the
+            # original digest (like CVRs) but do not have to be
+            # counted, there is no current need to spend the time to
+            # merge them to main.
+
             # If merging also merge the receipt file
-            if receipt_file_csv and version_receipts:
-                # ZZZ code to merge
-                logging.debug("Calling MergeContestsOperation.run (receipt)")
-                mco.run(
-                    branch="origin/" + receipt_branch,
-                    flush=False,
-                    remote=True,
-                    style="receipt",
-                )
+            # if receipt_file_csv and version_receipts:
+            #     # ZZZ code to merge
+            #     logging.debug("Calling MergeContestsOperation.run (receipt)")
+            #     mco.run(
+            #         branch="origin/" + receipt_branch,
+            #         flush=False,
+            #         remote=True,
+            #         style="receipt",
+            #     )
 
         # For now, print the location and the voter's index
         print("############")
