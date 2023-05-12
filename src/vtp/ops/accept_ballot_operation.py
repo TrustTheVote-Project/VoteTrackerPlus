@@ -464,7 +464,6 @@ class AcceptBallotOperation(Operation):
         a_ballot: dict,
         ballot_check: list,
         the_election_config: dict,
-        voter_index: int,
     ):
         """Called only by main.  Handles the receipt git dance"""
         # When here the actual voucher file on disk wants to be a
@@ -521,12 +520,6 @@ class AcceptBallotOperation(Operation):
                 )
                 self.imprimir("############")
                 self.imprimir(f"#### Created markdown: file://{demo_receipt}")
-                # also write out the index so that it can be printed on a
-                # sticky
-                index_file = os.path.join(os.path.dirname(receipt_file_md), "index.txt")
-                with open(index_file, "w", encoding="utf8") as outfile:
-                    outfile.write(f"{voter_index}\n")
-                self.imprimir(f"#### Created index file: {index_file}\n")
                 self.imprimir("############")
 
         # At this point the local receipt_branch can be deleted as
@@ -631,7 +624,6 @@ class AcceptBallotOperation(Operation):
                 a_ballot=a_ballot,
                 ballot_check=ballot_check,
                 the_election_config=the_election_config,
-                voter_index=index,
             )
         else:
             receipt_branch = None
