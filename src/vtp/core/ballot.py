@@ -505,7 +505,7 @@ class Ballot:
         os.makedirs(os.path.dirname(receipt_file), exist_ok=True)
         with open(receipt_file, "w", encoding="utf8") as outfile:
             if qr_file:
-                # add the voter's index and QR code to the markdown
+                # add the voter's QR code to the markdown
                 outfile.write(f"![{qr_url}]({qr_file} 'Ballot Voucer')\n\n")
             header = ""
             for col in lines[0].split(","):
@@ -519,7 +519,7 @@ class Ballot:
                     if qr_file:
                         newline += f"| [{dig[0:8]}...]({url_root}/{dig}) "
                     else:
-                        newline += f"| [{dig[0:8]}...]({url_root}/{dig}) "
+                        newline += f"| [<sub><sup>{dig}</sup></sub>]({url_root}/{dig}) "
                 outfile.write(f"| {index + 1} {newline}|\n")
         return receipt_file
 

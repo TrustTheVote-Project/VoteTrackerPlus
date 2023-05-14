@@ -494,7 +494,7 @@ class AcceptBallotOperation(Operation):
                 qr_url = (
                     f"{Globals.get('QR_ENDPOINT_ROOT')}/"
                     f"{os.path.basename(the_election_config.get('git_rootdir'))}"
-                    f"/tree/main/{a_ballot.get('ballot_subdir')}/"
+                    f"/blob/{receipt_branch}/{a_ballot.get('ballot_subdir')}/"
                     f"{receipt_branch}/{Globals.get('RECEIPT_FILE').rstrip('csv')}md"
                 )
                 qr_img = qrcode.make(
