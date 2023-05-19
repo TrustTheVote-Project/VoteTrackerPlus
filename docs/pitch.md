@@ -1,6 +1,6 @@
 ## The Pitch
 
-VoteTracker+ is an open software ballot tracking system that increases the security, accuracy, and trustworthiness of a paper ballot election by cryptographically tracking the [Cast Vote Records](https://pages.nist.gov/ElectionGlossary/#cast-vote-record) associated with paper ballots.
+VoteTracker+ is an open software vote tracking system that increases the security, accuracy, and trustworthiness of a paper ballot election by cryptographically and anonymously tracking the votes associated with paper ballots.
 
 VoteTracker+ provides three core capabilities:
 
