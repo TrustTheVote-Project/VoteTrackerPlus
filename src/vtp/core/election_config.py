@@ -272,6 +272,20 @@ class ElectionConfig:
         self.parsed_configs = ["."]
         self.digraph = networkx.DiGraph()
         self.uid = None
+        # Also determine the initial commit to branch the CVRs and
+        # RECEIPTS from
+        with Shellout.changed_cwd(self.git_rootdir):
+            result = Shellout.run(
+                ["git", "rev-list", "--max-parents=0", "HEAD"],
+                check=True,
+                capture_output=True,
+                text=True,
+            )
+        if result.stdout == "":
+            raise EnvironmentError(
+                "Cannot determine workspace initial commit via 'git rev-list'"
+            )
+        self.git_initial_commit = result.stdout.strip()
 
     def get(self, name):
         """A generic getter - will raise a NameError if name is not defined"""
@@ -281,6 +295,8 @@ class ElectionConfig:
             return getattr(self, "config")[name]
         if name == "git_rootdir":
             return self.git_rootdir
+        if name == "git_initial_commit":
+            return self.git_initial_commit
         raise NameError(
             (
                 f"Name {name} is not a supported root level key "

@@ -191,6 +191,14 @@ class RunMockElectionOperation(Operation):
             tally_contests.run()
         # clean up git just in case
         Shellout.run(
+            ["git", "remote", "prune", "origin"],
+            printonly=self.printonly,
+            verbosity=self.verbosity,
+            no_touch_stds=True,
+            timeout=None,
+            check=True,
+        )
+        Shellout.run(
             ["git", "gc"],
             printonly=self.printonly,
             verbosity=self.verbosity,

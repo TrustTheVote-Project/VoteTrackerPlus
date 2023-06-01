@@ -32,6 +32,9 @@ import os
 import random
 import secrets
 
+import qrcode
+import qrcode.image.svg
+
 # Project imports
 from vtp.core.address import Address
 from vtp.core.ballot import Ballot, Contests
@@ -70,26 +73,46 @@ class AcceptBallotOperation(Operation):
         # ZZZ - need to deal with a rolling 100 window
         return random.choice(commits)
 
-    def checkout_new_contest_branch(self, contest, ref_branch):
-        """Will checkout a new branch for a specific contest.  Since there
-        is no code yet to coordinate the potentially multiple scanners
-        pushing to the same VC VTP git remote, use a highly unlikely GUID
-        and try up to 3 times to get a unique branch.
+    def new_branch_name(self, contest, style: str) -> str:
+        """Return the new branch name for contest CVRs and ballot receipts"""
+        if style == "contest":
+            # branch = contest.get('uid') + "/" + str(uuid.uuid1().hex)[0:10]
+            return (
+                f"{Globals.get('CONTEST_FILE_SUBDIR')}/{contest.get('uid')}/"
+                f"{secrets.token_hex(5)}"
+            )
+        return (
+            f"{Globals.get('RECEIPT_FILE_SUBDIR')}/{secrets.token_hex(1)}/"
+            f"{secrets.token_hex(5)}"
+        )
+
+    # pylint: disable=too-many-arguments
+    def checkout_new_branch(
+        self,
+        the_election_config: dict,
+        contest: str,
+        ref_branch: str,
+        style: str = "contest",
+        initial: bool = True,
+    ):
+        """Will checkout a new branch for a specific contest or
+        receipt.  Since there is no code yet to coordinate the
+        potentially multiple scanners pushing to the same VC VTP git
+        remote, use a highly unlikely GUID and try up to 3 times to
+        get a unique branch.
 
         Requires the CWD to be the parent of the CVRs directory.
         """
 
         # select a branchpoint
-        branchpoint = self.get_random_branchpoint(ref_branch)
-        # and attempt at a new unique branch
-        branch = (
-            Globals.get("CONTEST_FILE_SUBDIR")
-            + "/"
-            + contest.get("uid")
-            + "/"
-            + secrets.token_hex(5)
+        branchpoint = (
+            the_election_config.get("git_initial_commit")
+            if initial
+            else self.get_random_branchpoint(ref_branch)
         )
-        #    branch = contest.get('uid') + "/" + str(uuid.uuid1().hex)[0:10]
+        # and attempt at a new unique branch
+        branch = self.new_branch_name(contest, style)
+        # Get the current branch for reference
         current_branch = Shellout.run(
             ["git", "rev-parse", "--abbrev-ref", "HEAD"],
             check=True,
@@ -128,7 +151,7 @@ class AcceptBallotOperation(Operation):
                     verbosity=self.verbosity,
                 )
             # At this point the local did not get created - try again
-            branch = contest.get("uid") + "/" + secrets.token_hex(5)
+            branch = self.new_branch_name(contest, style)
 
         # At this point the remote branch was never created and in theory the local
         # tries have also deleted(?)
@@ -199,28 +222,52 @@ class AcceptBallotOperation(Operation):
             text=True,
         ).stdout.strip()
 
-    def contest_add_and_commit(self, branch):
-        """Will git add and commit the new contest content.
-        Requires the CWD to be the parent of the CVRs directory.
+    def contest_add_and_commit(self, branch, style="contest"):
+        """Will git add and commit the new contest content.  Requires
+        the CWD to be the parent of the CVRs directory.  If this fails
+        a shell error will be raised.
+
+        There is a difference however between contests and receipts.
+        The actual CVR json payload is stored in the commit message of
+        a contest since the commit content is destructively merged to
+        main.  The actual receipt markdown payload is stored in the
+        file as markdown.  Hence, it is merged to main via a
+        subdirectory name that matches the random branch name.
         """
-        # If this fails a shell error will be raised
-        contest_file = os.path.join(
-            Globals.get("CONTEST_FILE_SUBDIR"), Globals.get("CONTEST_FILE")
-        )
+        if style == "contest":
+            payload_name = os.path.join(
+                Globals.get("CONTEST_FILE_SUBDIR"), Globals.get("CONTEST_FILE")
+            )
+        else:
+            # when handling receipts, there is no destructive merge
+            payload_name = os.path.join(
+                branch,
+                Globals.get("RECEIPT_FILE_MD"),
+            )
         Shellout.run(
-            ["git", "add", contest_file],
+            ["git", "add", payload_name],
             printonly=self.printonly,
             verbosity=self.verbosity,
+            check=True,
         )
-        # Note - apparently git place the commit msg on STDERR - hide it
-        Shellout.run(
-            ["git", "commit", "-F", contest_file],
-            printonly=self.printonly,
-            verbosity=1,
-        )
+        # Note - apparently git places the commit msg on STDERR - hide it
+        if style == "contest":
+            Shellout.run(
+                ["git", "commit", "-F", payload_name],
+                printonly=self.printonly,
+                verbosity=1,
+                check=True,
+            )
+        else:
+            Shellout.run(
+                ["git", "commit", "-m", "Ballot Voucher"],
+                printonly=self.printonly,
+                verbosity=1,
+                check=True,
+            )
         # Capture the digest
         digest = Shellout.run(
-            ["git", "log", branch, "-1", "--pretty=format:%H"],
+            ["git", "log", "-1", "--pretty=format:%H"],
             printonly=self.printonly,
             check=True,
             capture_output=True,
@@ -332,14 +379,163 @@ class AcceptBallotOperation(Operation):
             my_list.append(row)
         return my_list
 
+    def main_handle_contests(
+        self,
+        a_ballot: dict,
+        the_election_config: dict,
+    ):
+        """Called only by main.  Loops over contests and performs the required git dance"""
+
+        contest_receipts = {}
+        branches = []
+        cloak_receipts = {}
+        with Shellout.changed_cwd(a_ballot.get_cvr_parent_dir(the_election_config)):
+            # So, the CWD in this block is the state/town subfolder
+
+            # It turns out that determining the other not yet merged to
+            # main contests is apparently a challenging git query and one
+            # that creates a lot of temporary memory requirements.  One
+            # current way to slice that pie is to just get all such
+            # commits up front similar to the tally_contests.py code.
+            # Then extract from that chunk of memory the contest with the
+            # matching uid's of interest.  In the end this may be the
+            # least expensive as the big reader is thus a stdout PIPE
+            # loop.
+            unmerged_cvrs = self.get_unmerged_contests(the_election_config)
+            contests = Contests(a_ballot)
+            for contest in contests:
+                #                import pdb; pdb.set_trace()
+                with Shellout.changed_branch("main"):
+                    # get N other values for each contest for this ballot
+                    uid = contest.get("uid")
+                    # atomically create the branch locally and remotely
+                    branches.append(
+                        self.checkout_new_branch(
+                            the_election_config, contest, "main", "contest"
+                        )
+                    )
+                    # Add the cast_branch to the contest json payload
+                    contest.set("cast_branch", branches[-1])
+
+                    # They is an interest to add a contest runtime digest
+                    # key value pair which is a cryptographic value
+                    # derived from the run-time election private key. This
+                    # value could also read via read_contest and can be
+                    # validated against the election public key if
+                    # available. However, the 'lack of appearance of
+                    # trustworthiness' in that a 'cryptic' number is being
+                    # written/associated with the contest cvr that by
+                    # definition would contain something obaque is not an
+                    # effective improvement. So, do not so this. Leave the
+                    # insertion of a runtime digest at merge time, which
+                    # occurs later and independent of contest commit time
+                    # and any potential voter information.
+
+                    # Write out the voter's contest to CVRs/contest.json
+                    a_ballot.write_contest(contest, the_election_config)
+                    # commit the voter's contest
+                    contest_receipts[uid] = self.contest_add_and_commit(
+                        branches[-1], "contest"
+                    )
+                    # if cloaking, get those as well
+                    if "cloak" in contest.get("contest"):
+                        cloak_receipts[uid] = self.get_cloaked_contests(contest, "main")
+            # After all the contests digests have been generated as well
+            # as the others and cloaks as much as possible, then push as
+            # atomically as possible all the contests.
+            for branch in branches:
+                Shellout.run(
+                    ["git", "push", "origin", branch],
+                    printonly=self.printonly,
+                    verbosity=self.verbosity,
+                )
+                # Delete the local as they build up too much.  The local
+                # reflog keeps track of the local branches
+                Shellout.run(
+                    ["git", "branch", "-d", branch],
+                    printonly=self.printonly,
+                    verbosity=self.verbosity,
+                )
+        return contest_receipts, branches, unmerged_cvrs, cloak_receipts
+
+    # pylint: disable=too-many-arguments
+    def main_handle_receipt(
+        self,
+        a_ballot: dict,
+        ballot_check: list,
+        the_election_config: dict,
+    ):
+        """Called only by main.  Handles the receipt git dance"""
+        # When here the actual voucher file on disk wants to be a
+        # markdown file for a web-api endpoint rather than the
+        # original csv file defined above.
+        with Shellout.changed_cwd(a_ballot.get_cvr_parent_dir(the_election_config)):
+            with Shellout.changed_branch("main"):
+                # Create a unique branch for the receipt
+                receipt_branch = self.checkout_new_branch(
+                    the_election_config, "", "main", "receipt"
+                )
+                # Write out the receipt there as a markdown file
+                receipt_file_md = a_ballot.write_receipt_md(
+                    ballot_check, the_election_config, receipt_branch
+                )
+                self.imprimir(f"#### Created markdown: file://{receipt_file_md}")
+                # Commit the voter's ballot voucher
+                self.contest_add_and_commit(receipt_branch, "receipt")
+                # Push the voucher
+                Shellout.run(
+                    ["git", "push", "origin", receipt_branch],
+                    printonly=self.printonly,
+                    verbosity=self.verbosity,
+                )
+
+                # Create the QR image while still in the branch as exiting the
+                # above with will nominally delete it
+                qr_url = (
+                    f"{Globals.get('QR_ENDPOINT_ROOT')}/"
+                    f"{os.path.basename(the_election_config.get('git_rootdir'))}"
+                    f"/blob/{receipt_branch}/{a_ballot.get('ballot_subdir')}/"
+                    f"{receipt_branch}/{Globals.get('RECEIPT_FILE').rstrip('csv')}md"
+                )
+                qr_img = qrcode.make(
+                    qr_url,
+                    image_factory=qrcode.image.svg.SvgImage,
+                )
+                qr_file = os.path.join(os.path.dirname(receipt_file_md), "qr.svg")
+                with open(qr_file, "wb") as qr_fh:
+                    qr_img.save(qr_fh)
+                self.imprimir(f"#### Created QR code: {qr_file}")
+
+                # Create a markdown version of the receipt that contains the QR code.
+                demo_receipt = a_ballot.write_receipt_md(
+                    lines=ballot_check,
+                    config=the_election_config,
+                    receipt_branch=receipt_branch,
+                    qr_file="qr.svg",
+                    qr_url=qr_url,
+                )
+                self.imprimir(f"#### Created markdown: file://{demo_receipt}")
+
+        # At this point the local receipt_branch can be deleted as
+        # the local branches build up too much. The local reflog
+        # keeps track of the local branches
+        Shellout.run(
+            ["git", "branch", "-d", receipt_branch],
+            printonly=self.printonly,
+            verbosity=self.verbosity,
+        )
+        return receipt_branch, qr_img
+
     # pylint: disable=duplicate-code
     # pylint: disable=too-many-locals
+    # pylint: disable=too-many-arguments
     def run(
         self,
         an_address: Address = None,
         cast_ballot: str = "",
         cast_ballot_json: dict = "",
         merge_contests: bool = False,
+        version_receipts: bool = False,
     ) -> tuple[list, int]:
         """
         Main function - see -h for more info.  Will work with either
@@ -394,94 +590,50 @@ class AcceptBallotOperation(Operation):
         # Validate it
         a_ballot.verify_cast_ballot_data(the_election_config)
 
-        # the voter's row of digests (indexed by contest uid)
-        contest_receipts = {}
-        # a cloaked receipt
-        cloak_receipts = {}
-        # 100 additional contest receipts
-        unmerged_cvrs = {}
-
         # Set the three EV's
         os.environ["GIT_AUTHOR_DATE"] = "2022-01-01T12:00:00"
         os.environ["GIT_COMMITTER_DATE"] = "2022-01-01T12:00:00"
         os.environ["GIT_EDITOR"] = "true"
 
-        # loop over contests
-        branches = []
-        contests = Contests(a_ballot)
-        with Shellout.changed_cwd(a_ballot.get_cvr_parent_dir(the_election_config)):
-            # So, the CWD in this block is the state/town subfolder
+        # handle the contests (cloaking is not yet supported)
+        # pylint: disable=unused-variable
+        (
+            contest_receipts,
+            branches,
+            unmerged_cvrs,
+            cloak_receipts,
+        ) = self.main_handle_contests(
+            a_ballot=a_ballot,
+            the_election_config=the_election_config,
+        )
 
-            # It turns out that determining the other not yet merged to
-            # main contests is apparently a challangin git query and one
-            # that creates a lot of temporary memory requirements.  One
-            # current way to slice that pie is to just get all such
-            # commits up front similar to the tally_contests.py code.
-            # Then extract from that chunk of memory the contest with the
-            # matching uid's of interest.  In the end this may be the
-            # least expensive as the big reader is thus a stdout PIPE
-            # loop.
-            unmerged_cvrs = self.get_unmerged_contests(the_election_config)
+        # Create the ballot check
+        ballot_check, index, receipt_file_csv = self.create_ballot_receipt(
+            a_ballot, contest_receipts, unmerged_cvrs, the_election_config
+        )
 
-            for contest in contests:
-                #                import pdb; pdb.set_trace()
-                with Shellout.changed_branch("main"):
-                    # get N other values for each contest for this ballot
-                    uid = contest.get("uid")
-                    # atomically create the branch locally and remotely
-                    branches.append(self.checkout_new_contest_branch(contest, "main"))
-                    # Add the cast_branch to the contest json payload
-                    contest.set("cast_branch", branches[-1])
+        # Optionally version the ballot check
+        if receipt_file_csv and version_receipts:
+            receipt_branch, qr_img = self.main_handle_receipt(
+                a_ballot=a_ballot,
+                ballot_check=ballot_check,
+                the_election_config=the_election_config,
+            )
+        else:
+            receipt_branch = None
+            qr_img = None
 
-                    # They is an interest to add a contest runtime digest
-                    # key value pair which is a cryptographic value
-                    # derived from the run-time election private key. This
-                    # value could also read via read_contest and can be
-                    # validated against the election public key if
-                    # available. However, the 'lack of appearance of
-                    # trustworthiness' in that a 'cryptic' number is being
-                    # written/associated with the contest cvr that by
-                    # definition would contain something obaque is not an
-                    # effective improvement. So, do not so this. Leave the
-                    # insertion of a runtime digest at merge time, which
-                    # occurs later and independent of contest commit time
-                    # and any potential voter information.
-
-                    # Write out the voter's contest to CVRs/contest.json
-                    a_ballot.write_contest(contest, the_election_config)
-                    # commit the voter's contest
-                    contest_receipts[uid] = self.contest_add_and_commit(branches[-1])
-                    # if cloaking, get those as well
-                    if "cloak" in contest.get("contest"):
-                        cloak_receipts[uid] = self.get_cloaked_contests(contest, "main")
-            # After all the contests digests have been generated as well
-            # as the others and cloaks as much as possible, then push as
-            # atomically as possible all the contests.
-            for branch in branches:
-                Shellout.run(
-                    ["git", "push", "origin", branch],
-                    printonly=self.printonly,
-                    verbosity=self.verbosity,
-                )
-                # Delete the local as they build up too much.  The local
-                # reflog keeps track of the local branches
-                Shellout.run(
-                    ["git", "branch", "-d", branch],
-                    printonly=self.printonly,
-                    verbosity=self.verbosity,
-                )
-
-        # If in demo mode, optionally merge the branches now and avoid
-        # calling merge-contests later. Note - this will serialize the
-        # ballots in time, but this is ok in certain demo situations.
-        # Note - since the above git push/delete is trying to be
-        # automic, at the moment that is done in the above loop and
-        # then later (now) the merge into main is done.  Since the
-        # above deletes the local CVR branch reference, the
-        # merge-contests below needs to merge directly from the remote
-        # reference.  (One could also do the merge prior to the local
-        # branch reference deletion and let the merge operation itself
-        # delete both branch references.)
+        # Optionally merge the branches now and avoid calling
+        # merge-contests later. Note - this will serialize the ballots
+        # in time, but this is ok in certain demo situations. Note -
+        # since the above git push/delete is trying to be atomic, at
+        # the moment that is done in the above loop and then later
+        # (now) the merge into main is done. Since the above deletes
+        # the local CVR branch reference, the merge-contests below
+        # needs to merge directly from the remote reference. (One
+        # could also do the merge prior to the local branch reference
+        # deletion and let the merge operation itself delete both
+        # branch references.)
         if merge_contests:
             for branch in branches:
                 # Merge the branch (but since the local branch should be
@@ -493,28 +645,37 @@ class AcceptBallotOperation(Operation):
                     verbosity=self.verbosity,
                     printonly=self.printonly,
                 )
-                logging.debug("Calling MergeContestsOperation.run")
+                logging.debug("Calling MergeContestsOperation.run (contest)")
                 mco.run(
                     branch="origin/" + branch,
                     flush=False,
                     remote=True,
                 )
+            # Note - since the receipts are stored by file content and
+            # not by git commit, and since they are referenced by the
+            # original digest (like CVRs) but do not have to be
+            # counted, there is no current need to spend the time to
+            # merge them to main.
 
-        # Create the ballot check
-        ballot_check, index, receipt_file = self.create_ballot_receipt(
-            a_ballot, contest_receipts, unmerged_cvrs, the_election_config
-        )
+            # If merging also merge the receipt file
+            # if receipt_file_csv and version_receipts:
+            #     # ZZZ code to merge
+            #     logging.debug("Calling MergeContestsOperation.run (receipt)")
+            #     mco.run(
+            #         branch="origin/" + receipt_branch,
+            #         flush=False,
+            #         remote=True,
+            #         style="receipt",
+            #     )
 
         # For now, print the location and the voter's index
-        print("############")
-        print(f"### Receipt file: {receipt_file}")
-        print(f"### Voter's row: {index}")
-        print("############")
+        print(f"#### Receipt file: {receipt_file_csv}")
+        print(f"#### Voter's row: {index}")
         # And return them.  Note that ballot_check is in csv format
         # when writing to a file.  However, when returning is it more
         # convenient for it to be normal 2-D array -
         # list[list[str]]. So convert it first.
-        return self.convert_csv_to_2d_list(ballot_check), index
+        return self.convert_csv_to_2d_list(ballot_check), index, qr_img
 
 
 # EOF

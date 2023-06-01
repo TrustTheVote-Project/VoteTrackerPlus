@@ -34,8 +34,7 @@ class Arguments:
     @staticmethod
     def add_address_args(parser, generic_address=False):
         """Helper function to add standard address program switches to argparse"""
-        #        parser.add_argument('-c', "--csv",
-        #                                help="a comma separated address")
+        parser.add_argument("-c", "--csv", help="a comma separated address")
         #        parser.add_argument('-r', "--street",
         #                                help="the street/road field of an address, \
         #                                in which case the address is the number")

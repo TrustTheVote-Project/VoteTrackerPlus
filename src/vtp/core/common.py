@@ -43,6 +43,7 @@ class Globals:
         "BALLOT_FILE": "ballot.json",
         "CONTEST_FILE": "contest.json",
         "RECEIPT_FILE": "receipt.csv",
+        "RECEIPT_FILE_MD": "receipt.md",
         # The blank ballot folder location
         "BLANK_BALLOT_SUBDIR": "blank-ballots",
         # The location/name of the config and address map files for this GGO
@@ -50,6 +51,12 @@ class Globals:
         "ADDRESS_MAP_FILE": "address_map.yaml",
         # The location of the contest cvr file
         "CONTEST_FILE_SUBDIR": "CVRs",
+        # The location of the ballot receipts (and other QR files etc.
+        # Note - files are always explicitly checked in (or .gitognore
+        # can be set), so just place the non versioned file in the
+        # same directory as the receipt so that it is easier to
+        # reference the QR image
+        "RECEIPT_FILE_SUBDIR": "RECEIPTs",
         # The required address fields for an address. To get around
         # the difficulty of creating a completely generic
         # address-to-ballot function at this time, these fields are
@@ -95,6 +102,8 @@ class Globals:
         "MOCK_CLIENT_DIRNAME": "mock-clients",
         # Default runtime location of everything
         "DEFAULT_RUNTIME_LOCATION": "/opt/VoteTrackerPlus/demo.01",
+        # Default git web service endpoint for QR codes
+        "QR_ENDPOINT_ROOT": "https://github.com/TrustTheVote-Project",
     }
 
     @staticmethod

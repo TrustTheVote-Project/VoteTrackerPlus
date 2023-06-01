@@ -56,6 +56,11 @@ Either the location of the ballot_file or the associated address is required.
         "--cast_ballot",
         help="overrides an address - specifies a specific cast ballot",
     )
+    parser.add_argument(
+        "--version_receipts",
+        action="store_true",
+        help="when set will capture and version the ballot receipts",
+    )
     Arguments.add_merge_contests(parser)
     Arguments.add_verbosity(parser)
     Arguments.add_printonly(parser)
@@ -74,6 +79,7 @@ def main():
         town=parsed_args.town,
         state=parsed_args.state,
         generic_address=True,
+        csv=parsed_args.csv,
     )
 
     # do it
@@ -86,6 +92,7 @@ def main():
         an_address=an_address,
         cast_ballot=parsed_args.cast_ballot,
         merge_contests=parsed_args.merge_contests,
+        version_receipts=parsed_args.version_receipts,
     )
 
 

@@ -155,13 +155,31 @@ class Ballot:
         )
 
     @staticmethod
-    def gen_receipt_location(config, subdir):
-        """Return the receipt.csv file location"""
+    def gen_receipt_location(
+        config,
+        subdir: str,
+        branch: str,
+        style: str,
+    ) -> str:
+        """
+        Return either a csv or md receipt file location.  Note that
+        the receipt.csv version is stored next to the unversioned
+        ballot.json and the ephemeral contest.json files in the CVRs
+        subdirectory while the version receipt.md is stored in the
+        RECEIPT_FILE_SUBDIR tree.
+        """
+        if style == "csv":
+            return os.path.join(
+                config.get("git_rootdir"),
+                subdir,
+                Globals.get("CONTEST_FILE_SUBDIR"),
+                Globals.get("RECEIPT_FILE"),
+            )
         return os.path.join(
             config.get("git_rootdir"),
             subdir,
-            Globals.get("CONTEST_FILE_SUBDIR"),
-            Globals.get("RECEIPT_FILE"),
+            branch,
+            Globals.get("RECEIPT_FILE_MD"),
         )
 
     @staticmethod
@@ -441,18 +459,75 @@ class Ballot:
     def write_receipt_csv(self, lines, config, receipt_file=""):
         """Write out the voter's ballot receipt"""
         if not receipt_file:
-            receipt_file = Ballot.gen_receipt_location(config, self.ballot_subdir)
+            receipt_file = Ballot.gen_receipt_location(
+                config, self.ballot_subdir, "", "csv"
+            )
         # The parent directory better exist or something is wrong
         with open(receipt_file, "w", encoding="utf8") as outfile:
             for line in lines:
                 outfile.write(f"{line}\n")
         return receipt_file
 
+    # pylint: disable=too-many-locals
+    # pylint: disable=too-many-arguments
+    def write_receipt_md(
+        self,
+        lines: list,
+        config: dict,
+        receipt_branch: str,
+        qr_file: str = "",
+        qr_url: str = "",
+    ) -> str:
+        """Write out the voter's ballot receipt as a markdown table with hyperlinks"""
+        receipt_file = Ballot.gen_receipt_location(
+            config, self.ballot_subdir, receipt_branch, "md"
+        )
+        if qr_file:
+            receipt_file = receipt_file.rstrip(".md") + "-qr.md"
+        url_root = "/".join(
+            [
+                Globals.get("QR_ENDPOINT_ROOT"),
+                os.path.basename(config.get("git_rootdir")),
+                "commit",
+            ]
+        )
+        # The directory will rarely exist in this case as receipt_file
+        # will be the first file to be placed there
+        if not os.path.isdir(
+            os.path.dirname(
+                os.path.dirname(os.path.dirname(os.path.dirname(receipt_file)))
+            )
+        ):
+            raise OSError(
+                f"the receipt markdown file is being placed someplace outside the expected tree"
+                f"{receipt_file}"
+            )
+        os.makedirs(os.path.dirname(receipt_file), exist_ok=True)
+        with open(receipt_file, "w", encoding="utf8") as outfile:
+            if qr_file:
+                # add the voter's QR code to the markdown
+                outfile.write(f"![{qr_url}]({qr_file} 'Ballot Voucer')\n\n")
+            header = ""
+            for col in lines[0].split(","):
+                uid, title = col.split(" - ", 1)
+                header += "| " + uid[1:] + "<br>" + title[:-1] + " "
+            outfile.write(f"| Index {header}|\n")
+            outfile.write("|:---:" * len(lines[1].split(",")) + "|:---:|\n")
+            for index, line in enumerate(lines[1:]):
+                newline = ""
+                for dig in line.split(","):
+                    if qr_file:
+                        newline += f"| [{dig[0:8]}...]({url_root}/{dig}) "
+                    else:
+                        newline += f"| [<sub><sup>{dig}</sup></sub>]({url_root}/{dig}) "
+                outfile.write(f"| {index + 1} {newline}|\n")
+        return receipt_file
+
     def read_receipt_csv(self, config, receipt_file="", address=""):
         """Read the voter's ballot receipt"""
         if not receipt_file:
             receipt_file = Ballot.gen_receipt_location(
-                config, address.get("ballot_subdir")
+                config, address.get("ballot_subdir"), "", "cvs"
             )
         # The parent directory better exist or something is wrong
         lines = []

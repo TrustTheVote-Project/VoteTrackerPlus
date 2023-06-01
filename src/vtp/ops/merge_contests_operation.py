@@ -44,8 +44,60 @@ class MergeContestsOperation(Operation):
     description (immediately below this) in the source file.
     """
 
+    def merge_receipt_branch(self, branch: str, remote: bool):
+        """Merge a specific receipt branch"""
+        # This command is duplicate from merge_receipt_branch below
+        contest_file = Shellout.run(
+            ["git", "diff-tree", "--no-commit-id", "-r", "--name-only", branch],
+            verbosity=self.verbosity,
+            capture_output=True,
+            text=True,
+            check=True,
+        ).stdout.strip()
+        # This command is duplicate from merge_receipt_branch below
+        if not contest_file:
+            logging.error(
+                "Error - (receipt) "
+                "'git diff-tree --no-commit-d -r --name-only %s' returned no files."
+                "  Skipping",
+                branch,
+            )
+            return
+        # For receipts the content stays intact AND the branch is
+        # unique, so there should never be a conflict on the branch -
+        # it should always successfully auto-merge as there are not
+        # file overlaps.
+        Shellout.run(
+            ["git", "merge", branch],
+            printonly=self.printonly,
+            verbosity=self.verbosity,
+        )
+        Shellout.run(["git", "push", "origin", "main"], self.printonly, check=True)
+        # Delete the local and remote branch if this is a local branch
+        if not remote:
+            Shellout.run(
+                ["git", "push", "origin", "-d", branch],
+                printonly=self.printonly,
+                verbosity=self.verbosity,
+                check=True,
+            )
+            Shellout.run(
+                ["git", "branch", "-d", branch],
+                printonly=self.printonly,
+                verbosity=self.verbosity,
+                check=True,
+            )
+        else:
+            # otherwise just delete the remote
+            Shellout.run(
+                ["git", "push", "origin", "-d", branch.removeprefix("origin/")],
+                printonly=self.printonly,
+                verbosity=self.verbosity,
+                check=True,
+            )
+
     def merge_contest_branch(self, branch: str, remote: bool):
-        """Merge a specific branch"""
+        """Merge a specific contest branch"""
         # If the VTP server is processing contests from different
         # voting centers, then the contest.json could be in different
         # locations on different branches.
@@ -63,13 +115,15 @@ class MergeContestsOperation(Operation):
         # file to merge - pass.
         if not contest_file:
             logging.error(
-                "Error - 'git diff-tree --no-commit-d -r --name-only %s' returned no files."
+                "Error - (contest) "
+                "'git diff-tree --no-commit-d -r --name-only %s' returned no files."
                 "  Skipping",
                 branch,
             )
             return
-        # Merge the branch / file.  Note - there will always be a conflict
-        # so this command will always return non zero
+        # Merge the branch / file.  Note - for contests there will
+        # always be a conflict so this command will always return non
+        # zero
         Shellout.run(
             ["git", "merge", "--no-ff", "--no-commit", branch],
             printonly=self.printonly,
@@ -177,6 +231,7 @@ class MergeContestsOperation(Operation):
         flush: bool = False,
         remote: bool = False,
         minimum_cast_cache: int = 100,
+        style: str = "contest",
     ):
         """
         Main function - see -h for more info.  Note that the merge
@@ -218,7 +273,10 @@ class MergeContestsOperation(Operation):
                 check=True,
             )
             if branch:
-                self.merge_contest_branch(branch, remote)
+                if style == "contest":
+                    self.merge_contest_branch(branch, remote)
+                else:
+                    self.merge_receipt_branch(branch, remote)
                 logging.info("Merged '%s'", branch)
                 return
             # Get the pending CVR branches

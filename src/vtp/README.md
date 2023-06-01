@@ -113,7 +113,16 @@ If using conda:
 $ conda activate vtp.01
 ```
 
-### 4.5) Running a mock election
+### 4.5) Odds and Ends
+
+As VoteTrackerPlus leverages git, one must have a git "user.name" and "user.email" defined somewhere.  One way to accomplish this is the following:
+
+```bash
+$ git config --global user.email "you@example.com"
+$ git config --global user.name "your name"
+```
+
+### 4.6) Running a mock election
 
 To run a mock election, run the setup_vtp_demo.py script (which per python's local install described above is installed in the python environment as _setup-vtp-demo_).  This script will nominally create a mock election with four VTP scanner _apps_ and one VTP tabulation server _app_ as if all ballots were being cast in a single voting center with four separate and independent ballot scanners.  By default it will place the git repos in /opt/VotetrackerPlus with the 5 clients (the four scanner apps and one server app) in the _clients_ folder with the two local git upstream bare repositories in the _tabulation-server_ folder.
 
@@ -316,7 +325,7 @@ Final results for contest U.S. Senate (uid=0001):
 ```
 FYI - with -v4 and RCV contests, how each specific voter's ranked choice selection gets re-directed from their last place loosing candidate to their next choice candidate is printed, offering full transparency to RVC contests.  See [../../docs/E2EV.md][E2EV.md] for more details.
 
-### 4.6) Development cycle
+## 5) Development cycle
 
 New development should use a feature branch directly in this repo.  New ElectionData repositories can be created at will.  Signed commits are required in both repos.
 
