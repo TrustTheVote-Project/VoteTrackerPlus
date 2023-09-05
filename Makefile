@@ -36,6 +36,7 @@ default:
 	@echo "pylint                  - runs pylint"
 	@echo "pytest                  - runs pytest"
 	@echo "etags                   - constructs an emacs tags table"
+	@echo "requirements.txt        - updates the python requirements file"
 	@echo ""
 	@echo "See ${BUILD_DIR}/README.md for more details and info"
 
