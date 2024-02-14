@@ -10,7 +10,7 @@ To run your own [CLI](https://en.wikipedia.org/wiki/Command-line_interface) base
 
 ## 1) Overview
 
-VoteTracker+ is a distributed, open-source vote and [Cast Vote Record][[Cast Vote Record]] (CVR) integrity and tracking system to support public [elections](https://en.wikipedia.org/wiki/Election).  It enables verifiable, accurate, secure and transparent elections with a complete [End-to-End Verifiable](https://en.wikipedia.org/wiki/End-to-end_auditable_voting_systems) (E2EV) solution - see [docs/E2EV.md][E2EV.md].  VoteTracker+ maximizes the transparency and trust of an election throughout the election process by:
+VoteTracker+ is a distributed, open-source vote and [Cast Vote Record][Cast Vote Record] (CVR) integrity and tracking system to support public [elections](https://en.wikipedia.org/wiki/Election).  It enables verifiable, accurate, secure and transparent elections with a complete [End-to-End Verifiable](https://en.wikipedia.org/wiki/End-to-end_auditable_voting_systems) (E2EV) solution - see [docs/E2EV.md][E2EV.md].  VoteTracker+ maximizes the transparency and trust of an election throughout the election process by:
 
 * allowing each voter to verify that their ballot is electronically cast, collected, and counted as intended
 * allowing each voter and all election officials to verify the tally of all the ballot questions
