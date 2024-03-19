@@ -677,5 +677,4 @@ class AcceptBallotOperation(Operation):
         # list[list[str]]. So convert it first.
         return self.convert_csv_to_2d_list(ballot_check), index, qr_img
 
-
 # EOF

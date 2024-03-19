@@ -17,6 +17,10 @@
 
 """Base class of operations."""
 
+# standard imports
+import re
+
+# local imports
 from vtp.core.common import Common
 
 
@@ -35,21 +39,35 @@ class Operation:
         verbosity: int = 3,
         printonly: bool = False,
         stdout_printing: bool = True,
+        style: str = "text",
     ):
         self.election_data_dir = election_data_dir
         self.printonly = printonly
         self.verbosity = verbosity
+        self.style = style
         # Configure logging
         Common.configure_logging(verbosity)
         # Validate the election_data_dir arg here and now
         Common.verify_election_data_dir(self.election_data_dir)
         # Configure printing
         self.stdout_printing = stdout_printing
-        self.stdout_output = []
+        if style == "html":
+            self.stdout_output = ["<p>"]
+        else:
+            self.stdout_output = []
 
     def imprimir(self, a_line: str, incoming_printlevel: int = 3):
-        """Either prints a line of text to STDOUT or appends it to a list"""
+        """Either prints a line of text to STDOUT or appends it to a list,
+        in which case the output needs to be retrieved."""
+        regex = re.compile(r"([0-9a-fA-F])")
         if incoming_printlevel <= self.verbosity:
+            if self.style == "html":
+                # If self.style == "html", html-ize the line
+                # - add digest links for digests
+                # - add line breaks per line
+                # - convert an array to a table with css class=imprimir
+                # ZZZ
+                a_line = regex.sub('<a href="foo" target="_blank">' + match.group + "</a>", a_line)
             if self.stdout_printing:
                 print(a_line)
             else:

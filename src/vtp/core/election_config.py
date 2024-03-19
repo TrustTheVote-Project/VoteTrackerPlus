@@ -250,16 +250,26 @@ class ElectionConfig:
         else:
             self.git_rootdir = os.path.realpath(election_data_dir)
         with Shellout.changed_cwd(self.git_rootdir):
+            # the path
             result = Shellout.run(
                 ["git", "rev-parse", "--show-toplevel"],
                 check=True,
                 capture_output=True,
                 text=True,
             )
+            result2 = Shellout.run(
+                ["git", "rev-list", "--max-parents=0", "HEAD"],
+                check=True,
+                capture_output=True,
+                text=True,
+            )
+
+        # Check result
         if result.stdout == "":
             raise EnvironmentError(
                 "Cannot determine workspace top level via 'git rev-parse'"
             )
+        # Set values based on result
         self.git_rootdir = result.stdout.strip()
         self.root_config_file = os.path.join(
             self.git_rootdir,
@@ -270,22 +280,36 @@ class ElectionConfig:
             Globals.get("ADDRESS_MAP_FILE"),
         )
         self.parsed_configs = ["."]
-        self.digraph = networkx.DiGraph()
         self.uid = None
-        # Also determine the initial commit to branch the CVRs and
+
+        # Check result2 - determine the initial commit to branch the CVRs and
         # RECEIPTS from
-        with Shellout.changed_cwd(self.git_rootdir):
-            result = Shellout.run(
-                ["git", "rev-list", "--max-parents=0", "HEAD"],
-                check=True,
-                capture_output=True,
-                text=True,
-            )
-        if result.stdout == "":
+        if result2.stdout == "":
             raise EnvironmentError(
                 "Cannot determine workspace initial commit via 'git rev-list'"
             )
-        self.git_initial_commit = result.stdout.strip()
+        self.git_initial_commit = result2.stdout.strip()
+
+        # Check ELECTION_NAME
+        if Globals.get("ELECTION_NAME") == "":
+            # the name of the remote election data repo
+            with Shellout.changed_cwd(self.git_rootdir):
+                result = Shellout.run(
+                    ["git", "remote", "get-url", "origin"],
+                    check=True,
+                    capture_output=True,
+                    text=True,
+                )
+            if os.path.splitext(os.path.basename(result.stdout.strip()))[1] == ".git":
+                Globals.set_ELECTION_NAME(os.path.splitext(os.path.basename(result.stdout))[0])
+            else:
+                raise EnvironmentError(
+                    "Cannot determine workspace origin remote name via 'git remote get-url origin'"
+                    )
+
+        # With the above set, can spend the time to determine the election data
+        # network graph
+        self.digraph = networkx.DiGraph()
 
     def get(self, name):
         """A generic getter - will raise a NameError if name is not defined"""

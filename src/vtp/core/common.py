@@ -104,12 +104,21 @@ class Globals:
         "DEFAULT_RUNTIME_LOCATION": "/opt/VoteTrackerPlus/demo.01",
         # Default git web service endpoint for QR codes
         "QR_ENDPOINT_ROOT": "https://github.com/TrustTheVote-Project",
+        # The election date-time for all ElectionData commits
+        "ELECTION_DATETIME": "2022-01-01T12:00:00",
+        # The arbitrary election data string
+        "ELECTION_NAME": "",
     }
 
     @staticmethod
     def get(name):
         """A generic getter"""
         return Globals._config[name]
+
+    @staticmethod
+    def set_ELECTION_NAME(value):
+        """Set the ELECTION_NAME"""
+        Globals._config["ELECTION_NAME"] = value
 
 
 class Common:
