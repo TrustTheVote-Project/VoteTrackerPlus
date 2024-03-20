@@ -452,7 +452,7 @@ class Tally:
             return "True" if pick else "False"
         raise ValueError(f"unknown/unsupported contest choices data structure ({pick})")
 
-    def tally_a_plurality_contest(self, contest, provenance_digest):
+    def tally_a_plurality_contest(self, contest, provenance_digest, vote_count):
         """plurality tally"""
         for count in range(self.defaults["max"]):
             if 0 <= count < len(contest["selection"]):
@@ -467,12 +467,12 @@ class Tally:
                 self.selection_counts[choice] += 1
                 self.vote_count += 1
                 if provenance_digest:
-                    self.imprimir(f"Counted {provenance_digest}: choice={choice}", 2)
+                    self.imprimir(f"Counted {provenance_digest} as vote {vote_count}: choice={choice}", 2)
             else:
                 if provenance_digest:
                     self.imprimir(f"No-vote {provenance_digest}: BLANK", 2)
 
-    def tally_a_rcv_contest(self, contest, provenance_digest):
+    def tally_a_rcv_contest(self, contest, provenance_digest, vote_count):
         """RCV tally"""
         if len(contest["selection"]):
             # the voter can still leave a RCV contest blank
@@ -484,7 +484,7 @@ class Tally:
             self.selection_counts[choice] += 1
             self.vote_count += 1
             if provenance_digest:
-                self.imprimir(f"Counted {provenance_digest}: choice={choice}", 2)
+                self.imprimir(f"Counted {provenance_digest} as vote {vote_count}: choice={choice}", 2)
         else:
             if provenance_digest:
                 self.imprimir(f"No vote {provenance_digest}: BLANK", 2)
@@ -771,7 +771,9 @@ class Tally:
     def parse_all_contests(self, contest_batch: list, checks: list):
         """Will parse all the contests validating each"""
         errors = {}
+        vote_count = 0
         for a_git_cvr in contest_batch:
+            vote_count += 1
             contest = a_git_cvr["CVR"]
             digest = a_git_cvr["digest"]
             Contest.check_cvr_blob_syntax(contest, digest=digest)
@@ -791,17 +793,17 @@ class Tally:
                         "is present in digest"
                     )
             # Tally the contest - this is just the first pass of a
-            # tally.  It just so happens that with pluraity tallies
-            # the tally can be completed with s single pass over over
+            # tally.  It just so happens that with plurality tallies
+            # the tally can be completed with a single pass over
             # the CVRs.  And that can be done here.  But with more
             # complicated tallies such as RCV, the additional passes
             # are done outside of this for loop.
             if contest["tally"] == "plurality":
-                self.tally_a_plurality_contest(contest, provenance_digest)
+                self.tally_a_plurality_contest(contest, provenance_digest, vote_count)
             elif contest["tally"] == "rcv":
                 # Since this is the first round on a rcv tally, just
                 # grap the first selection
-                self.tally_a_rcv_contest(contest, provenance_digest)
+                self.tally_a_rcv_contest(contest, provenance_digest, vote_count)
             else:
                 # This code block should never be executed as the
                 # constructor or the Validate values clause above will

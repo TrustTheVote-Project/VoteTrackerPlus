@@ -61,9 +61,11 @@ class TallyContestsOperation(Operation):
         # as a first pass it is easier to just perform a git log across
         # all the contests and then filter later for the contest of
         # interest than to try to create a git grep query against the CVR
-        # payload.
+        # payload.  Note - --reverse is set so to go in parent to child order
+        # (though either order is valid, voters probably will understand
+        # parent to child order better)
         contest_batches = self.cvr_parse_git_log_output(
-            ["git", "log", "--topo-order", "--no-merges", "--pretty=format:%H%B"],
+            ["git", "log", "--topo-order", "--no-merges", "--reverse", "--pretty=format:%H%B"],
             the_election_config,
         )
 
