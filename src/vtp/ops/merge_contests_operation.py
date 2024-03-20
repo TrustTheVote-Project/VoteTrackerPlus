@@ -24,7 +24,6 @@ for the CVR stays intact in a Merkle tree sense.
 """
 
 # Standard imports
-import logging
 import os
 import random
 import re
@@ -56,11 +55,9 @@ class MergeContestsOperation(Operation):
         ).stdout.strip()
         # This command is duplicate from merge_receipt_branch below
         if not contest_file:
-            logging.error(
-                "Error - (receipt) "
-                "'git diff-tree --no-commit-d -r --name-only %s' returned no files."
-                "  Skipping",
-                branch,
+            self.imprimir(
+                f"(receipt) 'git diff-tree --no-commit-d -r --name-only {branch}' returned no files.  Skipping",
+                1,
             )
             return
         # For receipts the content stays intact AND the branch is
@@ -114,11 +111,9 @@ class MergeContestsOperation(Operation):
         # test condition in that if there is no file to merge, there is no
         # file to merge - pass.
         if not contest_file:
-            logging.error(
-                "Error - (contest) "
-                "'git diff-tree --no-commit-d -r --name-only %s' returned no files."
-                "  Skipping",
-                branch,
+            self.imprimir(
+                f"(contest) 'git diff-tree --no-commit-d -r --name-only {branch}' returned no files.  Skipping",
+                1,
             )
             return
         # Merge the branch / file.  Note - for contests there will
@@ -158,8 +153,9 @@ class MergeContestsOperation(Operation):
         )
         # Note - apparently git places the commit msg on STDERR - hide it
         if not self.printonly:
-            logging.info(
-                "Running \"git commit -m 'auto commit - thank you for voting'\""
+            self.imprimir(
+                "Running \"git commit -m 'auto commit - thank you for voting'\"",
+                3,
             )
         Shellout.run(
             ["git", "commit", "-m", "auto commit - thank you for voting"],
@@ -206,14 +202,15 @@ class MergeContestsOperation(Operation):
             if flush:
                 count = len(batch)
             else:
-                logging.info(
-                    "Contest %s not merged - only %s available", uid, len(batch)
+                self.imprimir(
+                    f"Contest {uid} not merged - only {len(batch)} available",
+                    3,
                 )
                 return 0
         else:
             count = len(batch) - minimum_cast_cache
         loop = count
-        logging.info("Merging %s contests for contest %s", count, uid)
+        self.imprimir(f"Merging {count} contests for contest {uid}", 3)
         while loop:
             pick = random.randrange(len(batch))
             branch = batch[pick]
@@ -221,7 +218,7 @@ class MergeContestsOperation(Operation):
             # End of loop maintenance
             del batch[pick]
             loop -= 1
-        logging.debug("Merged %s %s contests", count, uid)
+        self.imprimir(f"Merged {count} {uid} contests", 3)
         return count
 
     # pylint: disable=duplicate-code
@@ -277,7 +274,7 @@ class MergeContestsOperation(Operation):
                     self.merge_contest_branch(branch, remote)
                 else:
                     self.merge_receipt_branch(branch, remote)
-                logging.info("Merged '%s'", branch)
+                self.imprimir(f"Merged '{branch}'", 3)
                 return
             # Get the pending CVR branches
             cmds = ["git", "branch"]
@@ -335,7 +332,7 @@ class MergeContestsOperation(Operation):
                     remote=remote,
                     minimum_cast_cache=minimum_cast_cache,
                 )
-        logging.info("Merged %s contest branches", merged)
+        self.imprimir(f"Merged {merged} contest branches", 3)
 
 
 # EOF

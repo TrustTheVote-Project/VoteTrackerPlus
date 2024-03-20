@@ -20,7 +20,6 @@
 """Logic of operation for showing contests."""
 
 # Standard imports
-import logging
 
 # Project imports
 from vtp.core.common import Shellout
@@ -64,15 +63,13 @@ class ShowContestsOperation(Operation):
         for count, line in enumerate(output_lines):
             digest, commit_type = line.split()
             if commit_type == "missing":
-                logging.error("[ERROR]: missing digest: n=%s digest=%s", count, digest)
+                self.imprimir(f"missing digest: n={count} digest={digest}", 1)
                 error_digests.add(digest)
                 errors += 1
             elif commit_type != "commit":
-                logging.error(
-                    "[ERROR]: invalid digest type: n=%s digest=%s type=%s",
-                    count,
-                    digest,
-                    commit_type,
+                self.imprimir(
+                    f"invalid digest type: n={count} digest={digest} type={commit_type}",
+                    1
                 )
                 error_digests.add(digest)
                 errors += 1

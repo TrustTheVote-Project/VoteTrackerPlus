@@ -23,7 +23,6 @@ or the README.md file in the src/vtp directory for details.
 """
 
 # Standard imports
-import logging
 import os
 import re
 import secrets
@@ -108,9 +107,9 @@ class SetupVtpDemoOperation(Operation):
                         check=True,
                     )
             else:
-                logging.debug("Entering dir (%s):", clone_dir)
-                logging.info("Running git clone %s", upstream_url)
-                logging.debug("Leaving dir (%s):", clone_dir)
+                self.imprimir(f"Entering dir ({clone_dir}):", 5)
+                self.imprimir(f"Running git clone {upstream_url}", 3)
+                self.imprimir(f"Leaving dir ({clone_dir}):", 5)
 
     def create_a_guid_workspace_folder(self, location: str):
         """creates guid workspace"""
@@ -127,7 +126,7 @@ class SetupVtpDemoOperation(Operation):
         path2 = os.path.join(path1, folder2)
         if not self.printonly:
             try:
-                logging.debug("creating (%s) if it does not exist", path1)
+                self.imprimir(f"creating ({path1}) if it does not exist", 5)
                 os.mkdir(path1)
             except FileExistsError:
                 pass
@@ -142,7 +141,7 @@ class SetupVtpDemoOperation(Operation):
             while True:
                 count += 1
                 try:
-                    logging.debug("creating (%s)", path2)
+                    self.imprimir(f"creating (path2)", 5)
                     os.mkdir(path2)
                 except FileExistsError as exc:
                     if count > 3:
@@ -156,13 +155,13 @@ class SetupVtpDemoOperation(Operation):
                 # success
                 break
         else:
-            logging.debug("creating (%s) if it does not exist", path1)
-            logging.debug("creating (%s) if it does not exist", path2)
+            self.imprimir(f"creating ({path1}) if it does not exist", 5)
+            self.imprimir(f"creating (path2) if it does not exist", 5)
 
         # Clone the repo from the local clone, not the GitHub remote clone
         self.create_client_repos([path2], self.tabulation_local_upstream_absdir)
         # return the GUID
-        logging.debug("returning %s", guid)
+        self.imprimir(f"returning guid", 5)
         return guid
 
     # pylint: disable=duplicate-code
@@ -173,9 +172,6 @@ class SetupVtpDemoOperation(Operation):
         location: str = Globals.get("DEFAULT_RUNTIME_LOCATION"),
     ) -> str:
         """Main function - see -h for more info"""
-
-        # Configure logging
-        Common.configure_logging(self.verbosity)
 
         # Create a VTP ElectionData object if one does not already exist
         the_election_config = ElectionConfig.configure_election(self.election_data_dir)
@@ -222,7 +218,7 @@ class SetupVtpDemoOperation(Operation):
         ]:
             full_dir = os.path.join(location, subdir)
             if not os.path.isdir(full_dir):
-                logging.debug("creating (%s)", full_dir)
+                self.imprimir(f"creating ({full_dir})", 5)
                 if not self.printonly:
                     os.mkdir(full_dir)
 
@@ -236,9 +232,9 @@ class SetupVtpDemoOperation(Operation):
                     check=True,
                 )
         else:
-            logging.debug("Entering dir (%s):", bare_clone_path)
-            logging.info("Running git clone --bare %s", election_data_remote_url)
-            logging.debug("Leaving dir (%s):", bare_clone_path)
+            self.imprimir(f"Entering dir (bare_clone_path):", 5)
+            self.imprimir(f"Running git clone --bare election_data_remote_url", 3)
+            self.imprimir(f"Leaving dir ({bare_clone_path}):", 5)
 
         # Third create the mock scanner client subdirs
         clone_dirs = []
@@ -249,7 +245,7 @@ class SetupVtpDemoOperation(Operation):
                 "scanner." + f"{count:02d}",
             )
             if not os.path.isdir(full_dir):
-                logging.debug("creating (%s)", full_dir)
+                self.imprimir(f"creating ({full_dir})", 5)
                 if not self.printonly:
                     os.mkdir(full_dir)
             clone_dirs.append(full_dir)
@@ -261,7 +257,7 @@ class SetupVtpDemoOperation(Operation):
             "server",
         )
         if not os.path.isdir(full_dir):
-            logging.debug("creating (%s)", full_dir)
+            self.imprimir(f"creating ({full_dir})", 5)
             if not self.printonly:
                 os.mkdir(full_dir)
         clone_dirs.append(full_dir)

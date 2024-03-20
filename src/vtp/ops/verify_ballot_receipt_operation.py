@@ -21,7 +21,6 @@
 
 # Standard imports
 import json
-import logging
 import re
 
 # Project imports
@@ -268,8 +267,9 @@ class VerifyBallotReceiptOperation(Operation):
                     )
                     continue
                 valid_digests.append(digest)
-                logging.debug(
-                    "%s", json.dumps(requested_row[digest], indent=5, sort_keys=True)
+                self.imprimir(
+                    f"{json.dumps(requested_row[digest], indent=5, sort_keys=True)}",
+                    5,
                 )
             if show_cvr:
                 # Show the CVRs of the row

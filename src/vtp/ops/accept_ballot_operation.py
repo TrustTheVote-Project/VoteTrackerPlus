@@ -27,7 +27,6 @@ operation of merging the pushed CVR branches to the main branch.
 
 # Standard imports
 import csv
-import logging
 import os
 import random
 import secrets
@@ -283,7 +282,7 @@ class AcceptBallotOperation(Operation):
         a csv file with a header line with one row in particular being the
         voter's.
         """
-        logging.debug("Ballot's digests:\n%s", contest_receipts)
+        self.imprimir(f"Ballot's digests:\n{contest_receipts}", 3)
         # Shuffled the unmerged_cvrs (an inplace shuffle) - only need to
         # shuffle the uids for this ballot.
         #    import pdb; pdb.set_trace()
@@ -291,20 +290,19 @@ class AcceptBallotOperation(Operation):
         for uid in contest_receipts:
             # if there are no unmerged_cvrs, just warn
             if uid not in unmerged_cvrs:
-                logging.warning("Warning - no unmerged_cvrs yet for contest %s", uid)
+                self.imprimir(f"no unmerged_cvrs yet for contest {uid}", 2)
                 skip_receipt = True
                 continue
             if len(unmerged_cvrs[uid]) < Globals.get("BALLOT_RECEIPT_ROWS"):
-                logging.warning(
-                    "Warning - not enough unmerged CVRs (%s) to print receipt for contest %s",
-                    len(unmerged_cvrs[uid]),
-                    uid,
+                self.imprimir(
+                    f"not enough unmerged CVRs ({len(unmerged_cvrs[uid])}) to print receipt for contest {uid}",
+                    2,
                 )
                 skip_receipt = True
             random.shuffle(unmerged_cvrs[uid])
         # Create the ballot receipt
         if skip_receipt:
-            logging.warning("Skipping ballot receipt due to lack of unmerged CVRs")
+            self.imprimir(f"Skipping ballot receipt due to lack of unmerged CVRs", 2)
             return [], 0, ""
 
         ballot_receipt = []
@@ -645,7 +643,7 @@ class AcceptBallotOperation(Operation):
                     verbosity=self.verbosity,
                     printonly=self.printonly,
                 )
-                logging.debug("Calling MergeContestsOperation.run (contest)")
+                self.imprimir("Calling MergeContestsOperation.run (contest)", 5)
                 mco.run(
                     branch="origin/" + branch,
                     flush=False,
@@ -660,7 +658,7 @@ class AcceptBallotOperation(Operation):
             # If merging also merge the receipt file
             # if receipt_file_csv and version_receipts:
             #     # ZZZ code to merge
-            #     logging.debug("Calling MergeContestsOperation.run (receipt)")
+            #     self.imprimir(f"Calling MergeContestsOperation.run (receipt)", 5)
             #     mco.run(
             #         branch="origin/" + receipt_branch,
             #         flush=False,
@@ -669,8 +667,8 @@ class AcceptBallotOperation(Operation):
             #     )
 
         # For now, print the location and the voter's index
-        print(f"#### Receipt file: {receipt_file_csv}")
-        print(f"#### Voter's row: {index}")
+        self.imprimir(f"#### Receipt file: {receipt_file_csv}", 0)
+        self.imprimir(f"#### Voter's row: {index}", 0)
         # And return them.  Note that ballot_check is in csv format
         # when writing to a file.  However, when returning is it more
         # convenient for it to be normal 2-D array -

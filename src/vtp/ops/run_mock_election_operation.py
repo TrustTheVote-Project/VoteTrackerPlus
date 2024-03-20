@@ -23,7 +23,6 @@ or the README.md file in the src/vtp directory for details.
 """
 
 # Standard imports
-import logging
 import os
 import time
 
@@ -89,17 +88,14 @@ class RunMockElectionOperation(Operation):
             count += 1
             for blank_ballot in blank_ballots:
                 if duration:
-                    logging.info(
-                        "Iteration %s - processing %s",
-                        count,
-                        blank_ballot,
+                    self.imprimir(
+                        f"Iteration {count} - processing {blank_ballot}",
+                        3,
                     )
                 else:
-                    logging.info(
-                        "Iteration %s of %s - processing %s",
-                        count,
-                        iterations,
-                        blank_ballot,
+                    self.imprimir(
+                        f"Iteration {count} of {iterations} - processing {blank_ballot}",
+                        3,
                     )
                 # - cast a ballot
                 #            import pdb; pdb.set_trace()
@@ -264,7 +260,7 @@ class RunMockElectionOperation(Operation):
             )
             if iterations and count >= iterations:
                 break
-            logging.info("Sleeping for 10 (iteration=%s)", count)
+            self.imprimir(f"Sleeping for 10 (iteration={count})", 3)
             time.sleep(10)
             elapsed_time = time.time() - start_time
             if not iterations and elapsed_time > seconds:

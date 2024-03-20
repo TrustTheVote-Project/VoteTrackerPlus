@@ -274,7 +274,7 @@ class CastBallotOperation(Operation):
 
         # If still here, prompt the user to vote for each contest
         contests = self.loop_over_contests(a_ballot, demo_mode)
-        logging.debug("And the ballot looks like:\n%s", pprint.pformat(a_ballot.dict()))
+        self.imprimir(f"And the ballot looks like:\n{pprint.pformat(a_ballot.dict())}", 5)
 
         # Validate at least something
         a_ballot.verify_cast_ballot_data(the_election_config)
@@ -291,10 +291,10 @@ class CastBallotOperation(Operation):
             a_ballot.get("ballot_node"), "config"
         )["voting centers"]
         for vote_center in voting_centers:
-            logging.info(
-                "Casting a %s contest ballot at VC %s", contests.len(), vote_center
+            self.imprimir(
+                f"Casting a {contests.len()} contest ballot at VC {vote_center}", 3
             )
-            logging.info("Cast ballot file: %s", ballot_file)
+            self.imprimir(f"Cast ballot file: {ballot_file}", 3)
         # return the cast ballot location
         return ballot_file
 

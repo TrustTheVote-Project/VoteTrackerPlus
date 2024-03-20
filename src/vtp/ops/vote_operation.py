@@ -20,7 +20,6 @@
 """Logic of operation for voting."""
 
 # Standard imports
-import logging
 
 # Project imports
 from vtp.core.address import Address
@@ -75,7 +74,7 @@ class VoteOperation(Operation):
             verbosity=self.verbosity,
             printonly=self.printonly,
         )
-        logging.debug("Calling CastBallotOperation.run")
+        self.imprimir("Calling CastBallotOperation.run", 5)
         a_cast_ballot_operation.run(
             an_address=an_address,
             blank_ballot=blank_ballot,
@@ -87,7 +86,7 @@ class VoteOperation(Operation):
             printonly=self.printonly,
         )
         # return what accept_ballot returns
-        logging.debug("Calling AcceptBallotOperation.run")
+        self.imprimir("Calling AcceptBallotOperation.run", 5)
         a_accept_ballot_operation.run(
             an_address=an_address,
             cast_ballot=blank_ballot,

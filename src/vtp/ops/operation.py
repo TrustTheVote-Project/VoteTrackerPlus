@@ -55,7 +55,7 @@ class Operation:
         # systems became a problem, and the logging package was dropped.
 
         # The verbosity levels:
-        #     0: CRITICAL  - [CRITICAL] is prepended to the line
+        #     0: ALWAYS    - always print the line
         #     1: ERROR     - [ERROR]    is prepended to the line
         #     2: WARNING   - [WARNING]  is prepended to the line
         #     3: INFO      - minimal info

@@ -45,9 +45,6 @@ class GenerateAllBlankBallotsOperation(Operation):
     def run(self):
         """Main function - see -h for more info"""
 
-        # Configure logging
-        Common.configure_logging(self.verbosity)
-
         # Create a VTP ElectionData object if one does not already exist
         the_election_config = ElectionConfig.configure_election(self.election_data_dir)
 
