@@ -18,16 +18,14 @@
 """The VTP ElectionConfig class - everything needed to parse the config.yaml tree."""
 
 # standard imports
-import logging
 import os
-import os.path
 import re
 
 import networkx
 import yaml
 
 # local imports
-from .common import Common, Globals, Shellout
+from .common import Common, Globals
 from .contest import Contest
 
 
@@ -106,7 +104,7 @@ class ElectionConfig:
     _election_data = None
 
     @staticmethod
-    def configure_election(election_data_dir: str):
+    def configure_election(operation_self, election_data_dir: str):
         """
         Return the existing ElectionData or parse a new one into
         existence.  This is the entrypoint/wrapper into/around the
@@ -118,7 +116,7 @@ class ElectionConfig:
         # election_data_dir.  It will call git rev-parse but at the
         # moment that is required to determine the exact root of the
         # ElectionData tree (as the CWD can move around etc).
-        incoming_ec = ElectionConfig(election_data_dir)
+        incoming_ec = ElectionConfig(operation_self, election_data_dir)
         # Now, if the git_rootdir is different than the previous
         # constructor call, parse the new tree even though the EDF is
         # the same.  Two design notes: 1) if the git_rootdir is stored
@@ -200,40 +198,7 @@ class ElectionConfig:
                         f"supported: {bad_keys}"
                     )
 
-    @staticmethod
-    def read_address_map(filename):
-        """
-        Read the address_map yaml file return the dictionary but
-        only if the file exists.  Check the syntax.
-        """
-        if os.path.isfile(filename):
-            logging.debug("Reading %s", filename)
-            with open(filename, "r", encoding="utf8") as map_file:
-                this_address_map = yaml.load(map_file, Loader=yaml.BaseLoader)
-            # sanity-check it
-            ElectionConfig.check_address_map_syntax(this_address_map, filename)
-            return this_address_map
-        return {}
-
-    @staticmethod
-    def read_config_file(filename):
-        """
-        Read the confgi yaml file return the dictionary and check the syntax.
-        """
-        logging.debug("Reading %s", filename)
-        with open(filename, "r", encoding="utf8") as config_file:
-            config = yaml.load(config_file, Loader=yaml.BaseLoader)
-        # sanity-check it
-        ElectionConfig.check_config_syntax(config, filename)
-        # should really sanity check the contests too
-        if "contests" in config:
-            for contest in config["contests"]:
-                Contest.check_contest_blob_syntax(contest, filename)
-                Contest.set_uid(contest, ".")
-        #        import pdb; pdb.set_trace()
-        return config
-
-    def __init__(self, election_data_dir: str = "."):
+    def __init__(self, operation_self, election_data_dir: str = "."):
         """Constructor for ElectionConfig.  If no election_data_dir is
         supplied, then the CWD _MUST_ be in the current ElectionData
         tree (the election_data_dir) where the election is happening -
@@ -243,21 +208,25 @@ class ElectionConfig:
         to read the tree.
         """
 
+        # Need the (outer) operation_self as that contains the shellOut
+        # environment
+        self.operation_self = operation_self
+
         # Determine the absolute PATH to the election_data_dir and
         # store the value in self.git_rootdir.
         if election_data_dir in ["", ".", None]:
             self.git_rootdir = os.getcwd()
         else:
             self.git_rootdir = os.path.realpath(election_data_dir)
-        with Shellout.changed_cwd(self.git_rootdir):
+        with operation_self.changed_cwd(self.git_rootdir):
             # the path
-            result = Shellout.run(
+            result = operation_self.shellOut(
                 ["git", "rev-parse", "--show-toplevel"],
                 check=True,
                 capture_output=True,
                 text=True,
             )
-            result2 = Shellout.run(
+            result2 = operation_self.shellOut(
                 ["git", "rev-list", "--max-parents=0", "HEAD"],
                 check=True,
                 capture_output=True,
@@ -293,8 +262,8 @@ class ElectionConfig:
         # Check ELECTION_NAME
         if Globals.get("ELECTION_NAME") == "":
             # the name of the remote election data repo
-            with Shellout.changed_cwd(self.git_rootdir):
-                result = Shellout.run(
+            with operation_self.changed_cwd(self.git_rootdir):
+                result = operation_self.shellOut(
                     ["git", "remote", "get-url", "origin"],
                     check=True,
                     capture_output=True,
@@ -376,6 +345,37 @@ class ElectionConfig:
         """Return the serialization of this instance's ElectionConfig dictionary"""
         return str(list(self.get_dag("topo")))
 
+    def read_address_map(self, filename):
+        """
+        Read the address_map yaml file return the dictionary but
+        only if the file exists.  Check the syntax.
+        """
+        if os.path.isfile(filename):
+            self.operation_self.imprimir(f"Reading {filename}", 4)
+            with open(filename, "r", encoding="utf8") as map_file:
+                this_address_map = yaml.load(map_file, Loader=yaml.BaseLoader)
+            # sanity-check it
+            ElectionConfig.check_address_map_syntax(this_address_map, filename)
+            return this_address_map
+        return {}
+
+    def read_config_file(self, filename):
+        """
+        Read the confgi yaml file return the dictionary and check the syntax.
+        """
+        self.operation_self.imprimir(f"Reading {filename}", 4)
+        with open(filename, "r", encoding="utf8") as config_file:
+            config = yaml.load(config_file, Loader=yaml.BaseLoader)
+        # sanity-check it
+        ElectionConfig.check_config_syntax(config, filename)
+        # should really sanity check the contests too
+        if "contests" in config:
+            for contest in config["contests"]:
+                Contest.check_contest_blob_syntax(contest, filename)
+                Contest.set_uid(contest, ".")
+        #        import pdb; pdb.set_trace()
+        return config
+
     # This defunct with the address_map design change - there are no
     # lnnger any such thing as an implicit address include - all
     # address_map includes are now explicit in the address_map.yaml
@@ -410,10 +410,10 @@ class ElectionConfig:
         """
 
         # read the root config and address_map files
-        config = ElectionConfig.read_config_file(self.root_config_file)
+        config = self.read_config_file(self.root_config_file)
 
         # read the root address_map and sanity check that
-        address_map = ElectionConfig.read_address_map(self.root_address_map_file)
+        address_map = self.read_address_map(self.root_address_map_file)
 
         def recursively_parse_tree(subdir, parent_node_name):
             """Something to recursivelty parse the GGO tree"""
@@ -438,7 +438,7 @@ class ElectionConfig:
                             ggo_subdir_abspath, ggo, Globals.get("CONFIG_FILE")
                         )
                         # read the child config
-                        this_config = ElectionConfig.read_config_file(ggo_file)
+                        this_config = self.read_config_file(ggo_file)
 
                         # Do not hit a node twice - it is a config error if so
                         next_subdir = os.path.join(subdir, ggo_kind, ggo)
@@ -453,7 +453,7 @@ class ElectionConfig:
 
                         # Before recursing, read in address_map and add it to the node
                         # Note - reading will check syntax
-                        this_address_map = ElectionConfig.read_address_map(
+                        this_address_map = self.read_address_map(
                             os.path.join(
                                 ggo_subdir_abspath, ggo, Globals.get("ADDRESS_MAP_FILE")
                             )

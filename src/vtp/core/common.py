@@ -20,13 +20,8 @@
 # pylint: disable=too-few-public-methods
 
 # standard imports
-import json
-import logging
 import os
 import re
-import subprocess
-import sys
-from contextlib import contextmanager
 
 
 class Globals:
@@ -124,29 +119,6 @@ class Globals:
 class Common:
     """Common functions without a better home at this time"""
 
-    # logging should only be configured once and only once (until a
-    # logger is set up)
-    _configured = False
-
-    @staticmethod
-    def configure_logging(verbosity):
-        """How VTP is (currently) using logging"""
-        if Common._configured:
-            return
-        verbose = {
-            0: logging.CRITICAL,
-            1: logging.ERROR,
-            2: logging.WARNING,
-            3: logging.INFO,
-            4: logging.DEBUG,
-        }
-        logging.basicConfig(
-            format="%(message)s",
-            level=verbose[verbosity],
-            stream=sys.stdout,
-        )
-        Common._configured = True
-
     @staticmethod
     def verify_election_data_dir(election_data_dir: str):
         """
@@ -233,14 +205,6 @@ class Common:
             )
         return os.path.join(edf_path, dirs[0])
 
-
-# pylint: disable=too-few-public-methods   # ZZZ - remove this later
-class Shellout:
-    """
-    A class to wrap the control & management of shell subprocesses,
-    nominally git commands.
-    """
-
     @staticmethod
     def get_script_name(script, the_election_config):
         """
@@ -255,125 +219,6 @@ class Shellout:
         )
 
     @staticmethod
-    def run(argv, printonly=False, verbosity=3, no_touch_stds=False, **kwargs):
-        """Run a shell command with logging and error handling.  Raises a
-        CalledProcessError if the shell command fails - the caller needs to
-        deal with that.  Can also raise a TimeoutExpired exception.
-
-        Nominally returns a CompletedProcess instance.
-
-        See for example https://docs.python.org/3.9/library/subprocess.html
-        """
-        # Note - it is ok to pass ints and floats down through argv
-        # here, but they need to be individually converted to strings
-        # regardless since _everything_ below wants to see strings.
-        argv_string = [str(arg) for arg in argv]
-        if verbosity >= 3:
-            logging.info('Running "%s"', " ".join(argv_string))
-        if printonly:
-            return subprocess.CompletedProcess(argv_string, 0, stdout="", stderr="")
-        # the caller desides on whether check is set or not
-        # pylint: disable=subprocess-run-check
-        if not no_touch_stds:
-            if "capture_output" not in kwargs:
-                if "stdout" not in kwargs and verbosity < 3:
-                    kwargs["stdout"] = subprocess.DEVNULL
-                if "stderr" not in kwargs and verbosity <= 3:
-                    kwargs["stderr"] = subprocess.DEVNULL
-        if "timeout" not in kwargs:
-            kwargs["timeout"] = Globals.get("SHELL_TIMEOUT")
-        return subprocess.run(argv_string, **kwargs)
-
-    @staticmethod
-    @contextmanager
-    def changed_cwd(path):
-        """Context manager for temporarily changing the CWD"""
-        oldpwd = os.getcwd()
-        try:
-            os.chdir(path)
-            logging.debug("Entering dir (%s):", path)
-            yield
-        finally:
-            os.chdir(oldpwd)
-            logging.debug("Leaving dir (%s):", path)
-
-    @staticmethod
-    @contextmanager
-    def changed_branch(branch):
-        """
-        Context manager for temporarily encapsulating a potential git
-        branch change.  Will explicitly switch to the specified branch
-        before yielding.
-        """
-        Shellout.run(["git", "checkout", branch], check=True)
-        logging.debug("Entering branch (%s):", branch)
-        try:
-            yield
-        finally:
-            # switch the branch back
-            Shellout.run(["git", "checkout", branch], check=True)
-            logging.debug("Leaving branch (%s):", branch)
-
-    @staticmethod
-    # ZZZ - could use an optional filter_by_uid argument which is a set object
-    def cvr_parse_git_log_output(
-        git_log_command, election_config, grouped_by_uid=True, verbosity=3
-    ):
-        """Will execute the supplied git log command and process the
-        output of those commits that are CVRs.  Will return a
-        dictionary keyed on the contest UID that is a list of CVRs.
-        The CVR is just the CVR from the git log with a 'digest' key
-        added.
-
-        Note the the order of the list is git log order and not
-        randomized FWIIW.
-        """
-        # Will process all the CVR commits on the main branch and tally
-        # all the contests found.
-        git_log_cvrs = {}
-        with Shellout.changed_cwd(election_config.get("git_rootdir")):
-            if verbosity >= 3:
-                logging.info('Running "%s"', " ".join(git_log_command))
-            with subprocess.Popen(
-                git_log_command, stdout=subprocess.PIPE, text=True, encoding="utf8"
-            ) as git_output:
-                # read lines until there is a complete json object, then
-                # add the object for that contest.
-                block = ""
-                digest = ""
-                recording = False
-                # question - how to get "for line in
-                # git_output.stdout.readline():" not to effectively return
-                # the characters in line as opposed to the entire line
-                # itself?
-                while True:
-                    line = git_output.stdout.readline()
-                    if not line:
-                        break
-                    if match := re.match("^([a-f0-9]{40}){", line):
-                        digest = match.group(1)
-                        recording = True
-                        block = "{"
-                        continue
-                    if recording:
-                        block += line.strip()
-                        if re.match("^}", line):
-                            # this loads the contest under the CVR key
-                            cvr = json.loads(block)
-                            if grouped_by_uid:
-                                cvr["digest"] = digest
-                                if cvr["CVR"]["uid"] in git_log_cvrs:
-                                    git_log_cvrs[cvr["CVR"]["uid"]].append(cvr)
-                                else:
-                                    git_log_cvrs[cvr["CVR"]["uid"]] = [cvr]
-                            else:
-                                git_log_cvrs[digest] = cvr
-                            block = ""
-                            digest = ""
-                            recording = False
-        return git_log_cvrs
-
-    @staticmethod
     def convert_show_output(output_lines: list) -> dict:
         """
         Will convert the native text output of a CVR git commit to a
@@ -385,6 +230,5 @@ class Shellout:
         contest_cvr["header"] = output_lines[:3]
         contest_cvr["payload"] = json.loads("".join(output_lines[4:]))
         return contest_cvr
-
 
 # EOF

@@ -19,7 +19,6 @@
 
 import csv
 import json
-import logging
 import os
 from copy import deepcopy
 
@@ -415,7 +414,7 @@ class Ballot:
             ballot_file = Ballot.gen_cast_ballot_location(
                 config, address.get("ballot_subdir")
             )
-        logging.debug("Reading %s", ballot_file)
+        self.imprimir(f"Reading {ballot_file}", 4)
         with open(ballot_file, "r", encoding="utf8") as file:
             json_doc = json.load(file)
             self.contests = json_doc["contests"]
@@ -651,7 +650,7 @@ class BlankBallot(Ballot):
                 self.active_ggos, self.ballot_subdir, style
             )
         if style == "json":
-            logging.debug("Reading %s", ballot_file)
+            self.imprimir(f"Reading {ballot_file}", 4)
             with open(ballot_file, "r", encoding="utf8") as file:
                 json_doc = json.load(file)
                 self.contests = json_doc["contests"]

@@ -23,7 +23,6 @@
 
 # Project imports
 from vtp.core.ballot import Ballot
-from vtp.core.common import Shellout
 from vtp.core.contest import Tally
 from vtp.core.election_config import ElectionConfig
 from vtp.core.exceptions import TallyException
@@ -49,13 +48,13 @@ class TallyContestsOperation(Operation):
         """Main function - see -h for more info"""
 
         # Create a VTP ElectionData object if one does not already exist
-        the_election_config = ElectionConfig.configure_election(self.election_data_dir)
+        the_election_config = ElectionConfig.configure_election(self, self.election_data_dir)
 
         # git pull the ElectionData repo so to get the latest set of
         # remote CVRs branches
         a_ballot = Ballot()
-        with Shellout.changed_cwd(a_ballot.get_cvr_parent_dir(the_election_config)):
-            Shellout.run(["git", "pull"], verbosity=self.verbosity, check=True)
+        with self.changed_cwd(a_ballot.get_cvr_parent_dir(the_election_config)):
+            self.shellOut(["git", "pull"], check=True)
 
         # Will process all the CVR commits on the main branch and tally
         # all the contests found.  Note - even if a contest is specified,
@@ -63,7 +62,7 @@ class TallyContestsOperation(Operation):
         # all the contests and then filter later for the contest of
         # interest than to try to create a git grep query against the CVR
         # payload.
-        contest_batches = Shellout.cvr_parse_git_log_output(
+        contest_batches = self.cvr_parse_git_log_output(
             ["git", "log", "--topo-order", "--no-merges", "--pretty=format:%H%B"],
             the_election_config,
         )
