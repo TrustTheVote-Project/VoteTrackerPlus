@@ -37,6 +37,9 @@ class Operation:
     election_data_dir.
     """
 
+    # class constants
+    _sha1_regex = re.compile(r"([0-9a-fA-F]{40})")
+
     # pylint: disable=too-many-arguments
     def __init__(
         self,
@@ -77,7 +80,6 @@ class Operation:
         in which case the output needs to be retrieved.  If the second
         argument is less than or equal to self.verbosity, the line prints.
         The default self.verbosity is 3."""
-        regex = re.compile(r"([0-9a-fA-F])")
         if incoming_printlevel <= self.verbosity:
             if self.style == "html":
                 # If self.style == "html", html-ize the line
@@ -85,8 +87,8 @@ class Operation:
                 # - add line breaks per line
                 # - convert an array to a table with css class=imprimir
                 # ZZZ
-                a_line = regex.sub(
-                    '<a href="foo" target="_blank">' + match.group + "</a>", a_line
+                a_line = Operation._sha1_regex.sub(
+                    '<a href="foo/\1" target="_blank">\1</a>', a_line
                 )
             if self.stdout_printing:
                 print(a_line)
@@ -101,10 +103,10 @@ class Operation:
 
     def shell_out(
         self,
-        argv,
-        no_touch_stds=False,
-        printonly_override=False,
-        verbosity_override=-1,
+        argv: list,
+        no_touch_stds: bool = False,
+        printonly_override: bool = False,
+        verbosity_override: int = -1,
         **kwargs,
     ):
         """Run a shell command with logging and error handling.  Raises a
@@ -139,7 +141,7 @@ class Operation:
         return subprocess.run(argv_string, **kwargs)
 
     @contextmanager
-    def changed_cwd(self, path):
+    def changed_cwd(self, path: str):
         """Context manager for temporarily changing the CWD"""
         oldpwd = os.getcwd()
         try:
@@ -151,7 +153,7 @@ class Operation:
             self.imprimir(f"Leaving dir ({path})", 4)
 
     @contextmanager
-    def changed_branch(self, branch):
+    def changed_branch(self, branch: str):
         """
         Context manager for temporarily encapsulating a potential git
         branch change.  Will explicitly switch to the specified branch
@@ -169,10 +171,10 @@ class Operation:
     # ZZZ - could use an optional filter_by_uid argument which is a set object
     def cvr_parse_git_log_output(
         self,
-        git_log_command,
-        election_config,
-        grouped_by_uid=True,
-        verbosity_override=-1,
+        git_log_command: list,
+        election_config: dict,
+        grouped_by_uid: bool = True,
+        verbosity_override: int = -1,
     ):
         """Will execute the supplied git log command and process the
         output of those commits that are CVRs.  Will return a

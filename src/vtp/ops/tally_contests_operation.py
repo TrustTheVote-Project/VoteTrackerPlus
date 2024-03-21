@@ -87,7 +87,7 @@ class TallyContestsOperation(Operation):
                 if contest_batches[contest_batch][0]["CVR"]["uid"] != contest_uid:
                     continue
             # Create a Tally object for this specific contest
-            the_tally = Tally(contest_batches[contest_batch][0], self.imprimir)
+            the_tally = Tally(contest_batches[contest_batch][0], self)
             self.imprimir(
                 f"Scanned {len(contest_batches[contest_batch])} contests "
                 f"for contest ({contest_batches[contest_batch][0]['CVR']['name']}) "

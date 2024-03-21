@@ -18,8 +18,6 @@
 """How to manage a VTP specific contest"""
 
 import json
-
-# import logging
 import operator
 import re
 from fractions import Fraction
@@ -52,7 +50,7 @@ class Contest:
     _nextuid = 0
 
     @staticmethod
-    def set_uid(a_contest_blob, ggo):
+    def set_uid(a_contest_blob: dict, ggo: str):
         """Will add a contest uid (only good within the context of this
         specific election) to the supplied contest.
         """
@@ -125,7 +123,10 @@ class Contest:
 
     @staticmethod
     def check_contest_blob_syntax(
-        a_contest_blob, filename="", digest="", accept_all_keys=False
+        a_contest_blob: dict,
+        filename: str = "",
+        digest: str = "",
+        accept_all_keys: bool = False,
     ):
         """
         Will check the synatx of a contest somewhat and conveniently
@@ -164,7 +165,7 @@ class Contest:
         return name
 
     @staticmethod
-    def check_cvr_blob_syntax(a_cvr_blob, filename="", digest=""):
+    def check_cvr_blob_syntax(a_cvr_blob: dict, filename: str = "", digest: str = ""):
         """
         Will check the synatx of a cvr
         """
@@ -190,7 +191,7 @@ class Contest:
         Contest.check_contest_choices(a_cvr_blob["choices"], a_cvr_blob)
 
     @staticmethod
-    def get_choices_from_contest(choices):
+    def get_choices_from_contest(choices: list):
         """Will smartly return just the pure list of choices sans all
         values and sub dictionaries.  An individual choice can either
         be a simple string, a regulare 1D dictionary, or it turns out
@@ -208,13 +209,13 @@ class Contest:
         )
 
     @staticmethod
-    def split_selection(selection):
+    def split_selection(selection: str):
         """Will split the selection into (2) parts again."""
         offset, name = re.split(r":\s+", selection, 1)
         return int(offset), name
 
     @staticmethod
-    def extract_offest_from_selection(selection):
+    def extract_offest_from_selection(selection: str):
         """
         Will extract the int selection choice from the verbose
         selection string
@@ -222,14 +223,20 @@ class Contest:
         return int(Contest.split_selection(selection)[0])
 
     @staticmethod
-    def extract_name_from_selection(selection):
+    def extract_name_from_selection(selection: str):
         """
         Will extract the name selection choice from the verbose
         selection string
         """
         return Contest.split_selection(selection)[1]
 
-    def __init__(self, a_contest_blob, ggo, contests_index, accept_all_keys=False):
+    def __init__(
+        self,
+        a_contest_blob: dict,
+        ggo: str,
+        contests_index: int,
+        accept_all_keys: bool = False,
+    ):
         """Construct the object placing the contest info in an attribute
         while recording the meta data
         """
@@ -263,7 +270,7 @@ class Contest:
         )
         return json.dumps(contest_dict, sort_keys=True, indent=4, ensure_ascii=False)
 
-    def is_contest_a_ticket_choice(self, choice_index=0):
+    def is_contest_a_ticket_choice(self, choice_index: int = 0):
         """Returns whether or not the contest is ticket based"""
         if (
             isinstance(self.contest["choices"][choice_index], dict)
@@ -272,7 +279,7 @@ class Contest:
             return True
         return False
 
-    def get_ticket_info(self, choice_index):
+    def get_ticket_info(self, choice_index: int):
         """Returns the ticket info as a 'ticket_names', 'ticket_offices' dictionary"""
         # ticket info
         if "ticket_names" in self.contest["choices"][choice_index]:
@@ -282,7 +289,7 @@ class Contest:
             }
         return None
 
-    def pretty_print_ticket(self, choice_index):
+    def pretty_print_ticket(self, choice_index: int):
         """Will pretty print a ticket to allow a voter to choose."""
         ticket = []
         ticket_info = self.get_ticket_info(choice_index)
@@ -290,7 +297,7 @@ class Contest:
             ticket.append(f"{name} ({ticket_info['ticket_offices'][ticket_index]})")
         return "; ".join(ticket)
 
-    def get(self, name):
+    def get(self, name: str):
         """Generic getter - can raise KeyError"""
         # Return the choices
         if name == "dict":
@@ -322,14 +329,14 @@ class Contest:
         # Else return contest data indexed by name
         return getattr(self, "contest")[name]
 
-    def set(self, name, value):
+    def set(self, name: str, value: str):
         """Generic setter - need to be able to set the cast_branch when committing the contest"""
         if name in ["name", "ggo", "index", "contest", "cast_branch", "cloak"]:
             setattr(self, name, value)
             return
         raise ValueError(f"Illegal value for Contest attribute ({name})")
 
-    def delete_contest_field(self, name):
+    def delete_contest_field(self, name: str):
         """Generic deleter - need to be able to delete nodes"""
         if name in Contest._cast_keys:
             if name in self.contest:
@@ -347,7 +354,7 @@ class Tally:
     """
 
     @staticmethod
-    def get_choices_from_round(choices, what=""):
+    def get_choices_from_round(choices, what: str = ""):
         """Will smartly return just the pure list of choices sans all
         values and sub dictionaries from a round
         """
@@ -355,7 +362,7 @@ class Tally:
             return [choice[1] for choice in choices]
         return [choice[0] for choice in choices]
 
-    def __init__(self, a_git_cvr, operation_self):
+    def __init__(self, a_git_cvr: dict, operation_self: dict):
         """Given a contest as parsed from the git log, a.k.a the
         contest digest and CVR json payload, will construct a Tally.
         A tally object can validate and tally a contest.
@@ -369,6 +376,7 @@ class Tally:
         print function to the Tally constructor so that each (contest)
         tally can handle printing as desired.
         """
+        #        import pdb; pdb.set_trace()
         self.operation_self = operation_self
         self.digest = a_git_cvr["digest"]
         self.contest = a_git_cvr["CVR"]
@@ -414,7 +422,7 @@ class Tally:
                 f"the specified tally ({self.contest['tally']}) is not yet implemented"
             )
 
-    def get(self, name):
+    def get(self, name: str):
         """Simple limited functionality getter"""
         if name in ["max", "win-by"]:
             return self.defaults[name]
@@ -439,7 +447,7 @@ class Tally:
         }
         return json.dumps(tally_dict, sort_keys=True, indent=4, ensure_ascii=False)
 
-    def select_name_from_choices(self, selection):
+    def select_name_from_choices(self, selection: str):
         """Will smartly return just the pure selection name sans all
         values and sub dictionaries from a round
         """
@@ -452,7 +460,9 @@ class Tally:
             return "True" if pick else "False"
         raise ValueError(f"unknown/unsupported contest choices data structure ({pick})")
 
-    def tally_a_plurality_contest(self, contest, provenance_digest, vote_count):
+    def tally_a_plurality_contest(
+        self, contest: dict, provenance_digest: str, vote_count: int
+    ):
         """plurality tally"""
         for count in range(self.defaults["max"]):
             if 0 <= count < len(contest["selection"]):
@@ -477,7 +487,9 @@ class Tally:
                         f"No-vote {provenance_digest}: BLANK", 2
                     )
 
-    def tally_a_rcv_contest(self, contest, provenance_digest, vote_count):
+    def tally_a_rcv_contest(
+        self, contest: dict, provenance_digest: str, vote_count: int
+    ):
         """RCV tally"""
         if len(contest["selection"]):
             # the voter can still leave a RCV contest blank
@@ -737,7 +749,7 @@ class Tally:
         slice off that choice off and re-count the now first
         selection choice (if there is one)
         """
-        self.operation_self(f"RCV: round {this_round}", 2)
+        self.operation_self.imprimir(f"RCV: round {this_round}", 2)
 
         # ZZZ - create a function to validate incoming last place
         # names and call that.  Maybe in the furure once more is know
@@ -762,7 +774,7 @@ class Tally:
         self.rcv_round.append([])
         # Get the correct current total vote count for this round
         total_current_vote_count = self.get_total_vote_count(this_round)
-        self.operation_self(f"Total vote count: {total_current_vote_count}", 2)
+        self.operation_self.imprimir(f"Total vote count: {total_current_vote_count}", 2)
         for choice in Tally.get_choices_from_round(self.rcv_round[this_round]):
             # Note the test is '>' and NOT '>='
             if (
@@ -853,9 +865,9 @@ class Tally:
         """
         # Read all the contests, validate, and count votes
         if self.contest["tally"] == "plurality":
-            self.operation_self("Plurality - one round", 2)
+            self.operation_self.imprimir("Plurality - one round", 2)
         else:
-            self.operation_self("RCV: round 0", 2)
+            self.operation_self.imprimir("RCV: round 0", 2)
         self.parse_all_contests(contest_batch, checks)
 
         # For all tallies order what has been counted so far (a tuple)
@@ -879,7 +891,7 @@ class Tally:
 
         # Get the correct current total vote count for this round
         total_current_vote_count = self.get_total_vote_count(0)
-        self.operation_self(f"Total vote count: {total_current_vote_count}", 2)
+        self.operation_self.imprimir(f"Total vote count: {total_current_vote_count}", 2)
 
         # Determine winners if any ...
         for choice in Tally.get_choices_from_round(self.rcv_round[0]):
@@ -910,7 +922,7 @@ class Tally:
 
     def print_results(self):
         """Will print the results of the tally"""
-        self.operation_self(
+        self.operation_self.imprimir(
             f"Final results for contest {self.contest['name']} (uid={self.contest['uid']}):",
             1,
         )
@@ -919,7 +931,7 @@ class Tally:
         # self.winner_order since the former is a full count across all
         # choices while the latter is a partial list
         for result in self.rcv_round[-2]:
-            self.operation_self(f"  {result}")
+            self.operation_self.imprimir(f"  {result}")
 
 
 # EOF

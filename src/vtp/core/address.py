@@ -40,18 +40,20 @@ class Address:
     _keys = ["number", "street", "substreet", "town", "state", "country", "zipcode"]
 
     @staticmethod
-    def convert_address_to_num_street(address):
+    def convert_address_to_num_street(address: str):
         """Convert a street address string to number and street"""
         return re.split(r"\s+", address, 1)
 
     @staticmethod
-    def create_generic_address(config, subdir, ggos):
+    def create_generic_address(config, subdir: str, ggos: list):
         """Will create/return a generic address nominally from the list
         of ggos
         """
-        # Walk the address in DAG order from root to the prescribed leafs
+        # ZZZ strange pylint error on config:dict above
+        # import pdb; pdb.set_trace()
         nodes = []
         count = 0
+        # Walk the address in DAG order from root to the prescribed leafs
         for _ in Globals.get("REQUIRED_GGO_ADDRESS_FIELDS"):
             # Get the basename of the node via its subdir
             name = subdir.split(os.path.sep)[((count + 1) * 3) - 1]
@@ -64,16 +66,16 @@ class Address:
     # pylint: disable=too-many-arguments
     def __init__(
         self,
-        address="",
-        number="",
-        street="",
-        substreet="",
-        town="",
-        state="",
-        country="",
-        zipcode="",
-        csv="",
-        generic_address=False,
+        address: str = "",
+        number: str = "",
+        street: str = "",
+        substreet: str = "",
+        town: str = "",
+        state: str = "",
+        country: str = "",
+        zipcode: str = "",
+        csv: str = "",
+        generic_address: bool = False,
     ):
         """At the moment only support a few ways of creating an
         Address: a csv string and reasonable set of specified fields.
@@ -144,7 +146,7 @@ class Address:
                 nice_string += " " + self.address[key]
         return nice_string.strip()
 
-    def get(self, name):
+    def get(self, name: str):
         """A generic getter - will raise a NameError if name is not defined"""
         if name in Address._keys:
             return self.address[name]
@@ -160,10 +162,9 @@ class Address:
             return self.ballot_subdir
         raise NameError(f"Name {name} not accepted/defined for get()")
 
-    def set(self, name, value):
+    def set(self, name: str, value: str = ""):
         """A generic setter - will raise a NameError if name is not defined"""
         if name in Address._keys:
-            value = "" if value is None else value
             self.address[name] = value
         else:
             raise NameError(f"Name {name} not accepted/defined for Address.set()")
@@ -192,7 +193,7 @@ class Address:
             )
         )
 
-    def map_ggos(self, config, skip_ggos=False, ggos=None):
+    def map_ggos(self, config: dict, skip_ggos: bool = False, ggos: list = None):
         """Will map an address onto the ElectionConfig data.  If
         skip_ggos is True, will completely skip setting the
         active_ggos field.  If an explicit list of GGOs is provided,

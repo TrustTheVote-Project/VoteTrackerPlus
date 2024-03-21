@@ -105,7 +105,7 @@ class ElectionConfig:
     _election_data = None
 
     @staticmethod
-    def configure_election(operation_self, election_data_dir: str):
+    def configure_election(operation_self: dict, election_data_dir: str):
         """
         Return the existing ElectionData or parse a new one into
         existence.  This is the entrypoint/wrapper into/around the
@@ -143,7 +143,7 @@ class ElectionConfig:
         return ElectionConfig._election_data
 
     @staticmethod
-    def get_next_uid(ggo):
+    def get_next_uid(ggo: str):
         """Will return the next GGO uid (only good within the context of
         this specific election)
         """
@@ -155,7 +155,7 @@ class ElectionConfig:
         return this_uid
 
     @staticmethod
-    def is_valid_ggo_string(arg):
+    def is_valid_ggo_string(arg: str):
         """Check to see if it is a string without illegal characters."""
         if not isinstance(arg, str):
             raise TypeError(f"The GGO value is not a string ({arg})")
@@ -164,7 +164,7 @@ class ElectionConfig:
         # ZZZ need a bunch more QA checks here and one day deal with unicode
 
     @staticmethod
-    def check_config_syntax(config, filename):
+    def check_config_syntax(config: dict, filename: str):
         """Validate the config.yaml syntax"""
         bad_keys = [key for key in config if not key in ElectionConfig._config_keys]
         if bad_keys:
@@ -174,7 +174,7 @@ class ElectionConfig:
             )
 
     @staticmethod
-    def check_address_map_syntax(address_map, filename):
+    def check_address_map_syntax(address_map: dict, filename: str):
         """Validate the address_map.yaml syntax"""
         bad_keys = [
             key for key in address_map if not key in ElectionConfig._address_map_keys
@@ -199,7 +199,7 @@ class ElectionConfig:
                         f"supported: {bad_keys}"
                     )
 
-    def __init__(self, operation_self, election_data_dir: str = "."):
+    def __init__(self, operation_self: dict, election_data_dir: str = "."):
         """Constructor for ElectionConfig.  If no election_data_dir is
         supplied, then the CWD _MUST_ be in the current ElectionData
         tree (the election_data_dir) where the election is happening -
@@ -283,7 +283,7 @@ class ElectionConfig:
         # network graph
         self.digraph = networkx.DiGraph()
 
-    def get(self, name):
+    def get(self, name: str):
         """A generic getter - will raise a NameError if name is not defined"""
         if name in ElectionConfig._config_keys:
             return getattr(self, "config")[name]
@@ -300,7 +300,7 @@ class ElectionConfig:
             )
         )
 
-    def get_dag(self, what):
+    def get_dag(self, what: str):
         """An ElectionConfig get interface to the underlying DiGraph class."""
         if what == "nodes":
             return self.digraph.nodes()
@@ -317,7 +317,7 @@ class ElectionConfig:
         """Return the networkx node"""
         return self.digraph.nodes[node]
 
-    def get_node(self, node, what):
+    def get_node(self, node, what: str):
         """An ElectionConfig get interface to the underlying election configuration data."""
         if what == "ALL":
             return {
@@ -348,7 +348,7 @@ class ElectionConfig:
         """Return the serialization of this instance's ElectionConfig dictionary"""
         return str(list(self.get_dag("topo")))
 
-    def read_address_map(self, filename):
+    def read_address_map(self, filename: str):
         """
         Read the address_map yaml file return the dictionary but
         only if the file exists.  Check the syntax.
@@ -362,7 +362,7 @@ class ElectionConfig:
             return this_address_map
         return {}
 
-    def read_config_file(self, filename):
+    def read_config_file(self, filename: str):
         """
         Read the confgi yaml file return the dictionary and check the syntax.
         """
