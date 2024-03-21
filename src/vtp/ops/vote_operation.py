@@ -59,10 +59,8 @@ class VoteOperation(Operation):
         # remote CVRs branches
         a_ballot = Ballot()
         with Shellout.changed_cwd(a_ballot.get_cvr_parent_dir(the_election_config)):
-            Shellout.run(
+            self.shellOut(
                 ["git", "pull"],
-                printonly=self.printonly,
-                verbosity=self.verbosity,
                 check=True,
             )
 

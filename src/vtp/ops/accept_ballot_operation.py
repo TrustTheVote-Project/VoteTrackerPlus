@@ -55,7 +55,7 @@ class AcceptBallotOperation(Operation):
         Return a random branchpoint on the supplied branch Requires
         the CWD to be the parent of the CVRs directory.
         """
-        result = Shellout.run(
+        result = self.shellOut(
             ["git", "log", branch, "--pretty=format:'%h'"],
             check=True,
             capture_output=True,
@@ -112,7 +112,7 @@ class AcceptBallotOperation(Operation):
         # and attempt at a new unique branch
         branch = self.new_branch_name(contest, style)
         # Get the current branch for reference
-        current_branch = Shellout.run(
+        current_branch = self.shellOut(
             ["git", "rev-parse", "--abbrev-ref", "HEAD"],
             check=True,
             capture_output=True,
@@ -120,34 +120,26 @@ class AcceptBallotOperation(Operation):
         ).stdout.strip()
         # if after 3 tries it still does not work, raise an error
         for _ in [0, 1, 2]:
-            cmd1 = Shellout.run(
+            cmd1 = self.shellOut(
                 ["git", "checkout", "-b", branch, branchpoint],
-                printonly=self.printonly,
-                verbosity=self.verbosity,
             )
             if cmd1.returncode == 0:
                 # Created the local branch - see if it is push-able
-                cmd2 = Shellout.run(
+                cmd2 = self.shellOut(
                     ["git", "push", "-u", "origin", branch],
-                    printonly=self.printonly,
-                    verbosity=self.verbosity,
                 )
                 if cmd2.returncode == 0:
                     # success
                     return branch
                 # At this point there was some type of push failure - delete the
                 # local branch and try again
-                Shellout.run(
+                self.shellOut(
                     ["git", "checkout", current_branch],
                     check=True,
-                    printonly=self.printonly,
-                    verbosity=self.verbosity,
                 )
-                Shellout.run(
+                self.shellOut(
                     ["git", "branch", "-D", branch],
                     check=True,
-                    printonly=self.printonly,
-                    verbosity=self.verbosity,
                 )
             # At this point the local did not get created - try again
             branch = self.new_branch_name(contest, style)
@@ -167,7 +159,7 @@ class AcceptBallotOperation(Operation):
         # since this is per contest, there should only be about 100 or so
         # of them.
         head_commits = (
-            Shellout.run(
+            self.shellOut(
                 [
                     "git",
                     "rev-list",
@@ -205,7 +197,7 @@ class AcceptBallotOperation(Operation):
         """
         this_uid = contest.get("uid")
         cloak_target = contest.get("cloak")
-        return Shellout.run(
+        return self.shellOut(
             [
                 "git",
                 "log",
@@ -243,31 +235,24 @@ class AcceptBallotOperation(Operation):
                 branch,
                 Globals.get("RECEIPT_FILE_MD"),
             )
-        Shellout.run(
+        self.shellOut(
             ["git", "add", payload_name],
-            printonly=self.printonly,
-            verbosity=self.verbosity,
             check=True,
         )
         # Note - apparently git places the commit msg on STDERR - hide it
         if style == "contest":
-            Shellout.run(
+            self.shellOut(
                 ["git", "commit", "-F", payload_name],
-                printonly=self.printonly,
-                verbosity=1,
                 check=True,
             )
         else:
-            Shellout.run(
+            self.shellOut(
                 ["git", "commit", "-m", "Ballot Voucher"],
-                printonly=self.printonly,
-                verbosity=1,
                 check=True,
             )
         # Capture the digest
-        digest = Shellout.run(
+        digest = self.shellOut(
             ["git", "log", "-1", "--pretty=format:%H"],
-            printonly=self.printonly,
             check=True,
             capture_output=True,
             text=True,
@@ -442,17 +427,13 @@ class AcceptBallotOperation(Operation):
             # as the others and cloaks as much as possible, then push as
             # atomically as possible all the contests.
             for branch in branches:
-                Shellout.run(
+                self.shellOut(
                     ["git", "push", "origin", branch],
-                    printonly=self.printonly,
-                    verbosity=self.verbosity,
                 )
                 # Delete the local as they build up too much.  The local
                 # reflog keeps track of the local branches
-                Shellout.run(
+                self.shellOut(
                     ["git", "branch", "-d", branch],
-                    printonly=self.printonly,
-                    verbosity=self.verbosity,
                 )
         return contest_receipts, branches, unmerged_cvrs, cloak_receipts
 
@@ -481,10 +462,8 @@ class AcceptBallotOperation(Operation):
                 # Commit the voter's ballot voucher
                 self.contest_add_and_commit(receipt_branch, "receipt")
                 # Push the voucher
-                Shellout.run(
+                self.shellOut(
                     ["git", "push", "origin", receipt_branch],
-                    printonly=self.printonly,
-                    verbosity=self.verbosity,
                 )
 
                 # Create the QR image while still in the branch as exiting the
@@ -517,10 +496,8 @@ class AcceptBallotOperation(Operation):
         # At this point the local receipt_branch can be deleted as
         # the local branches build up too much. The local reflog
         # keeps track of the local branches
-        Shellout.run(
+        self.shellOut(
             ["git", "branch", "-d", receipt_branch],
-            printonly=self.printonly,
-            verbosity=self.verbosity,
         )
         return receipt_branch, qr_img
 

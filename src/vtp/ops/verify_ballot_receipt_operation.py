@@ -51,7 +51,7 @@ class VerifyBallotReceiptOperation(Operation):
             input_data += "\n".join(line) + "\n"
         with Shellout.changed_cwd(the_election_config.get("git_rootdir")):
             results = (
-                Shellout.run(
+                self.shellOut(
                     [
                         "git",
                         "cat-file",
@@ -61,7 +61,6 @@ class VerifyBallotReceiptOperation(Operation):
                     input=input_data,
                     text=True,
                     check=True,
-                    verbosity=self.verbosity,
                     capture_output=True,
                 )
                 .stdout.strip()
@@ -274,7 +273,7 @@ class VerifyBallotReceiptOperation(Operation):
             if show_cvr:
                 # Show the CVRs of the row
                 with Shellout.changed_cwd(the_election_config.get("git_rootdir")):
-                    Shellout.run(["git", "show", "-s"] + valid_digests, check=True)
+                    self.shellOut(["git", "show", "-s"] + valid_digests, check=True)
             else:
                 # Just show the summary validation of the row
                 vet_a_row()
@@ -307,7 +306,7 @@ class VerifyBallotReceiptOperation(Operation):
         # remote CVRs branches
         a_ballot = Ballot()
         with Shellout.changed_cwd(a_ballot.get_cvr_parent_dir(the_election_config)):
-            Shellout.run(["git", "pull"], verbosity=self.verbosity, check=True)
+            self.shellOut(["git", "pull"], check=True)
 
         #    import pdb; pdb.set_trace()
         # Can read the receipt file directly without any Ballot info

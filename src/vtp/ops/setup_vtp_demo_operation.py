@@ -100,10 +100,8 @@ class SetupVtpDemoOperation(Operation):
         for clone_dir in clone_dirs:
             if not self.printonly:
                 with Shellout.changed_cwd(clone_dir):
-                    Shellout.run(
+                    self.shellOut(
                         ["git", "clone", upstream_url],
-                        self.printonly,
-                        verbosity=self.verbosity,
                         check=True,
                     )
             else:
@@ -178,7 +176,7 @@ class SetupVtpDemoOperation(Operation):
 
         # Get the election data native GitHub remote clone name from _here_
         with Shellout.changed_cwd(the_election_config.get("git_rootdir")):
-            election_data_remote_url = Shellout.run(
+            election_data_remote_url = self.shellOut(
                 ["git", "config", "--get", "remote.origin.url"],
                 check=True,
                 capture_output=True,
@@ -225,10 +223,8 @@ class SetupVtpDemoOperation(Operation):
         # Second clone the bare upstream remote GitHub ElectionData repo
         if not self.printonly:
             with Shellout.changed_cwd(bare_clone_path):
-                Shellout.run(
+                self.shellOut(
                     ["git", "clone", "--bare", election_data_remote_url],
-                    self.printonly,
-                    verbosity=self.verbosity,
                     check=True,
                 )
         else:

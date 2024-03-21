@@ -100,10 +100,8 @@ class RunMockElectionOperation(Operation):
                 # - cast a ballot
                 #            import pdb; pdb.set_trace()
                 with Shellout.changed_cwd(the_election_config.get("git_rootdir")):
-                    Shellout.run(
+                    self.shellOut(
                         ["git", "pull"],
-                        printonly=self.printonly,
-                        verbosity=self.verbosity,
                         no_touch_stds=True,
                         timeout=None,
                         check=True,
@@ -153,10 +151,8 @@ class RunMockElectionOperation(Operation):
                         )
                     # don't let too much garbage build up
                     if count % 10 == 9:
-                        Shellout.run(
+                        self.shellOut(
                             ["git", "gc"],
-                            printonly=self.printonly,
-                            verbosity=self.verbosity,
                             no_touch_stds=True,
                             timeout=None,
                             check=True,
@@ -186,18 +182,14 @@ class RunMockElectionOperation(Operation):
             )
             tally_contests.run()
         # clean up git just in case
-        Shellout.run(
+        self.shellOut(
             ["git", "remote", "prune", "origin"],
-            printonly=self.printonly,
-            verbosity=self.verbosity,
             no_touch_stds=True,
             timeout=None,
             check=True,
         )
-        Shellout.run(
+        self.shellOut(
             ["git", "gc"],
-            printonly=self.printonly,
-            verbosity=self.verbosity,
             no_touch_stds=True,
             timeout=None,
             check=True,
@@ -224,10 +216,8 @@ class RunMockElectionOperation(Operation):
         while True:
             count += 1
             with Shellout.changed_cwd(the_election_config.get("git_rootdir")):
-                Shellout.run(
+                self.shellOut(
                     ["git", "pull"],
-                    self.printonly,
-                    self.verbosity,
                     no_touch_stds=True,
                     timeout=None,
                     check=True,

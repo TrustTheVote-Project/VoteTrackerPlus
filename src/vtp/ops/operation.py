@@ -144,13 +144,13 @@ class Operation:
         branch change.  Will explicitly switch to the specified branch
         before yielding.
         """
-        Shellout.run(["git", "checkout", branch], check=True)
+        self.shellOut(["git", "checkout", branch], check=True)
         self.imprimir(f"Entering branch ({branch})", 4)
         try:
             yield
         finally:
             # switch the branch back
-            Shellout.run(["git", "checkout", branch], check=True)
+            self.shellOut(["git", "checkout", branch], check=True)
             self.imprimir(f"Leaving branch ({branch})", 4)
 
     # ZZZ - could use an optional filter_by_uid argument which is a set object

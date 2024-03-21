@@ -44,14 +44,13 @@ class ShowContestsOperation(Operation):
         input_data = "\n".join(digests.split(",")) + "\n"
         with Shellout.changed_cwd(the_election_config.get("git_rootdir")):
             output_lines = (
-                Shellout.run(
+                self.shellOut(
                     [
                         "git",
                         "cat-file",
                         "--batch-check=%(objectname) %(objecttype)",
                         "--buffer",
                     ],
-                    verbosity=self.verbosity,
                     input=input_data,
                     text=True,
                     check=True,
@@ -92,7 +91,7 @@ class ShowContestsOperation(Operation):
         # show/log the digests
         with Shellout.changed_cwd(the_election_config.get("git_rootdir")):
             output_lines = (
-                Shellout.run(
+                self.shellOut(
                     ["git", "show", "-s"] + valid_digests,
                     text=True,
                     check=True,
@@ -111,15 +110,14 @@ class ShowContestsOperation(Operation):
 # this is a loop of shell commands
 #        for digest in contest_check.split(','):
 #            if digest not in error_digests:
-#                Shellout.run(['git', 'log', '-1', digest], check=True)
+#                self.shellOut(['git', 'log', '-1', digest], check=True)
 
 # this does not work well enough either
 #        input_data = '\n'.join(contest_check.split(',')) + '\n'
-#        Shellout.run(
+#        self.shellOut(
 #            ['git', 'cat-file', '--batch=%(objectname)'],
 #            input=input_data,
 #            text=True,
-#            check=True,
-#            verbosity=self.verbosity)
+#            check=True)
 
 # EOF
