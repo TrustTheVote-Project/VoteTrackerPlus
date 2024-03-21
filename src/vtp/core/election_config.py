@@ -29,6 +29,7 @@ from .common import Common, Globals
 from .contest import Contest
 
 
+# pylint: disable=too-many-instance-attributes
 class ElectionConfig:
     """A class to parse all the VTP election config.yaml files and
     return a VTP election config.
@@ -208,7 +209,7 @@ class ElectionConfig:
         to read the tree.
         """
 
-        # Need the (outer) operation_self as that contains the shellOut
+        # Need the (outer) operation_self as that contains the shell_out
         # environment
         self.operation_self = operation_self
 
@@ -218,15 +219,15 @@ class ElectionConfig:
             self.git_rootdir = os.getcwd()
         else:
             self.git_rootdir = os.path.realpath(election_data_dir)
-        with operation_self.changed_cwd(self.git_rootdir):
+        with self.operation_self.changed_cwd(self.git_rootdir):
             # the path
-            result = operation_self.shellOut(
+            result = self.operation_self.shell_out(
                 ["git", "rev-parse", "--show-toplevel"],
                 check=True,
                 capture_output=True,
                 text=True,
             )
-            result2 = operation_self.shellOut(
+            result2 = self.operation_self.shell_out(
                 ["git", "rev-list", "--max-parents=0", "HEAD"],
                 check=True,
                 capture_output=True,
@@ -262,19 +263,21 @@ class ElectionConfig:
         # Check ELECTION_NAME
         if Globals.get("ELECTION_NAME") == "":
             # the name of the remote election data repo
-            with operation_self.changed_cwd(self.git_rootdir):
-                result = operation_self.shellOut(
+            with self.operation_self.changed_cwd(self.git_rootdir):
+                result = self.operation_self.shell_out(
                     ["git", "remote", "get-url", "origin"],
                     check=True,
                     capture_output=True,
                     text=True,
                 )
             if os.path.splitext(os.path.basename(result.stdout.strip()))[1] == ".git":
-                Globals.set_ELECTION_NAME(os.path.splitext(os.path.basename(result.stdout))[0])
+                Globals.set_election_name(
+                    os.path.splitext(os.path.basename(result.stdout))[0]
+                )
             else:
                 raise EnvironmentError(
                     "Cannot determine workspace origin remote name via 'git remote get-url origin'"
-                    )
+                )
 
         # With the above set, can spend the time to determine the election data
         # network graph

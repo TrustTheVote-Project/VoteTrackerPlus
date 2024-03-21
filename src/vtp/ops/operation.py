@@ -37,6 +37,7 @@ class Operation:
     election_data_dir.
     """
 
+    # pylint: disable=too-many-arguments
     def __init__(
         self,
         election_data_dir: str = "",
@@ -84,12 +85,13 @@ class Operation:
                 # - add line breaks per line
                 # - convert an array to a table with css class=imprimir
                 # ZZZ
-                a_line = regex.sub('<a href="foo" target="_blank">' + match.group + "</a>", a_line)
+                a_line = regex.sub(
+                    '<a href="foo" target="_blank">' + match.group + "</a>", a_line
+                )
             if self.stdout_printing:
                 print(a_line)
             else:
                 self.stdout_output.append(a_line)
-        return self.verbosity
 
     def get_imprimir(self) -> list:
         """Return the stored output string"""
@@ -97,7 +99,14 @@ class Operation:
 
     # The below were oringally in the Shellout package
 
-    def shellOut(self, argv, no_touch_stds=False, **kwargs):
+    def shell_out(
+        self,
+        argv,
+        no_touch_stds=False,
+        printonly_override=False,
+        verbosity_override=-1,
+        **kwargs,
+    ):
         """Run a shell command with logging and error handling.  Raises a
         CalledProcessError if the shell command fails - the caller needs to
         deal with that.  Can also raise a TimeoutExpired exception.
@@ -105,21 +114,25 @@ class Operation:
         Nominally returns a CompletedProcess instance.
 
         See for example https://docs.python.org/3.9/library/subprocess.html
+
+        If printonly_override is True, then self.printonly is ignored if True
+        If verbose_override is not -1 ([0-5]), will use that value
         """
+        verbosity = verbosity_override if verbosity_override != -1 else self.verbosity
         # Note - it is ok to pass ints and floats down through argv
         # here, but they need to be individually converted to strings
         # regardless since _everything_ below wants to see strings.
         argv_string = [str(arg) for arg in argv]
         self.imprimir(f'Running ({" ".join(argv_string)})', 4)
-        if self.printonly:
+        if self.printonly and not printonly_override:
             return subprocess.CompletedProcess(argv_string, 0, stdout="", stderr="")
         # the caller desides on whether check is set or not
         # pylint: disable=subprocess-run-check
         if not no_touch_stds:
             if "capture_output" not in kwargs:
-                if "stdout" not in kwargs and self.verbosity < 3:
+                if "stdout" not in kwargs and verbosity < 3:
                     kwargs["stdout"] = subprocess.DEVNULL
-                if "stderr" not in kwargs and self.verbosity <= 3:
+                if "stderr" not in kwargs and verbosity <= 3:
                     kwargs["stderr"] = subprocess.DEVNULL
         if "timeout" not in kwargs:
             kwargs["timeout"] = Globals.get("SHELL_TIMEOUT")
@@ -144,18 +157,22 @@ class Operation:
         branch change.  Will explicitly switch to the specified branch
         before yielding.
         """
-        self.shellOut(["git", "checkout", branch], check=True)
+        self.shell_out(["git", "checkout", branch], check=True)
         self.imprimir(f"Entering branch ({branch})", 4)
         try:
             yield
         finally:
             # switch the branch back
-            self.shellOut(["git", "checkout", branch], check=True)
+            self.shell_out(["git", "checkout", branch], check=True)
             self.imprimir(f"Leaving branch ({branch})", 4)
 
     # ZZZ - could use an optional filter_by_uid argument which is a set object
     def cvr_parse_git_log_output(
-        self, git_log_command, election_config, grouped_by_uid=True
+        self,
+        git_log_command,
+        election_config,
+        grouped_by_uid=True,
+        verbosity_override=-1,
     ):
         """Will execute the supplied git log command and process the
         output of those commits that are CVRs.  Will return a
@@ -170,7 +187,7 @@ class Operation:
         # all the contests found.
         git_log_cvrs = {}
         with self.changed_cwd(election_config.get("git_rootdir")):
-            self.imprimir(f'Running ({" ".join(git_log_command)})', 4)
+            self.imprimir(f'Running ({" ".join(git_log_command)})', verbosity_override)
             with subprocess.Popen(
                 git_log_command, stdout=subprocess.PIPE, text=True, encoding="utf8"
             ) as git_output:

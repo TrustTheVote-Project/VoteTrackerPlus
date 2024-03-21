@@ -25,7 +25,6 @@ import re
 
 # Project imports
 from vtp.core.ballot import Ballot
-from vtp.core.common import Shellout
 from vtp.core.election_config import ElectionConfig
 
 # Local imports
@@ -49,15 +48,16 @@ class VerifyBallotReceiptOperation(Operation):
         input_data = ""
         for line in lines:
             input_data += "\n".join(line) + "\n"
-        with Shellout.changed_cwd(the_election_config.get("git_rootdir")):
+        with self.changed_cwd(the_election_config.get("git_rootdir")):
             results = (
-                self.shellOut(
+                self.shell_out(
                     [
                         "git",
                         "cat-file",
                         "--buffer",
                         "--batch-check=%(objectname) %(objecttype)",
                     ],
+                    printonly_override=True,
                     input=input_data,
                     text=True,
                     check=True,
@@ -114,19 +114,19 @@ class VerifyBallotReceiptOperation(Operation):
             legit_row = [dig for dig in row if dig not in error_digests]
             if len(legit_row) == len(row):
                 # all the digests are legit
-                cvrs = Shellout.cvr_parse_git_log_output(
+                cvrs = self.cvr_parse_git_log_output(
                     ["git", "log", "--no-walk", "--pretty=format:%H%B"] + row,
                     the_election_config,
                     grouped_by_uid=False,
-                    verbosity=self.verbosity - 1,
+                    verbosity_override=self.verbosity - 1,
                 )
             elif len(legit_row) > 0:
                 # Only some are legitimate
-                cvrs = Shellout.cvr_parse_git_log_output(
+                cvrs = self.cvr_parse_git_log_output(
                     ["git", "log", "--no-walk", "--pretty=format:%H%B"] + legit_row,
                     the_election_config,
                     grouped_by_uid=False,
-                    verbosity=self.verbosity - 1,
+                    verbosity_override=self.verbosity - 1,
                 )
             else:
                 # skip the row - it has no legitimate digests
@@ -183,7 +183,7 @@ class VerifyBallotReceiptOperation(Operation):
         #    import pdb; pdb.set_trace()
         # Create a ballot to read the receipt file
         if receipt_file:
-            a_ballot = Ballot()
+            a_ballot = Ballot(self)
             lines = a_ballot.read_receipt_csv(
                 the_election_config, receipt_file=receipt_file
             )
@@ -226,10 +226,10 @@ class VerifyBallotReceiptOperation(Operation):
             as well do that for all contests (unless one cat create the
             git grep query syntax to just pull the uids of interest).
             """
-            contest_batches = Shellout.cvr_parse_git_log_output(
+            contest_batches = self.cvr_parse_git_log_output(
                 ["git", "log", "--topo-order", "--no-merges", "--pretty=format:%H%B"],
                 the_election_config,
-                verbosity=self.verbosity - 1,
+                verbosity_override=self.verbosity - 1,
             )
             unmerged_uids = {}
             for u_count, uid in enumerate(uids):
@@ -272,8 +272,12 @@ class VerifyBallotReceiptOperation(Operation):
                 )
             if show_cvr:
                 # Show the CVRs of the row
-                with Shellout.changed_cwd(the_election_config.get("git_rootdir")):
-                    self.shellOut(["git", "show", "-s"] + valid_digests, check=True)
+                with self.changed_cwd(the_election_config.get("git_rootdir")):
+                    self.shell_out(
+                        ["git", "show", "-s"] + valid_digests,
+                        printonly_override=True,
+                        check=True,
+                    )
             else:
                 # Just show the summary validation of the row
                 vet_a_row()
@@ -300,13 +304,15 @@ class VerifyBallotReceiptOperation(Operation):
         """Main function - see -h for more info"""
 
         # Create a VTP ElectionData object if one does not already exist
-        the_election_config = ElectionConfig.configure_election(self.election_data_dir)
+        the_election_config = ElectionConfig.configure_election(
+            self.election_data_dir, self
+        )
 
         # git pull the ElectionData repo so to get the latest set of
         # remote CVRs branches
-        a_ballot = Ballot()
-        with Shellout.changed_cwd(a_ballot.get_cvr_parent_dir(the_election_config)):
-            self.shellOut(["git", "pull"], check=True)
+        a_ballot = Ballot(self)
+        with self.changed_cwd(a_ballot.get_cvr_parent_dir(the_election_config)):
+            self.shell_out(["git", "pull"], check=True)
 
         #    import pdb; pdb.set_trace()
         # Can read the receipt file directly without any Ballot info

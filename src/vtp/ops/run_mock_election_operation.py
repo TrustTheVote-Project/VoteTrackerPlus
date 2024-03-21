@@ -29,7 +29,6 @@ import time
 # Project imports
 from vtp.core.address import Address
 from vtp.core.ballot import Ballot
-from vtp.core.common import Shellout
 from vtp.core.election_config import ElectionConfig
 from vtp.ops.accept_ballot_operation import AcceptBallotOperation
 from vtp.ops.cast_ballot_operation import CastBallotOperation
@@ -69,7 +68,7 @@ class RunMockElectionOperation(Operation):
             # a blank ballot location was specified (either directly or via an address)
             blank_ballots.append(ballot)
         else:
-            with Shellout.changed_cwd(the_election_config.get("git_rootdir")):
+            with self.changed_cwd(the_election_config.get("git_rootdir")):
                 for dirpath, _, files in os.walk("."):
                     for filename in [
                         f
@@ -99,8 +98,8 @@ class RunMockElectionOperation(Operation):
                     )
                 # - cast a ballot
                 #            import pdb; pdb.set_trace()
-                with Shellout.changed_cwd(the_election_config.get("git_rootdir")):
-                    self.shellOut(
+                with self.changed_cwd(the_election_config.get("git_rootdir")):
+                    self.shell_out(
                         ["git", "pull"],
                         no_touch_stds=True,
                         timeout=None,
@@ -151,7 +150,7 @@ class RunMockElectionOperation(Operation):
                         )
                     # don't let too much garbage build up
                     if count % 10 == 9:
-                        self.shellOut(
+                        self.shell_out(
                             ["git", "gc"],
                             no_touch_stds=True,
                             timeout=None,
@@ -182,13 +181,13 @@ class RunMockElectionOperation(Operation):
             )
             tally_contests.run()
         # clean up git just in case
-        self.shellOut(
+        self.shell_out(
             ["git", "remote", "prune", "origin"],
             no_touch_stds=True,
             timeout=None,
             check=True,
         )
-        self.shellOut(
+        self.shell_out(
             ["git", "gc"],
             no_touch_stds=True,
             timeout=None,
@@ -215,8 +214,8 @@ class RunMockElectionOperation(Operation):
 
         while True:
             count += 1
-            with Shellout.changed_cwd(the_election_config.get("git_rootdir")):
-                self.shellOut(
+            with self.changed_cwd(the_election_config.get("git_rootdir")):
+                self.shell_out(
                     ["git", "pull"],
                     no_touch_stds=True,
                     timeout=None,
@@ -304,7 +303,9 @@ class RunMockElectionOperation(Operation):
         """
 
         # Create a VTP ElectionData object if one does not already exist
-        the_election_config = ElectionConfig.configure_election(self.election_data_dir)
+        the_election_config = ElectionConfig.configure_election(
+            self.election_data_dir, self
+        )
 
         # If an address was used, use that
         if an_address is not None:

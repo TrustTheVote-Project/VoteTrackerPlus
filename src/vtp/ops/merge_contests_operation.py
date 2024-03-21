@@ -29,7 +29,7 @@ import random
 import re
 
 # Project import
-from vtp.core.common import Globals, Shellout
+from vtp.core.common import Globals
 from vtp.core.election_config import ElectionConfig
 
 # Local imports
@@ -46,9 +46,9 @@ class MergeContestsOperation(Operation):
     def merge_receipt_branch(self, branch: str, remote: bool):
         """Merge a specific receipt branch"""
         # This command is duplicate from merge_receipt_branch below
-        contest_file = Shellout.run(
+        contest_file = self.shell_out(
             ["git", "diff-tree", "--no-commit-id", "-r", "--name-only", branch],
-            verbosity=self.verbosity,
+            printonly_override=True,
             capture_output=True,
             text=True,
             check=True,
@@ -56,7 +56,8 @@ class MergeContestsOperation(Operation):
         # This command is duplicate from merge_receipt_branch below
         if not contest_file:
             self.imprimir(
-                f"(receipt) 'git diff-tree --no-commit-d -r --name-only {branch}' returned no files.  Skipping",
+                "(receipt) 'git diff-tree --no-commit-d -r --name-only "
+                f"{branch}' returned no files.  Skipping",
                 1,
             )
             return
@@ -64,21 +65,21 @@ class MergeContestsOperation(Operation):
         # unique, so there should never be a conflict on the branch -
         # it should always successfully auto-merge as there are not
         # file overlaps.
-        self.shellOut(["git", "merge", branch])
-        self.shellOut(["git", "push", "origin", "main"] check=True)
+        self.shell_out(["git", "merge", branch])
+        self.shell_out(["git", "push", "origin", "main"], check=True)
         # Delete the local and remote branch if this is a local branch
         if not remote:
-            self.shellOut(
+            self.shell_out(
                 ["git", "push", "origin", "-d", branch],
                 check=True,
             )
-            self.shellOut(
+            self.shell_out(
                 ["git", "branch", "-d", branch],
                 check=True,
             )
         else:
             # otherwise just delete the remote
-            self.shellOut(
+            self.shell_out(
                 ["git", "push", "origin", "-d", branch.removeprefix("origin/")],
                 check=True,
             )
@@ -88,8 +89,9 @@ class MergeContestsOperation(Operation):
         # If the VTP server is processing contests from different
         # voting centers, then the contest.json could be in different
         # locations on different branches.
-        contest_file = self.shellOut(
+        contest_file = self.shell_out(
             ["git", "diff-tree", "--no-commit-id", "-r", "--name-only", branch],
+            printonly_override=True,
             capture_output=True,
             text=True,
             check=True,
@@ -101,14 +103,15 @@ class MergeContestsOperation(Operation):
         # file to merge - pass.
         if not contest_file:
             self.imprimir(
-                f"(contest) 'git diff-tree --no-commit-d -r --name-only {branch}' returned no files.  Skipping",
+                "(contest) 'git diff-tree --no-commit-d -r --name-only "
+                f"{branch}' returned no files.  Skipping",
                 1,
             )
             return
         # Merge the branch / file.  Note - for contests there will
         # always be a conflict so this command will always return non
         # zero
-        self.shellOut(
+        self.shell_out(
             ["git", "merge", "--no-ff", "--no-commit", branch],
         )
         # ZZZ - replace this with an run-time cryptographic value
@@ -116,8 +119,9 @@ class MergeContestsOperation(Operation):
         # the git commit run-time value).  This will basically slam
         # the contents of the contest file to a second runtime digest
         # (the first one being contained in the commit itself).
-        result = self.shellOut(
+        result = self.shell_out(
             ["openssl", "rand", "-base64", "48"],
+            printonly_override=True,
             capture_output=True,
             text=True,
             check=True,
@@ -131,7 +135,7 @@ class MergeContestsOperation(Operation):
                 # merge
                 outfile.write(str(result.stdout))
         # Force the git add just in case
-        self.shellOut(
+        self.shell_out(
             ["git", "add", contest_file],
             check=True,
         )
@@ -141,24 +145,24 @@ class MergeContestsOperation(Operation):
                 "Running \"git commit -m 'auto commit - thank you for voting'\"",
                 3,
             )
-        self.shellOut(
+        self.shell_out(
             ["git", "commit", "-m", "auto commit - thank you for voting"],
             check=True,
         )
-        self.shellOut(["git", "push", "origin", "main"], check=True)
+        self.shell_out(["git", "push", "origin", "main"], check=True)
         # Delete the local and remote branch if this is a local branch
         if not remote:
-            self.shellOut(
+            self.shell_out(
                 ["git", "push", "origin", "-d", branch],
                 check=True,
             )
-            self.shellOut(
+            self.shell_out(
                 ["git", "branch", "-d", branch],
                 check=True,
             )
         else:
             # otherwise just delete the remote
-            self.shellOut(
+            self.shell_out(
                 ["git", "push", "origin", "-d", branch.removeprefix("origin/")],
                 check=True,
             )
@@ -225,7 +229,9 @@ class MergeContestsOperation(Operation):
         """
 
         # Create a VTP ElectionData object if one does not already exist
-        the_election_config = ElectionConfig.configure_election(self.election_data_dir)
+        the_election_config = ElectionConfig.configure_election(
+            self.election_data_dir, self
+        )
 
         # Set the three EV's
         os.environ["GIT_AUTHOR_DATE"] = "2022-01-01T12:00:00"
@@ -236,10 +242,10 @@ class MergeContestsOperation(Operation):
         # tranverse the correct symlink or not), use the CWD as when
         # accepting the ballot (accept_ballot.py).
         merged = 0
-        with Shellout.changed_cwd(the_election_config.get("git_rootdir")):
+        with self.changed_cwd(the_election_config.get("git_rootdir")):
             # So, the CWD in this block is the state/town subfolder
             # Pull the remote
-            self.shellOut(
+            self.shell_out(
                 ["git", "pull"],
                 check=True,
             )
@@ -262,8 +268,9 @@ class MergeContestsOperation(Operation):
             # after that each result is strip'ed
             cvr_branches = [
                 this_branch.strip()
-                for this_branch in self.shellOut(
+                for this_branch in self.shell_out(
                     cmds,
+                    printonly_override=True,
                     check=True,
                     capture_output=True,
                     text=True,

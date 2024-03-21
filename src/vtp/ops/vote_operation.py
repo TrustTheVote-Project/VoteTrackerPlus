@@ -24,7 +24,6 @@
 # Project imports
 from vtp.core.address import Address
 from vtp.core.ballot import Ballot
-from vtp.core.common import Shellout
 from vtp.core.election_config import ElectionConfig
 from vtp.ops.accept_ballot_operation import AcceptBallotOperation
 from vtp.ops.cast_ballot_operation import CastBallotOperation
@@ -53,13 +52,15 @@ class VoteOperation(Operation):
         """Main function - see -h for more info"""
 
         # Create a VTP ElectionData object if one does not already exist
-        the_election_config = ElectionConfig.configure_election(self.election_data_dir)
+        the_election_config = ElectionConfig.configure_election(
+            self.election_data_dir, self
+        )
 
         # git pull the ElectionData repo so to get the latest set of
         # remote CVRs branches
-        a_ballot = Ballot()
-        with Shellout.changed_cwd(a_ballot.get_cvr_parent_dir(the_election_config)):
-            self.shellOut(
+        a_ballot = Ballot(self)
+        with self.changed_cwd(a_ballot.get_cvr_parent_dir(the_election_config)):
+            self.shell_out(
                 ["git", "pull"],
                 check=True,
             )

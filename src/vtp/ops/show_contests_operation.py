@@ -22,7 +22,6 @@
 # Standard imports
 
 # Project imports
-from vtp.core.common import Shellout
 from vtp.core.election_config import ElectionConfig
 
 # Local imports
@@ -42,15 +41,16 @@ class ShowContestsOperation(Operation):
         """
         errors = 0
         input_data = "\n".join(digests.split(",")) + "\n"
-        with Shellout.changed_cwd(the_election_config.get("git_rootdir")):
+        with self.changed_cwd(the_election_config.get("git_rootdir")):
             output_lines = (
-                self.shellOut(
+                self.shell_out(
                     [
                         "git",
                         "cat-file",
                         "--batch-check=%(objectname) %(objecttype)",
                         "--buffer",
                     ],
+                    printonly_override=True,
                     input=input_data,
                     text=True,
                     check=True,
@@ -68,7 +68,7 @@ class ShowContestsOperation(Operation):
             elif commit_type != "commit":
                 self.imprimir(
                     f"invalid digest type: n={count} digest={digest} type={commit_type}",
-                    1
+                    1,
                 )
                 error_digests.add(digest)
                 errors += 1
@@ -80,7 +80,9 @@ class ShowContestsOperation(Operation):
         """Main function - see -h for more info"""
 
         # Create a VTP ElectionData object if one does not already exist
-        the_election_config = ElectionConfig.configure_election(self.election_data_dir)
+        the_election_config = ElectionConfig.configure_election(
+            self, self.election_data_dir
+        )
 
         # First validate the digests
         error_digests = set()
@@ -89,10 +91,11 @@ class ShowContestsOperation(Operation):
             digest for digest in contest_check.split(",") if digest not in error_digests
         ]
         # show/log the digests
-        with Shellout.changed_cwd(the_election_config.get("git_rootdir")):
+        with self.changed_cwd(the_election_config.get("git_rootdir")):
             output_lines = (
-                self.shellOut(
+                self.shell_out(
                     ["git", "show", "-s"] + valid_digests,
+                    printonly_override=True,
                     text=True,
                     check=True,
                     capture_output=True,
@@ -110,12 +113,16 @@ class ShowContestsOperation(Operation):
 # this is a loop of shell commands
 #        for digest in contest_check.split(','):
 #            if digest not in error_digests:
-#                self.shellOut(['git', 'log', '-1', digest], check=True)
+#                self.shell_out(
+#                    ['git', 'log', '-1', digest],
+#                    printonly_override=True,
+#                    check=True)
 
 # this does not work well enough either
 #        input_data = '\n'.join(contest_check.split(',')) + '\n'
-#        self.shellOut(
+#        self.shell_out(
 #            ['git', 'cat-file', '--batch=%(objectname)'],
+#            printonly_override=True,
 #            input=input_data,
 #            text=True,
 #            check=True)

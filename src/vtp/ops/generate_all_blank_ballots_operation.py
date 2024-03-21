@@ -27,7 +27,6 @@ import pprint
 # Project imports
 from vtp.core.address import Address
 from vtp.core.ballot import BlankBallot
-from vtp.core.common import Common
 from vtp.core.election_config import ElectionConfig
 
 # Local imports
@@ -46,7 +45,9 @@ class GenerateAllBlankBallotsOperation(Operation):
         """Main function - see -h for more info"""
 
         # Create a VTP ElectionData object if one does not already exist
-        the_election_config = ElectionConfig.configure_election(self.election_data_dir)
+        the_election_config = ElectionConfig.configure_election(
+            self, self.election_data_dir
+        )
 
         # Walk a topo sort of the DAG and for any node with
         # 'unique-ballots', add them all.  If the subdir does not match
@@ -64,7 +65,7 @@ class GenerateAllBlankBallotsOperation(Operation):
                     generic_address = Address.create_generic_address(
                         the_election_config, subdir, ggos
                     )
-                    generic_ballot = BlankBallot()
+                    generic_ballot = BlankBallot(self)
                     generic_ballot.create_blank_ballot(
                         generic_address, the_election_config
                     )

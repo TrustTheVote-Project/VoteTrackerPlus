@@ -37,7 +37,7 @@ import qrcode.image.svg
 # Project imports
 from vtp.core.address import Address
 from vtp.core.ballot import Ballot, Contests
-from vtp.core.common import Globals, Shellout
+from vtp.core.common import Globals
 from vtp.core.election_config import ElectionConfig
 from vtp.ops.merge_contests_operation import MergeContestsOperation
 
@@ -55,8 +55,9 @@ class AcceptBallotOperation(Operation):
         Return a random branchpoint on the supplied branch Requires
         the CWD to be the parent of the CVRs directory.
         """
-        result = self.shellOut(
+        result = self.shell_out(
             ["git", "log", branch, "--pretty=format:'%h'"],
+            printonly_override=True,
             check=True,
             capture_output=True,
             text=True,
@@ -112,20 +113,21 @@ class AcceptBallotOperation(Operation):
         # and attempt at a new unique branch
         branch = self.new_branch_name(contest, style)
         # Get the current branch for reference
-        current_branch = self.shellOut(
+        current_branch = self.shell_out(
             ["git", "rev-parse", "--abbrev-ref", "HEAD"],
+            printonly_override=True,
             check=True,
             capture_output=True,
             text=True,
         ).stdout.strip()
         # if after 3 tries it still does not work, raise an error
         for _ in [0, 1, 2]:
-            cmd1 = self.shellOut(
+            cmd1 = self.shell_out(
                 ["git", "checkout", "-b", branch, branchpoint],
             )
             if cmd1.returncode == 0:
                 # Created the local branch - see if it is push-able
-                cmd2 = self.shellOut(
+                cmd2 = self.shell_out(
                     ["git", "push", "-u", "origin", branch],
                 )
                 if cmd2.returncode == 0:
@@ -133,11 +135,11 @@ class AcceptBallotOperation(Operation):
                     return branch
                 # At this point there was some type of push failure - delete the
                 # local branch and try again
-                self.shellOut(
+                self.shell_out(
                     ["git", "checkout", current_branch],
                     check=True,
                 )
-                self.shellOut(
+                self.shell_out(
                     ["git", "branch", "-D", branch],
                     check=True,
                 )
@@ -159,7 +161,7 @@ class AcceptBallotOperation(Operation):
         # since this is per contest, there should only be about 100 or so
         # of them.
         head_commits = (
-            self.shellOut(
+            self.shell_out(
                 [
                     "git",
                     "rev-list",
@@ -170,6 +172,7 @@ class AcceptBallotOperation(Operation):
                     "--exclude=refs/remotes/origin/HEAD",
                     "--all",
                 ],
+                printonly_override=True,
                 check=True,
                 capture_output=True,
                 text=True,
@@ -179,10 +182,10 @@ class AcceptBallotOperation(Operation):
         )
         # With that list of HEAD exclusion commits, list the rest of the
         # --yes-walk commits and scrape that for the commits of interest.
-        return Shellout.cvr_parse_git_log_output(
+        return self.cvr_parse_git_log_output(
             ["git", "log", "--no-walk", "--pretty=format:%H%B"] + head_commits,
             config,
-            verbosity=self.verbosity - 1,
+            verbosity_override=self.verbosity - 1,
         )
 
     def get_cloaked_contests(self, contest, branch):
@@ -197,7 +200,7 @@ class AcceptBallotOperation(Operation):
         """
         this_uid = contest.get("uid")
         cloak_target = contest.get("cloak")
-        return self.shellOut(
+        return self.shell_out(
             [
                 "git",
                 "log",
@@ -208,6 +211,7 @@ class AcceptBallotOperation(Operation):
                 f'--grep="uid": "{this_uid}"',
                 f'--grep="cloak": "{cloak_target}"',
             ],
+            printonly_override=True,
             check=True,
             capture_output=True,
             text=True,
@@ -235,23 +239,23 @@ class AcceptBallotOperation(Operation):
                 branch,
                 Globals.get("RECEIPT_FILE_MD"),
             )
-        self.shellOut(
+        self.shell_out(
             ["git", "add", payload_name],
             check=True,
         )
         # Note - apparently git places the commit msg on STDERR - hide it
         if style == "contest":
-            self.shellOut(
+            self.shell_out(
                 ["git", "commit", "-F", payload_name],
                 check=True,
             )
         else:
-            self.shellOut(
+            self.shell_out(
                 ["git", "commit", "-m", "Ballot Voucher"],
                 check=True,
             )
         # Capture the digest
-        digest = self.shellOut(
+        digest = self.shell_out(
             ["git", "log", "-1", "--pretty=format:%H"],
             check=True,
             capture_output=True,
@@ -280,14 +284,15 @@ class AcceptBallotOperation(Operation):
                 continue
             if len(unmerged_cvrs[uid]) < Globals.get("BALLOT_RECEIPT_ROWS"):
                 self.imprimir(
-                    f"not enough unmerged CVRs ({len(unmerged_cvrs[uid])}) to print receipt for contest {uid}",
+                    f"not enough unmerged CVRs ({len(unmerged_cvrs[uid])}) "
+                    f"to print receipt for contest {uid}",
                     2,
                 )
                 skip_receipt = True
             random.shuffle(unmerged_cvrs[uid])
         # Create the ballot receipt
         if skip_receipt:
-            self.imprimir(f"Skipping ballot receipt due to lack of unmerged CVRs", 2)
+            self.imprimir("Skipping ballot receipt due to lack of unmerged CVRs", 2)
             return [], 0, ""
 
         ballot_receipt = []
@@ -372,7 +377,7 @@ class AcceptBallotOperation(Operation):
         contest_receipts = {}
         branches = []
         cloak_receipts = {}
-        with Shellout.changed_cwd(a_ballot.get_cvr_parent_dir(the_election_config)):
+        with self.changed_cwd(a_ballot.get_cvr_parent_dir(the_election_config)):
             # So, the CWD in this block is the state/town subfolder
 
             # It turns out that determining the other not yet merged to
@@ -388,7 +393,7 @@ class AcceptBallotOperation(Operation):
             contests = Contests(a_ballot)
             for contest in contests:
                 #                import pdb; pdb.set_trace()
-                with Shellout.changed_branch("main"):
+                with self.changed_branch("main"):
                     # get N other values for each contest for this ballot
                     uid = contest.get("uid")
                     # atomically create the branch locally and remotely
@@ -427,12 +432,12 @@ class AcceptBallotOperation(Operation):
             # as the others and cloaks as much as possible, then push as
             # atomically as possible all the contests.
             for branch in branches:
-                self.shellOut(
+                self.shell_out(
                     ["git", "push", "origin", branch],
                 )
                 # Delete the local as they build up too much.  The local
                 # reflog keeps track of the local branches
-                self.shellOut(
+                self.shell_out(
                     ["git", "branch", "-d", branch],
                 )
         return contest_receipts, branches, unmerged_cvrs, cloak_receipts
@@ -448,8 +453,8 @@ class AcceptBallotOperation(Operation):
         # When here the actual voucher file on disk wants to be a
         # markdown file for a web-api endpoint rather than the
         # original csv file defined above.
-        with Shellout.changed_cwd(a_ballot.get_cvr_parent_dir(the_election_config)):
-            with Shellout.changed_branch("main"):
+        with self.changed_cwd(a_ballot.get_cvr_parent_dir(the_election_config)):
+            with self.changed_branch("main"):
                 # Create a unique branch for the receipt
                 receipt_branch = self.checkout_new_branch(
                     the_election_config, "", "main", "receipt"
@@ -462,7 +467,7 @@ class AcceptBallotOperation(Operation):
                 # Commit the voter's ballot voucher
                 self.contest_add_and_commit(receipt_branch, "receipt")
                 # Push the voucher
-                self.shellOut(
+                self.shell_out(
                     ["git", "push", "origin", receipt_branch],
                 )
 
@@ -496,7 +501,7 @@ class AcceptBallotOperation(Operation):
         # At this point the local receipt_branch can be deleted as
         # the local branches build up too much. The local reflog
         # keeps track of the local branches
-        self.shellOut(
+        self.shell_out(
             ["git", "branch", "-d", receipt_branch],
         )
         return receipt_branch, qr_img
@@ -526,10 +531,12 @@ class AcceptBallotOperation(Operation):
         """
 
         # Create a VTP ElectionData object if one does not already exist
-        the_election_config = ElectionConfig.configure_election(self.election_data_dir)
+        the_election_config = ElectionConfig.configure_election(
+            self.election_data_dir, self
+        )
 
         # Create a ballot
-        a_ballot = Ballot()
+        a_ballot = Ballot(self)
 
         # Note - it probably makes the most sense to validate an
         # incoming_cast_ballot against the set of target blank_ballots
@@ -547,7 +554,7 @@ class AcceptBallotOperation(Operation):
         # up in the same spot, nominally in the town subfolder.
         if cast_ballot:
             # Read the specified cast_ballot
-            with Shellout.changed_cwd(the_election_config.get("git_rootdir")):
+            with self.changed_cwd(the_election_config.get("git_rootdir")):
                 a_ballot.read_a_cast_ballot("", the_election_config, cast_ballot)
         elif cast_ballot_json:
             a_ballot.set_ballot_data(cast_ballot_json)
@@ -651,5 +658,6 @@ class AcceptBallotOperation(Operation):
         # convenient for it to be normal 2-D array -
         # list[list[str]]. So convert it first.
         return self.convert_csv_to_2d_list(ballot_check), index, qr_img
+
 
 # EOF

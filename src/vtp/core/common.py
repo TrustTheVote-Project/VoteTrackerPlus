@@ -20,6 +20,7 @@
 # pylint: disable=too-few-public-methods
 
 # standard imports
+import json
 import os
 import re
 
@@ -111,7 +112,7 @@ class Globals:
         return Globals._config[name]
 
     @staticmethod
-    def set_ELECTION_NAME(value):
+    def set_election_name(value):
         """Set the ELECTION_NAME"""
         Globals._config["ELECTION_NAME"] = value
 
@@ -230,5 +231,6 @@ class Common:
         contest_cvr["header"] = output_lines[:3]
         contest_cvr["payload"] = json.loads("".join(output_lines[4:]))
         return contest_cvr
+
 
 # EOF

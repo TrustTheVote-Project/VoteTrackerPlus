@@ -25,7 +25,6 @@ import pprint
 # Project imports
 from vtp.core.address import Address
 from vtp.core.ballot import BlankBallot
-from vtp.core.common import Common
 from vtp.core.election_config import ElectionConfig
 
 # Local imports
@@ -49,7 +48,9 @@ class CreateBlankBallotOperation(Operation):
         """Main function - see -h for more info"""
 
         # Create a VTP ElectionData object if one does not already exist
-        the_election_config = ElectionConfig.configure_election(self.election_data_dir)
+        the_election_config = ElectionConfig.configure_election(
+            self.election_data_dir, self
+        )
 
         # Set the ggos for the address
         an_address.map_ggos(the_election_config)
@@ -60,17 +61,19 @@ class CreateBlankBallotOperation(Operation):
         self.imprimir(f"And language is: {language}", 5)
 
         # Construct a blank ballot
-        the_ballot = BlankBallot()
+        the_ballot = BlankBallot(self)
         the_ballot.create_blank_ballot(an_address, the_election_config)
         self.imprimir(f"Active GGOs: {the_ballot.get('active_ggos')}", 4)
         self.imprimir(
-            f"And the blank ballot looks like:\n{pprint.pformat(the_ballot.dict())}", 5)
+            f"And the blank ballot looks like:\n{pprint.pformat(the_ballot.dict())}",
+            5,
         )
 
         # Maybe display some node info
         node = the_ballot.get("ballot_node")
         self.imprimir(
-            f"And a/the node ({node}) looks like:\n{pprint.pformat(the_election_config.get_node(node, 'ALL'))}",
+            f"And a/the node ({node}) looks like:\n"
+            f"{pprint.pformat(the_election_config.get_node(node, 'ALL'))}",
             5,
         )
         self.imprimir(

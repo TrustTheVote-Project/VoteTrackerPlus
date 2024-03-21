@@ -48,13 +48,15 @@ class TallyContestsOperation(Operation):
         """Main function - see -h for more info"""
 
         # Create a VTP ElectionData object if one does not already exist
-        the_election_config = ElectionConfig.configure_election(self, self.election_data_dir)
+        the_election_config = ElectionConfig.configure_election(
+            self, self.election_data_dir
+        )
 
         # git pull the ElectionData repo so to get the latest set of
         # remote CVRs branches
-        a_ballot = Ballot()
+        a_ballot = Ballot(self)
         with self.changed_cwd(a_ballot.get_cvr_parent_dir(the_election_config)):
-            self.shellOut(["git", "pull"], check=True)
+            self.shell_out(["git", "pull"], check=True)
 
         # Will process all the CVR commits on the main branch and tally
         # all the contests found.  Note - even if a contest is specified,
@@ -65,7 +67,14 @@ class TallyContestsOperation(Operation):
         # (though either order is valid, voters probably will understand
         # parent to child order better)
         contest_batches = self.cvr_parse_git_log_output(
-            ["git", "log", "--topo-order", "--no-merges", "--reverse", "--pretty=format:%H%B"],
+            [
+                "git",
+                "log",
+                "--topo-order",
+                "--no-merges",
+                "--reverse",
+                "--pretty=format:%H%B",
+            ],
             the_election_config,
         )
 

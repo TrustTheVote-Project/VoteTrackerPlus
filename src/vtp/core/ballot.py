@@ -208,7 +208,7 @@ class Ballot:
                 f"{','.join(missing_keys)}"
             )
 
-    def __init__(self):
+    def __init__(self, operation_self):
         """Constructor - just creates the dictionary and returns the
         object.
         """
@@ -217,6 +217,7 @@ class Ballot:
         self.ballot_subdir = ""
         self.ballot_node = ""
         self.ballot_filename = ""
+        self.operation_self = operation_self
 
     def verify_cast_ballot_data(self, config):
         """Will validate an incoming cast ballot (a ballot CVR, not a
@@ -234,7 +235,7 @@ class Ballot:
         # Ballot.verify_ballot_outer_keys(self)
 
         # Get the blank ballot
-        the_bb = BlankBallot()
+        the_bb = BlankBallot(self.operation_self)
         the_bb.read_a_blank_ballot(
             None,
             config,
@@ -414,7 +415,7 @@ class Ballot:
             ballot_file = Ballot.gen_cast_ballot_location(
                 config, address.get("ballot_subdir")
             )
-        self.imprimir(f"Reading {ballot_file}", 4)
+        self.operation_self.imprimir(f"Reading {ballot_file}", 4)
         with open(ballot_file, "r", encoding="utf8") as file:
             json_doc = json.load(file)
             self.contests = json_doc["contests"]
@@ -650,7 +651,7 @@ class BlankBallot(Ballot):
                 self.active_ggos, self.ballot_subdir, style
             )
         if style == "json":
-            self.imprimir(f"Reading {ballot_file}", 4)
+            self.operation_self.imprimir(f"Reading {ballot_file}", 4)
             with open(ballot_file, "r", encoding="utf8") as file:
                 json_doc = json.load(file)
                 self.contests = json_doc["contests"]

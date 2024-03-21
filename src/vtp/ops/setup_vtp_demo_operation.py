@@ -28,7 +28,7 @@ import re
 import secrets
 
 # Project imports
-from vtp.core.common import Common, Globals, Shellout
+from vtp.core.common import Globals
 from vtp.core.election_config import ElectionConfig
 
 # Local imports
@@ -99,8 +99,8 @@ class SetupVtpDemoOperation(Operation):
         # submodules to be cloned.
         for clone_dir in clone_dirs:
             if not self.printonly:
-                with Shellout.changed_cwd(clone_dir):
-                    self.shellOut(
+                with self.changed_cwd(clone_dir):
+                    self.shell_out(
                         ["git", "clone", upstream_url],
                         check=True,
                     )
@@ -139,7 +139,7 @@ class SetupVtpDemoOperation(Operation):
             while True:
                 count += 1
                 try:
-                    self.imprimir(f"creating (path2)", 5)
+                    self.imprimir(f"creating ({path2})", 5)
                     os.mkdir(path2)
                 except FileExistsError as exc:
                     if count > 3:
@@ -154,12 +154,12 @@ class SetupVtpDemoOperation(Operation):
                 break
         else:
             self.imprimir(f"creating ({path1}) if it does not exist", 5)
-            self.imprimir(f"creating (path2) if it does not exist", 5)
+            self.imprimir(f"creating ({path2}) if it does not exist", 5)
 
         # Clone the repo from the local clone, not the GitHub remote clone
         self.create_client_repos([path2], self.tabulation_local_upstream_absdir)
         # return the GUID
-        self.imprimir(f"returning guid", 5)
+        self.imprimir(f"returning guid ({guid})", 5)
         return guid
 
     # pylint: disable=duplicate-code
@@ -172,12 +172,15 @@ class SetupVtpDemoOperation(Operation):
         """Main function - see -h for more info"""
 
         # Create a VTP ElectionData object if one does not already exist
-        the_election_config = ElectionConfig.configure_election(self.election_data_dir)
+        the_election_config = ElectionConfig.configure_election(
+            self, self.election_data_dir
+        )
 
         # Get the election data native GitHub remote clone name from _here_
-        with Shellout.changed_cwd(the_election_config.get("git_rootdir")):
-            election_data_remote_url = self.shellOut(
+        with self.changed_cwd(the_election_config.get("git_rootdir")):
+            election_data_remote_url = self.shell_out(
                 ["git", "config", "--get", "remote.origin.url"],
+                printonly_override=True,
                 check=True,
                 capture_output=True,
                 text=True,
@@ -222,14 +225,14 @@ class SetupVtpDemoOperation(Operation):
 
         # Second clone the bare upstream remote GitHub ElectionData repo
         if not self.printonly:
-            with Shellout.changed_cwd(bare_clone_path):
-                self.shellOut(
+            with self.changed_cwd(bare_clone_path):
+                self.shell_out(
                     ["git", "clone", "--bare", election_data_remote_url],
                     check=True,
                 )
         else:
-            self.imprimir(f"Entering dir (bare_clone_path):", 5)
-            self.imprimir(f"Running git clone --bare election_data_remote_url", 3)
+            self.imprimir(f"Entering dir ({bare_clone_path}):", 5)
+            self.imprimir(f"Running git clone --bare {election_data_remote_url}", 3)
             self.imprimir(f"Leaving dir ({bare_clone_path}):", 5)
 
         # Third create the mock scanner client subdirs

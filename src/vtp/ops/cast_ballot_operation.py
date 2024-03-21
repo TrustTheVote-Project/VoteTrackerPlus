@@ -26,7 +26,6 @@ the Merkle tree.
 """
 
 # Standard imports
-import logging
 import pprint
 import random
 
@@ -35,7 +34,6 @@ import pyinputplus
 # Project imports
 from vtp.core.address import Address
 from vtp.core.ballot import Ballot, BlankBallot, Contests
-from vtp.core.common import Shellout
 from vtp.core.contest import Contest
 from vtp.core.election_config import ElectionConfig
 
@@ -250,15 +248,17 @@ class CastBallotOperation(Operation):
         """Main function - see -h for more info"""
 
         # Create a VTP ElectionData object if one does not already exist
-        the_election_config = ElectionConfig.configure_election(self.election_data_dir)
+        the_election_config = ElectionConfig.configure_election(
+            self, self.election_data_dir
+        )
 
         # Create a ballot
-        a_ballot = BlankBallot()
+        a_ballot = BlankBallot(self)
 
         # process the provided address
         if blank_ballot:
             # Read the specified blank_ballot
-            with Shellout.changed_cwd(the_election_config.get("git_rootdir")):
+            with self.changed_cwd(the_election_config.get("git_rootdir")):
                 a_ballot.read_a_blank_ballot("", the_election_config, blank_ballot)
         else:
             if isinstance(an_address, str):
@@ -274,7 +274,9 @@ class CastBallotOperation(Operation):
 
         # If still here, prompt the user to vote for each contest
         contests = self.loop_over_contests(a_ballot, demo_mode)
-        self.imprimir(f"And the ballot looks like:\n{pprint.pformat(a_ballot.dict())}", 5)
+        self.imprimir(
+            f"And the ballot looks like:\n{pprint.pformat(a_ballot.dict())}", 5
+        )
 
         # Validate at least something
         a_ballot.verify_cast_ballot_data(the_election_config)
