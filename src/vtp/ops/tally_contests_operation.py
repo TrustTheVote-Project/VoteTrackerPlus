@@ -99,7 +99,7 @@ class TallyContestsOperation(Operation):
                 f"uid={contest_batches[contest_batch][0]['CVR']['uid']}, "
                 f"tally={contest_batches[contest_batch][0]['CVR']['tally']}, "
                 f"max={the_tally.get('max')}, "
-                f"win-by>{the_tally.get('win-by')}"
+                f"win_by>{the_tally.get('win_by')}"
             )
             # Tally all the contests for this contest
             #        import pdb; pdb.set_trace()

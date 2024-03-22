@@ -23,6 +23,7 @@ import re
 from fractions import Fraction
 
 # local
+from .common import Globals
 from .exceptions import TallyException
 
 
@@ -34,12 +35,13 @@ class Contest:
     _config_keys = [
         "choices",
         "tally",
-        "win-by",
+        "win_by",
         "max",
-        "write-in",
+        "write_in",
         "description",
         "contest_type",
-        "ticket_offices",
+        "ticket_titles",
+        "election_name",
     ]
     _blank_ballot_keys = _config_keys + ["uid"]
     _cast_keys = _blank_ballot_keys + ["selection", "name", "cast_branch", "ggo"]
@@ -70,7 +72,7 @@ class Contest:
         """
         Will validate the syntax of the contest choices.  To validate
         a ticket contest, the outer context node now contains the
-        ticket_offices while the inner node choice contains the paired
+        ticket_titles while the inner node choice contains the paired
         ticket_names.  A a_c_blob can be either a_contest_blob or
         a_cvr_blob.
         """
@@ -102,16 +104,16 @@ class Contest:
                             "Contest type is a ticket contest but does not contain ticket_names"
                         )
                     if len(choice["ticket_names"]) != len(
-                        contest_dict["ticket_offices"]
+                        contest_dict["ticket_titles"]
                     ):
                         raise KeyError(
-                            "when either 'ticket_names' or 'ticket_offices' are specified"
+                            "when either 'ticket_names' or 'ticket_titles' are specified"
                             "the length of each array mush match - "
                             f"{len(choice['ticket_names'])} != {len(choice['ticket_names'])}"
                         )
                     if not isinstance(choice["ticket_names"], list):
                         raise KeyError("the key 'ticket_names' can only be a list")
-                    if not isinstance(contest_dict["ticket_offices"], list):
+                    if not isinstance(contest_dict["ticket_titles"], list):
                         raise KeyError("the key 'ticket_names' can only be a list")
                 elif "ticket_names" in choice:
                     raise KeyError(
@@ -122,6 +124,18 @@ class Contest:
                 continue
 
     @staticmethod
+    def check_contest_type(a_blob: dict):
+        """Will validate the value of contest_type"""
+        if "contest_type" not in a_blob or a_blob["contest_type"] not in [
+            "candidate",
+            "ticket",
+            "question",
+        ]:
+            raise KeyError(
+                "contest_type must be specified as either: candidate, ticket, or question"
+            )
+
+    @staticmethod
     def check_contest_blob_syntax(
         a_contest_blob: dict,
         filename: str = "",
@@ -130,7 +144,12 @@ class Contest:
     ):
         """
         Will check the synatx of a contest somewhat and conveniently
-        return the contest name
+        return the contest name.
+
+        Two adjustments can be made:
+        1 - if there is mo max, will set it (plurality:1 and RCV:len(choices))
+        2 - will add the Globals.ELECTION_NAME to the contest (so that it flows
+            out through the CVR and beyond - for voter UX purposes only
         """
         ### ZZZ - should sanity check the name
         name = next(iter(a_contest_blob))
@@ -161,7 +180,15 @@ class Contest:
             )
         # Need to validate choices sub data structure as well
         Contest.check_contest_choices(a_contest_blob[name]["choices"], a_contest_blob)
-        # good enough
+        Contest.check_contest_type(a_contest_blob)
+        # if max is not set, set it
+        if "max" not in a_contest_blob:
+            if a_contest_blob["tally"] == "plurality":
+                a_contest_blob["max"] = 1
+            else:
+                a_contest_blob["max"] = len(a_contest_blob["choices"])
+        # For voter UX, add ELECTION_NAME
+        a_contest_blob["election_name"] = Globals.get("ELECTION_NAME")
         return name
 
     @staticmethod
@@ -189,6 +216,7 @@ class Contest:
             )
         # Need to validate choices sub data structure as well
         Contest.check_contest_choices(a_cvr_blob["choices"], a_cvr_blob)
+        Contest.check_contest_type(a_cvr_blob)
 
     @staticmethod
     def get_choices_from_contest(choices: list):
@@ -280,12 +308,12 @@ class Contest:
         return False
 
     def get_ticket_info(self, choice_index: int):
-        """Returns the ticket info as a 'ticket_names', 'ticket_offices' dictionary"""
+        """Returns the ticket info as a 'ticket_names', 'ticket_titles' dictionary"""
         # ticket info
         if "ticket_names" in self.contest["choices"][choice_index]:
             return {
                 "ticket_names": self.contest["choices"][choice_index]["ticket_names"],
-                "ticket_offices": self.contest["ticket_offices"],
+                "ticket_titles": self.contest["ticket_titles"],
             }
         return None
 
@@ -294,7 +322,7 @@ class Contest:
         ticket = []
         ticket_info = self.get_ticket_info(choice_index)
         for ticket_index, name in enumerate(ticket_info["ticket_names"]):
-            ticket.append(f"{name} ({ticket_info['ticket_offices'][ticket_index]})")
+            ticket.append(f"{name} ({ticket_info['ticket_titles'][ticket_index]})")
         return "; ".join(ticket)
 
     def get(self, name: str):
@@ -399,15 +427,15 @@ class Tally:
         self.rcv_round = []
         self.rcv_round.append([])
 
-        # win-by and max are optional but have known defaults.
-        # Determine the win-by if is not specified by the
+        # win_by and max are optional but have known defaults.
+        # Determine the win_by if is not specified by the
         # ElectionConfig.
         self.defaults = {}
         self.defaults["max"] = 1 if "max" not in self.contest else self.contest["max"]
-        self.defaults["win-by"] = (
+        self.defaults["win_by"] = (
             (1.0 / float(1 + self.defaults["max"]))
-            if "win-by" not in self.contest
-            else Fraction(self.contest["win-by"])
+            if "win_by" not in self.contest
+            else Fraction(self.contest["win_by"])
         )
 
         # Need to keep track of a selections/choices that are no longer
@@ -424,7 +452,7 @@ class Tally:
 
     def get(self, name: str):
         """Simple limited functionality getter"""
-        if name in ["max", "win-by"]:
+        if name in ["max", "win_by"]:
             return self.defaults[name]
         if name in [
             "digest",
@@ -781,8 +809,8 @@ class Tally:
             # Note the test is '>' and NOT '>='
             if (
                 float(self.selection_counts[choice]) / float(total_current_vote_count)
-            ) > self.defaults["win-by"]:
-                # A winner.  Depending on the win-by (which is a
+            ) > self.defaults["win_by"]:
+                # A winner.  Depending on the win_by (which is a
                 # function of max), there could be multiple
                 # winners in this round.
                 self.winner_order.append((choice, self.selection_counts[choice]))
@@ -814,7 +842,17 @@ class Tally:
             # Maybe print an provenance log for the tally of this contest
             provenance_digest = digest if digest in checks else ""
             # Validate the values that should be the same as self
-            for field in ["choices", "tally", "win-by", "max", "ggo", "uid", "name"]:
+            for field in [
+                "choices",
+                "tally",
+                "win_by",
+                "max",
+                "ggo",
+                "uid",
+                "name",
+                "contest_type",
+                "election_name",
+            ]:
                 if field in self.contest:
                     if self.contest[field] != contest[field]:
                         errors[digest].append(
@@ -887,7 +925,7 @@ class Tally:
         # The rest of this block handles RCV
 
         # See if another RCV round is necessary.  When max=1 there is
-        # only one RCV winner.  However, not only can max>1 but win-by
+        # only one RCV winner.  However, not only can max>1 but win_by
         # might be 2/3 and not just a simple majority.  So only if there
         # are enough winners with enough votes is this contest done.
 
@@ -900,8 +938,8 @@ class Tally:
             # Note the test is '>' and NOT '>='
             if (
                 float(self.selection_counts[choice]) / float(total_current_vote_count)
-            ) > self.defaults["win-by"]:
-                # A winner.  Depending on the win-by (which is a
+            ) > self.defaults["win_by"]:
+                # A winner.  Depending on the win_by (which is a
                 # function of max), there could be multiple
                 # winners in this round.
                 self.winner_order.append((choice, self.selection_counts[choice]))

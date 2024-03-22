@@ -57,9 +57,9 @@ class CreateBlankBallotOperation(Operation):
         an_address.map_ggos(the_election_config)
 
         # print some debugging info
-        self.imprimir(f"The election config ggos are: {the_election_config}", 5)
-        self.imprimir(f"And the address is: {str(an_address)}", 5)
-        self.imprimir(f"And language is: {language}", 5)
+        self.imprimir(f"The election config ggos are: {the_election_config}", 4)
+        self.imprimir(f"And the address is: {str(an_address)}", 4)
+        self.imprimir(f"And language is: {language}", 4)
 
         # Construct a blank ballot
         the_ballot = BlankBallot(self)

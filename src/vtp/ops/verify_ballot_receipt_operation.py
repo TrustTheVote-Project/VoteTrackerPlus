@@ -305,7 +305,8 @@ class VerifyBallotReceiptOperation(Operation):
 
         # Create a VTP ElectionData object if one does not already exist
         the_election_config = ElectionConfig.configure_election(
-            self, self.election_data_dir,
+            self,
+            self.election_data_dir,
         )
 
         # git pull the ElectionData repo so to get the latest set of

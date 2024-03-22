@@ -96,7 +96,7 @@ class Operation:
                 # - add line breaks per line
                 # - convert an array to a table with css class=imprimir
                 # ZZZ
-#                import pdb; pdb.set_trace()
+                #                import pdb; pdb.set_trace()
                 a_line = Operation._sha1_regex.sub(
                     r'<a href="foo/\1" target="_blank">\1</a>', a_line
                 )

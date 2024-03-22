@@ -178,7 +178,7 @@ Running "git rev-parse --show-toplevel"
 Running "git pull"
 Already up to date.
 Running "git log --topo-order --no-merges --pretty=format:%H%B"
-Scanned 348 contests for contest (US president) uid=0000, tally=rcv, max=1, win-by>0.5
+Scanned 348 contests for contest (US president) uid=0000, tally=rcv, max=1, win_by>0.5
 RCV: round 0
 Total vote count: 348
 [('Mitt Romney', 74), ('Kamala Harris', 62), ('Cory Booker', 61), ('Phil Scott', 60), ("Beta O'rourke", 46), ('Ron DeSantis', 45)]
@@ -212,7 +212,7 @@ Running "git rev-parse --show-toplevel"
 Running "git pull"
 Already up to date.
 Running "git log --topo-order --no-merges --pretty=format:%H%B"
-Scanned 348 contests for contest (US president) uid=0000, tally=rcv, max=1, win-by>0.5
+Scanned 348 contests for contest (US president) uid=0000, tally=rcv, max=1, win_by>0.5
 RCV: round 0
 Counted 793fc652bfea0cc8590e2c618bdcaf8605db26e7: choice=Beta O'rourke
 Total vote count: 348
@@ -236,7 +236,7 @@ Contest US president (uid=0000):
   ('Phil Scott', 0)
   ("Beta O'rourke", 0)
   ('Ron DeSantis', 0)
-Scanned 347 contests for contest (US senate) uid=0001, tally=rcv, max=1, win-by>0.5
+Scanned 347 contests for contest (US senate) uid=0001, tally=rcv, max=1, win_by>0.5
 RCV: round 0
 Counted c09d2105936fe408379fcd7332fb88020f107a53: choice=Alexandria Ocasio-Cortez
 Total vote count: 347
@@ -251,20 +251,20 @@ Contest US senate (uid=0001):
   ('Larry Hogan', 167)
   ('Pramila Jayapal', 0)
   ('Greg Abbott', 0)
-Scanned 347 contests for contest (governor) uid=0002, tally=plurality, max=1, win-by>0.5
+Scanned 347 contests for contest (governor) uid=0002, tally=plurality, max=1, win_by>0.5
 Plurality - one round
 Counted dfacf455e5081208b16a5f19bfa5b62465e8558d: choice=Bernie Sanders
 Contest governor (uid=0002):
   ('Brian Kemp', 186)
   ('Bernie Sanders', 161)
-Scanned 348 contests for contest (County Clerk) uid=0003, tally=plurality, max=1, win-by>0.5
+Scanned 348 contests for contest (County Clerk) uid=0003, tally=plurality, max=1, win_by>0.5
 Plurality - one round
 Counted c70ddbeaf2a035d6354288b54d8ac9a05f499a11: choice=Huckleberry Finn
 Contest County Clerk (uid=0003):
   ('Huckleberry Finn', 128)
   ('Jean-Luc Picard', 119)
   ('Peggy Carter', 101)
-Scanned 347 contests for contest (mayor) uid=0005, tally=rcv, max=1, win-by>0.5
+Scanned 347 contests for contest (mayor) uid=0005, tally=rcv, max=1, win_by>0.5
 RCV: round 0
 Counted 5f56fd3cd03ddc88e7934f2b58a267570d889212: choice=Twenty Eight
 Total vote count: 347
@@ -279,13 +279,13 @@ Contest mayor (uid=0005):
   ('Twenty Eight', 163)
   ('Jane Doe', 0)
   ('Twenty Seven', 0)
-Scanned 348 contests for contest (Question 1 - school budget override) uid=0006, tally=plurality, max=1, win-by>0.5
+Scanned 348 contests for contest (Question 1 - school budget override) uid=0006, tally=plurality, max=1, win_by>0.5
 Plurality - one round
 Counted 1d66b23c07c6368833527ecc5d39c158ef6f4430: choice=no
 Contest Question 1 - school budget override (uid=0006):
   ('no', 187)
   ('yes', 161)
-Scanned 347 contests for contest (Question 2 - new firehouse land purchase) uid=0007, tally=plurality, max=1, win-by>2/3
+Scanned 347 contests for contest (Question 2 - new firehouse land purchase) uid=0007, tally=plurality, max=1, win_by>2/3
 Plurality - one round
 Counted 46b0e916db2da2acfda582cbb539beecbc3bf23d: choice=no
 Contest Question 2 - new firehouse land purchase (uid=0007):

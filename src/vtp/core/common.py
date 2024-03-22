@@ -101,9 +101,9 @@ class Globals:
         # Default git web service endpoint for QR codes
         "QR_ENDPOINT_ROOT": "https://github.com/TrustTheVote-Project",
         # The election date-time for all ElectionData commits
-        "ELECTION_DATETIME": "2022-01-01T12:00:00",
+        "ELECTION_DATETIME": "2024-11-05T12:00:00",
         # The arbitrary election data string
-        "ELECTION_NAME": "",
+        "ELECTION_NAME": "2024 November Election",
     }
 
     @staticmethod

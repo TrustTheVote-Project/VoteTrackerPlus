@@ -100,6 +100,7 @@ class Address:
         self.ballot_node = ""
         self.ballot_subdir = ""
 
+        #        import pdb; pdb.set_trace()
         if not csv:
             if not generic_address and address:
                 (
