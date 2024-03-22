@@ -159,7 +159,7 @@ class Operation:
                     kwargs["stderr"] = subprocess.DEVNULL
         if "timeout" not in kwargs:
             kwargs["timeout"] = Globals.get("SHELL_TIMEOUT")
-#        import pdb; pdb.set_trace()
+        #        import pdb; pdb.set_trace()
         return subprocess.run(argv_string, **kwargs)
 
     @contextmanager
@@ -181,13 +181,15 @@ class Operation:
         branch change.  Will explicitly switch to the specified branch
         before yielding.
         """
-        self.shell_out(["git", "checkout", branch], check=True)
+        self.shell_out(["git", "checkout", branch], check=True, verbosity_override=5)
         self.imprimir(f"Entering branch ({branch})", 5)
         try:
             yield
         finally:
             # switch the branch back
-            self.shell_out(["git", "checkout", branch], check=True)
+            self.shell_out(
+                ["git", "checkout", branch], check=True, verbosity_override=5
+            )
             self.imprimir(f"Leaving branch ({branch})", 5)
 
     # ZZZ - could use an optional filter_by_uid argument which is a set object
@@ -249,5 +251,4 @@ class Operation:
                             block = ""
                             digest = ""
                             recording = False
-#        import pdb; pdb.set_trace()
         return git_log_cvrs

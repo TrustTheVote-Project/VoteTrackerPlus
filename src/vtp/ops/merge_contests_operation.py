@@ -65,23 +65,28 @@ class MergeContestsOperation(Operation):
         # unique, so there should never be a conflict on the branch -
         # it should always successfully auto-merge as there are not
         # file overlaps.
-        self.shell_out(["git", "merge", branch])
-        self.shell_out(["git", "push", "origin", "main"], check=True)
+        self.shell_out(["git", "merge", branch], verbosity_override=5)
+        self.shell_out(
+            ["git", "push", "origin", "main"], check=True, verbosity_override=5
+        )
         # Delete the local and remote branch if this is a local branch
         if not remote:
             self.shell_out(
                 ["git", "push", "origin", "-d", branch],
                 check=True,
+                verbosity_override=5,
             )
             self.shell_out(
                 ["git", "branch", "-d", branch],
                 check=True,
+                verbosity_override=5,
             )
         else:
             # otherwise just delete the remote
             self.shell_out(
                 ["git", "push", "origin", "-d", branch.removeprefix("origin/")],
                 check=True,
+                verbosity_override=5,
             )
 
     def merge_contest_branch(self, branch: str, remote: bool):
@@ -113,6 +118,7 @@ class MergeContestsOperation(Operation):
         # zero
         self.shell_out(
             ["git", "merge", "--no-ff", "--no-commit", branch],
+            verbosity_override=5,
         )
         # ZZZ - replace this with an run-time cryptographic value
         # derived from the run-time election private key (diffent from
@@ -138,33 +144,40 @@ class MergeContestsOperation(Operation):
         self.shell_out(
             ["git", "add", contest_file],
             check=True,
+            verbosity_override=5,
         )
         # Note - apparently git places the commit msg on STDERR - hide it
         if not self.printonly:
             self.imprimir(
                 "Running \"git commit -m 'auto commit - thank you for voting'\"",
-                3,
+                4,
             )
         self.shell_out(
             ["git", "commit", "-m", "auto commit - thank you for voting"],
             check=True,
+            verbosity_override=5,
         )
-        self.shell_out(["git", "push", "origin", "main"], check=True)
+        self.shell_out(
+            ["git", "push", "origin", "main"], check=True, verbosity_override=5
+        )
         # Delete the local and remote branch if this is a local branch
         if not remote:
             self.shell_out(
                 ["git", "push", "origin", "-d", branch],
                 check=True,
+                verbosity_override=5,
             )
             self.shell_out(
                 ["git", "branch", "-d", branch],
                 check=True,
+                verbosity_override=5,
             )
         else:
             # otherwise just delete the remote
             self.shell_out(
                 ["git", "push", "origin", "-d", branch.removeprefix("origin/")],
                 check=True,
+                verbosity_override=5,
             )
 
     # pylint: disable=too-many-arguments
@@ -190,7 +203,7 @@ class MergeContestsOperation(Operation):
         else:
             count = len(batch) - minimum_cast_cache
         loop = count
-        self.imprimir(f"Merging {count} contests for contest {uid}", 3)
+        self.imprimir(f"Merging {count} contests for contest {uid}", 4)
         while loop:
             pick = random.randrange(len(batch))
             branch = batch[pick]
@@ -198,7 +211,7 @@ class MergeContestsOperation(Operation):
             # End of loop maintenance
             del batch[pick]
             loop -= 1
-        self.imprimir(f"Merged {count} {uid} contests", 3)
+        self.imprimir(f"Merged {count} {uid} contests", 4)
         return count
 
     # pylint: disable=duplicate-code
@@ -249,13 +262,14 @@ class MergeContestsOperation(Operation):
             self.shell_out(
                 ["git", "pull"],
                 check=True,
+                verbosity_override=5,
             )
             if branch:
                 if style == "contest":
                     self.merge_contest_branch(branch, remote)
                 else:
                     self.merge_receipt_branch(branch, remote)
-                self.imprimir(f"Merged '{branch}'", 3)
+                self.imprimir(f"Merged '{branch}'", 4)
                 return
             # Get the pending CVR branches
             cmds = ["git", "branch"]

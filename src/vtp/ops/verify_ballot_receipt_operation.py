@@ -312,7 +312,11 @@ class VerifyBallotReceiptOperation(Operation):
         # remote CVRs branches
         a_ballot = Ballot(self)
         with self.changed_cwd(a_ballot.get_cvr_parent_dir(the_election_config)):
-            self.shell_out(["git", "pull"], check=True)
+            self.shell_out(
+                ["git", "pull"],
+                check=True,
+                verbosity_override=5,
+            )
 
         #    import pdb; pdb.set_trace()
         # Can read the receipt file directly without any Ballot info

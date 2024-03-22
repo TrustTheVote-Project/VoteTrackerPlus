@@ -64,6 +64,7 @@ class VoteOperation(Operation):
             self.shell_out(
                 ["git", "pull"],
                 check=True,
+                verbosity_override=5,
             )
 
         # Basically only do as little as necessary to call cast_ballot.py

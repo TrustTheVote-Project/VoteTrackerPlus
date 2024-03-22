@@ -60,7 +60,7 @@ class TallyContestsOperation(Operation):
                 ["git", "pull"],
                 check=True,
                 verbosity_override=5,
-                )
+            )
 
         # Will process all the CVR commits on the main branch and tally
         # all the contests found.  Note - even if a contest is specified,
