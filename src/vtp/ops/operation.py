@@ -40,6 +40,15 @@ class Operation:
     # class constants
     _sha1_regex = re.compile(r"([0-9a-fA-F]{40})")
 
+    # Mmm, there should only really be one instance of Operation and not
+    # multiple, so create a singleton class
+    _instance = None
+
+    def __new__(cls, *args, **kwargs):
+        if not cls._instance:
+            cls._instance = super().__new__(cls)
+        return cls._instance
+
     # pylint: disable=too-many-arguments
     def __init__(
         self,
@@ -81,19 +90,31 @@ class Operation:
         argument is less than or equal to self.verbosity, the line prints.
         The default self.verbosity is 3."""
         if incoming_printlevel <= self.verbosity:
+            prefix = ""
             if self.style == "html":
                 # If self.style == "html", html-ize the line
                 # - add digest links for digests
                 # - add line breaks per line
                 # - convert an array to a table with css class=imprimir
                 # ZZZ
+                match incoming_printlevel:
+                    case 1:
+                        prefix = "<span class=error>[ERROR] </span>"
+                    case 2:
+                        prefix = "<span class=warning>[WARNING] </span>"
                 a_line = Operation._sha1_regex.sub(
-                    '<a href="foo/\1" target="_blank">\1</a>', a_line
+                    prefix + '<a href="foo/\1" target="_blank">\1</a>', a_line
                 )
-            if self.stdout_printing:
-                print(a_line)
             else:
-                self.stdout_output.append(a_line)
+                match incoming_printlevel:
+                    case 1:
+                        prefix = "[ERROR] "
+                    case 2:
+                        prefix = "[WARNING] "
+            if self.stdout_printing:
+                print(prefix + a_line)
+            else:
+                self.stdout_output.append(prefix + a_line)
 
     def get_imprimir(self) -> list:
         """Return the stored output string"""
@@ -125,19 +146,20 @@ class Operation:
         # here, but they need to be individually converted to strings
         # regardless since _everything_ below wants to see strings.
         argv_string = [str(arg) for arg in argv]
-        self.imprimir(f'Running ({" ".join(argv_string)})', 4)
+        self.imprimir(f'Running ({" ".join(argv_string)})', 5)
         if self.printonly and not printonly_override:
             return subprocess.CompletedProcess(argv_string, 0, stdout="", stderr="")
-        # the caller desides on whether check is set or not
+        # the caller decides on whether check is set or not
         # pylint: disable=subprocess-run-check
         if not no_touch_stds:
             if "capture_output" not in kwargs:
-                if "stdout" not in kwargs and verbosity < 3:
+                if "stdout" not in kwargs and verbosity > 4:
                     kwargs["stdout"] = subprocess.DEVNULL
-                if "stderr" not in kwargs and verbosity <= 3:
+                if "stderr" not in kwargs and verbosity > 4:
                     kwargs["stderr"] = subprocess.DEVNULL
         if "timeout" not in kwargs:
             kwargs["timeout"] = Globals.get("SHELL_TIMEOUT")
+#        import pdb; pdb.set_trace()
         return subprocess.run(argv_string, **kwargs)
 
     @contextmanager
@@ -146,11 +168,11 @@ class Operation:
         oldpwd = os.getcwd()
         try:
             os.chdir(path)
-            self.imprimir(f"Entering dir ({path})", 4)
+            self.imprimir(f"Entering dir ({path})", 5)
             yield
         finally:
             os.chdir(oldpwd)
-            self.imprimir(f"Leaving dir ({path})", 4)
+            self.imprimir(f"Leaving dir ({path})", 5)
 
     @contextmanager
     def changed_branch(self, branch: str):
@@ -160,13 +182,13 @@ class Operation:
         before yielding.
         """
         self.shell_out(["git", "checkout", branch], check=True)
-        self.imprimir(f"Entering branch ({branch})", 4)
+        self.imprimir(f"Entering branch ({branch})", 5)
         try:
             yield
         finally:
             # switch the branch back
             self.shell_out(["git", "checkout", branch], check=True)
-            self.imprimir(f"Leaving branch ({branch})", 4)
+            self.imprimir(f"Leaving branch ({branch})", 5)
 
     # ZZZ - could use an optional filter_by_uid argument which is a set object
     def cvr_parse_git_log_output(
@@ -227,4 +249,5 @@ class Operation:
                             block = ""
                             digest = ""
                             recording = False
+#        import pdb; pdb.set_trace()
         return git_log_cvrs

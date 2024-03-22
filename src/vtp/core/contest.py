@@ -479,12 +479,12 @@ class Tally:
                 if provenance_digest:
                     self.operation_self.imprimir(
                         f"Counted {provenance_digest} as vote {vote_count}: choice={choice}",
-                        2,
+                        0,
                     )
             else:
                 if provenance_digest:
                     self.operation_self.imprimir(
-                        f"No-vote {provenance_digest}: BLANK", 2
+                        f"No-vote {provenance_digest}: BLANK", 0
                     )
 
     def tally_a_rcv_contest(
@@ -503,11 +503,11 @@ class Tally:
             if provenance_digest:
                 self.operation_self.imprimir(
                     f"Counted {provenance_digest} as vote {vote_count}: choice={choice}",
-                    2,
+                    0,
                 )
         else:
             if provenance_digest:
-                self.operation_self.imprimir(f"No vote {provenance_digest}: BLANK", 2)
+                self.operation_self.imprimir(f"No vote {provenance_digest}: BLANK", 0)
 
     def safely_determine_last_place_names(self, current_round: int) -> list:
         """Safely determine the next set of last_place_names for which
@@ -522,7 +522,9 @@ class Tally:
         number of votes (as in, pick 3 of 5 and a RCV round tie
         results in 1 or 2 choices instead of 3).
         """
-        self.operation_self.imprimir(f"{self.rcv_round[current_round]}", 4)
+        # Note - self.rcv_round[current_round] is the ordered array of
+        # all RCV choice tuples
+        self.operation_self.imprimir(f"{self.rcv_round[current_round]}", 3)
 
         # Step 1: remove self.obe_choices from current round
         working_copy = []
@@ -621,34 +623,34 @@ class Tally:
         # design option.  Doing that.
         if not last_place_names:
             self.operation_self.imprimir(
-                "No more choices/candidates to recast - no more RCV rounds", 2
+                "No more choices/candidates to recast - no more RCV rounds", 0
             )
             return 1
         if this_round > 64:
             raise TallyException("RCV rounds exceeded safety limit of 64 rounds")
         if this_round >= len(self.rcv_round[0]):
-            self.operation_self.imprimir("There are no more RCV rounds", 2)
+            self.operation_self.imprimir("There are no more RCV rounds", 0)
             return 1
         if not non_zero_count_choices:
-            self.operation_self.imprimir("There are no votes for any choice", 2)
+            self.operation_self.imprimir("There are no votes for any choice", 0)
             return 1
         if non_zero_count_choices < self.get("max"):
             self.operation_self.imprimir(
                 f"There are only {non_zero_count_choices} viable choices "
                 f"left which is less than the contest max ({self.get('max')})",
-                2,
+                0,
             )
             return 1
         if non_zero_count_choices == self.get("max"):
             self.operation_self.imprimir(
                 f"The contest max number of choices ({self.get('max')}) has been reached",
-                2,
+                0,
             )
             return 1
         if non_zero_count_choices == 1:
             self.operation_self.imprimir(
                 "There is only one remaining viable choice left - halting more RCV rounds",
-                2,
+                0,
             )
             return 1
 
@@ -661,7 +663,7 @@ class Tally:
         # return and print that.
         if non_zero_count_choices - len(last_place_names) == 0:
             self.operation_self.imprimir(
-                f"This contest ends in a {non_zero_count_choices} way tie", 2
+                f"This contest ends in a {non_zero_count_choices} way tie", 0
             )
             return 1
 
@@ -672,7 +674,7 @@ class Tally:
             self.operation_self.imprimir(
                 f"There is a last place tie ({len(last_place_names)} way) which results "
                 f"in LESS THAN the max ({non_zero_count_choices}) of choices",
-                2,
+                0,
             )
             return 1
 
@@ -731,14 +733,14 @@ class Tally:
                             self.operation_self.imprimir(
                                 f"RCV: {digest} (contest={contest['name']}) last place "
                                 f"pop and count ({last_place_name} -> {new_choice_name})",
-                                2,
+                                0,
                             )
                     else:
                         if digest in checks or self.operation_self.verbosity >= 4:
                             self.operation_self.imprimir(
                                 f"RCV: {digest} (contest={contest['name']}) last place "
                                 f"pop and drop ({last_place_name} -> BLANK)",
-                                2,
+                                0,
                             )
 
     def handle_another_rcv_round(
@@ -749,7 +751,7 @@ class Tally:
         slice off that choice off and re-count the now first
         selection choice (if there is one)
         """
-        self.operation_self.imprimir(f"RCV: round {this_round}", 2)
+        self.operation_self.imprimir(f"RCV: round {this_round}", 0)
 
         # ZZZ - create a function to validate incoming last place
         # names and call that.  Maybe in the furure once more is know
@@ -774,7 +776,7 @@ class Tally:
         self.rcv_round.append([])
         # Get the correct current total vote count for this round
         total_current_vote_count = self.get_total_vote_count(this_round)
-        self.operation_self.imprimir(f"Total vote count: {total_current_vote_count}", 2)
+        self.operation_self.imprimir(f"Total vote count: {total_current_vote_count}", 0)
         for choice in Tally.get_choices_from_round(self.rcv_round[this_round]):
             # Note the test is '>' and NOT '>='
             if (
@@ -865,9 +867,9 @@ class Tally:
         """
         # Read all the contests, validate, and count votes
         if self.contest["tally"] == "plurality":
-            self.operation_self.imprimir("Plurality - one round", 2)
+            self.operation_self.imprimir("Plurality - one round", 0)
         else:
-            self.operation_self.imprimir("RCV: round 0", 2)
+            self.operation_self.imprimir("RCV: round 0", 0)
         self.parse_all_contests(contest_batch, checks)
 
         # For all tallies order what has been counted so far (a tuple)
@@ -891,7 +893,7 @@ class Tally:
 
         # Get the correct current total vote count for this round
         total_current_vote_count = self.get_total_vote_count(0)
-        self.operation_self.imprimir(f"Total vote count: {total_current_vote_count}", 2)
+        self.operation_self.imprimir(f"Total vote count: {total_current_vote_count}", 0)
 
         # Determine winners if any ...
         for choice in Tally.get_choices_from_round(self.rcv_round[0]):
@@ -924,7 +926,7 @@ class Tally:
         """Will print the results of the tally"""
         self.operation_self.imprimir(
             f"Final results for contest {self.contest['name']} (uid={self.contest['uid']}):",
-            1,
+            0,
         )
         #        import pdb; pdb.set_trace()
         # Note - better to print the last self.rcv_round than

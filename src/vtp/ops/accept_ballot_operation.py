@@ -185,7 +185,7 @@ class AcceptBallotOperation(Operation):
         return self.cvr_parse_git_log_output(
             ["git", "log", "--no-walk", "--pretty=format:%H%B"] + head_commits,
             config,
-            verbosity_override=self.verbosity - 1,
+            verbosity_override=5,
         )
 
     def get_cloaked_contests(self, contest, branch):
@@ -532,7 +532,8 @@ class AcceptBallotOperation(Operation):
 
         # Create a VTP ElectionData object if one does not already exist
         the_election_config = ElectionConfig.configure_election(
-            self.election_data_dir, self
+            self,
+            self.election_data_dir,
         )
 
         # Create a ballot

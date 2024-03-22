@@ -53,10 +53,14 @@ class TallyContestsOperation(Operation):
         )
 
         # git pull the ElectionData repo so to get the latest set of
-        # remote CVRs branches
+        # remote CVRs branches.
         a_ballot = Ballot(self)
         with self.changed_cwd(a_ballot.get_cvr_parent_dir(the_election_config)):
-            self.shell_out(["git", "pull"], check=True)
+            self.shell_out(
+                ["git", "pull"],
+                check=True,
+                verbosity_override=5,
+                )
 
         # Will process all the CVR commits on the main branch and tally
         # all the contests found.  Note - even if a contest is specified,
@@ -76,6 +80,7 @@ class TallyContestsOperation(Operation):
                 "--pretty=format:%H%B",
             ],
             the_election_config,
+            verbosity_override=5,
         )
 
         # Note - though plurality voting can be counted within the above

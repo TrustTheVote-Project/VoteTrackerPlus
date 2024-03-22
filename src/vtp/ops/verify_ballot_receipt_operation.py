@@ -118,7 +118,7 @@ class VerifyBallotReceiptOperation(Operation):
                     ["git", "log", "--no-walk", "--pretty=format:%H%B"] + row,
                     the_election_config,
                     grouped_by_uid=False,
-                    verbosity_override=self.verbosity - 1,
+                    verbosity_override=5,
                 )
             elif len(legit_row) > 0:
                 # Only some are legitimate
@@ -126,7 +126,7 @@ class VerifyBallotReceiptOperation(Operation):
                     ["git", "log", "--no-walk", "--pretty=format:%H%B"] + legit_row,
                     the_election_config,
                     grouped_by_uid=False,
-                    verbosity_override=self.verbosity - 1,
+                    verbosity_override=5,
                 )
             else:
                 # skip the row - it has no legitimate digests

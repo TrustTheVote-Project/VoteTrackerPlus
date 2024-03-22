@@ -354,7 +354,7 @@ class ElectionConfig:
         only if the file exists.  Check the syntax.
         """
         if os.path.isfile(filename):
-            self.operation_self.imprimir(f"Reading {filename}", 4)
+            self.operation_self.imprimir(f"Reading {filename}", 5)
             with open(filename, "r", encoding="utf8") as map_file:
                 this_address_map = yaml.load(map_file, Loader=yaml.BaseLoader)
             # sanity-check it
@@ -366,7 +366,7 @@ class ElectionConfig:
         """
         Read the confgi yaml file return the dictionary and check the syntax.
         """
-        self.operation_self.imprimir(f"Reading {filename}", 4)
+        self.operation_self.imprimir(f"Reading {filename}", 5)
         with open(filename, "r", encoding="utf8") as config_file:
             config = yaml.load(config_file, Loader=yaml.BaseLoader)
         # sanity-check it

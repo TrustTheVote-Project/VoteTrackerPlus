@@ -230,7 +230,8 @@ class MergeContestsOperation(Operation):
 
         # Create a VTP ElectionData object if one does not already exist
         the_election_config = ElectionConfig.configure_election(
-            self.election_data_dir, self
+            self,
+            self.election_data_dir,
         )
 
         # Set the three EV's
