@@ -483,8 +483,7 @@ class AcceptBallotOperation(Operation):
                 # Create the QR image while still in the branch as exiting the
                 # above with will nominally delete it
                 qr_url = (
-                    f"{Globals.get('QR_ENDPOINT_ROOT')}/"
-                    f"{os.path.basename(the_election_config.get('git_rootdir'))}"
+                    f"{Globals.get('ELECTION_UPSTREAM_REMOTE')}/"
                     f"/blob/{receipt_branch}/{a_ballot.get('ballot_subdir')}/"
                     f"{receipt_branch}/{Globals.get('RECEIPT_FILE').rstrip('csv')}md"
                 )

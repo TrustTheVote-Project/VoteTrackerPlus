@@ -41,7 +41,7 @@ class Contest:
         "description",
         "contest_type",
         "ticket_titles",
-        "election_name",
+        "election_upstream_remote",
     ]
     _blank_ballot_keys = _config_keys + ["uid"]
     _cast_keys = _blank_ballot_keys + ["selection", "name", "cast_branch", "ggo"]
@@ -132,7 +132,7 @@ class Contest:
             "question",
         ]:
             raise KeyError(
-                "contest_type must be specified as either: candidate, ticket, or question"
+                f"contest_type ({a_blob['contest_type']}) must be specified as either: candidate, ticket, or question"
             )
 
     @staticmethod
@@ -148,7 +148,7 @@ class Contest:
 
         Two adjustments can be made:
         1 - if there is mo max, will set it (plurality:1 and RCV:len(choices))
-        2 - will add the Globals.ELECTION_NAME to the contest (so that it flows
+        2 - will add the Globals.ELECTION_UPSTREAM_REMOTE to the contest (so that it flows
             out through the CVR and beyond - for voter UX purposes only
         """
         ### ZZZ - should sanity check the name
@@ -180,15 +180,16 @@ class Contest:
             )
         # Need to validate choices sub data structure as well
         Contest.check_contest_choices(a_contest_blob[name]["choices"], a_contest_blob)
-        Contest.check_contest_type(a_contest_blob)
+        Contest.check_contest_type(a_contest_blob[name])
         # if max is not set, set it
-        if "max" not in a_contest_blob:
-            if a_contest_blob["tally"] == "plurality":
-                a_contest_blob["max"] = 1
+        # import pdb; pdb.set_trace()
+        if "max" not in a_contest_blob[name]:
+            if a_contest_blob[name]["tally"] == "plurality":
+                a_contest_blob[name]["max"] = 1
             else:
-                a_contest_blob["max"] = len(a_contest_blob["choices"])
-        # For voter UX, add ELECTION_NAME
-        a_contest_blob["election_name"] = Globals.get("ELECTION_NAME")
+                a_contest_blob[name]["max"] = len(a_contest_blob[name]["choices"])
+        # For voter UX, add ELECTION_UPSTREAM_REMOTE
+        a_contest_blob[name]["election_upstream_remote"] = Globals.get("ELECTION_UPSTREAM_REMOTE")
         return name
 
     @staticmethod
@@ -851,7 +852,7 @@ class Tally:
                 "uid",
                 "name",
                 "contest_type",
-                "election_name",
+                "election_upstream_remote",
             ]:
                 if field in self.contest:
                     if self.contest[field] != contest[field]:

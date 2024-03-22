@@ -98,12 +98,10 @@ class Globals:
         "MOCK_CLIENT_DIRNAME": "mock-clients",
         # Default runtime location of everything
         "DEFAULT_RUNTIME_LOCATION": "/opt/VoteTrackerPlus/demo.01",
-        # Default git web service endpoint for QR codes
-        "QR_ENDPOINT_ROOT": "https://github.com/TrustTheVote-Project",
         # The election date-time for all ElectionData commits
         "ELECTION_DATETIME": "2024-11-05T12:00:00",
         # The arbitrary election data string
-        "ELECTION_NAME": "2024 November Election",
+        "ELECTION_UPSTREAM_REMOTE": "https://github.com/TrustTheVote-Project/VTP-mock-election.US.16",
     }
 
     @staticmethod
@@ -112,9 +110,9 @@ class Globals:
         return Globals._config[name]
 
     @staticmethod
-    def set_election_name(value):
-        """Set the ELECTION_NAME"""
-        Globals._config["ELECTION_NAME"] = value
+    def set_election_upstream_remote(value):
+        """Set the ELECTION_UPSTREAM_REMOTE"""
+        Globals._config["ELECTION_UPSTREAM_REMOTE"] = value
 
 
 class Common:

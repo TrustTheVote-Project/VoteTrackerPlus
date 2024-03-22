@@ -486,8 +486,7 @@ class Ballot:
             receipt_file = receipt_file.rstrip(".md") + "-qr.md"
         url_root = "/".join(
             [
-                Globals.get("QR_ENDPOINT_ROOT"),
-                os.path.basename(config.get("git_rootdir")),
+                Globals.get("ELECTION_UPSTREAM_REMOTE"),
                 "commit",
             ]
         )

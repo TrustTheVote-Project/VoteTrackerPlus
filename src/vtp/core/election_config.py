@@ -260,8 +260,8 @@ class ElectionConfig:
             )
         self.git_initial_commit = result2.stdout.strip()
 
-        # Check ELECTION_NAME
-        if Globals.get("ELECTION_NAME") == "":
+        # Check ELECTION_UPSTREAM_REMOTE
+        if Globals.get("ELECTION_UPSTREAM_REMOTE") == "":
             # the name of the remote election data repo
             with self.operation_self.changed_cwd(self.git_rootdir):
                 result = self.operation_self.shell_out(
@@ -271,7 +271,7 @@ class ElectionConfig:
                     text=True,
                 )
             if os.path.splitext(os.path.basename(result.stdout.strip()))[1] == ".git":
-                Globals.set_election_name(
+                Globals.set_election_upstream_remote(
                     os.path.splitext(os.path.basename(result.stdout))[0]
                 )
             else:
