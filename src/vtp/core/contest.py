@@ -729,7 +729,7 @@ class Tally:
                         new_choice_name = self.select_name_from_choices(new_selection)
                         self.selection_counts[new_choice_name] += 1
                         # original variant: if digest in checks or loglevel == "DEBUG":
-                        if digest in checks:
+                        if digest in checks or self.operation_self.verbosity >= 4:
                             self.operation_self.imprimir(
                                 f"RCV: {digest} (contest={contest['name']}) last place "
                                 f"pop and count ({last_place_name} -> {new_choice_name})",

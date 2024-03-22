@@ -90,31 +90,31 @@ class Operation:
         argument is less than or equal to self.verbosity, the line prints.
         The default self.verbosity is 3."""
         if incoming_printlevel <= self.verbosity:
-            prefix = ""
             if self.style == "html":
                 # If self.style == "html", html-ize the line
                 # - add digest links for digests
                 # - add line breaks per line
                 # - convert an array to a table with css class=imprimir
                 # ZZZ
-                match incoming_printlevel:
-                    case 1:
-                        prefix = "<span class=error>[ERROR] </span>"
-                    case 2:
-                        prefix = "<span class=warning>[WARNING] </span>"
+#                import pdb; pdb.set_trace()
                 a_line = Operation._sha1_regex.sub(
-                    prefix + '<a href="foo/\1" target="_blank">\1</a>', a_line
+                    r'<a href="foo/\1" target="_blank">\1</a>', a_line
                 )
+                match incoming_printlevel:
+                    case 1:
+                        a_line = '<span class="error">[ERROR] </span>' + a_line
+                    case 2:
+                        a_line = '<span class="warning">[WARNING] </span>' + a_line
             else:
                 match incoming_printlevel:
                     case 1:
-                        prefix = "[ERROR] "
+                        a_line = "[ERROR] " + a_line
                     case 2:
-                        prefix = "[WARNING] "
+                        a_line = "[WARNING] " + a_line
             if self.stdout_printing:
-                print(prefix + a_line)
+                print(a_line)
             else:
-                self.stdout_output.append(prefix + a_line)
+                self.stdout_output.append(a_line)
 
     def get_imprimir(self) -> list:
         """Return the stored output string"""
