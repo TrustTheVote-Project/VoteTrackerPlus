@@ -36,7 +36,7 @@ import qrcode.image.svg
 
 # Project imports
 from vtp.core.address import Address
-from vtp.core.ballot import Ballot, Contests
+from vtp.core.ballot import Ballot
 from vtp.core.common import Globals
 from vtp.core.election_config import ElectionConfig
 from vtp.ops.merge_contests_operation import MergeContestsOperation
@@ -396,8 +396,7 @@ class AcceptBallotOperation(Operation):
             # least expensive as the big reader is thus a stdout PIPE
             # loop.
             unmerged_cvrs = self.get_unmerged_contests(the_election_config)
-            contests = Contests(a_ballot)
-            for contest in contests:
+            for contest in a_ballot["contests"]:
                 #                import pdb; pdb.set_trace()
                 with self.changed_branch("main"):
                     # get N other values for each contest for this ballot

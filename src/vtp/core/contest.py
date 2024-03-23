@@ -42,9 +42,11 @@ class Contest:
         "contest_type",
         "ticket_titles",
         "election_upstream_remote",
+        "name",
+        "ggo",
     ]
     _blank_ballot_keys = _config_keys + ["uid"]
-    _cast_keys = _blank_ballot_keys + ["selection", "name", "cast_branch", "ggo"]
+    _cast_keys = _blank_ballot_keys + ["selection", "cast_branch"]
     _choice_keys = ["name", "party", "ticket_names"]
 
     # A simple numerical n digit uid
@@ -56,13 +58,14 @@ class Contest:
         """Will add a contest uid (only good within the context of this
         specific election) to the supplied contest.
         """
-        name = next(iter(a_contest_blob))
-        if "uid" in a_contest_blob[name]:
-            raise IndexError(f"The uid of contest {name} is already set")
-        a_contest_blob[name]["uid"] = str(Contest._nextuid).rjust(4, "0")
+        if "uid" in a_contest_blob:
+            raise IndexError(
+                f"The uid of contest {a_contest_blob['name']} is already set"
+            )
+        a_contest_blob["uid"] = str(Contest._nextuid).rjust(4, "0")
         if Contest._nextuid not in Contest._uids:
             Contest._uids[Contest._nextuid] = {}
-        Contest._uids[Contest._nextuid]["name"] = name
+        Contest._uids[Contest._nextuid]["name"] = a_contest_blob["name"]
         Contest._uids[Contest._nextuid]["ggo"] = ggo
         Contest._nextuid += 1
 
@@ -76,17 +79,9 @@ class Contest:
         ticket_names.  A a_c_blob can be either a_contest_blob or
         a_cvr_blob.
         """
-        # Note - a a_contest_blob is a length one dict keyed on
-        # contest name - the desired dict is the value of this one and
-        # only key.  But if the a_c_blob is a a_contest_blob, then it
-        # is already the desired dict.  Sorry.
-        if "cast_branch" in a_c_blob:
-            contest_dict = a_c_blob
-        else:
-            contest_dict = next(iter(a_c_blob.values()))
         # if this is a ticket contest, need to validate uber ticket syntax
         check_ticket = (
-            "contest_type" in contest_dict and contest_dict["contest_type"] == "ticket"
+            "contest_type" in a_c_blob and a_c_blob["contest_type"] == "ticket"
         )
         for choice in choices:
             if isinstance(choice, str):
@@ -103,9 +98,7 @@ class Contest:
                         raise KeyError(
                             "Contest type is a ticket contest but does not contain ticket_names"
                         )
-                    if len(choice["ticket_names"]) != len(
-                        contest_dict["ticket_titles"]
-                    ):
+                    if len(choice["ticket_names"]) != len(a_c_blob["ticket_titles"]):
                         raise KeyError(
                             "when either 'ticket_names' or 'ticket_titles' are specified"
                             "the length of each array mush match - "
@@ -113,11 +106,11 @@ class Contest:
                         )
                     if not isinstance(choice["ticket_names"], list):
                         raise KeyError("the key 'ticket_names' can only be a list")
-                    if not isinstance(contest_dict["ticket_titles"], list):
+                    if not isinstance(a_c_blob["ticket_titles"], list):
                         raise KeyError("the key 'ticket_names' can only be a list")
                 elif "ticket_names" in choice:
                     raise KeyError(
-                        "Contest type is not a ticket contest but contains ticket_names"
+                        "contest_type is not a ticket contest but contains ticket_names"
                     )
                 continue
             if isinstance(choice, bool):
@@ -132,7 +125,8 @@ class Contest:
             "question",
         ]:
             raise KeyError(
-                f"contest_type ({a_blob['contest_type']}) must be specified as either: candidate, ticket, or question"
+                f"contest_type ({a_blob['contest_type']}) must be specified "
+                "as either: candidate, ticket, or question"
             )
 
     @staticmethod
@@ -151,8 +145,6 @@ class Contest:
         2 - will add the Globals.ELECTION_UPSTREAM_REMOTE to the contest (so that it flows
             out through the CVR and beyond - for voter UX purposes only
         """
-        ### ZZZ - should sanity check the name
-        name = next(iter(a_contest_blob))
 
         if filename:
             legal_fields = Contest._blank_ballot_keys
@@ -160,7 +152,7 @@ class Contest:
             legal_fields = Contest._cast_keys
         else:
             legal_fields = Contest._config_keys
-        bad_keys = [key for key in a_contest_blob[name] if key not in legal_fields]
+        bad_keys = [key for key in a_contest_blob if key not in legal_fields]
         if bad_keys:
             if filename:
                 raise KeyError(
@@ -179,18 +171,20 @@ class Contest:
                 f"{','.join(bad_keys)}"
             )
         # Need to validate choices sub data structure as well
-        Contest.check_contest_choices(a_contest_blob[name]["choices"], a_contest_blob)
-        Contest.check_contest_type(a_contest_blob[name])
+        Contest.check_contest_choices(a_contest_blob["choices"], a_contest_blob)
+        Contest.check_contest_type(a_contest_blob)
         # if max is not set, set it
         # import pdb; pdb.set_trace()
-        if "max" not in a_contest_blob[name]:
-            if a_contest_blob[name]["tally"] == "plurality":
-                a_contest_blob[name]["max"] = 1
+        if "max" not in a_contest_blob:
+            if a_contest_blob["tally"] == "plurality":
+                a_contest_blob["max"] = 1
             else:
-                a_contest_blob[name]["max"] = len(a_contest_blob[name]["choices"])
+                a_contest_blob["max"] = len(a_contest_blob["choices"])
         # For voter UX, add ELECTION_UPSTREAM_REMOTE
-        a_contest_blob[name]["election_upstream_remote"] = Globals.get("ELECTION_UPSTREAM_REMOTE")
-        return name
+        a_contest_blob["election_upstream_remote"] = Globals.get(
+            "ELECTION_UPSTREAM_REMOTE"
+        )
+        return a_contest_blob["name"]
 
     @staticmethod
     def check_cvr_blob_syntax(a_cvr_blob: dict, filename: str = "", digest: str = ""):

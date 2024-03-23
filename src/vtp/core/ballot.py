@@ -29,93 +29,6 @@ from .common import Globals
 from .contest import Contest
 
 
-class Contests:
-    """An iteratable object for the contests in a ballot"""
-
-    def __init__(self, a_ballot):
-        """
-        Need to cache enough data here so to be able to iterate AND
-        create valid Contest objects
-        """
-        self.ballot_ref = a_ballot
-        # Need the (ordered) list of ggos supplying contests
-        self.ggos = [*a_ballot.get("contests")]
-        self.ggo_max = len(self.ggos)
-        self.ggo_index = 0
-        self.contest_index = 0
-        self.contest_max = len(a_ballot.get("contests")[self.ggos[0]])
-
-    #        import pdb; pdb.set_trace()
-    #        inner_blob = next(iter((a_ballot.get('contests')[self.ggos[0]][0].values())))
-    #        self.contest_max = len(inner_blob['max']) if 'max' in inner_blob else 1
-
-    def __iter__(self):
-        """boilerplate"""
-        # start - be kind and reset things
-        self.ggo_index = 0
-        self.contest_index = 0
-        self.contest_max = len(self.ballot_ref.get("contests")[self.ggos[0]])
-        return self
-
-    def __next__(self):
-        """
-        Because of the blobiness nature of the data model of a contest
-        within a ballot dictionary, this is ugly.  Need to iterate over
-        the correct ordered list of ggos (self.ggos) and within each of
-        those iterations, iterate over the contests which is an ordered
-        list of single entry dictionaries.
-
-        Note - the code below post increments the index alues which is
-        not the common pattern ?
-        """
-        if self.ggo_max == 0:
-            # just in case
-            raise StopIteration
-        # cache this ggo
-        ggo = self.ggos[self.ggo_index]
-        # if there is a contest here, return it
-        if self.contest_index < self.contest_max:
-            # contest_content = \
-            # next(iter((self.ballot_ref.get('contests')[ggo][self.contest_index].values())))
-            # return the next contest in this ggo group
-            this_contest = Contest(
-                self.ballot_ref.get("contests")[ggo][self.contest_index],
-                ggo,
-                self.contest_index,
-                accept_all_keys=True,
-            )
-            self.contest_index += 1
-            return this_contest
-
-        # If here, bump the ggo_index and reset the contest index and try again
-        self.ggo_index += 1
-        self.contest_index = 0
-
-        # Now test to see if there is a next ggo group and if so, return
-        # its first contest
-        if self.ggo_index < self.ggo_max:
-            ggo = self.ggos[self.ggo_index]
-            self.contest_max = len(self.ballot_ref.get("contests")[ggo])
-            if self.contest_index < self.contest_max:
-                this_contest = Contest(
-                    self.ballot_ref.get("contests")[ggo][self.contest_index],
-                    ggo,
-                    0,
-                    accept_all_keys=True,
-                )
-                self.contest_index += 1
-                return this_contest
-        # done - be kind and reset things
-        self.ggo_index = 0
-        self.contest_index = 0
-        self.contest_max = len(self.ballot_ref.get("contests")[self.ggos[0]])
-        raise StopIteration
-
-    def len(self):
-        """Not my language, but still very cool"""
-        return sum(1 for _ in self)
-
-
 class Ballot:
     """A class to hold a ballot.  A ballot is always a function of an
     address defined within the context of VTP election configuration
@@ -212,7 +125,7 @@ class Ballot:
         """Constructor - just creates the dictionary and returns the
         object.
         """
-        self.contests = {}
+        self.contests = []
         self.active_ggos = []
         self.ballot_subdir = ""
         self.ballot_node = ""
@@ -248,12 +161,11 @@ class Ballot:
         # ... and make a dict out of it
         blank = the_bb.dict()
         # Create a local dict copy that we can manipulate
-        cast = deepcopy(self.dict())
+        cast_ballot = deepcopy(self.dict())
 
         # 1) Loop over contests and a) validate the selection, b) that
         # the blank_ballot is legit, and c) that it matches
-        contests = Contests(cast)
-        for contest in contests:
+        for contest in cast_ballot["contests"]:
             # Note - if selection is not a valid key, a KeyError will be raised
             if not isinstance(contest.get("selection"), list):
                 raise KeyError(
@@ -271,7 +183,7 @@ class Ballot:
             # Now remove the selection
             contest.delete_contest_field("selection")
             # Rats - the absence of 'max' is allowed and is
-            # interpreted as 1.  So in cast if max is 1, delete it so
+            # interpreted as 1.  So in cast_ballot if max is 1, delete it so
             # it can match the parent blank ballot
             if contest.get("max") == 1:
                 contest.delete_contest_field("max")
@@ -281,7 +193,7 @@ class Ballot:
         # easier to add the selection node to that than to make a deep
         # copy of the cast ballot and remove the selection node from
         # that.
-        result = DeepDiff(blank, cast)
+        result = DeepDiff(blank, cast_ballot)
         # import pdb; pdb.set_trace()
         if result:
             raise KeyError(
@@ -318,7 +230,7 @@ class Ballot:
         given a uid.  Will raise an error if the ballot does not contain
         that uid.
         """
-        for contest in Contests(self):
+        for contest in self.contests:
             if uid == contest.get("uid"):
                 return contest.get("name")
         raise KeyError(
@@ -575,10 +487,28 @@ class BlankBallot(Ballot):
         """
 
         # With the list of active GGOs, add in the contests for each one
+        candidate_order = []
+        question_order = []
         for node in address.get("active_ggos"):
             cfg = config.get_node(node, "config")
             if "contests" in cfg:
-                self.contests[node] = cfg["contests"]
+                for contest in cfg["contests"]:
+                    # first fill in the rest of the autofilled fields
+                    contest["ggo"] = node
+                    # ZZZ - at this point the question of order is still
+                    # an underconstrained TBD.  For now, while maintaining
+                    # the relative order, have the non-question contests
+                    # come first and the question contests come last.
+                    # Note - the whole GGO thing probably should be
+                    # deleted assuming the contest uid question can be
+                    # solved in a more reasonable manner.
+                    #                    import pdb; pdb.set_trace()
+                    if contest["contest_type"] == "question":
+                        question_order.append(contest)
+                    else:
+                        candidate_order.append(contest)
+        self.contests = candidate_order
+        self.contests.extend(question_order)
 
         # To determine the location of the blank ballot, the real
         # solution is probably something like determining the

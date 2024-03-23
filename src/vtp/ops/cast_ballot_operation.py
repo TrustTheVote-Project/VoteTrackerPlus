@@ -33,7 +33,7 @@ import pyinputplus
 
 # Project imports
 from vtp.core.address import Address
-from vtp.core.ballot import Ballot, BlankBallot, Contests
+from vtp.core.ballot import Ballot, BlankBallot
 from vtp.core.contest import Contest
 from vtp.core.election_config import ElectionConfig
 
@@ -173,7 +173,7 @@ class CastBallotOperation(Operation):
         """Will loop over the contests in a ballot and either ask the user
         for a choice or if in demo mode will randomly choose one.
         """
-        contests = Contests(a_ballot)
+        contests = a_ballot.get("contests")
         total_contests = contests.len()
         count = 0
         contest_uids = []
