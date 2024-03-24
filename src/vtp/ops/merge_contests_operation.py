@@ -248,8 +248,8 @@ class MergeContestsOperation(Operation):
         )
 
         # Set the three EV's
-        os.environ["GIT_AUTHOR_DATE"] = "2022-01-01T12:00:00"
-        os.environ["GIT_COMMITTER_DATE"] = "2022-01-01T12:00:00"
+        os.environ["GIT_AUTHOR_DATE"] = Globals.get("ELECTION_DATETIME")
+        os.environ["GIT_COMMITTER_DATE"] = Globals.get("ELECTION_DATETIME")
         os.environ["GIT_EDITOR"] = "true"
 
         # For best results (so to use the 'correct' git submodule or

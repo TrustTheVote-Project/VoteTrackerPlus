@@ -292,9 +292,26 @@ class Contest:
         return "; ".join(ticket)
 
     def get(self, thing: str):
-        """Generic getter - can raise KeyError"""
-        # Return the choices
-        # ZZZ        import pdb; pdb.set_trace()
+        """
+        Generic getter - can raise KeyError.  When the parameter is
+        'dict', will return an aggregated dictionary similar to when
+        the object is printed.  If the parameter is 'contest', it
+        returns the contest.
+
+        Note - 'contest' does NOT create/return a copy while 'dict'
+        does not copy any deeper data structures.
+        """
+        if thing == "dict":
+            # return the combined psuedo dictionary similar to __str__ above
+            contest_dict = {
+                key: self.contest[key]
+                for key in Contest._cast_keys
+                if key in self.contest
+            }
+            contest_dict.update(
+                {"cast_branch": self.cast_branch}
+            )
+            return contest_dict
         if thing == "contest":
             return self.contest
         if thing == "choices":

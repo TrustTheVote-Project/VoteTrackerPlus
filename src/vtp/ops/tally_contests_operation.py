@@ -89,15 +89,15 @@ class TallyContestsOperation(Operation):
         for contest_batch in sorted(contest_batches):
             # Maybe skip
             if contest_uid != "":
-                if contest_batches[contest_batch][0]["CVR"]["uid"] != contest_uid:
+                if contest_batches[contest_batch][0]["contestCVR"]["uid"] != contest_uid:
                     continue
             # Create a Tally object for this specific contest
             the_tally = Tally(contest_batches[contest_batch][0], self)
             self.imprimir(
                 f"Scanned {len(contest_batches[contest_batch])} contests "
-                f"for contest ({contest_batches[contest_batch][0]['CVR']['name']}) "
-                f"uid={contest_batches[contest_batch][0]['CVR']['uid']}, "
-                f"tally={contest_batches[contest_batch][0]['CVR']['tally']}, "
+                f"for contest ({contest_batches[contest_batch][0]['contestCVR']['contest_name']}) "
+                f"uid={contest_batches[contest_batch][0]['contestCVR']['uid']}, "
+                f"tally={contest_batches[contest_batch][0]['contestCVR']['tally']}, "
                 f"max={the_tally.get('max')}, "
                 f"win_by>{the_tally.get('win_by')}"
             )

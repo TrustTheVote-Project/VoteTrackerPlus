@@ -396,8 +396,8 @@ class AcceptBallotOperation(Operation):
             # least expensive as the big reader is thus a stdout PIPE
             # loop.
             unmerged_cvrs = self.get_unmerged_contests(the_election_config)
-            for contest in a_ballot["contests"]:
-                #                import pdb; pdb.set_trace()
+#            import pdb; pdb.set_trace()
+            for contest in a_ballot.get("contests"):
                 with self.changed_branch("main"):
                     # get N other values for each contest for this ballot
                     uid = contest.get("uid")
@@ -582,8 +582,8 @@ class AcceptBallotOperation(Operation):
         a_ballot.verify_cast_ballot_data(the_election_config)
 
         # Set the three EV's
-        os.environ["GIT_AUTHOR_DATE"] = "2022-01-01T12:00:00"
-        os.environ["GIT_COMMITTER_DATE"] = "2022-01-01T12:00:00"
+        os.environ["GIT_AUTHOR_DATE"] = Globals.get("ELECTION_DATETIME")
+        os.environ["GIT_COMMITTER_DATE"] = Globals.get("ELECTION_DATETIME")
         os.environ["GIT_EDITOR"] = "true"
 
         # handle the contests (cloaking is not yet supported)
@@ -660,7 +660,11 @@ class AcceptBallotOperation(Operation):
             #     )
 
         # For now, print the location and the voter's index
+        if not receipt_file_csv:
+            receipt_file_csv = None
         self.imprimir(f"#### Receipt file: {receipt_file_csv}", 0)
+        if index == 0:
+            index = None
         self.imprimir(f"#### Voter's row: {index}", 0)
         # And return them.  Note that ballot_check is in csv format
         # when writing to a file.  However, when returning is it more

@@ -241,11 +241,12 @@ class Operation:
                             # this loads the contest under the CVR key
                             cvr = json.loads(block)
                             if grouped_by_uid:
+#                                import pdb; pdb.set_trace()
                                 cvr["digest"] = digest
-                                if cvr["CVR"]["uid"] in git_log_cvrs:
-                                    git_log_cvrs[cvr["CVR"]["uid"]].append(cvr)
+                                if cvr["contestCVR"]["uid"] in git_log_cvrs:
+                                    git_log_cvrs[cvr["contestCVR"]["uid"]].append(cvr)
                                 else:
-                                    git_log_cvrs[cvr["CVR"]["uid"]] = [cvr]
+                                    git_log_cvrs[cvr["contestCVR"]["uid"]] = [cvr]
                             else:
                                 git_log_cvrs[digest] = cvr
                             block = ""

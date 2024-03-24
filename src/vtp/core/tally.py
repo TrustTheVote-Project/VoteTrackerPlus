@@ -60,7 +60,7 @@ class Tally:
         #        import pdb; pdb.set_trace()
         self.operation_self = operation_self
         self.digest = a_git_cvr["digest"]
-        self.contest = a_git_cvr["CVR"]
+        self.contest = a_git_cvr["contestCVR"]
         Contest.check_contest_blob_syntax(self.contest, digest=self.digest)
         # Something to hold the actual tallies.  During RCV rounds these
         # will change with last place finishers being decremented to 0.
@@ -490,7 +490,7 @@ class Tally:
         vote_count = 0
         for a_git_cvr in contest_batch:
             vote_count += 1
-            contest = a_git_cvr["CVR"]
+            contest = a_git_cvr["contestCVR"]
             digest = a_git_cvr["digest"]
             Contest.check_contest_blob_syntax(contest, digest=digest)
             # Maybe print an provenance log for the tally of this contest
@@ -617,7 +617,7 @@ class Tally:
     def print_results(self):
         """Will print the results of the tally"""
         self.operation_self.imprimir(
-            f"Final results for contest {self.contest['name']} (uid={self.contest['uid']}):",
+            f"Final results for contest {self.contest['contest_name']} (uid={self.contest['uid']}):",
             0,
         )
         #        import pdb; pdb.set_trace()
