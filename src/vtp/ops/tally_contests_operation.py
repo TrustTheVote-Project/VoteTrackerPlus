@@ -23,9 +23,9 @@
 
 # Project imports
 from vtp.core.ballot import Ballot
-from vtp.core.contest import Tally
 from vtp.core.election_config import ElectionConfig
 from vtp.core.exceptions import TallyException
+from vtp.core.tally import Tally
 
 # Local imports
 from .operation import Operation

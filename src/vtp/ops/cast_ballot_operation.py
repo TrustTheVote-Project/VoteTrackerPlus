@@ -72,14 +72,14 @@ class CastBallotOperation(Operation):
             the_ballot.add_selection(the_contest, picks.pop(0))
             loop -= 1
 
-    def get_user_selection(self, the_ballot, the_contest, count, total_contests):
+    def get_user_selection(self, the_contest, count, total_contests):
         """Print the contest and get the selection(s) from the user"""
         choices = the_contest.get("choices")
         tally = the_contest.get("tally")
         max_votes = the_contest.get("max")
         # Print something
         print(f"################ ({count} of {total_contests})")
-        print(f"Contest {the_contest.get('uid')}: {the_contest.get('name')}")
+        print(f"Contest {the_contest.get('uid')}: {the_contest.get('contest_name')}")
         if tally == "plurality":
             print(f"- This is a {tally} tally")
             print(
@@ -95,17 +95,15 @@ class CastBallotOperation(Operation):
             )
 
         # Need to print the choices first up front
-        count = 0
         for choice_index, choice in enumerate(choices):
             # If it is a ticket, need to pretty print the ticket
-            #            import pdb; pdb.set_trace()
-            if the_contest.is_contest_a_ticket_choice(choice_index):
+            if the_contest.get("contest_type") == "ticket":
                 print(
-                    f"  [{count}] {choice} - {the_contest.pretty_print_ticket(choice_index)}"
+                    f"  [{choice_index}] {choice} - "
+                    f"{the_contest.pretty_print_a_ticket(choice_index)}"
                 )
             else:
-                print(f"  [{count}] {choice}")
-            count += 1
+                print(f"  [{choice_index}] {choice}")
 
         def validate_multichoice(text):
             """Will validate the space separated user input choice
@@ -151,9 +149,9 @@ class CastBallotOperation(Operation):
             # If still here, set the selection.  Since it is possible to self
             # adjudicate a contest, always explicitly clear the selection
             # before adding
-            the_ballot.clear_selection(the_contest)
+            the_contest.clear_selection()
             for sel in validated_selections:
-                the_ballot.add_selection(the_contest, sel)
+                the_contest.add_selection(sel)
 
         if tally == "plurality":
             if max_votes > 1:
@@ -187,7 +185,7 @@ class CastBallotOperation(Operation):
                 # enter something.  Might as well validate legal selections (in
                 # this demo) as that is the long-term VTP vision.
                 count += 1
-                self.get_user_selection(a_ballot, contest, count, total_contests)
+                self.get_user_selection(contest, count, total_contests)
         # pylint: disable=too-many-nested-blocks
         if not demo_mode:
             # UX wise replicate the self adjudication experince.  This is
@@ -195,7 +193,9 @@ class CastBallotOperation(Operation):
             while True:
                 # Print the selections
                 for contest in contests:
-                    print(f"Contest {contest.get('uid')} - {contest.get('name')}:")
+                    print(
+                        f"Contest {contest.get('uid')} - {contest.get('contest_name')}:"
+                    )
                     # Loop over selections - there can be more than
                     # one but they are ALWAYS ordered
                     if len(contest.get("selection")) == 0:
@@ -205,14 +205,13 @@ class CastBallotOperation(Operation):
                         )
                     else:
                         for selection in contest.get("selection"):
-                            #                        import pdb; pdb.set_trace()
                             offset, name = Contest.split_selection(selection)
-                            if contest.is_contest_a_ticket_choice(offset):
+                            if contest.get("contest_type") == "ticket":
                                 print(
-                                    f"    {contest.pretty_print_ticket(offset)} - {name}"
+                                    f"  [{offset}] {name} - {contest.pretty_print_a_ticket(offset)}"
                                 )
                             else:
-                                print(f"    {name}")
+                                print(f"  [{offset}] {name}")
                 prompt = (
                     "Is this correct?  "
                     "Enter yes to accept the ballot, no to reject the ballot: "
@@ -228,13 +227,11 @@ class CastBallotOperation(Operation):
                     count = 0
                     for contest in contests:
                         count += 1
-                        self.get_user_selection(
-                            a_ballot, contest, count, total_contests
-                        )
+                        self.get_user_selection(contest, count, total_contests)
                 else:
                     for contest in contests:
                         if contest.get("uid") == response:
-                            self.get_user_selection(a_ballot, contest, 1, 1)
+                            self.get_user_selection(contest, 1, 1)
                             break
         # For a convenient side effect, return the contests
         return contests
@@ -295,7 +292,7 @@ class CastBallotOperation(Operation):
         )["voting centers"]
         for vote_center in voting_centers:
             self.imprimir(
-                f"Casting a {contests.len()} contest ballot at VC {vote_center}", 3
+                f"Casting a {len(contests)} contest ballot at VC {vote_center}", 3
             )
             self.imprimir(f"Cast ballot file: {ballot_file}", 3)
         # return the cast ballot location
