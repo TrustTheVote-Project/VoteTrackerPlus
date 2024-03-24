@@ -304,7 +304,8 @@ class RunMockElectionOperation(Operation):
 
         # Create a VTP ElectionData object if one does not already exist
         the_election_config = ElectionConfig.configure_election(
-            self.election_data_dir, self
+            self,
+            self.election_data_dir,
         )
 
         # If an address was used, use that

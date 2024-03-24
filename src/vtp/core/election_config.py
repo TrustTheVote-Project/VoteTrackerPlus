@@ -226,12 +226,14 @@ class ElectionConfig:
                 check=True,
                 capture_output=True,
                 text=True,
+                printonly_override=True,
             )
             result2 = self.operation_self.shell_out(
                 ["git", "rev-list", "--max-parents=0", "HEAD"],
                 check=True,
                 capture_output=True,
                 text=True,
+                printonly_override=True,
             )
 
         # Check result
@@ -269,6 +271,7 @@ class ElectionConfig:
                     check=True,
                     capture_output=True,
                     text=True,
+                    printonly_override=True,
                 )
             if os.path.splitext(os.path.basename(result.stdout.strip()))[1] == ".git":
                 Globals.set_election_upstream_remote(

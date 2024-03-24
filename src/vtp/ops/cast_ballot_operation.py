@@ -68,6 +68,7 @@ class CastBallotOperation(Operation):
         else:
             raise KeyError(f"Unspoorted tally ({tally})")
         while loop > 0:
+            #            import pdb; pdb.set_trace()
             the_ballot.add_selection(the_contest, picks.pop(0))
             loop -= 1
 
@@ -174,7 +175,7 @@ class CastBallotOperation(Operation):
         for a choice or if in demo mode will randomly choose one.
         """
         contests = a_ballot.get("contests")
-        total_contests = contests.len()
+        total_contests = len(contests)
         count = 0
         contest_uids = []
         for contest in contests:
