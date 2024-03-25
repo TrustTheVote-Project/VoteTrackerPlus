@@ -25,7 +25,9 @@ import subprocess
 from contextlib import contextmanager
 
 # local imports
-from vtp.core.common import Common, Globals
+from vtp.core.common import Globals
+
+# from py_singleton import singleton
 
 
 # pylint: disable=too-few-public-methods
@@ -53,7 +55,7 @@ class Operation:
     def __init__(
         self,
         election_data_dir: str = "",
-        verbosity: int = 3,
+        verbosity: int = Globals.get("DEFAULT_VERBOSITY"),
         printonly: bool = False,
         stdout_printing: bool = True,
         style: str = "text",
@@ -76,7 +78,7 @@ class Operation:
         #     5: DEBUG     - everything
 
         # Validate the election_data_dir arg here and now
-        Common.verify_election_data_dir(self.election_data_dir)
+        Globals.verify_election_data_dir(self.election_data_dir)
         # Configure printing
         self.stdout_printing = stdout_printing
         if style == "html":
@@ -84,11 +86,14 @@ class Operation:
         else:
             self.stdout_output = []
 
-    def imprimir(self, a_line: str, incoming_printlevel: int = 3):
-        """Either prints a line of text to STDOUT or appends it to a list,
-        in which case the output needs to be retrieved.  If the second
-        argument is less than or equal to self.verbosity, the line prints.
-        The default self.verbosity is 3."""
+    def imprimir(
+        self, a_line: str, incoming_printlevel: int = Globals.get("DEFAULT_VERBOSITY")
+    ):
+        """Either prints a line of text to STDOUT or appends it to a
+        list, in which case the output needs to be retrieved.  If
+        incoming_printlevel is less than or equal to self.verbosity,
+        the line prints.  The default self.verbosity is nominally 3.
+        """
         if incoming_printlevel <= self.verbosity:
             if self.style == "html":
                 # If self.style == "html", html-ize the line
@@ -127,7 +132,7 @@ class Operation:
         argv: list,
         no_touch_stds: bool = False,
         printonly_override: bool = False,
-        verbosity_override: int = -1,
+        incoming_printlevel: int = Globals.get("DEFAULT_VERBOSITY"),
         **kwargs,
     ):
         """Run a shell command with logging and error handling.
@@ -141,24 +146,24 @@ class Operation:
         https://docs.python.org/3.9/library/subprocess.html
 
         If printonly_override is True, then self.printonly is ignored.
-        If verbosity_override is not -1 ([0-5]), then self.verbsoity
-        is ignored.
+
+        If incoming_printlevel is less than or equal to
+        self.verbosity, the line prints similar to imprimir above (
         """
-        verbosity = verbosity_override if verbosity_override != -1 else self.verbosity
         # Note - it is ok to pass ints and floats down through argv
         # here, but they need to be individually converted to strings
         # regardless since _everything_ below wants to see strings.
         argv_string = [str(arg) for arg in argv]
-        self.imprimir(f'Running ({" ".join(argv_string)})', 5)
+        self.imprimir(f'Running ({" ".join(argv_string)})', incoming_printlevel)
         if self.printonly and not printonly_override:
             return subprocess.CompletedProcess(argv_string, 0, stdout="", stderr="")
         # the caller decides on whether check is set or not
         # pylint: disable=subprocess-run-check
         if not no_touch_stds:
             if "capture_output" not in kwargs:
-                if "stdout" not in kwargs and verbosity > 4:
+                if "stdout" not in kwargs and incoming_printlevel > self.verbosity:
                     kwargs["stdout"] = subprocess.DEVNULL
-                if "stderr" not in kwargs and verbosity > 4:
+                if "stderr" not in kwargs and incoming_printlevel > self.verbosity:
                     kwargs["stderr"] = subprocess.DEVNULL
         if "timeout" not in kwargs:
             kwargs["timeout"] = Globals.get("SHELL_TIMEOUT")
@@ -184,14 +189,14 @@ class Operation:
         branch change.  Will explicitly switch to the specified branch
         before yielding.
         """
-        self.shell_out(["git", "checkout", branch], check=True, verbosity_override=5)
+        self.shell_out(["git", "checkout", branch], check=True, incoming_printlevel=5)
         self.imprimir(f"Entering branch ({branch})", 5)
         try:
             yield
         finally:
             # switch the branch back
             self.shell_out(
-                ["git", "checkout", branch], check=True, verbosity_override=5
+                ["git", "checkout", branch], check=True, incoming_printlevel=5
             )
             self.imprimir(f"Leaving branch ({branch})", 5)
 
@@ -201,7 +206,7 @@ class Operation:
         git_log_command: list,
         election_config: dict,
         grouped_by_uid: bool = True,
-        verbosity_override: int = -1,
+        incoming_printlevel: int = -1,
     ):
         """Will execute the supplied git log command and process the
         output of those commits that are CVRs.  Will return a
@@ -216,7 +221,7 @@ class Operation:
         # all the contests found.
         git_log_cvrs = {}
         with self.changed_cwd(election_config.get("git_rootdir")):
-            self.imprimir(f'Running ({" ".join(git_log_command)})', verbosity_override)
+            self.imprimir(f'Running ({" ".join(git_log_command)})', incoming_printlevel)
             with subprocess.Popen(
                 git_log_command, stdout=subprocess.PIPE, text=True, encoding="utf8"
             ) as git_output:
@@ -244,7 +249,7 @@ class Operation:
                             # this loads the contest under the CVR key
                             cvr = json.loads(block)
                             if grouped_by_uid:
-#                                import pdb; pdb.set_trace()
+                                #                                import pdb; pdb.set_trace()
                                 cvr["digest"] = digest
                                 if cvr["contestCVR"]["uid"] in git_log_cvrs:
                                     git_log_cvrs[cvr["contestCVR"]["uid"]].append(cvr)

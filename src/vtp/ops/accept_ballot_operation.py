@@ -57,7 +57,7 @@ class AcceptBallotOperation(Operation):
         """
         result = self.shell_out(
             ["git", "log", branch, "--pretty=format:'%h'"],
-            printonly_override=True,
+            incoming_printlevel=True,
             check=True,
             capture_output=True,
             text=True,
@@ -115,7 +115,7 @@ class AcceptBallotOperation(Operation):
         # Get the current branch for reference
         current_branch = self.shell_out(
             ["git", "rev-parse", "--abbrev-ref", "HEAD"],
-            printonly_override=True,
+            incoming_printlevel=5,
             check=True,
             capture_output=True,
             text=True,
@@ -124,13 +124,13 @@ class AcceptBallotOperation(Operation):
         for _ in [0, 1, 2]:
             cmd1 = self.shell_out(
                 ["git", "checkout", "-b", branch, branchpoint],
-                verbosity_override=5,
+                incoming_printlevel=5,
             )
             if cmd1.returncode == 0:
                 # Created the local branch - see if it is push-able
                 cmd2 = self.shell_out(
                     ["git", "push", "-u", "origin", branch],
-                    verbosity_override=5,
+                    incoming_printlevel=5,
                 )
                 if cmd2.returncode == 0:
                     # success
@@ -140,12 +140,12 @@ class AcceptBallotOperation(Operation):
                 self.shell_out(
                     ["git", "checkout", current_branch],
                     check=True,
-                    verbosity_override=5,
+                    incoming_printlevel=5,
                 )
                 self.shell_out(
                     ["git", "branch", "-D", branch],
                     check=True,
-                    verbosity_override=5,
+                    incoming_printlevel=5,
                 )
             # At this point the local did not get created - try again
             branch = self.new_branch_name(contest, style)
@@ -176,7 +176,7 @@ class AcceptBallotOperation(Operation):
                     "--exclude=refs/remotes/origin/HEAD",
                     "--all",
                 ],
-                printonly_override=True,
+                incoming_printlevel=5,
                 check=True,
                 capture_output=True,
                 text=True,
@@ -189,7 +189,7 @@ class AcceptBallotOperation(Operation):
         return self.cvr_parse_git_log_output(
             ["git", "log", "--no-walk", "--pretty=format:%H%B"] + head_commits,
             config,
-            verbosity_override=5,
+            incoming_printlevel=5,
         )
 
     def get_cloaked_contests(self, contest, branch):
@@ -215,7 +215,7 @@ class AcceptBallotOperation(Operation):
                 f'--grep="uid": "{this_uid}"',
                 f'--grep="cloak": "{cloak_target}"',
             ],
-            printonly_override=True,
+            incoming_printlevel=True,
             check=True,
             capture_output=True,
             text=True,
@@ -246,20 +246,20 @@ class AcceptBallotOperation(Operation):
         self.shell_out(
             ["git", "add", payload_name],
             check=True,
-            verbosity_override=5,
+            incoming_printlevel=5,
         )
         # Note - apparently git places the commit msg on STDERR - hide it
         if style == "contest":
             self.shell_out(
                 ["git", "commit", "-F", payload_name],
                 check=True,
-                verbosity_override=5,
+                incoming_printlevel=5,
             )
         else:
             self.shell_out(
                 ["git", "commit", "-m", "Ballot Voucher"],
                 check=True,
-                verbosity_override=5,
+                incoming_printlevel=5,
             )
         # Capture the digest
         digest = self.shell_out(
@@ -267,6 +267,7 @@ class AcceptBallotOperation(Operation):
             check=True,
             capture_output=True,
             text=True,
+            incoming_printlevel=5,
         ).stdout.strip()
         return digest
 
@@ -396,7 +397,7 @@ class AcceptBallotOperation(Operation):
             # least expensive as the big reader is thus a stdout PIPE
             # loop.
             unmerged_cvrs = self.get_unmerged_contests(the_election_config)
-#            import pdb; pdb.set_trace()
+            #            import pdb; pdb.set_trace()
             for contest in a_ballot.get("contests"):
                 with self.changed_branch("main"):
                     # get N other values for each contest for this ballot
@@ -439,13 +440,13 @@ class AcceptBallotOperation(Operation):
             for branch in branches:
                 self.shell_out(
                     ["git", "push", "origin", branch],
-                    verbosity_override=5,
+                    incoming_printlevel=5,
                 )
                 # Delete the local as they build up too much.  The local
                 # reflog keeps track of the local branches
                 self.shell_out(
                     ["git", "branch", "-d", branch],
-                    verbosity_override=5,
+                    incoming_printlevel=5,
                 )
         return contest_receipts, branches, unmerged_cvrs, cloak_receipts
 
@@ -476,7 +477,7 @@ class AcceptBallotOperation(Operation):
                 # Push the voucher
                 self.shell_out(
                     ["git", "push", "origin", receipt_branch],
-                    verbosity_override=5,
+                    incoming_printlevel=5,
                 )
 
                 # Create the QR image while still in the branch as exiting the
@@ -510,7 +511,7 @@ class AcceptBallotOperation(Operation):
         # keeps track of the local branches
         self.shell_out(
             ["git", "branch", "-d", receipt_branch],
-            verbosity_override=5,
+            incoming_printlevel=5,
         )
         return receipt_branch, qr_img
 

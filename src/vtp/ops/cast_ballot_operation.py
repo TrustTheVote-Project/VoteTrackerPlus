@@ -52,7 +52,6 @@ class CastBallotOperation(Operation):
         """Will randomly make selections on a contest"""
         # get the possible choices
         choices = the_contest.get("choices")
-        tally = the_contest.get("tally")
         picks = list(range(len(choices)))
         # For plurality and max=1, the first choice is the only
         # choice.  For plurality and max>1, the order does not matter

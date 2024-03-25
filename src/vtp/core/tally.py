@@ -617,7 +617,8 @@ class Tally:
     def print_results(self):
         """Will print the results of the tally"""
         self.operation_self.imprimir(
-            f"Final results for contest {self.contest['contest_name']} (uid={self.contest['uid']}):",
+            f"Final results for contest {self.contest['contest_name']} "
+            f"(uid={self.contest['uid']}):",
             0,
         )
         #        import pdb; pdb.set_trace()

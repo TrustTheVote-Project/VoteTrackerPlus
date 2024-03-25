@@ -48,7 +48,7 @@ class MergeContestsOperation(Operation):
         # This command is duplicate from merge_receipt_branch below
         contest_file = self.shell_out(
             ["git", "diff-tree", "--no-commit-id", "-r", "--name-only", branch],
-            printonly_override=True,
+            incoming_printlevel=True,
             capture_output=True,
             text=True,
             check=True,
@@ -65,28 +65,28 @@ class MergeContestsOperation(Operation):
         # unique, so there should never be a conflict on the branch -
         # it should always successfully auto-merge as there are not
         # file overlaps.
-        self.shell_out(["git", "merge", branch], verbosity_override=5)
+        self.shell_out(["git", "merge", branch], incoming_printlevel=5)
         self.shell_out(
-            ["git", "push", "origin", "main"], check=True, verbosity_override=5
+            ["git", "push", "origin", "main"], check=True, incoming_printlevel=5
         )
         # Delete the local and remote branch if this is a local branch
         if not remote:
             self.shell_out(
                 ["git", "push", "origin", "-d", branch],
                 check=True,
-                verbosity_override=5,
+                incoming_printlevel=5,
             )
             self.shell_out(
                 ["git", "branch", "-d", branch],
                 check=True,
-                verbosity_override=5,
+                incoming_printlevel=5,
             )
         else:
             # otherwise just delete the remote
             self.shell_out(
                 ["git", "push", "origin", "-d", branch.removeprefix("origin/")],
                 check=True,
-                verbosity_override=5,
+                incoming_printlevel=5,
             )
 
     def merge_contest_branch(self, branch: str, remote: bool):
@@ -96,7 +96,7 @@ class MergeContestsOperation(Operation):
         # locations on different branches.
         contest_file = self.shell_out(
             ["git", "diff-tree", "--no-commit-id", "-r", "--name-only", branch],
-            printonly_override=True,
+            incoming_printlevel=True,
             capture_output=True,
             text=True,
             check=True,
@@ -118,7 +118,7 @@ class MergeContestsOperation(Operation):
         # zero
         self.shell_out(
             ["git", "merge", "--no-ff", "--no-commit", branch],
-            verbosity_override=5,
+            incoming_printlevel=5,
         )
         # ZZZ - replace this with an run-time cryptographic value
         # derived from the run-time election private key (diffent from
@@ -127,7 +127,7 @@ class MergeContestsOperation(Operation):
         # (the first one being contained in the commit itself).
         result = self.shell_out(
             ["openssl", "rand", "-base64", "48"],
-            printonly_override=True,
+            incoming_printlevel=True,
             capture_output=True,
             text=True,
             check=True,
@@ -144,7 +144,7 @@ class MergeContestsOperation(Operation):
         self.shell_out(
             ["git", "add", contest_file],
             check=True,
-            verbosity_override=5,
+            incoming_printlevel=5,
         )
         # Note - apparently git places the commit msg on STDERR - hide it
         if not self.printonly:
@@ -155,29 +155,29 @@ class MergeContestsOperation(Operation):
         self.shell_out(
             ["git", "commit", "-m", "auto commit - thank you for voting"],
             check=True,
-            verbosity_override=5,
+            incoming_printlevel=5,
         )
         self.shell_out(
-            ["git", "push", "origin", "main"], check=True, verbosity_override=5
+            ["git", "push", "origin", "main"], check=True, incoming_printlevel=5
         )
         # Delete the local and remote branch if this is a local branch
         if not remote:
             self.shell_out(
                 ["git", "push", "origin", "-d", branch],
                 check=True,
-                verbosity_override=5,
+                incoming_printlevel=5,
             )
             self.shell_out(
                 ["git", "branch", "-d", branch],
                 check=True,
-                verbosity_override=5,
+                incoming_printlevel=5,
             )
         else:
             # otherwise just delete the remote
             self.shell_out(
                 ["git", "push", "origin", "-d", branch.removeprefix("origin/")],
                 check=True,
-                verbosity_override=5,
+                incoming_printlevel=5,
             )
 
     # pylint: disable=too-many-arguments
@@ -262,7 +262,7 @@ class MergeContestsOperation(Operation):
             self.shell_out(
                 ["git", "pull"],
                 check=True,
-                verbosity_override=5,
+                incoming_printlevel=5,
             )
             if branch:
                 if style == "contest":
@@ -285,7 +285,7 @@ class MergeContestsOperation(Operation):
                 this_branch.strip()
                 for this_branch in self.shell_out(
                     cmds,
-                    printonly_override=True,
+                    incoming_printlevel=True,
                     check=True,
                     capture_output=True,
                     text=True,

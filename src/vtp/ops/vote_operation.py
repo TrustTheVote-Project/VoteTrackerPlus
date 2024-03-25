@@ -64,7 +64,7 @@ class VoteOperation(Operation):
             self.shell_out(
                 ["git", "pull"],
                 check=True,
-                verbosity_override=5,
+                incoming_printlevel=4,
             )
 
         # Basically only do as little as necessary to call cast_ballot.py
@@ -75,7 +75,7 @@ class VoteOperation(Operation):
             verbosity=self.verbosity,
             printonly=self.printonly,
         )
-        self.imprimir("Calling CastBallotOperation.run", 5)
+        self.imprimir("Calling CastBallotOperation.run", 4)
         a_cast_ballot_operation.run(
             an_address=an_address,
             blank_ballot=blank_ballot,
@@ -87,7 +87,7 @@ class VoteOperation(Operation):
             printonly=self.printonly,
         )
         # return what accept_ballot returns
-        self.imprimir("Calling AcceptBallotOperation.run", 5)
+        self.imprimir("Calling AcceptBallotOperation.run", 4)
         a_accept_ballot_operation.run(
             an_address=an_address,
             cast_ballot=blank_ballot,

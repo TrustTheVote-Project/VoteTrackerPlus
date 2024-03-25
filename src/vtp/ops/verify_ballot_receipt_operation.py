@@ -57,7 +57,7 @@ class VerifyBallotReceiptOperation(Operation):
                         "--buffer",
                         "--batch-check=%(objectname) %(objecttype)",
                     ],
-                    printonly_override=True,
+                    incoming_printlevel=True,
                     input=input_data,
                     text=True,
                     check=True,
@@ -118,7 +118,7 @@ class VerifyBallotReceiptOperation(Operation):
                     ["git", "log", "--no-walk", "--pretty=format:%H%B"] + row,
                     the_election_config,
                     grouped_by_uid=False,
-                    verbosity_override=5,
+                    incoming_printlevel=5,
                 )
             elif len(legit_row) > 0:
                 # Only some are legitimate
@@ -126,7 +126,7 @@ class VerifyBallotReceiptOperation(Operation):
                     ["git", "log", "--no-walk", "--pretty=format:%H%B"] + legit_row,
                     the_election_config,
                     grouped_by_uid=False,
-                    verbosity_override=5,
+                    incoming_printlevel=5,
                 )
             else:
                 # skip the row - it has no legitimate digests
@@ -229,7 +229,7 @@ class VerifyBallotReceiptOperation(Operation):
             contest_batches = self.cvr_parse_git_log_output(
                 ["git", "log", "--topo-order", "--no-merges", "--pretty=format:%H%B"],
                 the_election_config,
-                verbosity_override=5,
+                incoming_printlevel=5,
             )
             unmerged_uids = {}
             for u_count, uid in enumerate(uids):
@@ -275,7 +275,7 @@ class VerifyBallotReceiptOperation(Operation):
                 with self.changed_cwd(the_election_config.get("git_rootdir")):
                     self.shell_out(
                         ["git", "show", "-s"] + valid_digests,
-                        printonly_override=True,
+                        incoming_printlevel=True,
                         check=True,
                     )
             else:
@@ -316,7 +316,7 @@ class VerifyBallotReceiptOperation(Operation):
             self.shell_out(
                 ["git", "pull"],
                 check=True,
-                verbosity_override=5,
+                incoming_printlevel=5,
             )
 
         #    import pdb; pdb.set_trace()

@@ -50,7 +50,7 @@ class ShowContestsOperation(Operation):
                         "--batch-check=%(objectname) %(objecttype)",
                         "--buffer",
                     ],
-                    printonly_override=True,
+                    incoming_printlevel=True,
                     input=input_data,
                     text=True,
                     check=True,
@@ -95,7 +95,7 @@ class ShowContestsOperation(Operation):
             output_lines = (
                 self.shell_out(
                     ["git", "show", "-s"] + valid_digests,
-                    printonly_override=True,
+                    incoming_printlevel=True,
                     text=True,
                     check=True,
                     capture_output=True,
@@ -115,14 +115,14 @@ class ShowContestsOperation(Operation):
 #            if digest not in error_digests:
 #                self.shell_out(
 #                    ['git', 'log', '-1', digest],
-#                    printonly_override=True,
+#                    incoming_printlevel=True,
 #                    check=True)
 
 # this does not work well enough either
 #        input_data = '\n'.join(contest_check.split(',')) + '\n'
 #        self.shell_out(
 #            ['git', 'cat-file', '--batch=%(objectname)'],
-#            printonly_override=True,
+#            incoming_printlevel=True,
 #            input=input_data,
 #            text=True,
 #            check=True)

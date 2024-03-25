@@ -20,9 +20,7 @@
 # pylint: disable=too-few-public-methods
 
 # standard imports
-import json
 import os
-import re
 
 
 class Globals:
@@ -69,6 +67,8 @@ class Globals:
         "REQUIRED_NG_ADDRESS_FIELDS": ["street", "number"],
         # Whether or not VTP has been locally installed
         "VTP_LOCAL_INSTALL": True,
+        # The default verbosity
+        "DEFAULT_VERBOSITY": 3,
         # Where the bin directory is relative from the root of _this_ repo
         "BIN_DIR": "src/vtp",
         # How long to wait for a git shell command to complete - maybe a bad idea
@@ -115,10 +115,6 @@ class Globals:
         """Set the ELECTION_UPSTREAM_REMOTE"""
         Globals._config["ELECTION_UPSTREAM_REMOTE"] = value
 
-
-class Common:
-    """Common functions without a better home at this time"""
-
     @staticmethod
     def verify_election_data_dir(election_data_dir: str):
         """
@@ -128,108 +124,3 @@ class Common:
             raise ValueError(
                 f"The provided --election_data value ({election_data_dir}) does not exist"
             )
-
-    @staticmethod
-    def get_generic_ro_edf_dir() -> str:
-        """
-        Will return a generic EDF workspace so to be able to execute
-        generic/readonly commands.  It is 'readonly' because any
-        number of processes could be executing in this one git
-        workspace at the same time and if any them wrote anything, it
-        would be bad.
-        """
-        edf_path = os.path.join(
-            Globals.get("DEFAULT_RUNTIME_LOCATION"),
-            Globals.get("MOCK_CLIENT_DIRNAME"),
-            "scanner.00",
-        )
-        # Need to verify that there is only _one_ directory in the edf_path
-        dirs = [
-            name
-            for name in os.listdir(edf_path)
-            if os.path.isdir(os.path.join(edf_path, name))
-        ]
-        if len(dirs) > 1:
-            raise ValueError(
-                f"The mock client directory ({edf_path}) ",
-                "contains multiple subdirs - there can only be one ",
-                "as there should only be one EDF clone in this directory",
-            )
-        if len(dirs) == 0:
-            raise ValueError(
-                f"The mock client directory ({edf_path}) ",
-                "is empty - there needs to be exactly one git clone ",
-                "of a ElectionData repo",
-            )
-        return os.path.join(edf_path, dirs[0])
-
-    @staticmethod
-    def get_guid_based_edf_dir(guid: str) -> str:
-        """
-        Return the default runtime location for a guid based
-        workspace.  The actual ElectionData clone directory can be
-        named anything.  HOWEVER it is assumed (REQUIRED) that there
-        is only one clone in this directory, which is reasonable given
-        that the whole tree from '/' is nominally created by the
-        setup-vtp-demo operation.
-        """
-        if len(guid) != 40:
-            raise ValueError(f"The provided guid is not 40 characters long: {guid}")
-        if not re.match("^[0-9a-f]+$", guid):
-            raise ValueError(
-                f"The provided guid contains characters other than [0-9a-f]: {guid}"
-            )
-        edf_path = os.path.join(
-            Globals.get("DEFAULT_RUNTIME_LOCATION"),
-            Globals.get("GUID_CLIENT_DIRNAME"),
-            guid[:2],
-            guid[2:],
-        )
-        # Need to verify that the _only_ directory in edf_path is a
-        # valid EDF tree via some clone
-        dirs = [
-            name
-            for name in os.listdir(edf_path)
-            if os.path.isdir(os.path.join(edf_path, name))
-        ]
-        if len(dirs) > 1:
-            raise ValueError(
-                f"The provided guid ({guid}) based path ({edf_path}) ",
-                "contains multiple subdirs - there can only be one",
-            )
-        if len(dirs) == 0:
-            raise ValueError(
-                f"The guid directory ({edf_path}) ",
-                "is empty - there needs to be exactly one git clone ",
-                "of a ElectionData repo",
-            )
-        return os.path.join(edf_path, dirs[0])
-
-    @staticmethod
-    def get_script_name(script, the_election_config):
-        """
-        Given a python script name, either return the poetry local
-        install name or the relative path from the default execution
-        CWD.
-        """
-        if Globals.get("VTP_LOCAL_INSTALL"):
-            return re.sub("_", "-", script).rstrip(".py")
-        return os.path.join(
-            the_election_config.get("git_rootdir"), Globals.get("BIN_DIR"), script
-        )
-
-    @staticmethod
-    def convert_show_output(output_lines: list) -> dict:
-        """
-        Will convert the native text output of a CVR git commit to a
-        dictionary with a header key and a payload key.  The header is
-        the default three text lines and the payload is the CVS JSON
-        payload.
-        """
-        contest_cvr = {}
-        contest_cvr["header"] = output_lines[:3]
-        contest_cvr["payload"] = json.loads("".join(output_lines[4:]))
-        return contest_cvr
-
-
-# EOF

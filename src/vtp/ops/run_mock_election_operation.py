@@ -97,12 +97,12 @@ class RunMockElectionOperation(Operation):
                         3,
                     )
                 # - cast a ballot
-                #            import pdb; pdb.set_trace()
                 with self.changed_cwd(the_election_config.get("git_rootdir")):
                     self.shell_out(
                         ["git", "pull"],
                         timeout=None,
                         check=True,
+                        incoming_printlevel=4,
                     )
                 cast_ballot = CastBallotOperation(
                     election_data_dir=self.election_data_dir,
@@ -153,6 +153,7 @@ class RunMockElectionOperation(Operation):
                             ["git", "gc"],
                             timeout=None,
                             check=True,
+                            incoming_printlevel=4,
                         )
             if iterations and count >= iterations:
                 break
@@ -183,11 +184,13 @@ class RunMockElectionOperation(Operation):
             ["git", "remote", "prune", "origin"],
             timeout=None,
             check=True,
+            incoming_printlevel=4,
         )
         self.shell_out(
             ["git", "gc"],
             timeout=None,
             check=True,
+            incoming_printlevel=4,
         )
 
     def server_mockup(
@@ -215,6 +218,7 @@ class RunMockElectionOperation(Operation):
                     ["git", "pull"],
                     timeout=None,
                     check=True,
+                    incoming_printlevel=4,
                 )
             if flush_mode == 2:
                 merge_contests = MergeContestsOperation(

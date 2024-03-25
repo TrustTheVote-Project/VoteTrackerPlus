@@ -180,7 +180,7 @@ class SetupVtpDemoOperation(Operation):
         with self.changed_cwd(the_election_config.get("git_rootdir")):
             election_data_remote_url = self.shell_out(
                 ["git", "config", "--get", "remote.origin.url"],
-                printonly_override=True,
+                incoming_printlevel=True,
                 check=True,
                 capture_output=True,
                 text=True,

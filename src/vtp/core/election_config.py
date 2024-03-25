@@ -25,7 +25,7 @@ import networkx
 import yaml
 
 # local imports
-from .common import Common, Globals
+from .common import Globals
 from .contest import Contest
 
 
@@ -112,7 +112,7 @@ class ElectionConfig:
         ElectionData class/instance.
         """
         # Safety check
-        Common.verify_election_data_dir(election_data_dir)
+        Globals.verify_election_data_dir(election_data_dir)
         # Always call the constructor - sets the absolute path to
         # election_data_dir.  It will call git rev-parse but at the
         # moment that is required to determine the exact root of the
@@ -226,14 +226,14 @@ class ElectionConfig:
                 check=True,
                 capture_output=True,
                 text=True,
-                printonly_override=True,
+                incoming_printlevel=5,
             )
             result2 = self.operation_self.shell_out(
                 ["git", "rev-list", "--max-parents=0", "HEAD"],
                 check=True,
                 capture_output=True,
                 text=True,
-                printonly_override=True,
+                incoming_printlevel=5,
             )
 
         # Check result
@@ -271,7 +271,7 @@ class ElectionConfig:
                     check=True,
                     capture_output=True,
                     text=True,
-                    printonly_override=True,
+                    incoming_printlevel=True,
                 )
             if os.path.splitext(os.path.basename(result.stdout.strip()))[1] == ".git":
                 Globals.set_election_upstream_remote(

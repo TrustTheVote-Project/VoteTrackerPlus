@@ -17,6 +17,9 @@
 
 """Argument handling."""
 
+# local imports
+from vtp.core.common import Globals
+
 
 class Arguments:
 
@@ -116,7 +119,7 @@ class Arguments:
         )
 
     @staticmethod
-    def add_verbosity(parser, verbosity=3):
+    def add_verbosity(parser, verbosity=Globals.get("DEFAULT_VERBOSITY")):
         """Add verbosity option"""
         parser.add_argument(
             "-v",

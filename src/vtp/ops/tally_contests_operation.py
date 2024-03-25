@@ -59,7 +59,7 @@ class TallyContestsOperation(Operation):
             self.shell_out(
                 ["git", "pull"],
                 check=True,
-                verbosity_override=5,
+                incoming_printlevel=5,
             )
 
         # Will process all the CVR commits on the main branch and tally
@@ -80,7 +80,7 @@ class TallyContestsOperation(Operation):
                 "--pretty=format:%H%B",
             ],
             the_election_config,
-            verbosity_override=5,
+            incoming_printlevel=5,
         )
 
         # Note - though plurality voting can be counted within the above
@@ -89,7 +89,10 @@ class TallyContestsOperation(Operation):
         for contest_batch in sorted(contest_batches):
             # Maybe skip
             if contest_uid != "":
-                if contest_batches[contest_batch][0]["contestCVR"]["uid"] != contest_uid:
+                if (
+                    contest_batches[contest_batch][0]["contestCVR"]["uid"]
+                    != contest_uid
+                ):
                     continue
             # Create a Tally object for this specific contest
             the_tally = Tally(contest_batches[contest_batch][0], self)
