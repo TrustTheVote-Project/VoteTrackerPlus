@@ -201,10 +201,7 @@ class Contest:
             # if max is not set, set it
             # import pdb; pdb.set_trace()
             if "max" not in a_contest_blob:
-                if a_contest_blob["tally"] == "plurality":
-                    a_contest_blob["max"] = 1
-                else:
-                    a_contest_blob["max"] = len(a_contest_blob["choices"])
+                a_contest_blob["max"] = 1
             # If the contest choice is a string, convert it to dict (name)
             for index, choice in enumerate(a_contest_blob["choices"]):
                 if isinstance(choice, str):
