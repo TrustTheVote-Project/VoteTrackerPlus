@@ -57,7 +57,7 @@ class VerifyBallotReceiptOperation(Operation):
                         "--buffer",
                         "--batch-check=%(objectname) %(objecttype)",
                     ],
-                    incoming_printlevel=True,
+                    incoming_printlevel=5,
                     input=input_data,
                     text=True,
                     check=True,
@@ -75,14 +75,16 @@ class VerifyBallotReceiptOperation(Operation):
             digest, commit_type = line.split()
             if commit_type == "missing":
                 self.imprimir(
-                    f"[ERROR]: missing digest: row {row} column {column} "
-                    f"contest={headers[column - 1]} digest={digest}"
+                    f"missing digest: row {row} column {column} "
+                    f"contest={headers[column - 1]} digest={digest}",
+                    1,
                 )
                 error_digests.add(digest)
             elif commit_type != "commit":
                 self.imprimir(
-                    f"[ERROR]: invalid digest type: row {row} column {column} "
-                    f"contest={headers[column - 1]} digest={digest} type={commit_type}"
+                    f"invalid digest type: row {row} column {column} "
+                    f"contest={headers[column - 1]} digest={digest} type={commit_type}",
+                    1,
                 )
                 error_digests.add(digest)
             column += 1
@@ -144,15 +146,17 @@ class VerifyBallotReceiptOperation(Operation):
                     continue
                 if digest not in cvrs:
                     self.imprimir(
-                        f"[ERROR]: missing digest in main branch: row {index} "
-                        f"contest={headers[column]} digest={digest}"
+                        f"missing digest in main branch: row {index} "
+                        f"contest={headers[column]} digest={digest}",
+                        1,
                     )
                     error_digests.add(digest)
                     continue
-                if cvrs[digest]["CVR"]["uid"] != uids[column]:
+                if cvrs[digest]["contestCVR"]["uid"] != uids[column]:
                     self.imprimir(
-                        f"[ERROR]: bad contest uid: row {row} column {column} contest "
-                        f"{headers[column]} != {cvrs[digest]['CVR']['uid']} digest={digest}"
+                        f"bad contest uid: row {row} column {column} contest "
+                        f"{headers[column]} != {cvrs[digest]['contestCVR']['uid']} digest={digest}",
+                        1,
                     )
                     error_digests.add(digest)
                     continue
@@ -241,18 +245,19 @@ class VerifyBallotReceiptOperation(Operation):
                 for c_count, contest in enumerate(contest_batches[uid]):
                     if contest["digest"] in requested_row:
                         self.imprimir(
-                            f"Contest '{contest['CVR']['uid']} - {contest['CVR']['name']}' "
+                            f"Contest '{contest['contestCVR']['uid']} - {contest['contestCVR']['name']}' "
                             f"({contest['digest']}) is vote {contest_votes - c_count} out "
-                            f"of {contest_votes} votes"
+                            f"of {contest_votes} votes",
+                            0,
                         )
                         found = True
                         break
                 if found is False:
                     unmerged_uids[uid] = u_count
             if unmerged_uids:
-                self.imprimir("The following contests are not merged to main yet:")
+                self.imprimir("The following contests are not merged to main yet:", 0)
                 for uid, offset in unmerged_uids.items():
-                    self.imprimir(f"{headers[offset]} ({requested_digests[offset]})")
+                    self.imprimir(f"{headers[offset]} ({requested_digests[offset]})", 0)
 
         # If a row is specified, will print the context index in the
         # actual contest tally - which basically tells the voter 'your
@@ -262,7 +267,8 @@ class VerifyBallotReceiptOperation(Operation):
             for digest in lines[int(row_index) - 1]:
                 if digest in error_digests:
                     self.imprimir(
-                        "[ERROR]: cannot print CVR for {digest} (row {row_index}) - it is invalid"
+                        "cannot print CVR for {digest} (row {row_index}) - it is invalid",
+                        1,
                     )
                     continue
                 valid_digests.append(digest)
@@ -275,7 +281,7 @@ class VerifyBallotReceiptOperation(Operation):
                 with self.changed_cwd(the_election_config.get("git_rootdir")):
                     self.shell_out(
                         ["git", "show", "-s"] + valid_digests,
-                        incoming_printlevel=True,
+                        incoming_printlevel=0,
                         check=True,
                     )
             else:
@@ -286,11 +292,12 @@ class VerifyBallotReceiptOperation(Operation):
         self.imprimir("############")
         if error_digests:
             self.imprimir(
-                "[ERROR]: ballot receipt INVALID - the supplied ballot receipt has "
-                "{len(error_digests)} errors."
+                "ballot receipt INVALID - the supplied ballot receipt has "
+                "{len(error_digests)} errors.",
+                1,
             )
         else:
-            self.imprimir("[GOOD]: ballot receipt VALID - no digest errors found")
+            self.imprimir("[GOOD]: ballot receipt VALID - no digest errors found", 0)
         self.imprimir("############")
 
     # pylint: disable=duplicate-code

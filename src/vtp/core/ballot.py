@@ -235,7 +235,7 @@ class Ballot:
         """
         for contest in self.contests:
             if uid == contest.get("uid"):
-                return contest.get("name")
+                return contest.get("contest_name")
         raise KeyError(
             f"There is no matching contest uid ({uid}) in the supplied balloot"
         )

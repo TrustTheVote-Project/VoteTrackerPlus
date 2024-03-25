@@ -48,7 +48,7 @@ class MergeContestsOperation(Operation):
         # This command is duplicate from merge_receipt_branch below
         contest_file = self.shell_out(
             ["git", "diff-tree", "--no-commit-id", "-r", "--name-only", branch],
-            incoming_printlevel=True,
+            incoming_printlevel=5,
             capture_output=True,
             text=True,
             check=True,
@@ -96,7 +96,7 @@ class MergeContestsOperation(Operation):
         # locations on different branches.
         contest_file = self.shell_out(
             ["git", "diff-tree", "--no-commit-id", "-r", "--name-only", branch],
-            incoming_printlevel=True,
+            incoming_printlevel=5,
             capture_output=True,
             text=True,
             check=True,
@@ -127,7 +127,7 @@ class MergeContestsOperation(Operation):
         # (the first one being contained in the commit itself).
         result = self.shell_out(
             ["openssl", "rand", "-base64", "48"],
-            incoming_printlevel=True,
+            incoming_printlevel=5,
             capture_output=True,
             text=True,
             check=True,
@@ -285,7 +285,7 @@ class MergeContestsOperation(Operation):
                 this_branch.strip()
                 for this_branch in self.shell_out(
                     cmds,
-                    incoming_printlevel=True,
+                    incoming_printlevel=5,
                     check=True,
                     capture_output=True,
                     text=True,

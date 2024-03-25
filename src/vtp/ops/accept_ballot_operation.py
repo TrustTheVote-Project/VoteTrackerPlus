@@ -57,7 +57,7 @@ class AcceptBallotOperation(Operation):
         """
         result = self.shell_out(
             ["git", "log", branch, "--pretty=format:'%h'"],
-            incoming_printlevel=True,
+            incoming_printlevel=5,
             check=True,
             capture_output=True,
             text=True,
@@ -215,7 +215,7 @@ class AcceptBallotOperation(Operation):
                 f'--grep="uid": "{this_uid}"',
                 f'--grep="cloak": "{cloak_target}"',
             ],
-            incoming_printlevel=True,
+            incoming_printlevel=5,
             check=True,
             capture_output=True,
             text=True,

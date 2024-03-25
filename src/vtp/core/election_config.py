@@ -271,7 +271,7 @@ class ElectionConfig:
                     check=True,
                     capture_output=True,
                     text=True,
-                    incoming_printlevel=True,
+                    incoming_printlevel=5,
                 )
             if os.path.splitext(os.path.basename(result.stdout.strip()))[1] == ".git":
                 Globals.set_election_upstream_remote(
