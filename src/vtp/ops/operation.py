@@ -130,16 +130,19 @@ class Operation:
         verbosity_override: int = -1,
         **kwargs,
     ):
-        """Run a shell command with logging and error handling.  Raises a
-        CalledProcessError if the shell command fails - the caller needs to
-        deal with that.  Can also raise a TimeoutExpired exception.
+        """Run a shell command with logging and error handling.
+        Raises a CalledProcessError if the shell command fails - the
+        caller needs to deal with that.  Can also raise a
+        TimeoutExpired exception.
 
         Nominally returns a CompletedProcess instance.
 
-        See for example https://docs.python.org/3.9/library/subprocess.html
+        See for example
+        https://docs.python.org/3.9/library/subprocess.html
 
-        If printonly_override is True, then self.printonly is ignored if True
-        If verbose_override is not -1 ([0-5]), will use that value
+        If printonly_override is True, then self.printonly is ignored.
+        If verbosity_override is not -1 ([0-5]), then self.verbsoity
+        is ignored.
         """
         verbosity = verbosity_override if verbosity_override != -1 else self.verbosity
         # Note - it is ok to pass ints and floats down through argv

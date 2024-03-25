@@ -48,7 +48,7 @@ class CastBallotOperation(Operation):
     description (immediately below this) in the source file.
     """
 
-    def make_random_selection(self, the_ballot, the_contest):
+    def make_random_selection(self, the_contest):
         """Will randomly make selections on a contest"""
         # get the possible choices
         choices = the_contest.get("choices")
@@ -61,15 +61,10 @@ class CastBallotOperation(Operation):
         #
         # Choose something randomly
         random.shuffle(picks)
-        if "plurality" == tally:
-            loop = the_contest.get("max")
-        elif "rcv" == tally:
-            loop = len(choices)
-        else:
-            raise KeyError(f"Unspoorted tally ({tally})")
+        loop = the_contest.get("max")
         while loop > 0:
-            #            import pdb; pdb.set_trace()
-            the_ballot.add_selection(the_contest, picks.pop(0))
+            # import pdb; pdb.set_trace()
+            the_contest.add_selection(picks.pop(0))
             loop -= 1
 
     def get_user_selection(self, the_contest, count, total_contests):
@@ -179,7 +174,7 @@ class CastBallotOperation(Operation):
         for contest in contests:
             contest_uids.append(contest.get("uid"))
             if demo_mode:
-                self.make_random_selection(a_ballot, contest)
+                self.make_random_selection(contest)
             else:
                 # Display the tally type and choices and allow the user to manually
                 # enter something.  Might as well validate legal selections (in

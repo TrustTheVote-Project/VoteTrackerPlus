@@ -101,7 +101,6 @@ class RunMockElectionOperation(Operation):
                 with self.changed_cwd(the_election_config.get("git_rootdir")):
                     self.shell_out(
                         ["git", "pull"],
-                        no_touch_stds=True,
                         timeout=None,
                         check=True,
                     )
@@ -152,7 +151,6 @@ class RunMockElectionOperation(Operation):
                     if count % 10 == 9:
                         self.shell_out(
                             ["git", "gc"],
-                            no_touch_stds=True,
                             timeout=None,
                             check=True,
                         )
@@ -183,13 +181,11 @@ class RunMockElectionOperation(Operation):
         # clean up git just in case
         self.shell_out(
             ["git", "remote", "prune", "origin"],
-            no_touch_stds=True,
             timeout=None,
             check=True,
         )
         self.shell_out(
             ["git", "gc"],
-            no_touch_stds=True,
             timeout=None,
             check=True,
         )
@@ -217,7 +213,6 @@ class RunMockElectionOperation(Operation):
             with self.changed_cwd(the_election_config.get("git_rootdir")):
                 self.shell_out(
                     ["git", "pull"],
-                    no_touch_stds=True,
                     timeout=None,
                     check=True,
                 )
