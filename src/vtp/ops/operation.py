@@ -27,7 +27,23 @@ from contextlib import contextmanager
 # local imports
 from vtp.core.common import Globals
 
+# ZZZ - not sure how to best do this - could not make it work.  See:
+# https://stackoverflow.com/questions/6760685/what-is-the-best-way-of-implementing-singleton-in-python
 # from py_singleton import singleton
+#
+# class Singleton(type):
+#     """
+#     Mmm, there should only really be one instance of Operation and not
+#     multiple, so maybe create a singleton class?
+#     """
+#     _instances = {}
+#     def __call__(cls, *args, **kwargs):
+#         if cls not in cls._instances:
+#             cls._instances[cls] = super(Singleton, cls).__call__(*args, **kwargs)
+#         return cls._instances[cls]
+#
+# class Operation(metaclass=Singleton):
+#    pass
 
 
 # pylint: disable=too-few-public-methods
@@ -41,15 +57,15 @@ class Operation:
 
     # class constants
     _sha1_regex = re.compile(r"([0-9a-fA-F]{40})")
-
-    # Mmm, there should only really be one instance of Operation and not
-    # multiple, so create a singleton class
-    _instance = None
-
-    def __new__(cls, *args, **kwargs):
-        if not cls._instance:
-            cls._instance = super().__new__(cls)
-        return cls._instance
+    _hackitoergosum = {
+        "election_data_dir": None,
+        "printonly": None,
+        "verbosity": None,
+        "style": None,
+        "stdout_printing": None,
+        "stdout_output": [],
+        "initialized": False,
+    }
 
     # pylint: disable=too-many-arguments
     def __init__(
@@ -60,15 +76,11 @@ class Operation:
         stdout_printing: bool = True,
         style: str = "text",
     ):
-        self.election_data_dir = election_data_dir
-        self.printonly = printonly
-        self.verbosity = verbosity
-        self.style = style
-
-        # Design note: originally the logging package was used,  But custom
-        # output was added without retiring logging.  And then having two
-        # systems became a problem, and the logging package was dropped.
-
+        """
+        Design note: originally the logging package was used,  But custom
+        output was added without retiring logging.  And then having two
+        systems became a problem, and the logging package was dropped.
+        """
         # The verbosity levels:
         #     0: ALWAYS    - always print the line
         #     1: ERROR     - [ERROR]    is prepended to the line
@@ -77,6 +89,19 @@ class Operation:
         #     4: VERBOSE   - more info
         #     5: DEBUG     - everything
 
+        if Operation._hackitoergosum["initialized"]:
+            self.election_data_dir = Operation._hackitoergosum["election_data_dir"]
+            self.printonly = Operation._hackitoergosum["printonly"]
+            self.verbosity = Operation._hackitoergosum["verbosity"]
+            self.style = Operation._hackitoergosum["style"]
+            self.stdout_printing = Operation._hackitoergosum["stdout_printing"]
+            self.stdout_output = Operation._hackitoergosum["stdout_output"]
+            return
+        # import pdb; pdb.set_trace()
+        self.election_data_dir = election_data_dir
+        self.printonly = printonly
+        self.verbosity = verbosity
+        self.style = style
         # Validate the election_data_dir arg here and now
         Globals.verify_election_data_dir(self.election_data_dir)
         # Configure printing
@@ -85,6 +110,13 @@ class Operation:
             self.stdout_output = ["<p>"]
         else:
             self.stdout_output = []
+        Operation._hackitoergosum["election_data_dir"] = self.election_data_dir
+        Operation._hackitoergosum["printonly"] = self.printonly
+        Operation._hackitoergosum["verbosity"] = self.verbosity
+        Operation._hackitoergosum["style"] = self.style
+        Operation._hackitoergosum["stdout_printing"] = self.stdout_printing
+        Operation._hackitoergosum["stdout_ouput"] = self.stdout_output
+        Operation._hackitoergosum["initialized"] = True
 
     def imprimir(
         self, a_line: str, incoming_printlevel: int = Globals.get("DEFAULT_VERBOSITY")

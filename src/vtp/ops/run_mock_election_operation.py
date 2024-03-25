@@ -104,6 +104,7 @@ class RunMockElectionOperation(Operation):
                         check=True,
                         incoming_printlevel=4,
                     )
+                # import pdb; pdb.set_trace()
                 cast_ballot = CastBallotOperation(
                     election_data_dir=self.election_data_dir,
                     verbosity=self.verbosity,
