@@ -310,17 +310,19 @@ class Tally:
         if not non_zero_count_choices:
             self.operation_self.imprimir("There are no votes for any choice", 0)
             return 1
-        # if non_zero_count_choices < self.get("max_selections"):
+        # if non_zero_count_choices:
+        #     import pdb; pdb.set_trace()
         #     self.operation_self.imprimir(
         #         f"There are only {non_zero_count_choices} viable choices "
         #         "left which is less than the contest max selections "
         #         f"({self.get('max_selections')})",
         #         0,
         #     )
-        #     return 1
-        if non_zero_count_choices == 1:
+        #     return 0
+        if non_zero_count_choices <= 2:
             self.operation_self.imprimir(
-                "There is only one remaining viable choice left - halting more RCV rounds",
+                f"There is only {non_zero_count_choices} remaining choices - "
+                "halting more RCV rounds",
                 0,
             )
             return 1
@@ -426,6 +428,8 @@ class Tally:
         slice off that choice off and re-count the now first
         selection choice (if there is one)
         """
+        self.operation_self.imprimir_formatting("empty_line")
+        self.operation_self.imprimir_formatting("horizontal_line")
         self.operation_self.imprimir(f"RCV: round {this_round}", 0)
 
         # ZZZ - create a function to validate incoming last place
@@ -464,7 +468,7 @@ class Tally:
         #        import pprint
         #        import pdb; pdb.set_trace()
         # If there are anough winners, stop and return
-        if len(self.winner_order) >= self.defaults["max_selections"]:
+        if self.winner_order:
             return
         # If not, safely determine the next set of last_place_names and
         # execute another RCV round.
@@ -554,6 +558,8 @@ class Tally:
         if self.contest["tally"] == "plurality":
             self.operation_self.imprimir("Plurality - one round", 0)
         else:
+            self.operation_self.imprimir_formatting("empty_line")
+            self.operation_self.imprimir_formatting("horizontal_line")
             self.operation_self.imprimir("RCV: round 0", 0)
         self.parse_all_contests(contest_batch, checks)
 
@@ -597,7 +603,7 @@ class Tally:
 
         # If there are anough winners (IRV1 only has one winner as
         # defined by there only being one loser)
-        if self.winner_order and len(self.winner_order) == 1:
+        if self.winner_order:
             return
         # More RCV rounds are needed.  Loop until we have enough RCV
         # winners.
