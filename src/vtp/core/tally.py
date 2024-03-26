@@ -19,7 +19,6 @@
 
 import json
 import operator
-from fractions import Fraction
 
 # local
 from .contest import Contest
@@ -80,16 +79,11 @@ class Tally:
         self.rcv_round = []
         self.rcv_round.append([])
 
-        # win_by and max are optional but have known defaults.
-        # Determine the win_by if is not specified by the
-        # ElectionConfig.
-        self.defaults = {}
-        self.defaults["max"] = 1 if "max" not in self.contest else self.contest["max"]
-        self.defaults["win_by"] = (
-            (1.0 / float(1 + self.defaults["max"]))
-            if "win_by" not in self.contest
-            else Fraction(self.contest["win_by"])
-        )
+        # ZZZ - cache these values
+        self.defaults = {
+            "max_selections": self.contest["max_selections"],
+            "win_by": self.contest["win_by"],
+        }
 
         # Need to keep track of a selections/choices that are no longer
         # viable - key=choice['name'] value=obe round
@@ -106,7 +100,7 @@ class Tally:
     def get(self, name: str):
         """Simple limited functionality getter"""
         # ZZZ import pdb; pdb.set_trace()
-        if name in ["max", "win_by"]:
+        if name in ["max_selections", "win_by"]:
             return self.defaults[name]
         if name in [
             "digest",
@@ -146,7 +140,7 @@ class Tally:
         self, contest: dict, provenance_digest: str, vote_count: int
     ):
         """plurality tally"""
-        for count in range(self.defaults["max"]):
+        for count in range(self.defaults["max_selections"]):
             if 0 <= count < len(contest["selection"]):
                 # yes this can be one line, but the reader may
                 # be interested in verifying the explicit
@@ -316,19 +310,14 @@ class Tally:
         if not non_zero_count_choices:
             self.operation_self.imprimir("There are no votes for any choice", 0)
             return 1
-        if non_zero_count_choices < self.get("max"):
-            self.operation_self.imprimir(
-                f"There are only {non_zero_count_choices} viable choices "
-                f"left which is less than the contest max ({self.get('max')})",
-                0,
-            )
-            return 1
-        if non_zero_count_choices == self.get("max"):
-            self.operation_self.imprimir(
-                f"The contest max number of choices ({self.get('max')}) has been reached",
-                0,
-            )
-            return 1
+        # if non_zero_count_choices < self.get("max_selections"):
+        #     self.operation_self.imprimir(
+        #         f"There are only {non_zero_count_choices} viable choices "
+        #         "left which is less than the contest max selections "
+        #         f"({self.get('max_selections')})",
+        #         0,
+        #     )
+        #     return 1
         if non_zero_count_choices == 1:
             self.operation_self.imprimir(
                 "There is only one remaining viable choice left - halting more RCV rounds",
@@ -352,12 +341,16 @@ class Tally:
         # If len(last_place_names) leaves less than the max but one or
         # more choices left, this is a tie on losing.  Not sure what
         # to do, so print that and return.
-        if non_zero_count_choices - len(last_place_names) < self.get("max"):
+        if len(last_place_names) >= 2:
             self.operation_self.imprimir(
-                f"There is a last place tie ({len(last_place_names)} way) which results "
-                f"in LESS THAN the max ({non_zero_count_choices}) of choices",
-                0,
+                f"There is a last place {len(last_place_names)} way tie.",
+                2,
             )
+            if non_zero_count_choices > len(last_place_names):
+                # ZZZ is this the right thing to do?
+                # allow all the zero counts to go
+                return 0
+            # else, stop
             return 1
 
         # And, the recursive stack here should probably be returning a
@@ -378,7 +371,7 @@ class Tally:
             digest = uid["digest"]
             if digest in checks:
                 self.operation_self.imprimir(
-                    f"INSPECTING: {digest} (contest={contest['contest_name']})", 4
+                    f"INSPECTING: {digest} (contest={contest['contest_name']})", 3
                 )
             # Note - if there is no selection, there is no selection
             if not contest["selection"]:
@@ -463,7 +456,7 @@ class Tally:
             # Note the test is '>' and NOT '>='
             if (
                 float(self.selection_counts[choice]) / float(total_current_vote_count)
-            ) > self.defaults["win_by"]:
+            ) > float(self.defaults["win_by"]):
                 # A winner.  Depending on the win_by (which is a
                 # function of max), there could be multiple
                 # winners in this round.
@@ -471,7 +464,7 @@ class Tally:
         #        import pprint
         #        import pdb; pdb.set_trace()
         # If there are anough winners, stop and return
-        if len(self.winner_order) >= self.defaults["max"]:
+        if len(self.winner_order) >= self.defaults["max_selections"]:
             return
         # If not, safely determine the next set of last_place_names and
         # execute another RCV round.
@@ -500,7 +493,7 @@ class Tally:
                 "choices",
                 "tally",
                 "win_by",
-                "max",
+                "max_selections",
                 "ggo",
                 "uid",
                 "contest_name",
@@ -578,10 +571,14 @@ class Tally:
 
         # The rest of this block handles RCV
 
-        # See if another RCV round is necessary.  When max=1 there is
-        # only one RCV winner.  However, not only can max>1 but win_by
-        # might be 2/3 and not just a simple majority.  So only if there
-        # are enough winners with enough votes is this contest done.
+        # See if another RCV round is necessary.  Note that currently
+        # "RCV" actually means a IRV contests with only one winner.
+        # When support for other RCV contests is added, RCV will need
+        # to be replaced by something else (perhaps IRV1).  However,
+        # not only can the number of winners be more than 1 but win_by
+        # might be 2/3 and not just a simple majority.  So only if
+        # there are enough winners with enough votes is this contest
+        # done.
 
         # Get the correct current total vote count for this round
         total_current_vote_count = self.get_total_vote_count(0)
@@ -592,14 +589,15 @@ class Tally:
             # Note the test is '>' and NOT '>='
             if (
                 float(self.selection_counts[choice]) / float(total_current_vote_count)
-            ) > self.defaults["win_by"]:
+            ) > float(self.defaults["win_by"]):
                 # A winner.  Depending on the win_by (which is a
                 # function of max), there could be multiple
                 # winners in this round.
                 self.winner_order.append((choice, self.selection_counts[choice]))
 
-        # If there are anough winners, stop and return.
-        if self.winner_order and len(self.winner_order) >= self.defaults["max"]:
+        # If there are anough winners (IRV1 only has one winner as
+        # defined by there only being one loser)
+        if self.winner_order and len(self.winner_order) == 1:
             return
         # More RCV rounds are needed.  Loop until we have enough RCV
         # winners.

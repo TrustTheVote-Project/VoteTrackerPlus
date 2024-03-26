@@ -49,7 +49,7 @@ class Contest:
         "choices",
         "tally",
         "win_by",
-        "max",
+        "max_selections",
         "write_in",
         "description",
         "contest_type",
@@ -152,6 +152,7 @@ class Contest:
         """Will check the syntaz of the selection array"""
 
     @staticmethod
+    # pylint: disable=too-many-branches
     def check_contest_blob_syntax(
         a_contest_blob: dict,
         filename: str = "",
@@ -159,19 +160,14 @@ class Contest:
         set_defaults: bool = False,
     ):
         """
-        Will check the synatx of a contest.
+        Will check the syntax of a contest.
 
         Note - the filename and digest parameters only adjust
         potential error messages.
 
         If set_defaults is set, missing default values will be set.
-
-        Three adjustments can be made: 1 - if there is mo max, will
-        set it (plurality:1 and RCV:len(choices)) 2 - will add the
-        Globals.ELECTION_UPSTREAM_REMOTE to the contest (so that it
-        flows out through the CVR and beyond - for voter UX purposes
-        only 3 - if a contest choice is a string, set the name key to
-        that value
+        Four default adjustments can be made: max_selections, win_by,
+        the "name" key for each choice, and election_upstream_remote
         """
         legal_fields = Contest._cast_keys
         bad_keys = [key for key in a_contest_blob if key not in legal_fields]
@@ -198,10 +194,27 @@ class Contest:
         if "selection" in a_contest_blob:
             Contest.check_selection(a_contest_blob)
         if set_defaults:
-            # if max is not set, set it
+            # If max_selections is not set, set it
             # import pdb; pdb.set_trace()
-            if "max" not in a_contest_blob:
-                a_contest_blob["max"] = 1
+            if "max_selections" not in a_contest_blob:
+                if a_contest_blob["tally"] == "plurality":
+                    a_contest_blob["max_selections"] = 1
+                else:
+                    a_contest_blob["max_selections"] = len(a_contest_blob["choices"])
+            # If win_by is not set
+            if "win_by" not in a_contest_blob:
+                # ZZZ - it is unclear what win_by may actually want to
+                # mean from a UX POV.  For now, simple set it to "max"
+                # for plurality and "0.5" for IRV(1), which implies
+                # the winning plurality choice and the first IRV(1)
+                # candidate past the 50% mark.  Note - a value of
+                # "max" in IRV(1) could mean after all rounds TBD.
+                if a_contest_blob["contest_type"] == "plurality":
+                    a_contest_blob["win_by"] = "max"
+                else:
+                    # Note - RCV tallies are technically IRV(1)
+                    # tallies currently
+                    a_contest_blob["win_by"] = "0.5"
             # If the contest choice is a string, convert it to dict (name)
             for index, choice in enumerate(a_contest_blob["choices"]):
                 if isinstance(choice, str):

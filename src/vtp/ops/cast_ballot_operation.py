@@ -53,14 +53,14 @@ class CastBallotOperation(Operation):
         # get the possible choices
         choices = the_contest.get("choices")
         picks = list(range(len(choices)))
-        # For plurality and max=1, the first choice is the only
-        # choice.  For plurality and max>1, the order does not matter
+        # For plurality and max_selections=1, the first choice is the only
+        # choice.  For plurality and max_selections>1, the order does not matter
         # - a selection is a selection.  For RCV, the order does
         # matter as that is the ranking.
         #
         # Choose something randomly
         random.shuffle(picks)
-        loop = the_contest.get("max")
+        loop = the_contest.get("max_selections")
         while loop > 0:
             # import pdb; pdb.set_trace()
             the_contest.add_selection(picks.pop(0))
@@ -70,7 +70,7 @@ class CastBallotOperation(Operation):
         """Print the contest and get the selection(s) from the user"""
         choices = the_contest.get("choices")
         tally = the_contest.get("tally")
-        max_votes = the_contest.get("max")
+        max_votes = the_contest.get("max_selections")
         # Print something
         print(f"################ ({count} of {total_contests})")
         print(f"Contest {the_contest.get('uid')}: {the_contest.get('contest_name')}")
