@@ -86,7 +86,7 @@ class TallyContestsOperation(Operation):
         # Note - though plurality voting can be counted within the above
         # loop, tallies such as rcv cannot.  So far now, just count
         # everything in a separate loop.
-        for contest_batch in sorted(contest_batches):
+        for count, contest_batch in enumerate(sorted(contest_batches)):
             # Maybe skip
             if contest_uid != "":
                 if (
@@ -96,6 +96,10 @@ class TallyContestsOperation(Operation):
                     continue
             # Create a Tally object for this specific contest
             the_tally = Tally(contest_batches[contest_batch][0], self)
+            if contest_uid == "":
+                if count > 0:
+                    self.imprimir_formatting("empty_line")
+                self.imprimir_formatting("horizontal_line")
             self.imprimir(
                 f"Scanned {len(contest_batches[contest_batch])} contests "
                 f"for contest ({contest_batches[contest_batch][0]['contestCVR']['contest_name']}) "

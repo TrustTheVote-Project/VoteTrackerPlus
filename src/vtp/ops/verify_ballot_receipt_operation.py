@@ -245,7 +245,8 @@ class VerifyBallotReceiptOperation(Operation):
                 for c_count, contest in enumerate(contest_batches[uid]):
                     if contest["digest"] in requested_row:
                         self.imprimir(
-                            f"Contest '{contest['contestCVR']['uid']} - {contest['contestCVR']['name']}' "
+                            f"Contest '{contest['contestCVR']['uid']} - "
+                            f"{contest['contestCVR']['name']}' "
                             f"({contest['digest']}) is vote {contest_votes - c_count} out "
                             f"of {contest_votes} votes",
                             0,

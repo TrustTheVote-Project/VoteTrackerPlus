@@ -118,6 +118,42 @@ class Operation:
         Operation._hackitoergosum["stdout_ouput"] = self.stdout_output
         Operation._hackitoergosum["initialized"] = True
 
+    def imprimir_formatting(
+        self,
+        a_construct: str,
+        incoming_printlevel: int = Globals.get("DEFAULT_VERBOSITY"),
+    ):
+        """Will print various formatting constructs for UX.  If
+        incoming_printlevel is less than or equal to self.verbosity,
+        the line prints.  The default self.verbosity is nominally 3.
+        """
+        a_line = ""
+        if incoming_printlevel <= self.verbosity:
+            if self.style == "html":
+                match a_construct:
+                    case "horizontal_line":
+                        a_line = "<hr>"
+                    case "empty_line":
+                        a_line = "<br>"
+                    case _:
+                        raise RuntimeError(
+                            f"Error: unsupported printing construct {a_construct}"
+                        )
+            else:
+                match a_construct:
+                    case "horizontal_line":
+                        a_line = "-" * 78
+                    case "empty_line":
+                        a_line = ""
+                    case _:
+                        raise RuntimeError(
+                            f"Error: unsupported printing construct {a_construct}"
+                        )
+            if self.stdout_printing:
+                print(a_line)
+            else:
+                self.stdout_output.append(a_line)
+
     def imprimir(
         self, a_line: str, incoming_printlevel: int = Globals.get("DEFAULT_VERBOSITY")
     ):

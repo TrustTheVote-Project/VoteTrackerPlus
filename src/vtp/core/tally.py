@@ -123,7 +123,7 @@ class Tally:
         """Return the Tally in a partially print-able json string - careful ..."""
         # Note - keep cloak out of it until proven safe to include
         tally_dict = {
-            "name": self.contest["name"],
+            "contest_name": self.contest["contest_name"],
             "vote_count": self.vote_count,
             "winner_order": self.winner_order,
         }
@@ -374,11 +374,11 @@ class Tally:
 
         # Loop over CVRs
         for uid in contest_batch:
-            contest = uid["CVR"]
+            contest = uid["contestCVR"]
             digest = uid["digest"]
             if digest in checks:
                 self.operation_self.imprimir(
-                    f"INSPECTING: {digest} (contest={contest['name']})", 4
+                    f"INSPECTING: {digest} (contest={contest['contest_name']})", 4
                 )
             # Note - if there is no selection, there is no selection
             if not contest["selection"]:
@@ -413,14 +413,14 @@ class Tally:
                         # original variant: if digest in checks or loglevel == "DEBUG":
                         if digest in checks or self.operation_self.verbosity >= 4:
                             self.operation_self.imprimir(
-                                f"RCV: {digest} (contest={contest['name']}) last place "
+                                f"RCV: {digest} (contest={contest['contest_name']}) last place "
                                 f"pop and count ({last_place_name} -> {new_choice_name})",
                                 0,
                             )
                     else:
                         if digest in checks or self.operation_self.verbosity >= 4:
                             self.operation_self.imprimir(
-                                f"RCV: {digest} (contest={contest['name']}) last place "
+                                f"RCV: {digest} (contest={contest['contest_name']}) last place "
                                 f"pop and drop ({last_place_name} -> BLANK)",
                                 0,
                             )
@@ -503,7 +503,7 @@ class Tally:
                 "max",
                 "ggo",
                 "uid",
-                "name",
+                "contest_name",
                 "contest_type",
                 "election_upstream_remote",
             ]:
