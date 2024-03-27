@@ -246,7 +246,7 @@ class VerifyBallotReceiptOperation(Operation):
                     if contest["digest"] in requested_row:
                         self.imprimir(
                             f"Contest '{contest['contestCVR']['uid']} - "
-                            f"{contest['contestCVR']['name']}' "
+                            f"{contest['contestCVR']['contest_name']}' "
                             f"({contest['digest']}) is vote {contest_votes - c_count} out "
                             f"of {contest_votes} votes",
                             0,
@@ -290,16 +290,18 @@ class VerifyBallotReceiptOperation(Operation):
                 vet_a_row()
 
         # Summerize
-        self.imprimir("############")
         if error_digests:
+            self.imprimir_formatting("begin_error_box")
             self.imprimir(
                 "ballot receipt INVALID - the supplied ballot receipt has "
                 "{len(error_digests)} errors.",
                 1,
             )
+            self.imprimir_formatting("end_error_box")
         else:
+            self.imprimir_formatting("begin_good_box")
             self.imprimir("[GOOD]: ballot receipt VALID - no digest errors found", 0)
-        self.imprimir("############")
+            self.imprimir_formatting("end_good_box")
 
     # pylint: disable=duplicate-code
     def run(

@@ -137,6 +137,14 @@ class Operation:
                         a_line = '<hr width="50%">'
                     case "empty_line":
                         a_line = "<br>"
+                    case "begin_good_box":
+                        a_line = '<div style="border-width:2px; border-style:solid; border-color:#00f000">'
+                    case "end_good_box":
+                        a_line = "</div>"
+                    case "begin_error_box":
+                        a_line = '<div style="border-width:2px; border-style:solid; border-color:#f00000">'
+                    case "end_error_box":
+                        a_line = "</div>"
                     case _:
                         raise RuntimeError(
                             f"Error: unsupported printing construct {a_construct}"
@@ -149,6 +157,14 @@ class Operation:
                         a_line = "-" * 32
                     case "empty_line":
                         a_line = ""
+                    case "begin_good_box":
+                        a_line = "*" * 12
+                    case "end_good_box":
+                        a_line = "*" * 12
+                    case "begin_error_box":
+                        a_line = "#" * 12
+                    case "end_error_box":
+                        a_line = "#" * 12
                     case _:
                         raise RuntimeError(
                             f"Error: unsupported printing construct {a_construct}"
