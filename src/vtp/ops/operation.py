@@ -74,7 +74,7 @@ class Operation:
         verbosity: int = Globals.get("DEFAULT_VERBOSITY"),
         printonly: bool = False,
         stdout_printing: bool = True,
-        style: str = "text",
+        output_style: str = "text",
     ):
         """
         Design note: originally the logging package was used,  But custom
@@ -93,7 +93,7 @@ class Operation:
             self.election_data_dir = Operation._hackitoergosum["election_data_dir"]
             self.printonly = Operation._hackitoergosum["printonly"]
             self.verbosity = Operation._hackitoergosum["verbosity"]
-            self.style = Operation._hackitoergosum["style"]
+            self.output_style = Operation._hackitoergosum["output_style"]
             self.stdout_printing = Operation._hackitoergosum["stdout_printing"]
             self.stdout_output = Operation._hackitoergosum["stdout_output"]
             return
@@ -101,19 +101,19 @@ class Operation:
         self.election_data_dir = election_data_dir
         self.printonly = printonly
         self.verbosity = verbosity
-        self.style = style
+        self.output_style = output_style
         # Validate the election_data_dir arg here and now
         Globals.verify_election_data_dir(self.election_data_dir)
         # Configure printing
         self.stdout_printing = stdout_printing
-        if style == "html":
+        if output_style == "html":
             self.stdout_output = ["<p>"]
         else:
             self.stdout_output = []
         Operation._hackitoergosum["election_data_dir"] = self.election_data_dir
         Operation._hackitoergosum["printonly"] = self.printonly
         Operation._hackitoergosum["verbosity"] = self.verbosity
-        Operation._hackitoergosum["style"] = self.style
+        Operation._hackitoergosum["output_style"] = self.output_style
         Operation._hackitoergosum["stdout_printing"] = self.stdout_printing
         Operation._hackitoergosum["stdout_ouput"] = self.stdout_output
         Operation._hackitoergosum["initialized"] = True
@@ -129,10 +129,12 @@ class Operation:
         """
         a_line = ""
         if incoming_printlevel <= self.verbosity:
-            if self.style == "html":
+            if self.output_style == "html":
                 match a_construct:
                     case "horizontal_line":
                         a_line = "<hr>"
+                    case "horizontal_shortline":
+                        a_line = '<hr width="50%">'
                     case "empty_line":
                         a_line = "<br>"
                     case _:
@@ -143,6 +145,8 @@ class Operation:
                 match a_construct:
                     case "horizontal_line":
                         a_line = "-" * 78
+                    case "horizontal_shortline":
+                        a_line = "-" * 32
                     case "empty_line":
                         a_line = ""
                     case _:
@@ -163,8 +167,8 @@ class Operation:
         the line prints.  The default self.verbosity is nominally 3.
         """
         if incoming_printlevel <= self.verbosity:
-            if self.style == "html":
-                # If self.style == "html", html-ize the line
+            if self.output_style == "html":
+                # If self.output_style == "html", html-ize the line
                 # - add digest links for digests
                 # - add line breaks per line
                 # - convert an array to a table with css class=imprimir

@@ -200,7 +200,9 @@ class Tally:
         """
         # Note - self.rcv_round[current_round] is the ordered array of
         # all RCV choice tuples
-        self.operation_self.imprimir(f"{self.rcv_round[current_round]}", 3)
+        for result in self.rcv_round[current_round]:
+            self.operation_self.imprimir(f"  {result}")
+        # self.operation_self.imprimir(f"{self.rcv_round[current_round]}", 3)
 
         # Step 1: remove self.obe_choices from current round
         working_copy = []
@@ -368,12 +370,14 @@ class Tally:
         """
 
         # Loop over CVRs
-        for uid in contest_batch:
+        for vote_count, uid in enumerate(contest_batch):
             contest = uid["contestCVR"]
             digest = uid["digest"]
             if digest in checks:
                 self.operation_self.imprimir(
-                    f"INSPECTING: {digest} (contest={contest['contest_name']})", 3
+                    f"INSPECTING: {digest} (contest={contest['contest_name']}) "
+                    f"as vote {vote_count + 1}",
+                    3,
                 )
             # Note - if there is no selection, there is no selection
             if not contest["selection"]:
@@ -429,7 +433,10 @@ class Tally:
         selection choice (if there is one)
         """
         self.operation_self.imprimir_formatting("empty_line")
-        self.operation_self.imprimir_formatting("horizontal_line")
+        if len(contest_batch) > 1:
+            self.operation_self.imprimir_formatting("horizontal_shortline")
+        else:
+            self.operation_self.imprimir_formatting("horizontal_line")
         self.operation_self.imprimir(f"RCV: round {this_round}", 0)
 
         # ZZZ - create a function to validate incoming last place
@@ -559,7 +566,10 @@ class Tally:
             self.operation_self.imprimir("Plurality - one round", 0)
         else:
             self.operation_self.imprimir_formatting("empty_line")
-            self.operation_self.imprimir_formatting("horizontal_line")
+            if len(contest_batch) > 1:
+                self.operation_self.imprimir_formatting("horizontal_shortline")
+            else:
+                self.operation_self.imprimir_formatting("horizontal_line")
             self.operation_self.imprimir("RCV: round 0", 0)
         self.parse_all_contests(contest_batch, checks)
 

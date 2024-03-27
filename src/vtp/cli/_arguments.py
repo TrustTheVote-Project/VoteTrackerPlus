@@ -128,3 +128,14 @@ class Arguments:
             default=verbosity,
             help=f"0 critical, 1 error, 2 warning, 3 info, 4 debug (def={verbosity})",
         )
+
+    @staticmethod
+    def add_output_style(parser):
+        """Set the STDOUT text style"""
+        parser.add_argument(
+            "-o",
+            "--output_style",
+            type=str,
+            default="text",
+            help="'text' is normal text; 'html' will decorate output with html markers (def='text')",
+        )
