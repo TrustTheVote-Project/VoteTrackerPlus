@@ -1,6 +1,6 @@
 [project]
 name = "votetrackerplus"
-version = "0.1.0"
+version = "0.2.0"
 description = "VoteTracker+ - a distributed, open-source, public ballot and Cast Vote Record integrity and tracking system"
 authors = [
   { name = "Sandy Currier", email = "windoverwater@users.noreply.github.com" }

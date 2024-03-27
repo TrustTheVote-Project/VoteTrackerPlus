@@ -20,13 +20,7 @@
 # pylint: disable=too-few-public-methods
 
 # standard imports
-import json
-import logging
 import os
-import re
-import subprocess
-import sys
-from contextlib import contextmanager
 
 
 class Globals:
@@ -73,6 +67,8 @@ class Globals:
         "REQUIRED_NG_ADDRESS_FIELDS": ["street", "number"],
         # Whether or not VTP has been locally installed
         "VTP_LOCAL_INSTALL": True,
+        # The default verbosity
+        "DEFAULT_VERBOSITY": 3,
         # Where the bin directory is relative from the root of _this_ repo
         "BIN_DIR": "src/vtp",
         # How long to wait for a git shell command to complete - maybe a bad idea
@@ -102,8 +98,11 @@ class Globals:
         "MOCK_CLIENT_DIRNAME": "mock-clients",
         # Default runtime location of everything
         "DEFAULT_RUNTIME_LOCATION": "/opt/VoteTrackerPlus/demo.01",
-        # Default git web service endpoint for QR codes
-        "QR_ENDPOINT_ROOT": "https://github.com/TrustTheVote-Project",
+        # The election date-time for all ElectionData commits
+        "ELECTION_DATETIME": "2024-11-05T12:00:00",
+        # The arbitrary election data string
+        "ELECTION_UPSTREAM_REMOTE": "https://github.com/TrustTheVote-Project/"
+        + "VTP-mock-election.US.16",
     }
 
     @staticmethod
@@ -111,32 +110,10 @@ class Globals:
         """A generic getter"""
         return Globals._config[name]
 
-
-class Common:
-    """Common functions without a better home at this time"""
-
-    # logging should only be configured once and only once (until a
-    # logger is set up)
-    _configured = False
-
     @staticmethod
-    def configure_logging(verbosity):
-        """How VTP is (currently) using logging"""
-        if Common._configured:
-            return
-        verbose = {
-            0: logging.CRITICAL,
-            1: logging.ERROR,
-            2: logging.WARNING,
-            3: logging.INFO,
-            4: logging.DEBUG,
-        }
-        logging.basicConfig(
-            format="%(message)s",
-            level=verbose[verbosity],
-            stream=sys.stdout,
-        )
-        Common._configured = True
+    def set_election_upstream_remote(value):
+        """Set the ELECTION_UPSTREAM_REMOTE"""
+        Globals._config["ELECTION_UPSTREAM_REMOTE"] = value
 
     @staticmethod
     def verify_election_data_dir(election_data_dir: str):
@@ -147,235 +124,3 @@ class Common:
             raise ValueError(
                 f"The provided --election_data value ({election_data_dir}) does not exist"
             )
-
-    @staticmethod
-    def get_generic_ro_edf_dir() -> str:
-        """
-        Will return a generic EDF workspace so to be able to execute
-        generic/readonly commands.  It is 'readonly' because any
-        number of processes could be executing in this one git
-        workspace at the same time and if any them wrote anything, it
-        would be bad.
-        """
-        edf_path = os.path.join(
-            Globals.get("DEFAULT_RUNTIME_LOCATION"),
-            Globals.get("MOCK_CLIENT_DIRNAME"),
-            "scanner.00",
-        )
-        # Need to verify that there is only _one_ directory in the edf_path
-        dirs = [
-            name
-            for name in os.listdir(edf_path)
-            if os.path.isdir(os.path.join(edf_path, name))
-        ]
-        if len(dirs) > 1:
-            raise ValueError(
-                f"The mock client directory ({edf_path}) ",
-                "contains multiple subdirs - there can only be one ",
-                "as there should only be one EDF clone in this directory",
-            )
-        if len(dirs) == 0:
-            raise ValueError(
-                f"The mock client directory ({edf_path}) ",
-                "is empty - there needs to be exactly one git clone ",
-                "of a ElectionData repo",
-            )
-        return os.path.join(edf_path, dirs[0])
-
-    @staticmethod
-    def get_guid_based_edf_dir(guid: str) -> str:
-        """
-        Return the default runtime location for a guid based
-        workspace.  The actual ElectionData clone directory can be
-        named anything.  HOWEVER it is assumed (REQUIRED) that there
-        is only one clone in this directory, which is reasonable given
-        that the whole tree from '/' is nominally created by the
-        setup-vtp-demo operation.
-        """
-        if len(guid) != 40:
-            raise ValueError(f"The provided guid is not 40 characters long: {guid}")
-        if not re.match("^[0-9a-f]+$", guid):
-            raise ValueError(
-                f"The provided guid contains characters other than [0-9a-f]: {guid}"
-            )
-        edf_path = os.path.join(
-            Globals.get("DEFAULT_RUNTIME_LOCATION"),
-            Globals.get("GUID_CLIENT_DIRNAME"),
-            guid[:2],
-            guid[2:],
-        )
-        # Need to verify that the _only_ directory in edf_path is a
-        # valid EDF tree via some clone
-        dirs = [
-            name
-            for name in os.listdir(edf_path)
-            if os.path.isdir(os.path.join(edf_path, name))
-        ]
-        if len(dirs) > 1:
-            raise ValueError(
-                f"The provided guid ({guid}) based path ({edf_path}) ",
-                "contains multiple subdirs - there can only be one",
-            )
-        if len(dirs) == 0:
-            raise ValueError(
-                f"The guid directory ({edf_path}) ",
-                "is empty - there needs to be exactly one git clone ",
-                "of a ElectionData repo",
-            )
-        return os.path.join(edf_path, dirs[0])
-
-
-# pylint: disable=too-few-public-methods   # ZZZ - remove this later
-class Shellout:
-    """
-    A class to wrap the control & management of shell subprocesses,
-    nominally git commands.
-    """
-
-    @staticmethod
-    def get_script_name(script, the_election_config):
-        """
-        Given a python script name, either return the poetry local
-        install name or the relative path from the default execution
-        CWD.
-        """
-        if Globals.get("VTP_LOCAL_INSTALL"):
-            return re.sub("_", "-", script).rstrip(".py")
-        return os.path.join(
-            the_election_config.get("git_rootdir"), Globals.get("BIN_DIR"), script
-        )
-
-    @staticmethod
-    def run(argv, printonly=False, verbosity=3, no_touch_stds=False, **kwargs):
-        """Run a shell command with logging and error handling.  Raises a
-        CalledProcessError if the shell command fails - the caller needs to
-        deal with that.  Can also raise a TimeoutExpired exception.
-
-        Nominally returns a CompletedProcess instance.
-
-        See for example https://docs.python.org/3.9/library/subprocess.html
-        """
-        # Note - it is ok to pass ints and floats down through argv
-        # here, but they need to be individually converted to strings
-        # regardless since _everything_ below wants to see strings.
-        argv_string = [str(arg) for arg in argv]
-        if verbosity >= 3:
-            logging.info('Running "%s"', " ".join(argv_string))
-        if printonly:
-            return subprocess.CompletedProcess(argv_string, 0, stdout="", stderr="")
-        # the caller desides on whether check is set or not
-        # pylint: disable=subprocess-run-check
-        if not no_touch_stds:
-            if "capture_output" not in kwargs:
-                if "stdout" not in kwargs and verbosity < 3:
-                    kwargs["stdout"] = subprocess.DEVNULL
-                if "stderr" not in kwargs and verbosity <= 3:
-                    kwargs["stderr"] = subprocess.DEVNULL
-        if "timeout" not in kwargs:
-            kwargs["timeout"] = Globals.get("SHELL_TIMEOUT")
-        return subprocess.run(argv_string, **kwargs)
-
-    @staticmethod
-    @contextmanager
-    def changed_cwd(path):
-        """Context manager for temporarily changing the CWD"""
-        oldpwd = os.getcwd()
-        try:
-            os.chdir(path)
-            logging.debug("Entering dir (%s):", path)
-            yield
-        finally:
-            os.chdir(oldpwd)
-            logging.debug("Leaving dir (%s):", path)
-
-    @staticmethod
-    @contextmanager
-    def changed_branch(branch):
-        """
-        Context manager for temporarily encapsulating a potential git
-        branch change.  Will explicitly switch to the specified branch
-        before yielding.
-        """
-        Shellout.run(["git", "checkout", branch], check=True)
-        logging.debug("Entering branch (%s):", branch)
-        try:
-            yield
-        finally:
-            # switch the branch back
-            Shellout.run(["git", "checkout", branch], check=True)
-            logging.debug("Leaving branch (%s):", branch)
-
-    @staticmethod
-    # ZZZ - could use an optional filter_by_uid argument which is a set object
-    def cvr_parse_git_log_output(
-        git_log_command, election_config, grouped_by_uid=True, verbosity=3
-    ):
-        """Will execute the supplied git log command and process the
-        output of those commits that are CVRs.  Will return a
-        dictionary keyed on the contest UID that is a list of CVRs.
-        The CVR is just the CVR from the git log with a 'digest' key
-        added.
-
-        Note the the order of the list is git log order and not
-        randomized FWIIW.
-        """
-        # Will process all the CVR commits on the main branch and tally
-        # all the contests found.
-        git_log_cvrs = {}
-        with Shellout.changed_cwd(election_config.get("git_rootdir")):
-            if verbosity >= 3:
-                logging.info('Running "%s"', " ".join(git_log_command))
-            with subprocess.Popen(
-                git_log_command, stdout=subprocess.PIPE, text=True, encoding="utf8"
-            ) as git_output:
-                # read lines until there is a complete json object, then
-                # add the object for that contest.
-                block = ""
-                digest = ""
-                recording = False
-                # question - how to get "for line in
-                # git_output.stdout.readline():" not to effectively return
-                # the characters in line as opposed to the entire line
-                # itself?
-                while True:
-                    line = git_output.stdout.readline()
-                    if not line:
-                        break
-                    if match := re.match("^([a-f0-9]{40}){", line):
-                        digest = match.group(1)
-                        recording = True
-                        block = "{"
-                        continue
-                    if recording:
-                        block += line.strip()
-                        if re.match("^}", line):
-                            # this loads the contest under the CVR key
-                            cvr = json.loads(block)
-                            if grouped_by_uid:
-                                cvr["digest"] = digest
-                                if cvr["CVR"]["uid"] in git_log_cvrs:
-                                    git_log_cvrs[cvr["CVR"]["uid"]].append(cvr)
-                                else:
-                                    git_log_cvrs[cvr["CVR"]["uid"]] = [cvr]
-                            else:
-                                git_log_cvrs[digest] = cvr
-                            block = ""
-                            digest = ""
-                            recording = False
-        return git_log_cvrs
-
-    @staticmethod
-    def convert_show_output(output_lines: list) -> dict:
-        """
-        Will convert the native text output of a CVR git commit to a
-        dictionary with a header key and a payload key.  The header is
-        the default three text lines and the payload is the CVS JSON
-        payload.
-        """
-        contest_cvr = {}
-        contest_cvr["header"] = output_lines[:3]
-        contest_cvr["payload"] = json.loads("".join(output_lines[4:]))
-        return contest_cvr
-
-
-# EOF

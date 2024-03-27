@@ -136,6 +136,7 @@ def main():
         substreet=parsed_args.substreet,
         town=parsed_args.town,
         state=parsed_args.state,
+        csv=parsed_args.csv,
     )
 
     # do it

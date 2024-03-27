@@ -68,6 +68,7 @@ tallying across git submodules/repos.
         default="",
         help="a comma separated list of contests checks to track",
     )
+    Arguments.add_output_style(parser)
     Arguments.add_verbosity(parser)
     parsed_args = parser.parse_args()
 
@@ -94,6 +95,7 @@ def main():
     # do it
     tco = TallyContestsOperation(
         election_data_dir=parsed_args.election_data_dir,
+        output_style=parsed_args.output_style,
         verbosity=parsed_args.verbosity,
         printonly=False,
     )

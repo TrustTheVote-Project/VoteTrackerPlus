@@ -20,13 +20,11 @@
 """Logic of operation for creating a blank ballot."""
 
 # Standard imports
-import logging
 import pprint
 
 # Project imports
 from vtp.core.address import Address
 from vtp.core.ballot import BlankBallot
-from vtp.core.common import Common
 from vtp.core.election_config import ElectionConfig
 
 # Local imports
@@ -49,45 +47,46 @@ class CreateBlankBallotOperation(Operation):
     ):
         """Main function - see -h for more info"""
 
-        # Configure logging
-        Common.configure_logging(self.verbosity)
-
         # Create a VTP ElectionData object if one does not already exist
-        the_election_config = ElectionConfig.configure_election(self.election_data_dir)
+        the_election_config = ElectionConfig.configure_election(
+            self,
+            self.election_data_dir,
+        )
 
         # Set the ggos for the address
         an_address.map_ggos(the_election_config)
 
         # print some debugging info
-        logging.debug("The election config ggos are: %s", the_election_config)
-        logging.debug("And the address is: %s", str(an_address))
-        logging.debug("And language is: %s", language)
+        self.imprimir(f"The election config ggos are: {the_election_config}", 4)
+        self.imprimir(f"And the address is: {str(an_address)}", 4)
+        self.imprimir(f"And language is: {language}", 4)
 
         # Construct a blank ballot
-        the_ballot = BlankBallot()
+        the_ballot = BlankBallot(self)
         the_ballot.create_blank_ballot(an_address, the_election_config)
-        logging.info("Active GGOs: %s", the_ballot.get("active_ggos"))
-        logging.debug(
-            "And the blank ballot looks like:\n%s", pprint.pformat(the_ballot.dict())
+        self.imprimir(f"Active GGOs: {the_ballot.get('active_ggos')}", 4)
+        self.imprimir(
+            f"And the blank ballot looks like:\n{pprint.pformat(the_ballot.dict())}",
+            5,
         )
 
         # Maybe display some node info
         node = the_ballot.get("ballot_node")
-        logging.debug(
-            "And a/the node (%s) looks like:\n%s",
-            node,
-            pprint.pformat(the_election_config.get_node(node, "ALL")),
+        self.imprimir(
+            f"And a/the node ({node}) looks like:\n"
+            f"{pprint.pformat(the_election_config.get_node(node, 'ALL'))}",
+            5,
         )
-        logging.debug(
-            "And the edges are: %s",
-            pprint.pformat(the_election_config.get_dag("edges")),
+        self.imprimir(
+            f"And the edges are: {pprint.pformat(the_election_config.get_dag('edges'))}",
+            5,
         )
 
         # Write it out
         ballot_file = the_ballot.write_blank_ballot(
             the_election_config, printonly=self.printonly
         )
-        logging.info("Blank ballot file: %s", ballot_file)
+        self.imprimir(f"Blank ballot file: {ballot_file}", 3)
 
 
 # EOF

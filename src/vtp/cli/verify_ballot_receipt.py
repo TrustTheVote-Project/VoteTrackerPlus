@@ -72,6 +72,7 @@ check row is provided.
         action="store_true",
         help="display the contents of the CVRs when specifying a row",
     )
+    Arguments.add_output_style(parser)
     Arguments.add_verbosity(parser)
 
     parsed_args = parser.parse_args()
@@ -92,6 +93,7 @@ def main():
     # do it
     vbro = VerifyBallotReceiptOperation(
         election_data_dir=parsed_args.election_data_dir,
+        output_style=parsed_args.output_style,
         verbosity=parsed_args.verbosity,
         printonly=False,
     )

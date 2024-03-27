@@ -19,7 +19,6 @@
 
 import csv
 import json
-import logging
 import os
 from copy import deepcopy
 
@@ -28,93 +27,6 @@ from deepdiff import DeepDiff
 # Local imports
 from .common import Globals
 from .contest import Contest
-
-
-class Contests:
-    """An iteratable object for the contests in a ballot"""
-
-    def __init__(self, a_ballot):
-        """
-        Need to cache enough data here so to be able to iterate AND
-        create valid Contest objects
-        """
-        self.ballot_ref = a_ballot
-        # Need the (ordered) list of ggos supplying contests
-        self.ggos = [*a_ballot.get("contests")]
-        self.ggo_max = len(self.ggos)
-        self.ggo_index = 0
-        self.contest_index = 0
-        self.contest_max = len(a_ballot.get("contests")[self.ggos[0]])
-
-    #        import pdb; pdb.set_trace()
-    #        inner_blob = next(iter((a_ballot.get('contests')[self.ggos[0]][0].values())))
-    #        self.contest_max = len(inner_blob['max']) if 'max' in inner_blob else 1
-
-    def __iter__(self):
-        """boilerplate"""
-        # start - be kind and reset things
-        self.ggo_index = 0
-        self.contest_index = 0
-        self.contest_max = len(self.ballot_ref.get("contests")[self.ggos[0]])
-        return self
-
-    def __next__(self):
-        """
-        Because of the blobiness nature of the data model of a contest
-        within a ballot dictionary, this is ugly.  Need to iterate over
-        the correct ordered list of ggos (self.ggos) and within each of
-        those iterations, iterate over the contests which is an ordered
-        list of single entry dictionaries.
-
-        Note - the code below post increments the index alues which is
-        not the common pattern ?
-        """
-        if self.ggo_max == 0:
-            # just in case
-            raise StopIteration
-        # cache this ggo
-        ggo = self.ggos[self.ggo_index]
-        # if there is a contest here, return it
-        if self.contest_index < self.contest_max:
-            # contest_content = \
-            # next(iter((self.ballot_ref.get('contests')[ggo][self.contest_index].values())))
-            # return the next contest in this ggo group
-            this_contest = Contest(
-                self.ballot_ref.get("contests")[ggo][self.contest_index],
-                ggo,
-                self.contest_index,
-                accept_all_keys=True,
-            )
-            self.contest_index += 1
-            return this_contest
-
-        # If here, bump the ggo_index and reset the contest index and try again
-        self.ggo_index += 1
-        self.contest_index = 0
-
-        # Now test to see if there is a next ggo group and if so, return
-        # its first contest
-        if self.ggo_index < self.ggo_max:
-            ggo = self.ggos[self.ggo_index]
-            self.contest_max = len(self.ballot_ref.get("contests")[ggo])
-            if self.contest_index < self.contest_max:
-                this_contest = Contest(
-                    self.ballot_ref.get("contests")[ggo][self.contest_index],
-                    ggo,
-                    0,
-                    accept_all_keys=True,
-                )
-                self.contest_index += 1
-                return this_contest
-        # done - be kind and reset things
-        self.ggo_index = 0
-        self.contest_index = 0
-        self.contest_max = len(self.ballot_ref.get("contests")[self.ggos[0]])
-        raise StopIteration
-
-    def len(self):
-        """Not my language, but still very cool"""
-        return sum(1 for _ in self)
 
 
 class Ballot:
@@ -209,23 +121,24 @@ class Ballot:
                 f"{','.join(missing_keys)}"
             )
 
-    def __init__(self):
+    def __init__(self, operation_self):
         """Constructor - just creates the dictionary and returns the
         object.
         """
-        self.contests = {}
+        self.contests = []
         self.active_ggos = []
         self.ballot_subdir = ""
         self.ballot_node = ""
         self.ballot_filename = ""
+        self.operation_self = operation_self
 
     def verify_cast_ballot_data(self, config):
-        """Will validate an incoming cast ballot (a ballot CVR, not a
-        contest CVR) against the upstream blank ballot.  This is done
-        by first verifying the ballot syntax, including the selection
-        node.  Then after del'ing the selection node from the
-        incoming_cast_ballot, a key sorted json.dump of that against
-        the source blank ballot is performed.
+        """Will validate an incoming cast ballot against the
+        associated blank ballot.  This is done by first verifying the
+        ballot syntax, including the selection node.  Then after
+        del'ing the selection node from the incoming_cast_ballot, a
+        key sorted json.dump of that against the source blank ballot
+        is performed.
 
         If incoming_cast_ballot is not JSON or broken, this function
         will raise an error.
@@ -235,7 +148,7 @@ class Ballot:
         # Ballot.verify_ballot_outer_keys(self)
 
         # Get the blank ballot
-        the_bb = BlankBallot()
+        the_bb = BlankBallot(self.operation_self)
         the_bb.read_a_blank_ballot(
             None,
             config,
@@ -248,12 +161,11 @@ class Ballot:
         # ... and make a dict out of it
         blank = the_bb.dict()
         # Create a local dict copy that we can manipulate
-        cast = deepcopy(self.dict())
+        cast_ballot = deepcopy(self.dict())
 
         # 1) Loop over contests and a) validate the selection, b) that
         # the blank_ballot is legit, and c) that it matches
-        contests = Contests(cast)
-        for contest in contests:
+        for contest in cast_ballot["contests"]:
             # Note - if selection is not a valid key, a KeyError will be raised
             if not isinstance(contest.get("selection"), list):
                 raise KeyError(
@@ -270,18 +182,13 @@ class Ballot:
                     )
             # Now remove the selection
             contest.delete_contest_field("selection")
-            # Rats - the absence of 'max' is allowed and is
-            # interpreted as 1.  So in cast if max is 1, delete it so
-            # it can match the parent blank ballot
-            if contest.get("max") == 1:
-                contest.delete_contest_field("max")
 
         # 2) Compare incoming_cast_ballot to the associated blank
         # ballot.  Since the blank ballot needs to be read in, it is
         # easier to add the selection node to that than to make a deep
         # copy of the cast ballot and remove the selection node from
         # that.
-        result = DeepDiff(blank, cast)
+        result = DeepDiff(blank, cast_ballot)
         # import pdb; pdb.set_trace()
         if result:
             raise KeyError(
@@ -290,16 +197,24 @@ class Ballot:
                 f"{result}"
             )
 
-    def set_ballot_data(self, ballot):
-        """Will set the ballot data"""
-        Ballot.verify_ballot_outer_keys(ballot)
-        self.contests = ballot["contests"]
-        self.active_ggos = ballot["active_ggos"]
-        self.ballot_subdir = ballot["ballot_subdir"]
-        self.ballot_node = ballot["ballot_node"]
-        self.ballot_filename = ballot["ballot_filename"]
+    def set_ballot_data(self, incoming_ballot_json, a_cast_ballot: bool = False):
+        """
+        Will set this Ballot instance to the incoming ballot json.
+        This _assumes_ that incoming_ballot_json is all json and has
+        not yet been converted to contest objects.
+        """
+        Ballot.verify_ballot_outer_keys(incoming_ballot_json)
+        self.active_ggos = incoming_ballot_json["active_ggos"]
+        self.ballot_subdir = incoming_ballot_json["ballot_subdir"]
+        self.ballot_node = incoming_ballot_json["ballot_node"]
+        self.ballot_filename = incoming_ballot_json["ballot_filename"]
+        # now handle the contests (with or without a selection entry)
+        # Need to create Contest (objects) for each contest
+        self.contests = []
+        for contest in incoming_ballot_json["contests"]:
+            self.contests.append(Contest(contest), a_cast_ballot=a_cast_ballot)
 
-    def get(self, name):
+    def get(self, name: str):
         """A generic getter - will raise a NameError if name is invalid"""
         if name in ["ggos", "active_ggos"]:
             return self.active_ggos
@@ -313,14 +228,14 @@ class Ballot:
             return self.ballot_filename
         raise NameError(f"Name {name} not accepted/defined for Ballot.get()")
 
-    def get_contest_name_by_uid(self, uid):
+    def get_contest_name_by_uid(self, uid: str):
         """Given a blank ballot or better, will return the contest name
         given a uid.  Will raise an error if the ballot does not contain
         that uid.
         """
-        for contest in Contests(self):
+        for contest in self.contests:
             if uid == contest.get("uid"):
-                return contest.get("name")
+                return contest.get("contest_name")
         raise KeyError(
             f"There is no matching contest uid ({uid}) in the supplied balloot"
         )
@@ -348,54 +263,17 @@ class Ballot:
         }
         return json.dumps(ballot, sort_keys=True, indent=4, ensure_ascii=False)
 
-    def clear_selection(self, contest):
-        """Clear the selection (as when self adjudicating)"""
-        self.contests[contest.get("ggo")][contest.get("index")][contest.get("name")][
-            "selection"
-        ] = []
-
-    def add_selection(self, contest, selection_offset):
-        """Will add the specified contest choice (offset into the ordered
-        choices array) to the specified contest.  This is an
-        'add' since in plurality one may be voting for more than one
-        choice, or in RCV one needs to rank the choices.  In both the
-        order is the rank but in plurality rank does not matter.
+    def get_contest_index(self, contest: dict):
         """
-        # Some minimal sanity checking
-        if selection_offset > len(contest.get("choices")):
-            raise ValueError(
-                f"The choice offset ({selection_offset}) is greater "
-                f"than the number of choices ({len(contest.get('choices'))})"
-            )
-        if selection_offset < 0:
-            raise ValueError(
-                f"Only positive offsets are supported ({selection_offset})"
-            )
-        contest_index = contest.get("index")
-        contest_ggo = contest.get("ggo")
-        contest_name = contest.get("name")
-        if (
-            "selection"
-            not in self.contests[contest_ggo][contest_index][contest_name].keys()
-        ):
-            self.contests[contest_ggo][contest_index][contest_name]["selection"] = []
-        # pylint: disable=line-too-long
-        elif (
-            selection_offset
-            in self.contests[contest_ggo][contest_index][contest_name]["selection"]
-        ):
-            raise ValueError(
-                (
-                    f"The selection ({selection_offset}) has already been "
-                    f"selected for contest ({contest_name}) "
-                    f"for GGO ({contest_ggo})"
-                )
-            )
-        # For end voter UX, add the selection as the offset + ': ' +
-        # name just because a string is more understandable than json
-        # list syntax
-        self.contests[contest_ggo][contest_index][contest_name]["selection"].append(
-            str(selection_offset) + ": " + contest.get("choices")[selection_offset]
+        Will return the contest's contests array index (via the
+        contest's uid)
+        """
+        uid = contest.get("uid")
+        for index, value in enumerate(self.contests):
+            if value["uid"] == uid:
+                return index
+        raise ValueError(
+            f"Internal error - a contest uid ({uid}) was not found in containing ballot"
         )
 
     def get_cvr_parent_dir(self, config):
@@ -415,14 +293,18 @@ class Ballot:
             ballot_file = Ballot.gen_cast_ballot_location(
                 config, address.get("ballot_subdir")
             )
-        logging.debug("Reading %s", ballot_file)
+        self.operation_self.imprimir(f"Reading {ballot_file}", 5)
         with open(ballot_file, "r", encoding="utf8") as file:
             json_doc = json.load(file)
-            self.contests = json_doc["contests"]
+            contests = json_doc["contests"]
             self.active_ggos = json_doc["active_ggos"]
             self.ballot_subdir = json_doc["ballot_subdir"]
             self.ballot_node = json_doc["ballot_node"]
             self.ballot_filename = json_doc["ballot_filename"]
+        # Need to create Contest (objects) for each contest
+        self.contests = []
+        for contest in contests:
+            self.contests.append(Contest(contest))
 
     def write_a_cast_ballot(self, config):
         """
@@ -430,9 +312,13 @@ class Ballot:
         """
         ballot_file = Ballot.gen_cast_ballot_location(config, self.ballot_subdir)
         os.makedirs(os.path.dirname(ballot_file), exist_ok=True)
+        # need to convert the Contests into a dictionary
+        contests = []
+        for contest in self.contests:
+            contests.append(contest.get("contest"))
         # might was well write out everything, yes?
         the_aggregate = {
-            "contests": self.contests,
+            "contests": contests,
             "active_ggos": self.active_ggos,
             "ballot_subdir": self.ballot_subdir,
             "ballot_node": self.ballot_node,
@@ -448,7 +334,7 @@ class Ballot:
         """Write out the voter's contest"""
         contest_file = Ballot.gen_contest_location(config, self.ballot_subdir)
         # Prepend the dictionary with a CVR key
-        the_aggregate = {"CVR": contest.get("dict")}
+        the_aggregate = {"contestCVR": contest.get("dict")}
         # The parent directory better exist or something is wrong
         with open(contest_file, "w", encoding="utf8") as outfile:
             json.dump(
@@ -486,8 +372,7 @@ class Ballot:
             receipt_file = receipt_file.rstrip(".md") + "-qr.md"
         url_root = "/".join(
             [
-                Globals.get("QR_ENDPOINT_ROOT"),
-                os.path.basename(config.get("git_rootdir")),
+                Globals.get("ELECTION_UPSTREAM_REMOTE"),
                 "commit",
             ]
         )
@@ -576,10 +461,28 @@ class BlankBallot(Ballot):
         """
 
         # With the list of active GGOs, add in the contests for each one
+        candidate_order = []
+        question_order = []
         for node in address.get("active_ggos"):
             cfg = config.get_node(node, "config")
             if "contests" in cfg:
-                self.contests[node] = cfg["contests"]
+                for contest in cfg["contests"]:
+                    # first fill in the rest of the autofilled fields
+                    contest["ggo"] = node
+                    # ZZZ - at this point the question of order is still
+                    # an underconstrained TBD.  For now, while maintaining
+                    # the relative order, have the non-question contests
+                    # come first and the question contests come last.
+                    # Note - the whole GGO thing probably should be
+                    # deleted assuming the contest uid question can be
+                    # solved in a more reasonable manner.
+                    #                    import pdb; pdb.set_trace()
+                    if contest["contest_type"] == "question":
+                        question_order.append(contest)
+                    else:
+                        candidate_order.append(contest)
+        self.contests = candidate_order
+        self.contests.extend(question_order)
 
         # To determine the location of the blank ballot, the real
         # solution is probably something like determining the
@@ -651,14 +554,18 @@ class BlankBallot(Ballot):
                 self.active_ggos, self.ballot_subdir, style
             )
         if style == "json":
-            logging.debug("Reading %s", ballot_file)
+            self.operation_self.imprimir(f"Reading {ballot_file}", 5)
             with open(ballot_file, "r", encoding="utf8") as file:
                 json_doc = json.load(file)
-                self.contests = json_doc["contests"]
+                contests = json_doc["contests"]
                 self.active_ggos = json_doc["active_ggos"]
                 self.ballot_subdir = json_doc["ballot_subdir"]
                 self.ballot_node = json_doc["ballot_node"]
                 self.ballot_filename = json_doc["ballot_filename"]
+            # Need to create Contest (objects) for each contest
+            self.contests = []
+            for contest in contests:
+                self.contests.append(Contest(contest))
         else:
             raise NotImplementedError(f"Unsupported Ballot type ({style}) for reading")
 

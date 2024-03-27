@@ -23,10 +23,9 @@
 
 # Project imports
 from vtp.core.ballot import Ballot
-from vtp.core.common import Shellout
-from vtp.core.contest import Tally
 from vtp.core.election_config import ElectionConfig
 from vtp.core.exceptions import TallyException
+from vtp.core.tally import Tally
 
 # Local imports
 from .operation import Operation
@@ -49,42 +48,65 @@ class TallyContestsOperation(Operation):
         """Main function - see -h for more info"""
 
         # Create a VTP ElectionData object if one does not already exist
-        the_election_config = ElectionConfig.configure_election(self.election_data_dir)
+        the_election_config = ElectionConfig.configure_election(
+            self, self.election_data_dir
+        )
 
         # git pull the ElectionData repo so to get the latest set of
-        # remote CVRs branches
-        a_ballot = Ballot()
-        with Shellout.changed_cwd(a_ballot.get_cvr_parent_dir(the_election_config)):
-            Shellout.run(["git", "pull"], verbosity=self.verbosity, check=True)
+        # remote CVRs branches.
+        a_ballot = Ballot(self)
+        with self.changed_cwd(a_ballot.get_cvr_parent_dir(the_election_config)):
+            self.shell_out(
+                ["git", "pull"],
+                check=True,
+                incoming_printlevel=5,
+            )
 
         # Will process all the CVR commits on the main branch and tally
         # all the contests found.  Note - even if a contest is specified,
         # as a first pass it is easier to just perform a git log across
         # all the contests and then filter later for the contest of
         # interest than to try to create a git grep query against the CVR
-        # payload.
-        contest_batches = Shellout.cvr_parse_git_log_output(
-            ["git", "log", "--topo-order", "--no-merges", "--pretty=format:%H%B"],
+        # payload.  Note - --reverse is set so to go in parent to child order
+        # (though either order is valid, voters probably will understand
+        # parent to child order better)
+        contest_batches = self.cvr_parse_git_log_output(
+            [
+                "git",
+                "log",
+                "--topo-order",
+                "--no-merges",
+                "--reverse",
+                "--pretty=format:%H%B",
+            ],
             the_election_config,
+            incoming_printlevel=5,
         )
 
         # Note - though plurality voting can be counted within the above
         # loop, tallies such as rcv cannot.  So far now, just count
         # everything in a separate loop.
-        for contest_batch in sorted(contest_batches):
+        for count, contest_batch in enumerate(sorted(contest_batches)):
             # Maybe skip
             if contest_uid != "":
-                if contest_batches[contest_batch][0]["CVR"]["uid"] != contest_uid:
+                if (
+                    contest_batches[contest_batch][0]["contestCVR"]["uid"]
+                    != contest_uid
+                ):
                     continue
             # Create a Tally object for this specific contest
-            the_tally = Tally(contest_batches[contest_batch][0], self.imprimir)
+            the_tally = Tally(contest_batches[contest_batch][0], self)
+            if contest_uid == "":
+                if count > 0:
+                    self.imprimir_formatting("empty_line")
+                self.imprimir_formatting("horizontal_line")
             self.imprimir(
                 f"Scanned {len(contest_batches[contest_batch])} contests "
-                f"for contest ({contest_batches[contest_batch][0]['CVR']['name']}) "
-                f"uid={contest_batches[contest_batch][0]['CVR']['uid']}, "
-                f"tally={contest_batches[contest_batch][0]['CVR']['tally']}, "
-                f"max={the_tally.get('max')}, "
-                f"win-by>{the_tally.get('win-by')}"
+                f"for contest ({contest_batches[contest_batch][0]['contestCVR']['contest_name']}) "
+                f"uid={contest_batches[contest_batch][0]['contestCVR']['uid']}, "
+                f"tally={contest_batches[contest_batch][0]['contestCVR']['tally']}, "
+                f"max_selections={the_tally.get('max_selections')}, "
+                f"win_by>{the_tally.get('win_by')}"
             )
             # Tally all the contests for this contest
             #        import pdb; pdb.set_trace()

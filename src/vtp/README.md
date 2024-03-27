@@ -303,7 +303,7 @@ Running "git rev-parse --show-toplevel"
 Running "git pull"
 Already up to date.
 Running "git log --topo-order --no-merges --pretty=format:%H%B"
-Scanned 303 contests for contest (U.S. Senate) uid=0001, tally=rcv, max=1, win-by>0.5
+Scanned 303 contests for contest (U.S. Senate) uid=0001, tally=rcv, max=1, win_by>0.5
 RCV: round 0
 Total vote count: 303
 [('Gloria Gamma', 65), ('Anthony Alpha', 53), ('David Delta', 47), ('Emily Echo', 47), ('Francis Foxtrot', 47), ('Betty Beta', 44)]
