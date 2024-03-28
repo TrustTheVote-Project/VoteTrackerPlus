@@ -138,13 +138,13 @@ class Operation:
                     case "empty_line":
                         a_line = "<br>"
                     case "begin_good_box":
-                        a_line = '<div style="border-width:2px; border-style:solid; border-color:#00f000">'
+                        a_line = "*" * 12
                     case "end_good_box":
-                        a_line = "</div>"
+                        a_line = "*" * 12
                     case "begin_error_box":
-                        a_line = '<div style="border-width:2px; border-style:solid; border-color:#f00000">'
+                        a_line = "#" * 12
                     case "end_error_box":
-                        a_line = "</div>"
+                        a_line = "#" * 12
                     case _:
                         raise RuntimeError(
                             f"Error: unsupported printing construct {a_construct}"
@@ -175,7 +175,10 @@ class Operation:
                 self.stdout_output.append(a_line)
 
     def imprimir(
-        self, a_line: str, incoming_printlevel: int = Globals.get("DEFAULT_VERBOSITY")
+        self,
+        a_line: str,
+        incoming_printlevel: int = Globals.get("DEFAULT_VERBOSITY"),
+        handle_hyperlinks: bool = False,
     ):
         """Either prints a line of text to STDOUT or appends it to a
         list, in which case the output needs to be retrieved.  If
@@ -190,9 +193,10 @@ class Operation:
                 # - convert an array to a table with css class=imprimir
                 # ZZZ
                 #                import pdb; pdb.set_trace()
-                a_line = Operation._sha1_regex.sub(
-                    r'<a href="foo/\1" target="_blank">\1</a>', a_line
-                )
+                if handle_hyperlinks:
+                    a_line = Operation._sha1_regex.sub(
+                        r'<a href="foo/\1" target="_blank">\1</a>', a_line
+                    )
                 match incoming_printlevel:
                     case 1:
                         a_line = '<span class="error">[ERROR] </span>' + a_line
