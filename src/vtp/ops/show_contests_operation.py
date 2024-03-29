@@ -20,10 +20,8 @@
 """Logic of operation for showing contests."""
 
 # Standard imports
-import logging
 
 # Project imports
-from vtp.core.common import Shellout
 from vtp.core.election_config import ElectionConfig
 
 # Local imports
@@ -43,16 +41,16 @@ class ShowContestsOperation(Operation):
         """
         errors = 0
         input_data = "\n".join(digests.split(",")) + "\n"
-        with Shellout.changed_cwd(the_election_config.get("git_rootdir")):
+        with self.changed_cwd(the_election_config.get("git_rootdir")):
             output_lines = (
-                Shellout.run(
+                self.shell_out(
                     [
                         "git",
                         "cat-file",
                         "--batch-check=%(objectname) %(objecttype)",
                         "--buffer",
                     ],
-                    verbosity=self.verbosity,
+                    incoming_printlevel=5,
                     input=input_data,
                     text=True,
                     check=True,
@@ -64,15 +62,13 @@ class ShowContestsOperation(Operation):
         for count, line in enumerate(output_lines):
             digest, commit_type = line.split()
             if commit_type == "missing":
-                logging.error("[ERROR]: missing digest: n=%s digest=%s", count, digest)
+                self.imprimir(f"missing digest: n={count} digest={digest}", 1)
                 error_digests.add(digest)
                 errors += 1
             elif commit_type != "commit":
-                logging.error(
-                    "[ERROR]: invalid digest type: n=%s digest=%s type=%s",
-                    count,
-                    digest,
-                    commit_type,
+                self.imprimir(
+                    f"invalid digest type: n={count} digest={digest} type={commit_type}",
+                    1,
                 )
                 error_digests.add(digest)
                 errors += 1
@@ -84,7 +80,9 @@ class ShowContestsOperation(Operation):
         """Main function - see -h for more info"""
 
         # Create a VTP ElectionData object if one does not already exist
-        the_election_config = ElectionConfig.configure_election(self.election_data_dir)
+        the_election_config = ElectionConfig.configure_election(
+            self, self.election_data_dir
+        )
 
         # First validate the digests
         error_digests = set()
@@ -93,10 +91,11 @@ class ShowContestsOperation(Operation):
             digest for digest in contest_check.split(",") if digest not in error_digests
         ]
         # show/log the digests
-        with Shellout.changed_cwd(the_election_config.get("git_rootdir")):
+        with self.changed_cwd(the_election_config.get("git_rootdir")):
             output_lines = (
-                Shellout.run(
+                self.shell_out(
                     ["git", "show", "-s"] + valid_digests,
+                    incoming_printlevel=5,
                     text=True,
                     check=True,
                     capture_output=True,
@@ -114,15 +113,18 @@ class ShowContestsOperation(Operation):
 # this is a loop of shell commands
 #        for digest in contest_check.split(','):
 #            if digest not in error_digests:
-#                Shellout.run(['git', 'log', '-1', digest], check=True)
+#                self.shell_out(
+#                    ['git', 'log', '-1', digest],
+#                    incoming_printlevel=5,
+#                    check=True)
 
 # this does not work well enough either
 #        input_data = '\n'.join(contest_check.split(',')) + '\n'
-#        Shellout.run(
+#        self.shell_out(
 #            ['git', 'cat-file', '--batch=%(objectname)'],
+#            incoming_printlevel=5,
 #            input=input_data,
 #            text=True,
-#            check=True,
-#            verbosity=self.verbosity)
+#            check=True)
 
 # EOF

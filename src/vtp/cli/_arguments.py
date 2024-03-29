@@ -17,6 +17,9 @@
 
 """Argument handling."""
 
+# local imports
+from vtp.core.common import Globals
+
 
 class Arguments:
 
@@ -116,7 +119,7 @@ class Arguments:
         )
 
     @staticmethod
-    def add_verbosity(parser, verbosity=3):
+    def add_verbosity(parser, verbosity=Globals.get("DEFAULT_VERBOSITY")):
         """Add verbosity option"""
         parser.add_argument(
             "-v",
@@ -124,4 +127,18 @@ class Arguments:
             type=int,
             default=verbosity,
             help=f"0 critical, 1 error, 2 warning, 3 info, 4 debug (def={verbosity})",
+        )
+
+    @staticmethod
+    def add_output_style(parser):
+        """Set the STDOUT text style"""
+        parser.add_argument(
+            "-o",
+            "--output_style",
+            type=str,
+            default="text",
+            help=(
+                "'text' is normal text; 'html' will decorate output with html "
+                "markers (def='text')"
+            ),
         )

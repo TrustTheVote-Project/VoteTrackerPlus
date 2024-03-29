@@ -23,14 +23,12 @@ or the README.md file in the src/vtp directory for details.
 """
 
 # Standard imports
-import logging
 import os
 import time
 
 # Project imports
 from vtp.core.address import Address
 from vtp.core.ballot import Ballot
-from vtp.core.common import Shellout
 from vtp.core.election_config import ElectionConfig
 from vtp.ops.accept_ballot_operation import AcceptBallotOperation
 from vtp.ops.cast_ballot_operation import CastBallotOperation
@@ -70,7 +68,7 @@ class RunMockElectionOperation(Operation):
             # a blank ballot location was specified (either directly or via an address)
             blank_ballots.append(ballot)
         else:
-            with Shellout.changed_cwd(the_election_config.get("git_rootdir")):
+            with self.changed_cwd(the_election_config.get("git_rootdir")):
                 for dirpath, _, files in os.walk("."):
                     for filename in [
                         f
@@ -89,29 +87,24 @@ class RunMockElectionOperation(Operation):
             count += 1
             for blank_ballot in blank_ballots:
                 if duration:
-                    logging.info(
-                        "Iteration %s - processing %s",
-                        count,
-                        blank_ballot,
+                    self.imprimir(
+                        f"Iteration {count} - processing {blank_ballot}",
+                        3,
                     )
                 else:
-                    logging.info(
-                        "Iteration %s of %s - processing %s",
-                        count,
-                        iterations,
-                        blank_ballot,
+                    self.imprimir(
+                        f"Iteration {count} of {iterations} - processing {blank_ballot}",
+                        3,
                     )
                 # - cast a ballot
-                #            import pdb; pdb.set_trace()
-                with Shellout.changed_cwd(the_election_config.get("git_rootdir")):
-                    Shellout.run(
+                with self.changed_cwd(the_election_config.get("git_rootdir")):
+                    self.shell_out(
                         ["git", "pull"],
-                        printonly=self.printonly,
-                        verbosity=self.verbosity,
-                        no_touch_stds=True,
                         timeout=None,
                         check=True,
+                        incoming_printlevel=4,
                     )
+                # import pdb; pdb.set_trace()
                 cast_ballot = CastBallotOperation(
                     election_data_dir=self.election_data_dir,
                     verbosity=self.verbosity,
@@ -157,13 +150,11 @@ class RunMockElectionOperation(Operation):
                         )
                     # don't let too much garbage build up
                     if count % 10 == 9:
-                        Shellout.run(
+                        self.shell_out(
                             ["git", "gc"],
-                            printonly=self.printonly,
-                            verbosity=self.verbosity,
-                            no_touch_stds=True,
                             timeout=None,
                             check=True,
+                            incoming_printlevel=4,
                         )
             if iterations and count >= iterations:
                 break
@@ -190,21 +181,17 @@ class RunMockElectionOperation(Operation):
             )
             tally_contests.run()
         # clean up git just in case
-        Shellout.run(
+        self.shell_out(
             ["git", "remote", "prune", "origin"],
-            printonly=self.printonly,
-            verbosity=self.verbosity,
-            no_touch_stds=True,
             timeout=None,
             check=True,
+            incoming_printlevel=4,
         )
-        Shellout.run(
+        self.shell_out(
             ["git", "gc"],
-            printonly=self.printonly,
-            verbosity=self.verbosity,
-            no_touch_stds=True,
             timeout=None,
             check=True,
+            incoming_printlevel=4,
         )
 
     def server_mockup(
@@ -227,14 +214,12 @@ class RunMockElectionOperation(Operation):
 
         while True:
             count += 1
-            with Shellout.changed_cwd(the_election_config.get("git_rootdir")):
-                Shellout.run(
+            with self.changed_cwd(the_election_config.get("git_rootdir")):
+                self.shell_out(
                     ["git", "pull"],
-                    self.printonly,
-                    self.verbosity,
-                    no_touch_stds=True,
                     timeout=None,
                     check=True,
+                    incoming_printlevel=4,
                 )
             if flush_mode == 2:
                 merge_contests = MergeContestsOperation(
@@ -264,7 +249,7 @@ class RunMockElectionOperation(Operation):
             )
             if iterations and count >= iterations:
                 break
-            logging.info("Sleeping for 10 (iteration=%s)", count)
+            self.imprimir(f"Sleeping for 10 (iteration={count})", 3)
             time.sleep(10)
             elapsed_time = time.time() - start_time
             if not iterations and elapsed_time > seconds:
@@ -318,7 +303,10 @@ class RunMockElectionOperation(Operation):
         """
 
         # Create a VTP ElectionData object if one does not already exist
-        the_election_config = ElectionConfig.configure_election(self.election_data_dir)
+        the_election_config = ElectionConfig.configure_election(
+            self,
+            self.election_data_dir,
+        )
 
         # If an address was used, use that
         if an_address is not None:

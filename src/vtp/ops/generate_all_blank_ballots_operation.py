@@ -20,14 +20,12 @@
 """Logic of operation for generating blank ballots."""
 
 # Standard imports
-import logging
 import os
 import pprint
 
 # Project imports
 from vtp.core.address import Address
 from vtp.core.ballot import BlankBallot
-from vtp.core.common import Common
 from vtp.core.election_config import ElectionConfig
 
 # Local imports
@@ -45,17 +43,17 @@ class GenerateAllBlankBallotsOperation(Operation):
     def run(self):
         """Main function - see -h for more info"""
 
-        # Configure logging
-        Common.configure_logging(self.verbosity)
-
         # Create a VTP ElectionData object if one does not already exist
-        the_election_config = ElectionConfig.configure_election(self.election_data_dir)
+        the_election_config = ElectionConfig.configure_election(
+            self, self.election_data_dir
+        )
 
         # Walk a topo sort of the DAG and for any node with
         # 'unique-ballots', add them all.  If the subdir does not match
         # REQUIRED_GGO_ADDRESS_FIELDS, place the blank ballot
         for node in the_election_config.get_dag("topo"):
             address_map = the_election_config.get_node(node, "address_map")
+            # import pdb; pdb.set_trace()
             if "unique-ballots" in address_map:
                 for unique_ballot in address_map["unique-ballots"]:
                     subdir = the_election_config.get_node(node, "subdir")
@@ -67,19 +65,18 @@ class GenerateAllBlankBallotsOperation(Operation):
                     generic_address = Address.create_generic_address(
                         the_election_config, subdir, ggos
                     )
-                    generic_ballot = BlankBallot()
+                    generic_ballot = BlankBallot(self)
                     generic_ballot.create_blank_ballot(
                         generic_address, the_election_config
                     )
-                    logging.info(
-                        "Active GGOs for blank ballot (%s): %s",
-                        generic_address,
-                        generic_ballot.get("active_ggos"),
+                    self.imprimir(
+                        f"Active GGOs for blank ballot ({generic_address}): "
+                        f"{generic_ballot.get('active_ggos')}",
+                        3,
                     )
-                    logging.debug(
-                        "And the blank ballot looks like:\n%s",
-                        pprint.pformat(generic_ballot.dict()),
-                    )
+                    self.imprimir("And the blank ballot looks like:\n", 5)
+                    if self.verbosity >= 4:
+                        pprint.pformat(generic_ballot.dict())
                     # Write it out
                     if self.printonly:
                         ballot_file = the_election_config.gen_blank_ballot_location(
@@ -91,7 +88,7 @@ class GenerateAllBlankBallotsOperation(Operation):
                         ballot_file = generic_ballot.write_blank_ballot(
                             the_election_config
                         )
-                    logging.info("Blank ballot file: %s", ballot_file)
+                    self.imprimir(f"Blank ballot file: {ballot_file}")
 
 
 # EOF

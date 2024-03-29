@@ -21,12 +21,10 @@
 
 # Standard imports
 import json
-import logging
 import re
 
 # Project imports
 from vtp.core.ballot import Ballot
-from vtp.core.common import Shellout
 from vtp.core.election_config import ElectionConfig
 
 # Local imports
@@ -50,19 +48,19 @@ class VerifyBallotReceiptOperation(Operation):
         input_data = ""
         for line in lines:
             input_data += "\n".join(line) + "\n"
-        with Shellout.changed_cwd(the_election_config.get("git_rootdir")):
+        with self.changed_cwd(the_election_config.get("git_rootdir")):
             results = (
-                Shellout.run(
+                self.shell_out(
                     [
                         "git",
                         "cat-file",
                         "--buffer",
                         "--batch-check=%(objectname) %(objecttype)",
                     ],
+                    incoming_printlevel=5,
                     input=input_data,
                     text=True,
                     check=True,
-                    verbosity=self.verbosity,
                     capture_output=True,
                 )
                 .stdout.strip()
@@ -77,14 +75,16 @@ class VerifyBallotReceiptOperation(Operation):
             digest, commit_type = line.split()
             if commit_type == "missing":
                 self.imprimir(
-                    f"[ERROR]: missing digest: row {row} column {column} "
-                    f"contest={headers[column - 1]} digest={digest}"
+                    f"missing digest: row {row} column {column} "
+                    f"contest={headers[column - 1]} digest={digest}",
+                    1,
                 )
                 error_digests.add(digest)
             elif commit_type != "commit":
                 self.imprimir(
-                    f"[ERROR]: invalid digest type: row {row} column {column} "
-                    f"contest={headers[column - 1]} digest={digest} type={commit_type}"
+                    f"invalid digest type: row {row} column {column} "
+                    f"contest={headers[column - 1]} digest={digest} type={commit_type}",
+                    1,
                 )
                 error_digests.add(digest)
             column += 1
@@ -116,19 +116,19 @@ class VerifyBallotReceiptOperation(Operation):
             legit_row = [dig for dig in row if dig not in error_digests]
             if len(legit_row) == len(row):
                 # all the digests are legit
-                cvrs = Shellout.cvr_parse_git_log_output(
+                cvrs = self.cvr_parse_git_log_output(
                     ["git", "log", "--no-walk", "--pretty=format:%H%B"] + row,
                     the_election_config,
                     grouped_by_uid=False,
-                    verbosity=self.verbosity - 1,
+                    incoming_printlevel=5,
                 )
             elif len(legit_row) > 0:
                 # Only some are legitimate
-                cvrs = Shellout.cvr_parse_git_log_output(
+                cvrs = self.cvr_parse_git_log_output(
                     ["git", "log", "--no-walk", "--pretty=format:%H%B"] + legit_row,
                     the_election_config,
                     grouped_by_uid=False,
-                    verbosity=self.verbosity - 1,
+                    incoming_printlevel=5,
                 )
             else:
                 # skip the row - it has no legitimate digests
@@ -146,15 +146,17 @@ class VerifyBallotReceiptOperation(Operation):
                     continue
                 if digest not in cvrs:
                     self.imprimir(
-                        f"[ERROR]: missing digest in main branch: row {index} "
-                        f"contest={headers[column]} digest={digest}"
+                        f"missing digest in main branch: row {index} "
+                        f"contest={headers[column]} digest={digest}",
+                        1,
                     )
                     error_digests.add(digest)
                     continue
-                if cvrs[digest]["CVR"]["uid"] != uids[column]:
+                if cvrs[digest]["contestCVR"]["uid"] != uids[column]:
                     self.imprimir(
-                        f"[ERROR]: bad contest uid: row {row} column {column} contest "
-                        f"{headers[column]} != {cvrs[digest]['CVR']['uid']} digest={digest}"
+                        f"bad contest uid: row {row} column {column} contest "
+                        f"{headers[column]} != {cvrs[digest]['contestCVR']['uid']} digest={digest}",
+                        1,
                     )
                     error_digests.add(digest)
                     continue
@@ -185,7 +187,7 @@ class VerifyBallotReceiptOperation(Operation):
         #    import pdb; pdb.set_trace()
         # Create a ballot to read the receipt file
         if receipt_file:
-            a_ballot = Ballot()
+            a_ballot = Ballot(self)
             lines = a_ballot.read_receipt_csv(
                 the_election_config, receipt_file=receipt_file
             )
@@ -228,10 +230,10 @@ class VerifyBallotReceiptOperation(Operation):
             as well do that for all contests (unless one cat create the
             git grep query syntax to just pull the uids of interest).
             """
-            contest_batches = Shellout.cvr_parse_git_log_output(
+            contest_batches = self.cvr_parse_git_log_output(
                 ["git", "log", "--topo-order", "--no-merges", "--pretty=format:%H%B"],
                 the_election_config,
-                verbosity=self.verbosity - 1,
+                incoming_printlevel=5,
             )
             unmerged_uids = {}
             for u_count, uid in enumerate(uids):
@@ -243,18 +245,20 @@ class VerifyBallotReceiptOperation(Operation):
                 for c_count, contest in enumerate(contest_batches[uid]):
                     if contest["digest"] in requested_row:
                         self.imprimir(
-                            f"Contest '{contest['CVR']['uid']} - {contest['CVR']['name']}' "
+                            f"Contest '{contest['contestCVR']['uid']} - "
+                            f"{contest['contestCVR']['contest_name']}' "
                             f"({contest['digest']}) is vote {contest_votes - c_count} out "
-                            f"of {contest_votes} votes"
+                            f"of {contest_votes} votes",
+                            0,
                         )
                         found = True
                         break
                 if found is False:
                     unmerged_uids[uid] = u_count
             if unmerged_uids:
-                self.imprimir("The following contests are not merged to main yet:")
+                self.imprimir("The following contests are not merged to main yet:", 0)
                 for uid, offset in unmerged_uids.items():
-                    self.imprimir(f"{headers[offset]} ({requested_digests[offset]})")
+                    self.imprimir(f"{headers[offset]} ({requested_digests[offset]})", 0)
 
         # If a row is specified, will print the context index in the
         # actual contest tally - which basically tells the voter 'your
@@ -264,31 +268,40 @@ class VerifyBallotReceiptOperation(Operation):
             for digest in lines[int(row_index) - 1]:
                 if digest in error_digests:
                     self.imprimir(
-                        "[ERROR]: cannot print CVR for {digest} (row {row_index}) - it is invalid"
+                        "cannot print CVR for {digest} (row {row_index}) - it is invalid",
+                        1,
                     )
                     continue
                 valid_digests.append(digest)
-                logging.debug(
-                    "%s", json.dumps(requested_row[digest], indent=5, sort_keys=True)
+                self.imprimir(
+                    f"{json.dumps(requested_row[digest], indent=5, sort_keys=True)}",
+                    5,
                 )
             if show_cvr:
                 # Show the CVRs of the row
-                with Shellout.changed_cwd(the_election_config.get("git_rootdir")):
-                    Shellout.run(["git", "show", "-s"] + valid_digests, check=True)
+                with self.changed_cwd(the_election_config.get("git_rootdir")):
+                    self.shell_out(
+                        ["git", "show", "-s"] + valid_digests,
+                        incoming_printlevel=0,
+                        check=True,
+                    )
             else:
                 # Just show the summary validation of the row
                 vet_a_row()
 
         # Summerize
-        self.imprimir("############")
         if error_digests:
+            self.imprimir_formatting("begin_error_box")
             self.imprimir(
-                "[ERROR]: ballot receipt INVALID - the supplied ballot receipt has "
-                "{len(error_digests)} errors."
+                "ballot receipt INVALID - the supplied ballot receipt has "
+                "{len(error_digests)} errors.",
+                1,
             )
+            self.imprimir_formatting("end_error_box")
         else:
-            self.imprimir("[GOOD]: ballot receipt VALID - no digest errors found")
-        self.imprimir("############")
+            self.imprimir_formatting("begin_good_box")
+            self.imprimir("[GOOD]: ballot receipt VALID - no digest errors found", 0)
+            self.imprimir_formatting("end_good_box")
 
     # pylint: disable=duplicate-code
     def run(
@@ -301,13 +314,20 @@ class VerifyBallotReceiptOperation(Operation):
         """Main function - see -h for more info"""
 
         # Create a VTP ElectionData object if one does not already exist
-        the_election_config = ElectionConfig.configure_election(self.election_data_dir)
+        the_election_config = ElectionConfig.configure_election(
+            self,
+            self.election_data_dir,
+        )
 
         # git pull the ElectionData repo so to get the latest set of
         # remote CVRs branches
-        a_ballot = Ballot()
-        with Shellout.changed_cwd(a_ballot.get_cvr_parent_dir(the_election_config)):
-            Shellout.run(["git", "pull"], verbosity=self.verbosity, check=True)
+        a_ballot = Ballot(self)
+        with self.changed_cwd(a_ballot.get_cvr_parent_dir(the_election_config)):
+            self.shell_out(
+                ["git", "pull"],
+                check=True,
+                incoming_printlevel=5,
+            )
 
         #    import pdb; pdb.set_trace()
         # Can read the receipt file directly without any Ballot info
