@@ -137,5 +137,8 @@ class Arguments:
             "--output_style",
             type=str,
             default="text",
-            help="'text' is normal text; 'html' will decorate output with html markers (def='text')",
+            help=(
+                "'text' is normal text; 'html' will decorate output with html "
+                "markers (def='text')"
+            ),
         )

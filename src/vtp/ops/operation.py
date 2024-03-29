@@ -136,7 +136,7 @@ class Operation:
                     case "horizontal_shortline":
                         a_line = '<hr width="50%">'
                     case "empty_line":
-                        a_line = "<br>"
+                        a_line = ""
                     case "begin_good_box":
                         a_line = "*" * 12
                     case "end_good_box":
