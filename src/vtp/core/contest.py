@@ -318,7 +318,8 @@ class Contest:
                 for key in Contest._cast_keys
                 if key in self.contest
             }
-            contest_dict.update({"cast_branch": self.cast_branch})
+            if self.cast_branch:
+                contest_dict.update({"cast_branch": self.cast_branch})
             return contest_dict
         if thing == "contest":
             return self.contest

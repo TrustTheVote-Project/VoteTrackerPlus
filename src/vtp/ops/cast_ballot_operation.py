@@ -235,7 +235,7 @@ class CastBallotOperation(Operation):
         an_address: Address = None,
         blank_ballot: str = "",
         demo_mode: bool = False,
-        return_bb: bool = False,
+        return_blank_ballot: bool = False,
     ) -> str:
         """Main function - see -h for more info"""
 
@@ -261,8 +261,10 @@ class CastBallotOperation(Operation):
             # get the ballot for the specified address
             a_ballot.read_a_blank_ballot(an_address, the_election_config)
 
-        if return_bb:
-            return a_ballot
+        if return_blank_ballot:
+            # Note - the caller does not want an ballot object - calls
+            # into this API want a simple dictionary
+            return a_ballot.dict()
 
         # If still here, prompt the user to vote for each contest
         contests = self.loop_over_contests(a_ballot, demo_mode)

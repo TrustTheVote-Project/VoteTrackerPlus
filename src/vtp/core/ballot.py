@@ -241,10 +241,16 @@ class Ballot:
         )
 
     def dict(self):
-        """Return a dictionary of the ballot by making a copy"""
+        """
+        Return a dictionary of the ballot by making a copy.  Note -
+        the embedded contest objects are also converted to dictionaries
+        """
+        contests = []
+        for contest in self.contests:
+            contests.append(contest.get("dict"))
         return dict(
             {
-                "contests": self.contests,
+                "contests": contests,
                 "active_ggos": self.active_ggos,
                 "ballot_node": self.ballot_node,
                 "ballot_subdir": self.ballot_subdir,
