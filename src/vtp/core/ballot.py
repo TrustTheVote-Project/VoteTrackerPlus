@@ -175,7 +175,7 @@ class Ballot:
             for pick in contest.get("selection"):
                 index, name = Contest.split_selection(pick)
                 # Is the name one of the choices?
-                if not any(choice['name'] == name for choice in contest.get("choices")):
+                if not any(choice["name"] == name for choice in contest.get("choices")):
                     raise KeyError(
                         f"the contest selection/vote index ({index}) and name ({name}) "
                         f"does not match the choice name ({contest[1][index]['name']})"

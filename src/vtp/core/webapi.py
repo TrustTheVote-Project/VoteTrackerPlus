@@ -113,3 +113,23 @@ class WebAPI:
                 "of a ElectionData repo",
             )
         return os.path.join(edf_path, dirs[0])
+
+    @staticmethod
+    def convert_git_log(stdout: list):
+        """
+        Will convert the STDOUT of git log -1 <digest> to a dictionary
+        """
+        output = {"Log": []}
+        for index, line in enumerate(stdout):
+            match index:
+                case 0:
+                    output["commit"] = line.split(r"\s+", 2)[1]
+                case 1:
+                    output["Author"] = line.split(r"\s+", 2)[1]
+                case 2:
+                    output["Date"] = line.split(r"\s+", 2)[1]
+                case 3:
+                    pass
+                case _:
+                    output["Log"].append(line[4:].rstrip())
+        return output

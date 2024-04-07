@@ -23,6 +23,7 @@
 
 # Project imports
 from vtp.core.election_config import ElectionConfig
+from vtp.core.webapi import WebAPI
 
 # Local imports
 from .operation import Operation
@@ -106,7 +107,8 @@ class ShowContestsOperation(Operation):
         if self.stdout_printing:
             for line in output_lines:
                 self.imprimir(line)
-        return output_lines
+        # return a dictionary
+        return WebAPI.convert_git_log(output_lines)
 
 
 # For future reference just in case . . .
