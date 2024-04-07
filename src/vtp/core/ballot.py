@@ -175,13 +175,14 @@ class Ballot:
             for pick in contest.get("selection"):
                 index, name = Contest.split_selection(pick)
                 # Does the index equal the name
-                if contest.get("choices")[index] != name:
+                if contest.get("choices")[index]['name'] != name:
                     raise KeyError(
-                        f"the selection index ({index}) name ({name}) "
+                        f"the contest selection/vote index ({index}) and name ({name}) "
                         f"does not match the choice name ({contest[1][index]['name']})"
                     )
-            # Now remove the selection
-            contest.delete_contest_field("selection")
+            # Now remove the selection node (as the goal is a diff with
+            # the associated blank ballot).
+            contest["selection"] = []
 
         # 2) Compare incoming_cast_ballot to the associated blank
         # ballot.  Since the blank ballot needs to be read in, it is
@@ -197,7 +198,7 @@ class Ballot:
                 f"{result}"
             )
 
-    def set_ballot_data(self, incoming_ballot_json, a_cast_ballot: bool = False):
+    def set_ballot_data(self, incoming_ballot_json):
         """
         Will set this Ballot instance to the incoming ballot json.
         This _assumes_ that incoming_ballot_json is all json and has
@@ -209,10 +210,10 @@ class Ballot:
         self.ballot_node = incoming_ballot_json["ballot_node"]
         self.ballot_filename = incoming_ballot_json["ballot_filename"]
         # now handle the contests (with or without a selection entry)
-        # Need to create Contest (objects) for each contest
+        #  - need to create Contest (objects) for each contest
         self.contests = []
         for contest in incoming_ballot_json["contests"]:
-            self.contests.append(Contest(contest), a_cast_ballot=a_cast_ballot)
+            self.contests.append(Contest(contest))
 
     def get(self, name: str):
         """A generic getter - will raise a NameError if name is invalid"""

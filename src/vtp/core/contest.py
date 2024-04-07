@@ -215,6 +215,9 @@ class Contest:
                     # Note - RCV tallies are technically IRV(1)
                     # tallies currently
                     a_contest_blob["win_by"] = "0.5"
+            # Add an empty selection if it does not exist
+            if "selection" not in a_contest_blob:
+                a_contest_blob["selection"] = []
             # If the contest choice is a string, convert it to dict (name)
             for index, choice in enumerate(a_contest_blob["choices"]):
                 if isinstance(choice, str):
@@ -267,7 +270,6 @@ class Contest:
     def __init__(
         self,
         a_contest_blob: dict,
-        cast_branch: str = "",
         set_defaults: bool = False,
     ):
         """Construct the object placing the contest info in an attribute
@@ -280,7 +282,6 @@ class Contest:
             set_defaults=set_defaults,
         )
         self.contest = a_contest_blob
-        self.cast_branch = cast_branch
         self.cloak = False
 
     def __str__(self):
@@ -289,7 +290,6 @@ class Contest:
         contest_dict = {
             key: self.contest[key] for key in Contest._cast_keys if key in self.contest
         }
-        contest_dict.update({"cast_branch": self.cast_branch})
         return json.dumps(contest_dict, sort_keys=True, indent=4, ensure_ascii=False)
 
     def pretty_print_a_ticket(self, choice_index: int):
@@ -318,15 +318,13 @@ class Contest:
                 for key in Contest._cast_keys
                 if key in self.contest
             }
-            if self.cast_branch:
-                contest_dict.update({"cast_branch": self.cast_branch})
             return contest_dict
         if thing == "contest":
             return self.contest
         if thing == "choices":
             return Contest.get_choices_from_contest(self.contest["choices"])
         # Return contest 'meta' data
-        if thing in ["cast_branch", "cloak"]:
+        if thing in ["cloak"]:
             return getattr(self, thing)
         # Note - a 'selection' is a aggregated string of the selected
         # offset and the 'name', which for a ticket based contest is
@@ -339,9 +337,14 @@ class Contest:
         return getattr(self, "contest")[thing]
 
     def set(self, thing: str, value: str):
-        """Generic setter - need to be able to set the cast_branch when committing the contest"""
-        if thing in ["cast_branch", "cloak"]:
+        """Generic setter - need to be able to set things outside of contest dict"""
+        if thing in ["cloak"]:
             setattr(self, thing, value)
+            return
+        # At the moment cast_branch is the only thing that needs to be set-able
+        # after the constructor/initiator
+        if thing in ["cast_branch"]:
+            self.contest["cast_branch"] = value
             return
         raise ValueError(f"Illegal value for Contest attribute ({thing})")
 

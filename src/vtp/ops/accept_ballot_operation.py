@@ -567,7 +567,7 @@ class AcceptBallotOperation(Operation):
             with self.changed_cwd(the_election_config.get("git_rootdir")):
                 a_ballot.read_a_cast_ballot("", the_election_config, cast_ballot)
         elif cast_ballot_json:
-            a_ballot.set_ballot_data(cast_ballot_json, a_cast_ballot=True)
+            a_ballot.set_ballot_data(cast_ballot_json)
         else:
             # The json was not supplied - in this case read the cast
             # ballot from the default location.
