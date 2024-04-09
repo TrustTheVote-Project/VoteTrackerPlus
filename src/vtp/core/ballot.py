@@ -169,7 +169,8 @@ class Ballot:
             # Note - if selection is not a valid key, a KeyError will be raised
             if not isinstance(contest.get("selection"), list):
                 raise KeyError(
-                    "the incoming cast ballot selection is not a list (it can be empty)"
+                    "the incoming cast ballot selection is not a list for contest "
+                    f"{contest['contest_name']} (it can be empty)"
                 )
             # Validate the selection node
             for pick in contest.get("selection"):

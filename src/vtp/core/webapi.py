@@ -18,6 +18,7 @@
 """A kitchen sync for VTP classes for the moment"""
 
 # standard imports
+import json
 import os
 import re
 
@@ -119,17 +120,23 @@ class WebAPI:
         """
         Will convert the STDOUT of git log -1 <digest> to a dictionary
         """
-        output = {"Log": []}
+        output = {}
+        log_string = ""
+        regex = re.compile(r"\s+")
+        blank = re.compile(r"^\s*$")
         for index, line in enumerate(stdout):
             match index:
                 case 0:
-                    output["commit"] = line.split(r"\s+", 2)[1]
+                    output["commit"] = regex.split(line, maxsplit=1)[1]
                 case 1:
-                    output["Author"] = line.split(r"\s+", 2)[1]
+                    output["Author"] = regex.split(line, maxsplit=1)[1]
                 case 2:
-                    output["Date"] = line.split(r"\s+", 2)[1]
+                    output["Date"] = regex.split(line, maxsplit=1)[1]
                 case 3:
                     pass
                 case _:
-                    output["Log"].append(line[4:].rstrip())
+                    if blank.match(line):
+                        continue
+                    log_string += line.strip()
+        output["Log"] = json.loads(log_string)
         return output
