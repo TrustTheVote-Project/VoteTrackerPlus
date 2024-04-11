@@ -104,9 +104,8 @@ class ShowContestsOperation(Operation):
                 .stdout.strip()
                 .splitlines()
             )
-        if self.stdout_printing:
-            for line in output_lines:
-                self.imprimir(line)
+        for line in output_lines:
+            self.imprimir(line, incoming_printlevel=4)
         # return a dictionary
         return WebAPI.convert_git_log(output_lines)
 
