@@ -25,6 +25,7 @@ import re
 
 # Project imports
 from vtp.core.ballot import Ballot
+from vtp.core.contest import Contest
 from vtp.core.election_config import ElectionConfig
 
 # Local imports
@@ -133,7 +134,7 @@ class VerifyBallotReceiptOperation(Operation):
             else:
                 # skip the row - it has no legitimate digests
                 continue
-            #            import pdb; pdb.set_trace()
+            # import pdb; pdb.set_trace()
             if row_index != "" and int(row_index) - 1 == index:
                 requested_row = cvrs
                 requested_digests = row
@@ -310,8 +311,13 @@ class VerifyBallotReceiptOperation(Operation):
         receipt_data: list[list[str]] = None,
         row: str = "",
         cvr: bool = False,
+        uids: bool = False,
     ) -> list[str]:
-        """Main function - see -h for more info"""
+        """
+        Main function - see -h for more info.  If the receipt_data
+        header lines are pure uids as opposed to the full pretty print
+        contest names, the boolean uids arg should be set to True.
+        """
 
         # Create a VTP ElectionData object if one does not already exist
         the_election_config = ElectionConfig.configure_election(
@@ -328,9 +334,12 @@ class VerifyBallotReceiptOperation(Operation):
                 check=True,
                 incoming_printlevel=5,
             )
+        # if ure uids, convert to the pretty print contest header values
+        if uids:
+            receipt_data[0] = [Contest.get_uid_pp_name(uid) for uid in receipt_data[0]]
 
-        #    import pdb; pdb.set_trace()
         # Can read the receipt file directly without any Ballot info
+        # import pdb; pdb.set_trace()
         self.verify_ballot_receipt(
             receipt_file=receipt_file,
             receipt_data=receipt_data,

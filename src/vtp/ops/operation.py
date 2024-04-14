@@ -123,6 +123,10 @@ class Operation:
         # Operation._hackitoergosum["stdout_ouput"] = self.stdout_output
         # Operation._hackitoergosum["initialized"] = True
 
+    def set_verbosity(self, verbosity: int):
+        """allow setting the verbosity (and nothing else) on the run"""
+        self.verbosity = verbosity
+
     def imprimir_formatting(
         self,
         a_construct: str,

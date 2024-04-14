@@ -68,8 +68,9 @@ class Contest:
 
     @staticmethod
     def set_uid(a_contest_blob: dict, ggo: str):
-        """Will add a contest uid (only good within the context of this
-        specific election) to the supplied contest.
+        """Will add a globally unique contest uid (only good within
+        the context of this specific election) to the supplied contest
+        while caching the contest_name and ggo.
         """
         if "uid" in a_contest_blob:
             raise IndexError(
@@ -81,6 +82,11 @@ class Contest:
         Contest._uids[Contest._nextuid]["contest_name"] = a_contest_blob["contest_name"]
         Contest._uids[Contest._nextuid]["ggo"] = ggo
         Contest._nextuid += 1
+
+    @staticmethod
+    def get_uid_pp_name(uid: str):
+        """Will return the contest pretty-print name of the global contest uid"""
+        return uid + " - " + Contest._uids[int(uid)]["contest_name"]
 
     @staticmethod
     # pylint: disable=too-many-branches
