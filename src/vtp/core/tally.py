@@ -137,7 +137,7 @@ class Tally:
         raise ValueError(f"unknown/unsupported contest choices data structure ({pick})")
 
     def tally_a_plurality_contest(
-        self, contest: dict, provenance_digest: str, vote_count: int
+        self, contest: dict, provenance_digest: str, vote_count: int, digest: str,
     ):
         """plurality tally"""
         for count in range(self.defaults["max_selections"]):
@@ -157,6 +157,9 @@ class Tally:
                         f"Counted {provenance_digest} as vote {vote_count}: choice={choice}",
                         0,
                     )
+                elif self.operation_self.verbosity == 5:
+                    self.operation_self.imprimir(
+                        f"counted {digest} as vote {vote_count}: choice={choice}")
             else:
                 if provenance_digest:
                     self.operation_self.imprimir(
@@ -529,7 +532,7 @@ class Tally:
             # complicated tallies such as RCV, the additional passes
             # are done outside of this for loop.
             if contest["tally"] == "plurality":
-                self.tally_a_plurality_contest(contest, provenance_digest, vote_count)
+                self.tally_a_plurality_contest(contest, provenance_digest, vote_count, digest)
             elif contest["tally"] == "rcv":
                 # Since this is the first round on a rcv tally, just
                 # grap the first selection

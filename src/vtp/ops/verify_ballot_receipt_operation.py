@@ -291,17 +291,18 @@ class VerifyBallotReceiptOperation(Operation):
                 vet_a_row()
 
         # Summerize
+        thing = "row" if receipt_data and len(receipt_data) <= 2 else "receipt"
         if error_digests:
             self.imprimir_formatting("begin_error_box")
             self.imprimir(
-                "ballot receipt INVALID - the supplied ballot receipt has "
+                f"ballot {thing} INVALID - the supplied ballot receipt has "
                 "{len(error_digests)} errors.",
                 1,
             )
             self.imprimir_formatting("end_error_box")
         else:
             self.imprimir_formatting("begin_good_box")
-            self.imprimir("[GOOD]: ballot receipt VALID - no digest errors found", 0)
+            self.imprimir(f"[GOOD]: ballot {thing} VALID - no digest errors found", 0)
             self.imprimir_formatting("end_good_box")
 
     # pylint: disable=duplicate-code
