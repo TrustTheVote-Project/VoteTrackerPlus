@@ -36,11 +36,18 @@ class ShowContestsOperation(Operation):
     description (immediately below this) in the source file.
     """
 
-    def validate_digests(self, digests, the_election_config, error_digests):
+    def validate_digests(
+        self,
+        digests: str,
+        the_election_config: dict,
+        error_digests: set,
+        webapi: bool = False,
+    ):
         """Will scan the supplied digests for validity.  Will print and
         return the invalid digests.
         """
         errors = 0
+        json_errors = []
         input_data = "\n".join(digests.split(",")) + "\n"
         with self.changed_cwd(the_election_config.get("git_rootdir")):
             output_lines = (
@@ -63,21 +70,36 @@ class ShowContestsOperation(Operation):
         for count, line in enumerate(output_lines):
             digest, commit_type = line.split()
             if commit_type == "missing":
-                self.imprimir(f"missing digest: n={count} digest={digest}", 1)
+                if webapi:
+                    json_errors.append(f"missing digest: n={count} digest={digest}")
+                else:
+                    self.imprimir(f"missing digest: n={count} digest={digest}", 1)
                 error_digests.add(digest)
                 errors += 1
             elif commit_type != "commit":
-                self.imprimir(
-                    f"invalid digest type: n={count} digest={digest} type={commit_type}",
-                    1,
-                )
+                if webapi:
+                    json_errors.append(
+                        f"invalid digest type: n={count} digest={digest} type={commit_type}"
+                    )
+                else:
+                    self.imprimir(
+                        f"invalid digest type: n={count} digest={digest} type={commit_type}",
+                        1,
+                    )
                 error_digests.add(digest)
                 errors += 1
         if errors:
-            raise ValueError(f"Found {errors} invalid digest(s)")
+            if webapi:
+                json_errors.append(f"Summary: found {errors} invalid digest(s)")
+            else:
+                self.imprimir(
+                    f"Summary: found {errors} invalid digest(s)",
+                    1,
+                )
+        return json_errors
 
     # pylint: disable=duplicate-code
-    def run(self, contest_check: str = "") -> list:
+    def run(self, contest_check: str = "", webapi: bool = False) -> list:
         """Main function - see -h for more info"""
 
         # Create a VTP ElectionData object if one does not already exist
@@ -87,7 +109,9 @@ class ShowContestsOperation(Operation):
 
         # First validate the digests
         error_digests = set()
-        self.validate_digests(contest_check, the_election_config, error_digests)
+        json_errors = self.validate_digests(
+            contest_check, the_election_config, error_digests, webapi
+        )
         valid_digests = [
             digest for digest in contest_check.split(",") if digest not in error_digests
         ]
@@ -105,9 +129,9 @@ class ShowContestsOperation(Operation):
                 .splitlines()
             )
         for line in output_lines:
-            self.imprimir(line, incoming_printlevel=4)
+            self.imprimir(line)
         # return a dictionary
-        return WebAPI.convert_git_log(output_lines)
+        return WebAPI.convert_git_log_to_json(output_lines, json_errors)
 
 
 # For future reference just in case . . .

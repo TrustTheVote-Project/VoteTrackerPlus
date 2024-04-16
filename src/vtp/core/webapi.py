@@ -116,7 +116,7 @@ class WebAPI:
         return os.path.join(edf_path, dirs[0])
 
     @staticmethod
-    def convert_git_log(stdout: list):
+    def convert_git_log_to_json(stdout: list, json_errors: list = None):
         """
         Will convert the STDOUT of git log -1 <digest> to a dictionary
         """
@@ -139,4 +139,6 @@ class WebAPI:
                         continue
                     log_string += line.strip()
         output["Log"] = json.loads(log_string)
+        if json_errors:
+            output["Errors"] = json_errors
         return output

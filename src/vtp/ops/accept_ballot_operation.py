@@ -466,6 +466,7 @@ class AcceptBallotOperation(Operation):
         # When here the actual voucher file on disk wants to be a
         # markdown file for a web-api endpoint rather than the
         # original csv file defined above.
+        receipt_digest = None
         with self.changed_cwd(a_ballot.get_cvr_parent_dir(the_election_config)):
             with self.changed_branch("main"):
                 # Create a unique branch for the receipt
@@ -514,9 +515,7 @@ class AcceptBallotOperation(Operation):
                 qr_file = os.path.join(os.path.dirname(qr_file), "qr.svg")
                 with open(qr_file, "wb") as qr_fh:
                     qr_img.save(qr_fh)
-                self.imprimir(
-                    f"#### Created (untracked) QR file: {qr_file}"
-                )
+                self.imprimir(f"#### Created (untracked) QR file: {qr_file}")
 
                 # Create a markdown version of the receipt that contains the QR code.
                 # demo_receipt = a_ballot.write_receipt_md(
@@ -536,7 +535,7 @@ class AcceptBallotOperation(Operation):
             ["git", "branch", "-d", receipt_branch],
             incoming_printlevel=5,
         )
-        return receipt_branch, qr_img
+        return receipt_branch, qr_img, receipt_digest
 
     # pylint: disable=duplicate-code
     # pylint: disable=too-many-locals
@@ -548,7 +547,7 @@ class AcceptBallotOperation(Operation):
         cast_ballot_json: dict = "",
         merge_contests: bool = False,
         version_receipts: bool = False,
-    ) -> tuple[list, int]:
+    ) -> tuple[list, int, str, str]:
         """
         Main function - see -h for more info.  Will work with either
         specific or an generic address.
@@ -629,7 +628,7 @@ class AcceptBallotOperation(Operation):
 
         # Optionally version the ballot check
         if receipt_file_csv and version_receipts:
-            receipt_branch, qr_img = self.main_handle_receipt(
+            receipt_branch, qr_img, receipt_digest = self.main_handle_receipt(
                 a_ballot=a_ballot,
                 ballot_check=ballot_check,
                 the_election_config=the_election_config,
@@ -694,7 +693,7 @@ class AcceptBallotOperation(Operation):
         # when writing to a file.  However, when returning is it more
         # convenient for it to be normal 2-D array -
         # list[list[str]]. So convert it first.
-        return self.convert_csv_to_2d_list(ballot_check), index, qr_img
+        return self.convert_csv_to_2d_list(ballot_check), index, qr_img, receipt_digest
 
 
 # EOF
