@@ -101,8 +101,9 @@ class Globals:
         # The election date-time for all ElectionData commits
         "ELECTION_DATETIME": "2024-11-05T12:00:00",
         # The arbitrary election data string
-        "ELECTION_UPSTREAM_REMOTE": "https://github.com/TrustTheVote-Project/"
-        + "VTP-mock-election.US.16",
+        # "ELECTION_UPSTREAM_REMOTE": "https://github.com/TrustTheVote-Project/"
+        # + "VTP-mock-election.US.16",
+        "ELECTION_UPSTREAM_REMOTE": "http://127.0.0.1:8000/static",
     }
 
     @staticmethod

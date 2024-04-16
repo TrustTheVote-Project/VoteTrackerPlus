@@ -467,13 +467,16 @@ class AcceptBallotOperation(Operation):
                 receipt_branch = self.checkout_new_branch(
                     the_election_config, "", "main", "receipt"
                 )
-                # Write out the receipt there as a markdown file
-                receipt_file_md = a_ballot.write_receipt_md(
+                # Write out the ballot receipt as a csv file (the
+                # first spring demo saved files out as markdown)
+                receipt_file = a_ballot.write_receipt_csv(
                     ballot_check, the_election_config, receipt_branch
                 )
-                self.imprimir(f"#### Created markdown: file://{receipt_file_md}")
+                self.imprimir(
+                    f"#### Committing csv receipt (branch={receipt_branch}): {receipt_file}"
+                )
                 # Commit the voter's ballot voucher
-                self.contest_add_and_commit(receipt_branch, "receipt")
+                receipt_digest = self.contest_add_and_commit(receipt_branch, "receipt")
                 # Push the voucher
                 self.shell_out(
                     ["git", "push", "origin", receipt_branch],
@@ -484,27 +487,33 @@ class AcceptBallotOperation(Operation):
                 # above with will nominally delete it
                 qr_url = (
                     f"{Globals.get('ELECTION_UPSTREAM_REMOTE')}/"
-                    f"/blob/{receipt_branch}/{a_ballot.get('ballot_subdir')}/"
-                    f"{receipt_branch}/{Globals.get('RECEIPT_FILE').rstrip('csv')}md"
+                    # to point to the file on the branch
+                    # f"/blob/{receipt_branch}/{a_ballot.get('ballot_subdir')}/"
+                    # f"{receipt_branch}/{Globals.get('RECEIPT_FILE').rstrip('csv')}md"
+                    #
+                    # to point the ballot receipt commit
+                    f"show-commit.html?digest={receipt_digest}"
                 )
                 qr_img = qrcode.make(
                     qr_url,
                     image_factory=qrcode.image.svg.SvgImage,
                 )
-                qr_file = os.path.join(os.path.dirname(receipt_file_md), "qr.svg")
+                qr_file = os.path.join(os.path.dirname(receipt_file), "qr.svg")
                 with open(qr_file, "wb") as qr_fh:
                     qr_img.save(qr_fh)
-                self.imprimir(f"#### Created QR code: {qr_file}")
+                self.imprimir(
+                    f"#### Created (untracked) QR file (branch={receipt_branch}): {qr_file}"
+                )
 
                 # Create a markdown version of the receipt that contains the QR code.
-                demo_receipt = a_ballot.write_receipt_md(
-                    lines=ballot_check,
-                    config=the_election_config,
-                    receipt_branch=receipt_branch,
-                    qr_file="qr.svg",
-                    qr_url=qr_url,
-                )
-                self.imprimir(f"#### Created markdown: file://{demo_receipt}")
+                # demo_receipt = a_ballot.write_receipt_md(
+                #     lines=ballot_check,
+                #     config=the_election_config,
+                #     receipt_branch=receipt_branch,
+                #     qr_file="qr.svg",
+                #     qr_url=qr_url,
+                # )
+                # self.imprimir(f"#### Created (untracked-combined) receipt: {demo_receipt}")
 
         # At this point the local receipt_branch can be deleted as
         # the local branches build up too much. The local reflog
@@ -660,10 +669,10 @@ class AcceptBallotOperation(Operation):
             #         style="receipt",
             #     )
 
-        # For now, print the location and the voter's index
+        # For now, print the (untracked) cvs receipt location and the voter's index
         if not receipt_file_csv:
             receipt_file_csv = None
-        self.imprimir(f"#### Receipt file: {receipt_file_csv}", 0)
+        self.imprimir(f"#### Receipt csv file: {receipt_file_csv}", 0)
         if index == 0:
             index = None
         self.imprimir(f"#### Voter's row: {index}", 0)
