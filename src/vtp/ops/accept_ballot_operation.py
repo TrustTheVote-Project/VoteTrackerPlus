@@ -26,7 +26,9 @@ operation of merging the pushed CVR branches to the main branch.
 """
 
 # Standard imports
+import base64
 import csv
+import io
 import os
 import random
 import secrets
@@ -693,7 +695,22 @@ class AcceptBallotOperation(Operation):
         # when writing to a file.  However, when returning is it more
         # convenient for it to be normal 2-D array -
         # list[list[str]]. So convert it first.
-        return self.convert_csv_to_2d_list(ballot_check), index, qr_img, receipt_digest
+
+        # Also, the qr_img is a qrcode object.  It _seems_ the easiest
+        # way to get this back to the client side is to base64 encode
+        # it.  The resulting size is about just under 64k.  The length
+        # of the ballot_check is about 101*41*<n contests>.
+        base64_image = ""
+        if qr_img:
+            safe_image = io.BytesIO()
+            qr_img.save(stream=safe_image)
+            base64_image = base64.b64encode(safe_image.getvalue()).decode()
+        return (
+            self.convert_csv_to_2d_list(ballot_check),
+            index,
+            base64_image,
+            receipt_digest,
+        )
 
 
 # EOF
