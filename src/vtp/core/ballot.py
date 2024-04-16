@@ -47,7 +47,7 @@ class Ballot:
     ]
 
     @staticmethod
-    def gen_cast_ballot_location(config, subdir):
+    def gen_cast_ballot_location(config, subdir: str):
         """Return the file location of a cast ballot"""
         return os.path.join(
             config.get("git_rootdir"),
@@ -57,7 +57,7 @@ class Ballot:
         )
 
     @staticmethod
-    def gen_contest_location(config, subdir):
+    def gen_contest_location(config, subdir: str):
         """Return the contest.json file location"""
         return os.path.join(
             config.get("git_rootdir"),
@@ -70,32 +70,35 @@ class Ballot:
     def gen_receipt_location(
         config,
         subdir: str,
-        branch: str,
-        style: str,
+        branch: str = "",
+        versioned: bool = False,
+        suffix: str = "csv",
     ) -> str:
         """
         Return either a csv or md receipt file location.  Note that
-        the receipt.csv version is stored next to the unversioned
-        ballot.json and the ephemeral contest.json files in the CVRs
-        subdirectory while the version receipt.md is stored in the
-        RECEIPT_FILE_SUBDIR tree.
+        the non versioned receipt is stored next to the non versioned
+        ballot.json and QR file and (the ephemeral) contest.json file
+        in the CVRs subdirectory while the versioned receipt is stored
+        in the RECEIPT_FILE_SUBDIR tree.  As it turned out, the first
+        pass at a demo had the versioned receipt as markdown and the
+        unversioned csv while the second demo has them both as csv.
         """
-        if style == "csv":
+        if not versioned:
             return os.path.join(
                 config.get("git_rootdir"),
                 subdir,
                 Globals.get("CONTEST_FILE_SUBDIR"),
-                Globals.get("RECEIPT_FILE"),
+                Globals.get("RECEIPT_FILE") + "." + suffix,
             )
         return os.path.join(
             config.get("git_rootdir"),
             subdir,
             branch,
-            Globals.get("RECEIPT_FILE_MD"),
+            Globals.get("RECEIPT_FILE") + "." + suffix,
         )
 
     @staticmethod
-    def get_cast_from_blank(blank_ballot):
+    def get_cast_from_blank(blank_ballot: str):
         """Given a blank ballot relative or absolute path, will map that
         to the state/town cast ballot location, which is basically up
         three and down one.
@@ -350,12 +353,36 @@ class Ballot:
             )
         return contest_file
 
-    def write_receipt_csv(self, lines, config, receipt_file=""):
-        """Write out the voter's ballot receipt"""
+    # pylint: disable=too-many-arguments
+    def write_receipt_csv(
+        self,
+        lines: list,
+        config: dict,
+        receipt_branch: str = "",
+        versioned: bool = True,
+        receipt_file: str = "",
+    ):
+        """Write out the voter's ballot receipt in csv format"""
         if not receipt_file:
             receipt_file = Ballot.gen_receipt_location(
-                config, self.ballot_subdir, "", "csv"
+                config,
+                self.ballot_subdir,
+                receipt_branch,
+                versioned=versioned,
+                suffix="csv",
             )
+        # The directory will rarely exist in the versioned case as receipt_file
+        # will be the first file to be placed in that location on that branch.
+        if not os.path.isdir(
+            os.path.dirname(
+                os.path.dirname(os.path.dirname(os.path.dirname(receipt_file)))
+            )
+        ):
+            raise OSError(
+                f"the receipt markdown file is being placed someplace outside the expected tree"
+                f"{receipt_file}"
+            )
+        os.makedirs(os.path.dirname(receipt_file), exist_ok=True)
         # The parent directory better exist or something is wrong
         with open(receipt_file, "w", encoding="utf8") as outfile:
             for line in lines:
@@ -369,13 +396,23 @@ class Ballot:
         lines: list,
         config: dict,
         receipt_branch: str,
+        versioned: bool = True,
+        receipt_file: str = "",
         qr_file: str = "",
         qr_url: str = "",
     ) -> str:
-        """Write out the voter's ballot receipt as a markdown table with hyperlinks"""
+        """
+        Write out the voter's ballot receipt as markdown.  This means
+        that hyperlinks want to be added (prior to the commit).
+        """
         receipt_file = Ballot.gen_receipt_location(
-            config, self.ballot_subdir, receipt_branch, "md"
+            config,
+            self.ballot_subdir,
+            receipt_branch,
+            versioned=versioned,
+            suffix=".md",
         )
+        # writing out a markdown receipt with hyperlinks
         if qr_file:
             receipt_file = receipt_file.rstrip(".md") + "-qr.md"
         url_root = "/".join(
@@ -384,8 +421,8 @@ class Ballot:
                 "commit",
             ]
         )
-        # The directory will rarely exist in this case as receipt_file
-        # will be the first file to be placed there
+        # The directory will rarely exist in the versioned case as receipt_file
+        # will be the first file to be placed in that location on that branch.
         if not os.path.isdir(
             os.path.dirname(
                 os.path.dirname(os.path.dirname(os.path.dirname(receipt_file)))

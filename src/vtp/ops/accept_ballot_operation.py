@@ -221,7 +221,9 @@ class AcceptBallotOperation(Operation):
             text=True,
         ).stdout.strip()
 
-    def contest_add_and_commit(self, branch, style="contest"):
+    def contest_add_and_commit(
+        self, branch: str, style: str = "contest", receipt_suffix: str = ".csv"
+    ):
         """Will git add and commit the new contest content.  Requires
         the CWD to be the parent of the CVRs directory.  If this fails
         a shell error will be raised.
@@ -230,8 +232,9 @@ class AcceptBallotOperation(Operation):
         The actual CVR json payload is stored in the commit message of
         a contest since the commit content is destructively merged to
         main.  The actual receipt markdown payload is stored in the
-        file as markdown.  Hence, it is merged to main via a
-        subdirectory name that matches the random branch name.
+        file (either as markdown or csv).  However, receipts do not
+        have to be counted and hence there is no real need to merge
+        receipts to any one branch (such as main).
         """
         if style == "contest":
             payload_name = os.path.join(
@@ -241,7 +244,7 @@ class AcceptBallotOperation(Operation):
             # when handling receipts, there is no destructive merge
             payload_name = os.path.join(
                 branch,
-                Globals.get("RECEIPT_FILE_MD"),
+                Globals.get("RECEIPT_FILE") + receipt_suffix,
             )
         self.shell_out(
             ["git", "add", payload_name],
@@ -363,7 +366,9 @@ class AcceptBallotOperation(Operation):
 
         # Now write out the ballot_receipt in csv for now - can deal with
         # html (URL links) and a pdf (printable) later - both still a TBD.
-        receipt_file = the_ballot.write_receipt_csv(ballot_receipt, the_election_config)
+        receipt_file = the_ballot.write_receipt_csv(
+            ballot_receipt, the_election_config, versioned=False
+        )
         # return all three
         return ballot_receipt, voters_row, receipt_file
 
@@ -470,7 +475,10 @@ class AcceptBallotOperation(Operation):
                 # Write out the ballot receipt as a csv file (the
                 # first spring demo saved files out as markdown)
                 receipt_file = a_ballot.write_receipt_csv(
-                    ballot_check, the_election_config, receipt_branch
+                    ballot_check,
+                    the_election_config,
+                    receipt_branch,
+                    versioned=True,
                 )
                 self.imprimir(
                     f"#### Committing csv receipt (branch={receipt_branch}): {receipt_file}"
@@ -489,7 +497,7 @@ class AcceptBallotOperation(Operation):
                     f"{Globals.get('ELECTION_UPSTREAM_REMOTE')}/"
                     # to point to the file on the branch
                     # f"/blob/{receipt_branch}/{a_ballot.get('ballot_subdir')}/"
-                    # f"{receipt_branch}/{Globals.get('RECEIPT_FILE').rstrip('csv')}md"
+                    # f"{receipt_branch}/{Globals.get('RECEIPT_FILE')}.md"
                     #
                     # to point the ballot receipt commit
                     f"show-commit.html?digest={receipt_digest}"
@@ -498,11 +506,16 @@ class AcceptBallotOperation(Operation):
                     qr_url,
                     image_factory=qrcode.image.svg.SvgImage,
                 )
-                qr_file = os.path.join(os.path.dirname(receipt_file), "qr.svg")
+                # The qr_file is not versioned and placed next to the
+                # ballot.json and receipt.csv
+                qr_file = Ballot.gen_receipt_location(
+                    the_election_config, a_ballot.get("ballot_subdir")
+                )
+                qr_file = os.path.join(os.path.dirname(qr_file), "qr.svg")
                 with open(qr_file, "wb") as qr_fh:
                     qr_img.save(qr_fh)
                 self.imprimir(
-                    f"#### Created (untracked) QR file (branch={receipt_branch}): {qr_file}"
+                    f"#### Created (untracked) QR file: {qr_file}"
                 )
 
                 # Create a markdown version of the receipt that contains the QR code.
@@ -510,6 +523,7 @@ class AcceptBallotOperation(Operation):
                 #     lines=ballot_check,
                 #     config=the_election_config,
                 #     receipt_branch=receipt_branch,
+                #     versioned=False,
                 #     qr_file="qr.svg",
                 #     qr_url=qr_url,
                 # )
@@ -672,7 +686,7 @@ class AcceptBallotOperation(Operation):
         # For now, print the (untracked) cvs receipt location and the voter's index
         if not receipt_file_csv:
             receipt_file_csv = None
-        self.imprimir(f"#### Receipt csv file: {receipt_file_csv}", 0)
+        self.imprimir(f"#### Created (untracked) csv file: {receipt_file_csv}", 0)
         if index == 0:
             index = None
         self.imprimir(f"#### Voter's row: {index}", 0)

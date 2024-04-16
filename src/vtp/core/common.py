@@ -36,8 +36,7 @@ class Globals:
         # The location of the incoming ballot.json file etc
         "BALLOT_FILE": "ballot.json",
         "CONTEST_FILE": "contest.json",
-        "RECEIPT_FILE": "receipt.csv",
-        "RECEIPT_FILE_MD": "receipt.md",
+        "RECEIPT_FILE": "receipt",
         # The blank ballot folder location
         "BLANK_BALLOT_SUBDIR": "blank-ballots",
         # The location/name of the config and address map files for this GGO
