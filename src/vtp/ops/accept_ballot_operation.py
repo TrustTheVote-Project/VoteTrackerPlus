@@ -27,7 +27,6 @@ operation of merging the pushed CVR branches to the main branch.
 
 # Standard imports
 import base64
-import csv
 import io
 import os
 import random
@@ -41,6 +40,7 @@ from vtp.core.address import Address
 from vtp.core.ballot import Ballot
 from vtp.core.common import Globals
 from vtp.core.election_config import ElectionConfig
+from vtp.core.webapi import WebAPI
 from vtp.ops.merge_contests_operation import MergeContestsOperation
 
 # Local imports
@@ -374,13 +374,6 @@ class AcceptBallotOperation(Operation):
         # return all three
         return ballot_receipt, voters_row, receipt_file
 
-    def convert_csv_to_2d_list(self, ballot_check_cvs: list) -> list[list[str]]:
-        """Convert a 1-D csv format list to a 2-D list of list format"""
-        my_list = []
-        for row in csv.reader(ballot_check_cvs, delimiter=",", quotechar='"'):
-            my_list.append(row)
-        return my_list
-
     def main_handle_contests(
         self,
         a_ballot: dict,
@@ -711,7 +704,7 @@ class AcceptBallotOperation(Operation):
             qr_img.save(stream=safe_image)
             base64_image = base64.b64encode(safe_image.getvalue()).decode()
         return (
-            self.convert_csv_to_2d_list(ballot_check),
+            WebAPI.convert_csv_to_2d_list(ballot_check),
             index,
             base64_image,
             receipt_digest,

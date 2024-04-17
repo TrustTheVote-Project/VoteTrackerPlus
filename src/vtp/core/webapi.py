@@ -18,6 +18,7 @@
 """A kitchen sync for VTP classes for the moment"""
 
 # standard imports
+import csv
 import json
 import os
 import re
@@ -116,7 +117,15 @@ class WebAPI:
         return os.path.join(edf_path, dirs[0])
 
     @staticmethod
-    def convert_git_log_to_json(stdout: list, json_errors: list = None):
+    def convert_csv_to_2d_list(ballot_check_cvs: list) -> list[list[str]]:
+        """Convert a 1-D csv format list to a 2-D list of list format"""
+        my_list = []
+        for row in csv.reader(ballot_check_cvs, delimiter=",", quotechar='"'):
+            my_list.append(row)
+        return my_list
+
+    @staticmethod
+    def convert_git_log_to_json(stdout: list, json_errors: list = None) -> dict:
         """
         Will convert the STDOUT of git log -1 <digest> to a dictionary
         """
@@ -140,5 +149,5 @@ class WebAPI:
                     log_string += line.strip()
         output["Log"] = json.loads(log_string)
         if json_errors:
-            output["Errors"] = json_errors
+            output["backend_errors"] = json_errors
         return output

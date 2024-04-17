@@ -20,6 +20,7 @@
 """Logic of operation for showing contests."""
 
 # Standard imports
+import os
 
 # Project imports
 from vtp.core.election_config import ElectionConfig
@@ -99,8 +100,15 @@ class ShowContestsOperation(Operation):
         return json_errors
 
     # pylint: disable=duplicate-code
-    def run(self, contest_check: str = "", webapi: bool = False) -> list:
-        """Main function - see -h for more info"""
+    def run(
+        self, contest_check: str = "", webapi: bool = False, receipt: bool = False
+    ) -> dict:
+        """
+        Main function - see -h for more info.  If receipt is True,
+        contest_check is interpreted as the commit digest of versioned
+        ballot receipt in which case the contents of the the versioned
+        file is returned.
+        """
 
         # Create a VTP ElectionData object if one does not already exist
         the_election_config = ElectionConfig.configure_election(
@@ -115,11 +123,32 @@ class ShowContestsOperation(Operation):
         valid_digests = [
             digest for digest in contest_check.split(",") if digest not in error_digests
         ]
-        # show/log the digests
+        if not receipt:
+            # show/log the digests
+            with self.changed_cwd(the_election_config.get("git_rootdir")):
+                output_lines = (
+                    self.shell_out(
+                        ["git", "show", "-s"] + valid_digests,
+                        incoming_printlevel=5,
+                        text=True,
+                        check=True,
+                        capture_output=True,
+                    )
+                    .stdout.strip()
+                    .splitlines()
+                )
+            for line in output_lines:
+                self.imprimir(line)
+            # return a dictionary
+            return WebAPI.convert_git_log_to_json(output_lines, json_errors)
+        # get the contents of the file via the commit digest.
+        # This appears to require two git commands TBD
+        receipt_digest = valid_digests[0]
         with self.changed_cwd(the_election_config.get("git_rootdir")):
+            # get the filename
             output_lines = (
                 self.shell_out(
-                    ["git", "show", "-s"] + valid_digests,
+                    ["git", "show", "--name-only", "--oneline", receipt_digest],
                     incoming_printlevel=5,
                     text=True,
                     check=True,
@@ -128,10 +157,32 @@ class ShowContestsOperation(Operation):
                 .stdout.strip()
                 .splitlines()
             )
-        for line in output_lines:
-            self.imprimir(line)
-        # return a dictionary
-        return WebAPI.convert_git_log_to_json(output_lines, json_errors)
+            # minimal error checking
+            if len(output_lines) != 2:
+                json_errors.append(
+                    "invalid 'git show ...' results - did not return 2 lines"
+                )
+            elif os.path.basename(output_lines[1]) != "receipt.csv":
+                json_errors.append("'git show ...' did not return a receipt.csv file")
+            else:
+                # get the contents
+                ballot_check = (
+                    self.shell_out(
+                        ["git", "show", receipt_digest + ":" + output_lines[1]],
+                        incoming_printlevel=5,
+                        text=True,
+                        check=True,
+                        capture_output=True,
+                    )
+                    .stdout.strip()
+                    .splitlines()
+                )
+        # convert this to an array of arrays
+        # import pdb; pdb.set_trace()
+        return {
+            "ballot_check": WebAPI.convert_csv_to_2d_list(ballot_check),
+            "backend_errors": json_errors,
+        }
 
 
 # For future reference just in case . . .
