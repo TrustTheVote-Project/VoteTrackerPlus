@@ -483,11 +483,12 @@ class AcceptBallotOperation(Operation):
                     receipt_branch,
                     versioned=True,
                 )
-                self.imprimir(
-                    f"#### Committing csv receipt (branch={receipt_branch}): {receipt_file}"
-                )
                 # Commit the voter's ballot voucher
                 receipt_digest = self.contest_add_and_commit(receipt_branch, "receipt")
+                self.imprimir(
+                    f"#### Versioned csv receipt (branch={receipt_branch}, "
+                    f"digest={receipt_digest}): {receipt_file}"
+                )
                 # Push the voucher
                 self.shell_out(
                     ["git", "push", "origin", receipt_branch],
@@ -687,10 +688,14 @@ class AcceptBallotOperation(Operation):
         # For now, print the (untracked) cvs receipt location and the voter's index
         if not receipt_file_csv:
             receipt_file_csv = None
-        self.imprimir(f"#### Created (untracked) csv file: {receipt_file_csv}", 0)
+            self.imprimir("#### Did not create an (untracked) csv file", 0)
+        else:
+            self.imprimir(f"#### Created (untracked) csv file: {receipt_file_csv}", 0)
         if index == 0:
             index = None
-        self.imprimir(f"#### Voter's row: {index}", 0)
+            self.imprimir("#### No Voter row generated", 0)
+        else:
+            self.imprimir(f"#### Voter's row: {index}", 0)
         # And return them.  Note that ballot_check is in csv format
         # when writing to a file.  However, when returning is it more
         # convenient for it to be normal 2-D array -
