@@ -257,9 +257,14 @@ class VerifyBallotReceiptOperation(Operation):
                 if found is False:
                     unmerged_uids[uid] = u_count
             if unmerged_uids:
-                self.imprimir("The following contests are not merged to main yet:", 0)
-                for uid, offset in unmerged_uids.items():
-                    self.imprimir(f"{headers[offset]} ({requested_digests[offset]})", 0)
+                truly_unmerged_uids = {}
+                for uid in unmerged_uids:
+                    if uid not in error_digests:
+                        truly_unmerged_uids[uid] = unmerged_uids[uid]
+                if truly_unmerged_uids:
+                    self.imprimir("The following contests are not merged to main yet:", 0)
+                    for uid, offset in truly_unmerged_uids.items():
+                        self.imprimir(f"{headers[offset]} ({requested_digests[offset]})", 0)
 
         # If a row is specified, will print the context index in the
         # actual contest tally - which basically tells the voter 'your
@@ -270,7 +275,7 @@ class VerifyBallotReceiptOperation(Operation):
                 if digest in error_digests:
                     self.imprimir(
                         "cannot print CVR for {digest} (row {row_index}) - it is invalid",
-                        1,
+                        5,
                     )
                     continue
                 valid_digests.append(digest)
