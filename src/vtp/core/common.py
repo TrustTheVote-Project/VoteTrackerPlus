@@ -36,8 +36,7 @@ class Globals:
         # The location of the incoming ballot.json file etc
         "BALLOT_FILE": "ballot.json",
         "CONTEST_FILE": "contest.json",
-        "RECEIPT_FILE": "receipt.csv",
-        "RECEIPT_FILE_MD": "receipt.md",
+        "RECEIPT_FILE": "receipt",
         # The blank ballot folder location
         "BLANK_BALLOT_SUBDIR": "blank-ballots",
         # The location/name of the config and address map files for this GGO
@@ -101,8 +100,9 @@ class Globals:
         # The election date-time for all ElectionData commits
         "ELECTION_DATETIME": "2024-11-05T12:00:00",
         # The arbitrary election data string
-        "ELECTION_UPSTREAM_REMOTE": "https://github.com/TrustTheVote-Project/"
-        + "VTP-mock-election.US.16",
+        # "ELECTION_UPSTREAM_REMOTE": "https://github.com/TrustTheVote-Project/"
+        # + "VTP-mock-election.US.16",
+        "ELECTION_UPSTREAM_REMOTE": "http://127.0.0.1:8000/static",
     }
 
     @staticmethod

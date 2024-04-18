@@ -10,9 +10,9 @@ VoteTracker+ (VTP) URL's and PATH references have the '+' spelled out (VoteTrack
 
 See [../../docs/project-overview.md](../../docs/project-overview.md) for more general VTP information.  In particular see [../../docs/tech-details/more-tech-details.md](../../docs/tech-details/more-tech-details.md) for details of the VTP election directory layout.  The directory layout is key to better understand the VoteTracker+ solution and how election data is organized the directory, file, and git repository levels.
 
-A VTP election in essence is the directory structure that represents a specific election.  The directory structure is rooted with a clone of a root election repository, representing either a real or mock election, that contains this repository as a direct submodule.  The election may have zero or more additional git submodules organized in a specific manner, primarily a function of voting precinct and/or computer network isolation.  One potentially common layout/deployment is one git repo per voting center.
+A VTP election configuration data, a.k.a. the ElectionData, in essence is the directory structure that represents a specific election.  The directory structure is rooted with a clone of a root election repository, representing either a real or mock election.  The ElectionData repo may have zero or more additional git submodules organized in a specific manner as a function of voting precinct and/or computer network isolation.  One potentially common layout/deployment is one git repo per voting center.
 
-This repo contains all the python executables and libraries necessary to run an election and does not contain any election specific information, configuration or [Cast Vote Records][Cast Vote Record].
+This repo contains all the python executables and libraries necessary to run an election and does not contain ElectionData specific information (such as [Cast Vote Records][Cast Vote Records]) other than basic configuration names and locations.
 
 When a specific election is configured, either for real or for mock/testing purposes, the ./config.yaml and ./address_map.yaml files in the election repositories are modified accordingly.  This initial modification will define Geographical Geopolitical Overlays (GGOs - NIST calls this a [geopolitical units](https://pages.nist.gov/ElectionGlossary/#geopolitical-unit)).  More specifically, the config and address-map files define the direct child GGOs (there can be multiple children), and those children config and address-map files define their potentially multiple children.  This effectively define an Directed Acyclic Graph (DAG) of election configuration data.
 
@@ -24,63 +24,43 @@ In summary, to create a VTP election configuration is to create these yaml files
 
 ## 2) Background and Caveats
 
-The VoteTracker+ project with respect to executable programs currently consists of a handfull of python scripts in this directory and a few libraries in the utils subdirectory.  To run these scripts simply cd into this directory and run them.  Running them from other directories within this git repo in theory may work but is not tested.
+The VoteTracker+ project with respect to executable programs currently consists of a handfull of python scripts in this repository, a web-api repository containing a FastAPI restful interface, and a html/css/javascript client browser front end.  See the [VTP-dev-env](https://github.com/TrustTheVote-Project/VTP-dev-env) repo for more info.
 
-It is important that the end-voter usage model be as simple as possible and as immune as possible to false narratives and conspiracy theories.  A primary goal of VoteTracker+ is election and ballot trustworthiness.  As such a design goal of VoteTracker+ is that this git repo along with the various git submodules will comprise a specific election, statically, both in terms of code __and__ election configuration data  __including__ all the [Cast Vote Records][Cast Vote Record].  By avoiding a python installation step the end-user (the end-voter) usage model is simplified while also minimizing the potential attack surface.  The intent is that the end-voter can clone this repo and with no further installation run the commands located here as is, with as little mystery as possible from the point of view of someone with no software coding experience.  An entire VTP election tree is relocatable, reclone-able tree of files.  Only the python environment itself needs to be installed.
-
-Therefor, there is no setup.py file for this project as there is no __pip install votetracker+__ or similar installation step.  As there is no VTP installation step, tests are run directly via pylint and  pytest and not via tox.  It is important that end-voters can also run the all the VTP tests on their computers.
-
-Currently both poetry and conda/miniconda python virtual environment frameworks are tested for compatibility.
+It is important that the end-voter usage model be as simple as possible and as immune as possible to false narratives and conspiracy theories.  A primary goal of VoteTracker+ is election and ballot trustworthiness.  As such a design goal of VoteTracker+ is that this git repo along with the various git submodules will comprise a specific election, statically, both in terms of code __and__ election configuration data (a.k.a. the ElectionData)  __including__ all the [Cast Vote Records][Cast Vote Record].
 
 ## 3) Development Process Target Goal
 
-It is a goal to create a development process that eventually includes the following:
+The VoteTracker+ development process is currently more or less the following:
 
 - Commits are required to be signed.  See [https://github.com/TrustTheVote-Project/VoteTrackerPlus/blob/main/docs/informal-security-overview.md](https://github.com/TrustTheVote-Project/VoteTrackerPlus/blob/main/docs/informal-security-overview.md)
 - Standard GitHub pull request (PR) development models are in play
-- ALl pull-requests are squashed-merged onto main - main maintains a linear history
+- All pull-requests are squashed-merged onto main - main maintains a linear history
 - All pull-requests pass isort, black, and pylint with a pylint score of 10.0
-- All pull-requests pass pytest (once tests have been written)
+- All pull-requests pass pytest (assuming that there are tests)
 - A TBD level of unit and functional test coverage (pytest coverage)
 - A TBD level of mock election test coverage (system testing)
 
-This project is not there yet.
+This project is not yet completely there process wise.
 
 ## 4) Current Development Process
 
-The current development process is in flux as the project is still being designed / framed out as code is being written.  This documentation may also be behind the actual code development.
+The current development process is in flux as the project is still being occasionally refactored as needed.
 
-### 4.1a) One time poetry installation
+### 4.1) One time poetry installation
 
-Currently Votetracker+ is using [poetry](https://python-poetry.org/) as the python package and dependency manager.  The base python is currently 3.9.
+Currently Votetracker+ is using [poetry](https://python-poetry.org/) as the python package and dependency manager.  The base python is currently 3.10.  However, any python environment manager the employs pyproject.toml files can be used.
 
-```bash
-# install poetry (Mac example) - see https://python-poetry.org/docs/ for poetry documentation
-$ mkdir repos && cd repos
-$ git clone https://github.com/python-poetry/poetry.git
-$ cd install.python-poetry.org
-$ python3 install-poetry.py
-$ cd ../..
-```
-Note the [poetry installation](https://python-poetry.org/docs/#installation) directions regarding shell integrations
-
-### 4.1b) One time conda/miniconda installation
+Mac example:
 
 ```bash
-# install conda (Mac example) - download from https://docs.conda.io/en/latest/miniconda.html
-$ curl https://repo.anaconda.com/miniconda/Miniconda3-latest-MacOSX-x86_64.sh -o Downloads/Miniconda3-latest-MacOSX-x86_64.sh
+# install homebrew - see https://brew.sh/ and https://docs.brew.sh/Installation
+$/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 
-# validate digest
-$ openssl sha256 Downloads/Miniconda3-latest-MacOSX-x86_64.sh
+# install pipx via homebrew - see https://pipx.pypa.io/stable/installation/
+$ brew install pipx
 
-# install it - see conda instructions!
-$ bash Downloads/Miniconda3-latest-MacOSX-x86_64.sh
-
-# create an python 3.9 environment
-$ conda create -n vtp.01 python=3.9
-$ conda activate vtp.01
-$ conda install pylint pytest pyyaml networkx
-$ pip install pyinputplus
+# install poetry - see https://python-poetry.org/docs#installation
+$ pipx install poetry
 ```
 
 ### 4.2) Clone a mock election repo and this repo
@@ -88,12 +68,11 @@ $ pip install pyinputplus
 The VotetrackerPlus repo is typically included as a submodule, and that is the case with the [VTP-mock-election.US.10](https://github.com/TrustTheVote-Project/VTP-mock-election.US.10) repo.  Clone that repo enabling submodules:
 
 ```bash
-$ mkdir repos && cd repos
-$ git clone --recurse-submodules git@github.com:TrustTheVote-Project/VTP-mock-election.US.10.git
-$ cd VTP-mock-election.US.10/VoteTrackerPlus
+$ mkdir vtp.repos && cd vtp.repos
+$ git clone --recurse-submodules git@github.com:TrustTheVote-Project/VTP-dev-env.git
 ```
 
-Each VTP election data repository, mock or otherwise, represents a different election.  An election data repo may be already configured, or may be of a past election, or may be a test/mock election.  The VTP-mock-election.US.10 election data repo is a test/mock election.
+Each VTP ElectionData repository, mock or otherwise, represents a different election.  An election data repo may be already configured, or may be of a past election, or may be a test/mock election.  The VTP-mock-election.US.10 election data repo is a test/mock election.
 
 ### 4.3) Create a python environment in which to run VTP
 
@@ -105,12 +84,6 @@ If using poetry, from the same root of the VoteTrackerPlus git repo:
 
 ```bash
 $ poetry shell
-```
-
-If using conda:
-
-```bash
-$ conda activate vtp.01
 ```
 
 ### 4.5) Odds and Ends
@@ -127,15 +100,15 @@ $ git config --global user.name "your name"
 To run a mock election, run the setup_vtp_demo.py script (which per python's local install described above is installed in the python environment as _setup-vtp-demo_).  This script will nominally create a mock election with four VTP scanner _apps_ and one VTP tabulation server _app_ as if all ballots were being cast in a single voting center with four separate and independent ballot scanners.  By default it will place the git repos in /opt/VotetrackerPlus with the 5 clients (the four scanner apps and one server app) in the _clients_ folder with the two local git upstream bare repositories in the _tabulation-server_ folder.
 
 ```
-% setup-vtp-demo -e ../VTP-mock-election.US.14
+% setup-vtp-demo -e ../VTP-mock-election.US.16
 Running "git rev-parse --show-toplevel"
 Running "git config --get remote.origin.url"
-Running "git clone --bare git@github.com:TrustTheVote-Project/VTP-mock-election.US.14.git"
-Running "git clone /opt/VoteTrackerPlus/demo.01/tabulation-server/VTP-mock-election.US.14.git"
-Running "git clone /opt/VoteTrackerPlus/demo.01/tabulation-server/VTP-mock-election.US.14.git"
-Running "git clone /opt/VoteTrackerPlus/demo.01/tabulation-server/VTP-mock-election.US.14.git"
-Running "git clone /opt/VoteTrackerPlus/demo.01/tabulation-server/VTP-mock-election.US.14.git"
-Running "git clone /opt/VoteTrackerPlus/demo.01/tabulation-server/VTP-mock-election.US.14.git"
+Running "git clone --bare git@github.com:TrustTheVote-Project/VTP-mock-election.US.16.git"
+Running "git clone /opt/VoteTrackerPlus/demo.01/tabulation-server/VTP-mock-election.US.16.git"
+Running "git clone /opt/VoteTrackerPlus/demo.01/tabulation-server/VTP-mock-election.US.16.git"
+Running "git clone /opt/VoteTrackerPlus/demo.01/tabulation-server/VTP-mock-election.US.16.git"
+Running "git clone /opt/VoteTrackerPlus/demo.01/tabulation-server/VTP-mock-election.US.16.git"
+Running "git clone /opt/VoteTrackerPlus/demo.01/tabulation-server/VTP-mock-election.US.16.git"
 ```
 
 The resulting directory tree looks like this:
@@ -147,7 +120,7 @@ The resulting directory tree looks like this:
 ├── guid-client-store
 ├── mock-clients
 │   ├── scanner.00
-│   │   └── VTP-mock-election.US.14
+│   │   └── VTP-mock-election.US.16
 │   │       ├── GGOs
 │   │       │   └── states
 │   │       │       └── Massachusetts
@@ -167,19 +140,19 @@ The resulting directory tree looks like this:
 │   │       ├── README.md
 │   │       └── config.yaml
 │   ├── scanner.01
-│   │   └── VTP-mock-election.US.14
+│   │   └── VTP-mock-election.US.16
 [... ditto ...]
 │   ├── scanner.02
-│   │   └── VTP-mock-election.US.14
+│   │   └── VTP-mock-election.US.16
 [... ditto ...]
 │   ├── scanner.03
-│   │   └── VTP-mock-election.US.14
+│   │   └── VTP-mock-election.US.16
 [... ditto ...]
 │   └── server
-│       └── VTP-mock-election.US.14
+│       └── VTP-mock-election.US.16
 [... ditto ...]
 └── tabulation-server
-    └── VTP-mock-election.US.14.git
+    └── VTP-mock-election.US.16.git
         ├── HEAD
         ├── config
         ├── description
@@ -221,27 +194,27 @@ Here is an example of running a 4 VTP scanner and 1 VTP server app mock demo ele
 ```bash
 # In terminal window #1, run a VTP tabulation server
 # Note - this assumes the explicit setup steps above - note the poetry pyproject.toml location
-$ cd repos/VTP-mock-election.US.14/VoteTrackerPlus
+$ cd vtp.repos/VTP-mock-election.US.16/VoteTrackerPlus
 $ poetry shell
 $ cd /opt/VotetrackerPlus/demo.01/clients/server/VoteTrackerPlus
 $ run-mock-election -s Massachusetts -t Concord -a "123 Main Street" -d server
 
 # In terminal window #2, run a VTP scanner in mock election mode
-$ cd repos/VTP-mock-election.US.14/VoteTrackerPlus
+$ cd vtp.repos/VTP-mock-election.US.16/VoteTrackerPlus
 $ poetry shell
 $ cd /opt/VotetrackerPlus/demo.01/clients/scanner.01/VoteTrackerPlus
 # Auto cast 100 random ballots
 $ run-mock-election -s Massachusetts -t Concord -a "123 Main Street" -d scanner -i 100
 
 # In terminal window #3, run a second VTP scanner in mock election mode
-$ cd repos/VTP-mock-election.US.14/VoteTrackerPlus
+$ cd vtp.repos/VTP-mock-election.US.16/VoteTrackerPlus
 $ poetry shell
 $ cd /opt/VotetrackerPlus/demo.01/clients/scanner.02/VoteTrackerPlus
 # Auto cast 100 random ballots
 $ run-mock-election -s Massachusetts -t Concord -a "123 Main Street" -d scanner -i 100
 
 # In terminal window #4, run an interactive VTP scanner to cast ballots
-$ cd repos/VTP-mock-election.US.14/VoteTrackerPlus
+$ cd vtp.repos/VTP-mock-election.US.16/VoteTrackerPlus
 $ poetry shell
 $ cd /opt/VotetrackerPlus/demo.01/clients/scanner.00/VoteTrackerPlus
 

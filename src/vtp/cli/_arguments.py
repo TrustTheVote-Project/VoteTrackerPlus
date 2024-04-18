@@ -22,7 +22,6 @@ from vtp.core.common import Globals
 
 
 class Arguments:
-
     """Arguments common to multiple commands.  Parameters are kept
     minimal but are provided when one command may have a different
     value than another.

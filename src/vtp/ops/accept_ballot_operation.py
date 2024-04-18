@@ -26,7 +26,8 @@ operation of merging the pushed CVR branches to the main branch.
 """
 
 # Standard imports
-import csv
+import base64
+import io
 import os
 import random
 import secrets
@@ -39,6 +40,7 @@ from vtp.core.address import Address
 from vtp.core.ballot import Ballot
 from vtp.core.common import Globals
 from vtp.core.election_config import ElectionConfig
+from vtp.core.webapi import WebAPI
 from vtp.ops.merge_contests_operation import MergeContestsOperation
 
 # Local imports
@@ -221,7 +223,9 @@ class AcceptBallotOperation(Operation):
             text=True,
         ).stdout.strip()
 
-    def contest_add_and_commit(self, branch, style="contest"):
+    def contest_add_and_commit(
+        self, branch: str, style: str = "contest", receipt_suffix: str = ".csv"
+    ):
         """Will git add and commit the new contest content.  Requires
         the CWD to be the parent of the CVRs directory.  If this fails
         a shell error will be raised.
@@ -230,8 +234,9 @@ class AcceptBallotOperation(Operation):
         The actual CVR json payload is stored in the commit message of
         a contest since the commit content is destructively merged to
         main.  The actual receipt markdown payload is stored in the
-        file as markdown.  Hence, it is merged to main via a
-        subdirectory name that matches the random branch name.
+        file (either as markdown or csv).  However, receipts do not
+        have to be counted and hence there is no real need to merge
+        receipts to any one branch (such as main).
         """
         if style == "contest":
             payload_name = os.path.join(
@@ -241,7 +246,7 @@ class AcceptBallotOperation(Operation):
             # when handling receipts, there is no destructive merge
             payload_name = os.path.join(
                 branch,
-                Globals.get("RECEIPT_FILE_MD"),
+                Globals.get("RECEIPT_FILE") + receipt_suffix,
             )
         self.shell_out(
             ["git", "add", payload_name],
@@ -363,16 +368,11 @@ class AcceptBallotOperation(Operation):
 
         # Now write out the ballot_receipt in csv for now - can deal with
         # html (URL links) and a pdf (printable) later - both still a TBD.
-        receipt_file = the_ballot.write_receipt_csv(ballot_receipt, the_election_config)
+        receipt_file = the_ballot.write_receipt_csv(
+            ballot_receipt, the_election_config, versioned=False
+        )
         # return all three
         return ballot_receipt, voters_row, receipt_file
-
-    def convert_csv_to_2d_list(self, ballot_check_cvs: list) -> list[list[str]]:
-        """Convert a 1-D csv format list to a 2-D list of list format"""
-        my_list = []
-        for row in csv.reader(ballot_check_cvs, delimiter=",", quotechar='"'):
-            my_list.append(row)
-        return my_list
 
     def main_handle_contests(
         self,
@@ -461,19 +461,27 @@ class AcceptBallotOperation(Operation):
         # When here the actual voucher file on disk wants to be a
         # markdown file for a web-api endpoint rather than the
         # original csv file defined above.
+        receipt_digest = None
         with self.changed_cwd(a_ballot.get_cvr_parent_dir(the_election_config)):
             with self.changed_branch("main"):
                 # Create a unique branch for the receipt
                 receipt_branch = self.checkout_new_branch(
                     the_election_config, "", "main", "receipt"
                 )
-                # Write out the receipt there as a markdown file
-                receipt_file_md = a_ballot.write_receipt_md(
-                    ballot_check, the_election_config, receipt_branch
+                # Write out the ballot receipt as a csv file (the
+                # first spring demo saved files out as markdown)
+                receipt_file = a_ballot.write_receipt_csv(
+                    ballot_check,
+                    the_election_config,
+                    receipt_branch,
+                    versioned=True,
                 )
-                self.imprimir(f"#### Created markdown: file://{receipt_file_md}")
                 # Commit the voter's ballot voucher
-                self.contest_add_and_commit(receipt_branch, "receipt")
+                receipt_digest = self.contest_add_and_commit(receipt_branch, "receipt")
+                self.imprimir(
+                    f"#### Versioned csv receipt (branch={receipt_branch}, "
+                    f"digest={receipt_digest}): {receipt_file}"
+                )
                 # Push the voucher
                 self.shell_out(
                     ["git", "push", "origin", receipt_branch],
@@ -484,27 +492,37 @@ class AcceptBallotOperation(Operation):
                 # above with will nominally delete it
                 qr_url = (
                     f"{Globals.get('ELECTION_UPSTREAM_REMOTE')}/"
-                    f"/blob/{receipt_branch}/{a_ballot.get('ballot_subdir')}/"
-                    f"{receipt_branch}/{Globals.get('RECEIPT_FILE').rstrip('csv')}md"
+                    # to point to the file on the branch
+                    # f"/blob/{receipt_branch}/{a_ballot.get('ballot_subdir')}/"
+                    # f"{receipt_branch}/{Globals.get('RECEIPT_FILE')}.md"
+                    #
+                    # to point the ballot receipt commit
+                    f"show-commit.html?digest={receipt_digest}"
                 )
                 qr_img = qrcode.make(
                     qr_url,
                     image_factory=qrcode.image.svg.SvgImage,
                 )
-                qr_file = os.path.join(os.path.dirname(receipt_file_md), "qr.svg")
+                # The qr_file is not versioned and placed next to the
+                # ballot.json and receipt.csv
+                qr_file = Ballot.gen_receipt_location(
+                    the_election_config, a_ballot.get("ballot_subdir")
+                )
+                qr_file = os.path.join(os.path.dirname(qr_file), "qr.svg")
                 with open(qr_file, "wb") as qr_fh:
                     qr_img.save(qr_fh)
-                self.imprimir(f"#### Created QR code: {qr_file}")
+                self.imprimir(f"#### Created (untracked) QR file: {qr_file}")
 
                 # Create a markdown version of the receipt that contains the QR code.
-                demo_receipt = a_ballot.write_receipt_md(
-                    lines=ballot_check,
-                    config=the_election_config,
-                    receipt_branch=receipt_branch,
-                    qr_file="qr.svg",
-                    qr_url=qr_url,
-                )
-                self.imprimir(f"#### Created markdown: file://{demo_receipt}")
+                # demo_receipt = a_ballot.write_receipt_md(
+                #     lines=ballot_check,
+                #     config=the_election_config,
+                #     receipt_branch=receipt_branch,
+                #     versioned=False,
+                #     qr_file="qr.svg",
+                #     qr_url=qr_url,
+                # )
+                # self.imprimir(f"#### Created (untracked-combined) receipt: {demo_receipt}")
 
         # At this point the local receipt_branch can be deleted as
         # the local branches build up too much. The local reflog
@@ -513,7 +531,7 @@ class AcceptBallotOperation(Operation):
             ["git", "branch", "-d", receipt_branch],
             incoming_printlevel=5,
         )
-        return receipt_branch, qr_img
+        return receipt_branch, qr_img, receipt_digest
 
     # pylint: disable=duplicate-code
     # pylint: disable=too-many-locals
@@ -525,7 +543,7 @@ class AcceptBallotOperation(Operation):
         cast_ballot_json: dict = "",
         merge_contests: bool = False,
         version_receipts: bool = False,
-    ) -> tuple[list, int]:
+    ) -> tuple[list, int, str, str]:
         """
         Main function - see -h for more info.  Will work with either
         specific or an generic address.
@@ -567,7 +585,7 @@ class AcceptBallotOperation(Operation):
             with self.changed_cwd(the_election_config.get("git_rootdir")):
                 a_ballot.read_a_cast_ballot("", the_election_config, cast_ballot)
         elif cast_ballot_json:
-            a_ballot.set_ballot_data(cast_ballot_json, a_cast_ballot=True)
+            a_ballot.set_ballot_data(cast_ballot_json)
         else:
             # The json was not supplied - in this case read the cast
             # ballot from the default location.
@@ -606,7 +624,7 @@ class AcceptBallotOperation(Operation):
 
         # Optionally version the ballot check
         if receipt_file_csv and version_receipts:
-            receipt_branch, qr_img = self.main_handle_receipt(
+            receipt_branch, qr_img, receipt_digest = self.main_handle_receipt(
                 a_ballot=a_ballot,
                 ballot_check=ballot_check,
                 the_election_config=the_election_config,
@@ -660,18 +678,37 @@ class AcceptBallotOperation(Operation):
             #         style="receipt",
             #     )
 
-        # For now, print the location and the voter's index
+        # For now, print the (untracked) cvs receipt location and the voter's index
         if not receipt_file_csv:
             receipt_file_csv = None
-        self.imprimir(f"#### Receipt file: {receipt_file_csv}", 0)
+            self.imprimir("#### Did not create an (untracked) csv file", 0)
+        else:
+            self.imprimir(f"#### Created (untracked) csv file: {receipt_file_csv}", 0)
         if index == 0:
             index = None
-        self.imprimir(f"#### Voter's row: {index}", 0)
+            self.imprimir("#### No Voter row generated", 0)
+        else:
+            self.imprimir(f"#### Voter's row: {index}", 0)
         # And return them.  Note that ballot_check is in csv format
         # when writing to a file.  However, when returning is it more
         # convenient for it to be normal 2-D array -
         # list[list[str]]. So convert it first.
-        return self.convert_csv_to_2d_list(ballot_check), index, qr_img
+
+        # Also, the qr_img is a qrcode object.  It _seems_ the easiest
+        # way to get this back to the client side is to base64 encode
+        # it.  The resulting size is about just under 64k.  The length
+        # of the ballot_check is about 101*41*<n contests>.
+        base64_image = ""
+        if qr_img:
+            safe_image = io.BytesIO()
+            qr_img.save(stream=safe_image)
+            base64_image = base64.b64encode(safe_image.getvalue()).decode()
+        return (
+            WebAPI.convert_csv_to_2d_list(ballot_check),
+            index,
+            base64_image,
+            receipt_digest,
+        )
 
 
 # EOF

@@ -103,7 +103,7 @@ def main():
         an_address=an_address,
         blank_ballot=parsed_args.blank_ballot,
         demo_mode=parsed_args.demo_mode,
-        return_bb=parsed_args.return_blank_ballot,
+        return_blank_ballot=parsed_args.return_blank_ballot,
     )
     print(return_string)
 

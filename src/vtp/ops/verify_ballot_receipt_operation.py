@@ -25,6 +25,7 @@ import re
 
 # Project imports
 from vtp.core.ballot import Ballot
+from vtp.core.contest import Contest
 from vtp.core.election_config import ElectionConfig
 
 # Local imports
@@ -133,7 +134,7 @@ class VerifyBallotReceiptOperation(Operation):
             else:
                 # skip the row - it has no legitimate digests
                 continue
-            #            import pdb; pdb.set_trace()
+            # import pdb; pdb.set_trace()
             if row_index != "" and int(row_index) - 1 == index:
                 requested_row = cvrs
                 requested_digests = row
@@ -256,9 +257,14 @@ class VerifyBallotReceiptOperation(Operation):
                 if found is False:
                     unmerged_uids[uid] = u_count
             if unmerged_uids:
-                self.imprimir("The following contests are not merged to main yet:", 0)
-                for uid, offset in unmerged_uids.items():
-                    self.imprimir(f"{headers[offset]} ({requested_digests[offset]})", 0)
+                truly_unmerged_uids = {}
+                for uid in unmerged_uids:
+                    if uid not in error_digests:
+                        truly_unmerged_uids[uid] = unmerged_uids[uid]
+                if truly_unmerged_uids:
+                    self.imprimir("The following contests are not merged to main yet:", 0)
+                    for uid, offset in truly_unmerged_uids.items():
+                        self.imprimir(f"{headers[offset]} ({requested_digests[offset]})", 0)
 
         # If a row is specified, will print the context index in the
         # actual contest tally - which basically tells the voter 'your
@@ -269,7 +275,7 @@ class VerifyBallotReceiptOperation(Operation):
                 if digest in error_digests:
                     self.imprimir(
                         "cannot print CVR for {digest} (row {row_index}) - it is invalid",
-                        1,
+                        5,
                     )
                     continue
                 valid_digests.append(digest)
@@ -290,17 +296,18 @@ class VerifyBallotReceiptOperation(Operation):
                 vet_a_row()
 
         # Summerize
+        thing = "row" if receipt_data and len(receipt_data) <= 2 else "receipt"
         if error_digests:
             self.imprimir_formatting("begin_error_box")
             self.imprimir(
-                "ballot receipt INVALID - the supplied ballot receipt has "
+                f"ballot {thing} INVALID - the supplied ballot receipt has "
                 "{len(error_digests)} errors.",
                 1,
             )
             self.imprimir_formatting("end_error_box")
         else:
             self.imprimir_formatting("begin_good_box")
-            self.imprimir("[GOOD]: ballot receipt VALID - no digest errors found", 0)
+            self.imprimir(f"[GOOD]: ballot {thing} VALID - no digest errors found", 0)
             self.imprimir_formatting("end_good_box")
 
     # pylint: disable=duplicate-code
@@ -310,8 +317,13 @@ class VerifyBallotReceiptOperation(Operation):
         receipt_data: list[list[str]] = None,
         row: str = "",
         cvr: bool = False,
+        uids: bool = False,
     ) -> list[str]:
-        """Main function - see -h for more info"""
+        """
+        Main function - see -h for more info.  If the receipt_data
+        header lines are pure uids as opposed to the full pretty print
+        contest names, the boolean uids arg should be set to True.
+        """
 
         # Create a VTP ElectionData object if one does not already exist
         the_election_config = ElectionConfig.configure_election(
@@ -328,9 +340,12 @@ class VerifyBallotReceiptOperation(Operation):
                 check=True,
                 incoming_printlevel=5,
             )
+        # if ure uids, convert to the pretty print contest header values
+        if uids:
+            receipt_data[0] = [Contest.get_uid_pp_name(uid) for uid in receipt_data[0]]
 
-        #    import pdb; pdb.set_trace()
         # Can read the receipt file directly without any Ballot info
+        # import pdb; pdb.set_trace()
         self.verify_ballot_receipt(
             receipt_file=receipt_file,
             receipt_data=receipt_data,

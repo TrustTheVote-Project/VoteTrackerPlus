@@ -132,9 +132,14 @@ class ElectionConfig:
         # which all could consume memory or just optimize for repeated
         # hits by the same client (into the same workspace).  So, for
         # now, implementing the latter.
-        if ElectionConfig._election_data is not None and (
-            incoming_ec.git_rootdir == ElectionConfig._election_data.git_rootdir
-        ):
+
+        # 2024/04/12: HOWEVER, doing the latter will not recreate the
+        # same ED since the ggo uids will increment (they are a class
+        # variable).  So, either move _uid and _next_uid to instance
+        # variables or simply do not parse a new ED ever (for this
+        # process instance).  Since it is considered illegitimate to
+        # parse multiple different ED's, pick the latter again.
+        if ElectionConfig._election_data is not None:
             return ElectionConfig._election_data
         # Parses the actual election_data_dir
         ElectionConfig._election_data = incoming_ec
@@ -367,7 +372,7 @@ class ElectionConfig:
 
     def read_config_file(self, filename: str):
         """
-        Read the confgi yaml file return the dictionary and check the syntax.
+        Read the config yaml file return the dictionary and check the syntax.
         """
         self.operation_self.imprimir(f"Reading {filename}", 5)
         with open(filename, "r", encoding="utf8") as config_file:

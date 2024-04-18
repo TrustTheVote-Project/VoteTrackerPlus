@@ -57,15 +57,20 @@ class Operation:
 
     # class constants
     _sha1_regex = re.compile(r"([0-9a-fA-F]{40})")
-    _hackitoergosum = {
-        "election_data_dir": None,
-        "printonly": None,
-        "verbosity": None,
-        "style": None,
-        "stdout_printing": None,
-        "stdout_output": [],
-        "initialized": False,
-    }
+
+    # Originally the design target was a singleton, but it then became apparent
+    # the that design target could not be that since each op call wants to be
+    # or may want to be different.
+    #
+    # _hackitoergosum = {
+    #     "election_data_dir": None,
+    #     "printonly": None,
+    #     "verbosity": None,
+    #     "style": None,
+    #     "stdout_printing": None,
+    #     "stdout_output": [],
+    #     "initialized": False,
+    # }
 
     # pylint: disable=too-many-arguments
     def __init__(
@@ -89,14 +94,14 @@ class Operation:
         #     4: VERBOSE   - more info
         #     5: DEBUG     - everything
 
-        if Operation._hackitoergosum["initialized"]:
-            self.election_data_dir = Operation._hackitoergosum["election_data_dir"]
-            self.printonly = Operation._hackitoergosum["printonly"]
-            self.verbosity = Operation._hackitoergosum["verbosity"]
-            self.output_style = Operation._hackitoergosum["output_style"]
-            self.stdout_printing = Operation._hackitoergosum["stdout_printing"]
-            self.stdout_output = Operation._hackitoergosum["stdout_output"]
-            return
+        # if Operation._hackitoergosum["initialized"]:
+        #     self.election_data_dir = Operation._hackitoergosum["election_data_dir"]
+        #     self.printonly = Operation._hackitoergosum["printonly"]
+        #     self.verbosity = Operation._hackitoergosum["verbosity"]
+        #     self.output_style = Operation._hackitoergosum["output_style"]
+        #     self.stdout_printing = Operation._hackitoergosum["stdout_printing"]
+        #     self.stdout_output = Operation._hackitoergosum["stdout_output"]
+        #     return
         # import pdb; pdb.set_trace()
         self.election_data_dir = election_data_dir
         self.printonly = printonly
@@ -110,13 +115,17 @@ class Operation:
             self.stdout_output = ["<p>"]
         else:
             self.stdout_output = []
-        Operation._hackitoergosum["election_data_dir"] = self.election_data_dir
-        Operation._hackitoergosum["printonly"] = self.printonly
-        Operation._hackitoergosum["verbosity"] = self.verbosity
-        Operation._hackitoergosum["output_style"] = self.output_style
-        Operation._hackitoergosum["stdout_printing"] = self.stdout_printing
-        Operation._hackitoergosum["stdout_ouput"] = self.stdout_output
-        Operation._hackitoergosum["initialized"] = True
+        # Operation._hackitoergosum["election_data_dir"] = self.election_data_dir
+        # Operation._hackitoergosum["printonly"] = self.printonly
+        # Operation._hackitoergosum["verbosity"] = self.verbosity
+        # Operation._hackitoergosum["output_style"] = self.output_style
+        # Operation._hackitoergosum["stdout_printing"] = self.stdout_printing
+        # Operation._hackitoergosum["stdout_ouput"] = self.stdout_output
+        # Operation._hackitoergosum["initialized"] = True
+
+    def set_verbosity(self, verbosity: int):
+        """allow setting the verbosity (and nothing else) on the run"""
+        self.verbosity = verbosity
 
     def imprimir_formatting(
         self,
