@@ -301,7 +301,7 @@ class VerifyBallotReceiptOperation(Operation):
             self.imprimir_formatting("begin_error_box")
             self.imprimir(
                 f"ballot {thing} INVALID - the supplied ballot receipt has "
-                "{len(error_digests)} errors.",
+                f"{len(error_digests)} errors.",
                 1,
             )
             self.imprimir_formatting("end_error_box")
