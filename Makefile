@@ -26,8 +26,8 @@ else
 endif
 
 # Let there be no default target
-.PHONY: default
-default:
+.PHONY: help
+help:
 	@echo "${RED}There is no default make target.${END}  Specify one of:"
 	@echo "poetry-build            - performs a poetry local install"
 	@echo "poetry-link             - refreshes local (poetry file) symlinks"
