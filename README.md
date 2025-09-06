@@ -4,7 +4,7 @@
 
 VoteTracker+ (VTP or VoteTrackerPlus) is a 100% open software vote tracking system that increases the security, accuracy, and trustworthiness of paper ballot based elections by cryptographically and anonymously tracking the votes associated with paper ballots, supplying real [E2EV][E2EV.md] for voters and election officials.  VTP is a software only product comprised of backoffice plugins with voter and election official facing frontoffice components.  VTP can leverage existing election hardware infrastructure to the extent that the OEM manufacturers allow and support the installation of the VTP plugins.
 
-Note - the latest work may be available from [this fork](https://github.com/OpenVotingTechnologyGroup/VoteTrackerPlus)
+Note - ongoing development including security fixes can be found via [this fork](https://github.com/OpenVotingTechnologyGroup/VoteTrackerPlus)
 
 Read the [pitch](docs/pitch.md), ask for a live demo, or run your own live demo on your own Apple or Linux desktop.
 
