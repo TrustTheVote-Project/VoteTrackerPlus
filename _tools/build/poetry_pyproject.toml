@@ -4,7 +4,7 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry]
 name = "votetrackerplus"
-version = "0.2.0"
+version = "0.2.1"
 description = "VoteTracker+ - a distributed, open-source, public ballot and Cast Vote Record integrity and tracking system"
 authors = ["Sandy Currier <windoverwater@users.noreply.github.com>"]
 license = "GPL-2.0"
@@ -15,23 +15,23 @@ packages = [
 ]
 
 [tool.poetry.dependencies]
-deepdiff = "^7.0.1"
-networkx = "^3.3"
+deepdiff = "^8.5.0"
+networkx = "^3.5"
 pyinputplus = "^0.2.12"
-python = "^3.10"
+python = "^3.13"
 pyyaml = "^6.0.1"
-qrcode = "^7.4.2"
+qrcode = "^8.2"
 poetry-plugin-export = "^1.7.1"
 
 [tool.poetry.group.dev.dependencies]
-black = "^24.4.0"
-isort = "^5.13.0"
-mypy = "^1.9.0"
+black = "^25.1.0"
+isort = "^6.0.1"
+mypy = "^1.16.1"
 pylint = "^3.1.0"
-pytest = "^8.1.0"
-pytest-cov = "^5.0.0"
-sphinx = "^7.3.6"
-types-pyyaml = "^6.0.12.8"
+pytest = "^8.4.1"
+pytest-cov = "^6.2.1"
+sphinx = "^8.2.3"
+types-pyyaml = "^6.0.12"
 
 [tool.poetry.scripts]
 accept-ballot = "vtp.cli.accept_ballot:main"
