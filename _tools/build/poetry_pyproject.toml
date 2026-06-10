@@ -15,7 +15,7 @@ packages = [
 ]
 
 [tool.poetry.dependencies]
-deepdiff = "^8.6.2"
+deepdiff = "^9.1.0"
 networkx = "^3.6.1"
 pyinputplus = "^0.2.12"
 # networkx (3.6.1) requires Python !=3.14.1,>=3.11
@@ -25,11 +25,11 @@ qrcode = "^8.2"
 poetry-plugin-export = "^1.10.0"
 
 [tool.poetry.group.dev.dependencies]
-black = "^26.3.1"
+black = "^26.5.1"
 flake8 = "^7.3.0"
 isort = "^8.0.1"
 mccabe = "^0.7.0"
-mypy = "^1.16.1"
+mypy = "^2.1.0"
 pylint = "^4.0.5"
 pytest = "^9.0.2"
 pytest-cov = "^7.0.0"
