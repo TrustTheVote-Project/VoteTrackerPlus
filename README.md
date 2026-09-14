@@ -2,7 +2,7 @@
 
 [![CodeQL](https://github.com/OpenVotingTechnologyGroup/VoteTrackerPlus/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/OpenVotingTechnologyGroup/VoteTrackerPlus/actions/workflows/codeql-analysis.yml)
 
-VoteTrackerPlus (a.k.a. VTP or VoteTracker+) is a 100% open source project that offers a verifiable guarantee directly to the voter that their ballot is correctly cast and tallied.  This guarantee directly increases the security, accuracy, and trustworthiness of elections regardless how they are held.
+VoteTrackerPlus&trade; (a.k.a. VTP or VoteTracker+&trade;) is a 100% open source project that offers a verifiable guarantee directly to the voter that their ballot is correctly cast and tallied.  This guarantee directly increases the security, accuracy, and trustworthiness of elections regardless how they are held.
 
 All types of elections are supported: traditional in-person paper based, mail-in, absentee, internet voting (iVoting) with or without paper, etc.  Currently four [tally algorithms](docs/tally-comparison.md) are supported in both single and multi-seat contests: plurality, sequential Rank Choice Vote, proportional RCV (STV), and pairwise Condorcet.
 
